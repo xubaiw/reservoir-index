@@ -1,0 +1,23 @@
+[
+  "https://github.com/mhuisi/lean4-cli",
+  "https://github.com/gebner/quote4",
+  "https://github.com/Kha/lean4-nightly",
+  "https://github.com/Ferinko/LeanSha",
+  "https://github.com/GregorKikelj/Lean4AdventOfCode",
+  "https://github.com/siddhartha-gadgil/Saturn",
+  "https://github.com/agentultra/lean-4-hackers",
+  "https://github.com/ammkrn/prolala_demo",
+  "https://github.com/Ferinko/LeanAStar",
+  "https://github.com/marcusrossel/model-checking",
+  "https://github.com/gebner/oleanparser",
+  "https://github.com/marcusrossel/reactor-model",
+  "https://github.com/opencompl/lean-mlir",
+  "https://github.com/xubaiw/CMark.lean",
+  "https://github.com/xubaiw/Reservoir.lean",
+  "https://github.com/xubaiw/csv",
+  "https://github.com/joehendrix/lean-crypto",
+  "https://github.com/hargoniX/lean4-fixed",
+  "https://github.com/insightmind/LeanInk",
+  "https://github.com/Julian/lean.nvim",
+  "https://github.com/tydeu/lean4-alloy"
+]
