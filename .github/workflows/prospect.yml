@@ -22,15 +22,14 @@ jobs:
       run: |
         git clone https://github.com/xubaiw/Reservoir.lean/
         cd Reservoir.lean
-        git checkout 06620792120b94a6698f9bacfe824cbba879437a
         lake build
         cd ..
       shell: bash
 
     - name: Prospect GitHub
       run: |
-        ./build/bin/reservoir -i lakes.json -o lakes.json
-        rm -rf builds
+        ./Reservoir.lean/build/bin/reservoir -i lakes.json -o lakes.json
+        rm -rf ./Reservoir.lean/
       shell: bash
 
     - name: Create Pull Request

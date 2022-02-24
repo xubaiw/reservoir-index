@@ -1,8 +1,6 @@
 name: Index
 
 on:
-  schedule:
-    - cron: '0 0,12 * * *'
   push:
     branches: [ main ]
   pull_request:
@@ -34,8 +32,7 @@ jobs:
 
     - name: Prospect GitHub
       run: |
-        ./Reservoir.lean/build/bin/reservoir -i lakes.json -o build/lakes.json
-        rm -rf builds
+        ./Reservoir.lean/build/bin/reservoir prospect -i lakes.json -o build/lakes.json
       shell: bash
 
     - name: Generate Pages
@@ -54,3 +51,5 @@ jobs:
       with:
         branch: gh-pages 
         folder: build/
+      if:
+        ${{github.event_name != 'pull_request'}}
