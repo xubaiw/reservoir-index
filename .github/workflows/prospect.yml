@@ -28,7 +28,7 @@ jobs:
 
     - name: Prospect GitHub
       run: |
-        ./Reservoir.lean/build/bin/reservoir -i lakes.json -o lakes.json
+        ./Reservoir.lean/build/bin/reservoir prospect -i lakes.json -o lakes.json
         rm -rf ./Reservoir.lean/
       shell: bash
 
