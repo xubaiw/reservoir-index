@@ -28,7 +28,6 @@ jobs:
       run: |
         git clone https://github.com/xubaiw/Reservoir.lean/
         cd Reservoir.lean
-        git checkout 06620792120b94a6698f9bacfe824cbba879437a
         lake build
         cd ..
       shell: bash
