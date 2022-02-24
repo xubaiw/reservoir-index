@@ -2,7 +2,10 @@ name: Prospect
 
 on:
   schedule:
-    - cron: '0 0,6,12,18 * * *'
+    - cron: '0 0,3,6,9,12,15,18,21 * * *'
+  push:
+    paths:
+      - '.github/workflows/**'
 
 jobs:
   prospect:
