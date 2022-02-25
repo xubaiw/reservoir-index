@@ -42,6 +42,7 @@
  "leanprover/doc-gen4",
  "leanprover/lake",
  "leanprover/lean4",
+ "leanprover/lean4-samples",
  "lecopivo/SciLean",
  "lecopivo/lean4-karray",
  "lecopivo/leanPluginTest",
