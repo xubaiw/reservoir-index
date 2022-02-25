@@ -21,10 +21,23 @@
 </header>
 <main>
 <h1>xubaiw/Reservoir.lean</h1>
+<p>WIP unofficial package registry of Lean 4</p>
 <a href="https://github.com/xubaiw/Reservoir.lean">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Reservoir.lean</h1>
+<p dir="auto">WIP unofficial package registry of Lean 4.</p>
+<p dir="auto">This is based on the GitHub Search API:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="curl -s \
+  -H "Authorization: token <YOUR TOKEN>" \
+  --location "https://api.github.com/search/code?q=Lake&language:Lean" \
+  --header "Accept: application/vnd.github.v3+json" "><pre>curl -s \
+  -H <span class="pl-s"><span class="pl-pds">"</span>Authorization: token <YOUR TOKEN><span class="pl-pds">"</span></span> \
+  --location <span class="pl-s"><span class="pl-pds">"</span>https://api.github.com/search/code?q=Lake&language:Lean<span class="pl-pds">"</span></span> \
+  --header <span class="pl-s"><span class="pl-pds">"</span>Accept: application/vnd.github.v3+json<span class="pl-pds">"</span></span> </pre></div>
+<p dir="auto">Since SSL utilities for Lean 4 are not yet finished, this package requires the existence of commandline <code>curl</code>.</p>
+</article></div></main>
 </body>
 </html>

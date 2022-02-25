@@ -21,10 +21,173 @@
 </header>
 <main>
 <h1>gebner/quote4</h1>
+<p>Intuitive, type-safe expression quotations for Lean 4.</p>
 <a href="https://github.com/gebner/quote4">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Expression quotations for Lean 4</h1>
+<p dir="auto">This package implements type-safe expression
+quotations, which are a particularly
+convenient way of constructing object-level
+expressions (<code>Expr</code>) in meta-level code.</p>
+<p dir="auto">It combines the intuitiveness of modal sequent
+calculus with the power and speed of
+Lean 4's metaprogramming facilities.
+The <code>Q(·)</code> modality quotes types:
+<code>Q(α)</code> denotes an expression of type <code>α</code>.
+The type former comes with the following
+natural introduction rule:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
+-----------------------------------------
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type"><pre><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
+-----------------------------------------
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type
+</code></pre></div>
+<p dir="auto">The lower-case <code>q(·)</code> macro serves
+as the modal inference rule,
+allowing us to construct values in <code>Q(·)</code>:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
+-----------------------------------------
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)"><pre><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
+-----------------------------------------
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)
+</code></pre></div>
+<h2 dir="auto">Example</h2>
+<p dir="auto">Let us write a type-safe version of <code>mkApp</code>:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
+open Qq
+
+set_option trace.compiler.ir.result true in
+
+-- Note: `betterApp` actually has two additional parameters
+-- `{u v : Lean.Level}` auto-generated due to option
+-- `autoBoundImplicitLocal`.
+
+def betterApp {α : Q(Sort u)} {β : Q($α → Sort v)}
+  (f : Q((a : α) → $β a)) (a : Q($α)) : Q($β $a) :=
+q($f $a)
+
+#eval betterApp q(Int.toNat) q(42)"><pre><span class="pl-k">import</span> Qq
+<span class="pl-k">open</span> Qq
+
+<span class="pl-k">set_option</span> trace.compiler.ir.result true <span class="pl-k">in</span>
+
+<span class="pl-c"><span class="pl-c">--</span> Note: `betterApp` actually has two additional parameters</span>
+<span class="pl-c"><span class="pl-c">--</span> `{u v : Lean.Level}` auto-generated due to option</span>
+<span class="pl-c"><span class="pl-c">--</span> `autoBoundImplicitLocal`.</span>
+
+<span class="pl-k">def</span> <span class="pl-en">betterApp</span> {α : Q(<span class="pl-k">Sort</span> u)} {β : Q($α → <span class="pl-k">Sort</span> v)}
+  (f : Q((a : α) → $β a)) (a : Q($α)) : Q($β $a) :=
+q($f $a)
+
+<span class="pl-k">#eval</span> betterApp q(Int.toNat) q(<span class="pl-c1">42</span>)</pre></div>
+<p dir="auto">There are many things going on here:</p>
+<ol dir="auto">
+<li>The <code>betterApp</code> function compiles to a single <code>mkApp</code> call.</li>
+<li>It does not require the <code>MetaM</code> monad (in contrast to
+<code>AppBuilder.lean</code> in the Lean 4 code).</li>
+<li><code>Q(…)</code> is definitionally equal to <code>Expr</code>, so each variable
+in the example is just an <code>Expr</code>.</li>
+<li>Nevertheless, implicit arguments of the definition (such as <code>α</code>
+or <code>u</code>) get filled in by type inference, which reduces the
+potential for errors even in the absence of strong type safety
+at the meta level.</li>
+<li>All quoted expressions, i.e. all code inside <code>Q(·)</code> and <code>q(·)</code>,
+are type-safe (under the assumption that the values of <code>α</code>,
+<code>f</code>, etc. really have their declared types).</li>
+<li>The second argument in the <code>#eval</code> example, <code>q(42)</code>,
+correctly constructs an expression of type <code>Int</code>, as
+determined by the first argument.</li>
+</ol>
+<p dir="auto">Because <code>betterApp</code>
+takes <code>α</code> and <code>u</code> (and <code>β</code> and <code>v</code>) as arguments,
+it can also perform more interesting tasks compared
+to the untyped function <code>mkApp</code>: for example,
+we can change <code>q($f $a)</code> into <code>q(id $f $a)</code>
+without changing the interface
+(even though the resulting expression
+now contains both the type and the universe level).</p>
+<p dir="auto">The arguments do not need to refer
+to concrete types like <code>Int</code> either:
+<code>List ((u : Level) × (α : Q(Sort u)) × List Q(Option $α))</code>
+does what you think it does!</p>
+<p dir="auto">In fact it is a crucial feature
+that we can write metaprograms
+transforming terms of nonconcrete types
+in inconsistent contexts:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ..."><pre><span class="pl-k">def</span> <span class="pl-en">tryProve</span> (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > <span class="pl-c1">0</span>) := ...</pre></div>
+<p dir="auto">If the <code>i > 0</code> in the return type were a concrete type in the metalanguage,
+then we could not call <code>tryProve</code> with <code>n := 0</code>
+(because we would need to provide a value for <code>i : Fin 0</code>).
+Furthermore,
+if <code>n</code> were a concrete value,
+then we could not call <code>tryProve</code> on
+the subterm <code>t</code> of <code>fun n : Nat => t</code>.</p>
+<h2 dir="auto">Implementation</h2>
+<p dir="auto">The type family on which this package is built is called <code>QQ</code>:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre><span class="pl-k">def</span> <span class="pl-en">QQ</span> (α : Expr) := Expr</pre></div>
+<p dir="auto">The intended meaning of <code>e : QQ t</code> is that
+<code>e</code> is an expression of type <code>t</code>.
+Or if you will,
+<code>isDefEq (← inferType e) t</code>.
+(This invariant is not enforced though,
+but it can be checked with <code>QQ.check</code>.)
+The <code>QQ</code> type is not meant to be used manually.
+You should only interact with it
+using the <code>Q(·)</code> and <code>q(·)</code> macros.</p>
+<h2 dir="auto">Comparison</h2>
+<p dir="auto">Template Haskell provides a similar mechanism
+for type-safe quotations,
+writing <code>Q Int</code> for an expression of type <code>Int</code>.
+This is subtly different
+to the <code>QQ</code> type family considered here:
+in Lean notation,
+TH's family has the type <code>Q : Type u → Type</code>,
+while ours has the type <code>QQ : Expr → Type</code>.
+In Lean, <code>Q</code> is not sufficiently expressive
+due to universe polymorphism:
+we might only know at runtime which universe the type is in,
+but <code>Q</code> version fixes the universe at compile time.
+Another lack of expressivity concerns dependent types:
+a telescope such as <code>{α : Q Type} (a : Q α)</code> is not well-typed
+with TH's <code>Q</code> constructor,
+because <code>α</code> is not a type.</p>
+<h2 dir="auto">To do</h2>
+<ul dir="auto">
+<li>
+<p dir="auto">This has almost certainly been done before
+somewhere else, by somebody else.</p>
+</li>
+<li>
+<p dir="auto"><code>ql(imax u (v+1))</code></p>
+</li>
+<li>
+<p dir="auto">Automatically create free variables for recursion.
+Maybe something like this:</p>
+</li>
+</ul>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
+  | ~q(∃ x, p x) => do
+     q(∀ x, $(x => turnExistsIntoForall q($p $x)))
+  | e => e"><pre><span class="pl-k">def</span> <span class="pl-en">turnExistsIntoForall</span> : Q(<span class="pl-k">Prop</span>) → MetaM Q(<span class="pl-k">Prop</span>)
+  | ~q(∃ x, p x) => <span class="pl-k">do</span>
+     q(∀ x, $(x => turnExistsIntoForall q($p $x)))
+  | e => e</pre></div>
+<ul dir="auto">
+<li>Matching should provide control over type-class diamonds, such as</li>
+</ul>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="~q((a + b : α) where
+  Semiring α
+  commutes ∀ n, OfNat α n
+  a + a defEq 0)"><pre>~q((a + b : α) where
+  Semiring α
+  commutes ∀ n, OfNat α n
+  a + a defEq <span class="pl-c1">0</span>)</pre></div>
+<ul dir="auto">
+<li>Other bug fixes, documentation, and assorted polishing.</li>
+</ul>
+</article></div></main>
 </body>
 </html>

@@ -21,10 +21,104 @@
 </header>
 <main>
 <h1>opencompl/lean-mlir</h1>
+<p>embedding MLIR in LEAN</p>
 <a href="https://github.com/opencompl/lean-mlir">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto"><code>mlir-lean</code>: embedded MLIR in LEAN</h1>
+<p dir="auto">This provides infrastructure for:</p>
+<ul dir="auto">
+<li>An embedding of the MLIR AST in lean (<code>MLIR/AST.lean</code>)</li>
+<li>A lightweight pretty printer library to pretty print the MLIR AST and parse errors (<code>MLIR/Doc.lean</code>)</li>
+<li>A embedded-domain-specific language to build MLIR generic operations via macros (<code>MLIR/EDSL.lean</code>)</li>
+<li>A parser from MLIR generic into LEAN data structures (<code>MLIR/MLIRParser.lean</code>)</li>
+<li>A lightweight parser combinator library with error tracking (<code>MLIR/P.lean</code>)</li>
+</ul>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def opRgnAttr0 : Op := (mlir_op_call%
+ "module"() (
+ {
+  ^entry:
+   "func"() (
+    {
+     ^bb0(%arg0:i32, %arg1:i32):
+      %zero = "std.addi"(%arg0 , %arg1) : (i32, i32) -> i32
+      "std.return"(%zero) : (i 32) -> ()
+    }){sym_name = "add", type = (i32, i32) -> i32} : () -> ()
+   "module_terminator"() : () -> ()
+ }) : () -> ()
+)
+#print opRgnAttr0"><pre><span class="pl-k">def</span> <span class="pl-en">opRgnAttr0</span> : Op := (mlir_op_call%
+ <span class="pl-s"><span class="pl-pds">"</span>module<span class="pl-pds">"</span></span>() (
+ {
+  ^entry:
+   <span class="pl-s"><span class="pl-pds">"</span>func<span class="pl-pds">"</span></span>() (
+    {
+     ^bb0(%arg0:i32, %arg1:i32):
+      %zero = <span class="pl-s"><span class="pl-pds">"</span>std.addi<span class="pl-pds">"</span></span>(%arg0 , %arg1) : (i32, i32) -> i32
+      <span class="pl-s"><span class="pl-pds">"</span>std.return<span class="pl-pds">"</span></span>(%zero) : (i <span class="pl-c1">32</span>) -> ()
+    }){sym_name = <span class="pl-s"><span class="pl-pds">"</span>add<span class="pl-pds">"</span></span>, type = (i32, i32) -> i32} : () -> ()
+   <span class="pl-s"><span class="pl-pds">"</span>module_terminator<span class="pl-pds">"</span></span>() : () -> ()
+ }) : () -> ()
+)
+<span class="pl-k">#print</span> opRgnAttr0</pre></div>
+<p dir="auto">As a research project, we explore:</p>
+<ul dir="auto">
+<li>How to provide formal semantics for MLIR, especially in the presence of multiple dialects.</li>
+<li>What default logics are useful, and how best to enable them for MLIR? Hoare logic? Separation logic?</li>
+<li>Purely functional, immutable rewriter with a carefully chosen set of
+primitives to enable reasoning and efficient rewriting.</li>
+</ul>
+<h1 dir="auto">Build instructions</h1>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
+$ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>"><pre><code>$ lake build
+$ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
+</code></pre></div>
+<h2 dir="auto">Nix</h2>
+<p dir="auto">Start a "lean shell" per the <a href="https://leanprover.github.io/lean4/doc/setup.html#nix-setup" rel="nofollow">Nix Setup documentation</a> for lean:</p>
+<blockquote>
+<p dir="auto">After installing (any version of) Nix (<a href="https://nixos.org/download.html" rel="nofollow">https://nixos.org/download.html</a>), you can easily open a shell with the particular pre-release version of Nix needed by and tested with our setup (called the "Lean shell" from here on):</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix"><pre><code>$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix
+</code></pre></div>
+</blockquote>
+<p dir="auto">Ensure that these extra options are active in the nix you are running. Under NixOS, this means putting this in top-level config. Under a non OS level isntall, this means putting this in the <code>.nix-profile</code> and restarting the nix daemon.</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="  nix = {
+      package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
+      extraOptions = ''
+        experimental-features = nix-command flakes
+        max-jobs = auto  # Allow building multiple derivations in parallel
+        keep-outputs = true  # Do not garbage-collect build time-only dependencies (e.g. clang)
+        # Allow fetching build results from the Lean Cachix cache
+        trusted-substituters = https://lean4.cachix.org/
+        trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= lean4.cachix.org-1:mawtxSxcaiWE24xCXXgh3qnvlTkyU7evRRnGeAhD4Wk=
+        allow-import-from-derivation = true
+      '';
+  };"><pre lang="nix="><code>  nix = {
+      package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
+      extraOptions = ''
+        experimental-features = nix-command flakes
+        max-jobs = auto  # Allow building multiple derivations in parallel
+        keep-outputs = true  # Do not garbage-collect build time-only dependencies (e.g. clang)
+        # Allow fetching build results from the Lean Cachix cache
+        trusted-substituters = https://lean4.cachix.org/
+        trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= lean4.cachix.org-1:mawtxSxcaiWE24xCXXgh3qnvlTkyU7evRRnGeAhD4Wk=
+        allow-import-from-derivation = true
+      '';
+  };
+</code></pre></div>
+<h1 dir="auto">Test instructions</h1>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd examples; lit -v . # run all examples, report failures."><pre><code>$ cd examples; lit -v . # run all examples, report failures.
+</code></pre></div>
+<h1 dir="auto">Documentation</h1>
+<ul dir="auto">
+<li>Go to <a href="./docs/README.md"><code>docs/README.md</code></a> for library documentation.</li>
+</ul>
+<h1 dir="auto">Other projects of interest</h1>
+<ul dir="auto">
+<li><a href="https://github.com/tydeu/lean4-papyrus"><code>tydeu/lean4-papyrus</code></a> is an LLVM interface for Lean 4.</li>
+<li><a href="https://github.com/GaloisInc/lean-llvm"><code>GaloisInc/lean-llvm</code></a> is Lean4 bindings to the LLVM library.</li>
+</ul>
+</article></div></main>
 </body>
 </html>

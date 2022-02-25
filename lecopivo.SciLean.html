@@ -21,10 +21,95 @@
 </header>
 <main>
 <h1>lecopivo/SciLean</h1>
+<p>Framework for scientific computing written in Lean</p>
 <a href="https://github.com/lecopivo/SciLean">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div id="readme" class="org" data-path="README.org"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto"><a id="user-content-scilean-scientific-computing-assistant" class="anchor" aria-hidden="true" href="#scilean-scientific-computing-assistant"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>SciLean: Scientific Computing Assistant</h1>
+<p dir="auto">Framework for scientific computing such as solving differential equations, optimization or machine learning written in <a href="http://leanprover.github.io/" rel="nofollow">Lean</a>. This library is in an <b>extremely early stage of development</b> and at its current stage is just a proof of concept on how Lean can be used for scientific computing.</p>
+<p dir="auto">Lean is an expressive functional programming language that allows to formalize the mathematics behind these computations. This can offer several benefits:</p>
+<ul dir="auto">
+  <li>Code transformation and optimization guided by formalization of underlining mathematics, like automatic differentiation, algebraic simplification, fine control of used approximations or execution scheduling.</li>
+  <li>First class symbolic computation. Any function can be purely symbolic, functions like `gradient`, `integral` or `limit` are inherently non-computable. However, they carry meaning what the program should be doing and we provide tools to manipulate them or approximate them with actually computable function.</li>
+  <li>Code generation based on formal specification. Many problems any scientific computing or machine learning can be stated very easily e.g. find a minimizer of a function. We then provide tools how to turn such specification into a runnable code satisfying the specification, usually in an appropriate limit of used approximations.</li>
+  <li>Catalogization of numerical methods.</li>
+</ul>
+<p dir="auto">In short, mathematics is the ultimate abstraction for numerical computing and Lean can understand mathematics. Hopefully, using Lean will allow us to create really powerfull and extensible library for scientific computing.</p>
+<h1 dir="auto"><a id="user-content-installation-and-running-examplestests" class="anchor" aria-hidden="true" href="#installation-and-running-examplestests"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Installation and running examples/tests</h1>
+<p dir="auto">As we are using Lean programming language, you need Lean’s version manager <code>elan</code>. Follow its installation <a href="https://github.com/leanprover/elan#installation">instructions</a>.</p>
+<p dir="auto">Getting and building SciLean simply:</p>
+<pre>git clone https://github.com/lecopivo/SciLean.git
+cd SciLean
+lake build
+</pre>
+<p dir="auto">To run examples:</p>
+<pre>lake env lean --run examples/HarmonicOscilator.lean 
+lake env lean --run examples/WaveEquation.lean 
+</pre>
+<p dir="auto">Other examples in <code>examples</code> directory do not currently work.</p>
+<p dir="auto">To run tests:</p>
+<pre>lake run tests
+</pre>
+<h1 dir="auto"><a id="user-content-example-simulation-of-harmonic-oscillator" class="anchor" aria-hidden="true" href="#example-simulation-of-harmonic-oscillator"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Example: Simulation of harmonic oscillator</h1>
+<p dir="auto">The idea behind this library is can be most easily demonstrated on an example. We will create simulation of a harmonic oscillator, full <a href="https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscilator.lean">example</a>.</p>
+<p dir="auto">Harmonic oscillator is defined by its energy/Hamiltonian. Lean allows us to write down the energy in very familiar form:</p>
+<pre>def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
+</pre>
+<p dir="auto">One of the main novelties of SciLean is that it allows us to formally state our goal i.e. simulation of harmonic oscillator:</p>
+<pre>def solver (m k : ℝ) (steps : Nat)
+  : Impl (ode_solve (HamiltonianSystem (H m k))) := ...
+</pre>
+<p dir="auto">The above code declares a function <code>solver</code> taking mass <code>m</code>, spring stiffness <code>k</code> and number of steps <code>steps</code>. The type of the function <code>solver</code> is an implementation of ODE solver of Hamiltonian system given by Hamiltonian <code>(H m k)</code>. This means that it is a function taking <code>(t, x, p)</code> and producing state <code>(x, p)</code> by approximately evolving the specified Hamiltonian system. Furthermore, it has compiler checked guarantee that as you increase the number of <code>steps</code> the function output converges to the correct answer(not completely true but good enough explanation for now).</p>
+<p dir="auto">The last three dots <code>...</code> is the place where the actual definition of the <code>solver</code> goes. This is a place where we completely diverge from traditional programming languages and where the word <code>assistant</code> from the title comes in. We do not tell computer what to do step by step but we guide it on how to transform the formal specification into an executable code. This sounds way to abstract, here is the actual code:</p>
+<pre>def solver (m k : ℝ) (steps : Nat)
+: Impl (ode_solve (HamiltonianSystem (H m k))) :=
+by
+-- Unfold Hamiltonian definition and compute gradients
+simp[HamiltonianSystem, H];
+autograd
+autograd
+
+-- Apply RK4 method
+rw [ode_solve_fixed_dt runge_kutta4_step]
+lift_limit steps "Number of ODE solver steps."; admit; simp
+
+finish_impl
+</pre>
+<p dir="auto">Let’s start with a warning! This code is not meant to be consumed as it is but it should be read interactively in a text editor, see the following animation:</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="anim.gif"><img src="anim.gif" alt="anim.gif" style="max-width: 100%;"></a></p>
+<p dir="auto">On the right side you can see what is our current goal based on the position of the cursor. At the beginning, the goal is <code>Impl (ode_solve (HamiltonianSystem (H m k)))</code> as we have defined <code>solver</code> function.</p>
+<p dir="auto">In the next step, we expand the definition of <code>HamiltonianSystem</code> and <code>H</code>. This allows us to proceed to symbolic differentiation step.</p>
+<p dir="auto">Let’s pause for a bit. If we expand only <code>HamiltonianSystem</code>, the goal would contain:</p>
+<pre>fun x p =&gt; (gradient (H m k x) p, -gradient (fun x =&gt; H m k x p) x))
+</pre>
+<p dir="auto">These are exactly <a href="https://en.wikipedia.org/wiki/Hamiltonian_mechanics#From_Euler-Lagrange_equation_to_Hamilton's_equations" rel="nofollow">Hamilton’s equations of motion</a>. The first term <code>gradient (H m k x) p</code> is derivative of Hamiltonian w.r.t. to momentum and the second term <code>gradient (fun x =&gt; H m k x p) x</code> it derivative of Hamiltonian w.r.t. to position.</p>
+<p dir="auto">Thus after expanding <code>H</code> as well we call <code>autograd</code> twice to eliminate both <code>gradient</code> functions.</p>
+<p dir="auto">The <code>gradient</code> function is purely symbolic. A term like <code>gradient f</code> just tells us we want to have a program that computes the gradient of a function <code>f</code>. Our task in the interactive mode is to eliminate every occurrence of <code>gradient f</code> (or any other purely symbolic function) and replace it with an actually computable function. This can be done through symbolic differentiation, automatic differentiation(like forward or backward mode differentiation) or approximate it with finite differences.</p>
+<p dir="auto">The second purely symbolic function in our specification is <code>ode_solve</code>. We have to decide which ODE integration scheme we want to use. Let’s pick fixed time step Runge-Kutta 4:</p>
+<pre>rw [ode_solve_fixed_dt runge_kutta4_step]
+</pre>
+<p dir="auto">At this point the goal is still saying that we are implementing the original goal <code>Impl (ode_solve (HamiltonianSystem (H m k)))</code> in a limit of infinite number of ODE integrator steps. The next line just accepts the fact that we can not compute the answer exactly and pick a concrete number of steps:</p>
+<pre>lift_limit steps "Number of ODE solver steps."; admit; simp
+</pre>
+<p dir="auto">The last line <code>finish_impl</code> states we are done. Lean checks if all purely symbolic function have been eliminated and the actually executable code can be generated.</p>
+<p dir="auto">See the full <a href="https://github.com/lecopivo/SciLean/blob/master/examples/HarmonicOscilator.lean">example</a> to see how the set up initial conditions and how the function <code>solver</code> is actually used. To execute this example, run:</p>
+<pre>lake env lean --run examples/HarmonicOscilator.lean 
+</pre>
+<p dir="auto">from the project root directory.</p>
+<p dir="auto">The simulation of harmonic oscillator is not very interesting. The great thing about SciLean is that we can simply change the definition of Hamiltonian and get simulation of way more interesting systems. The Hamiltonian for wave equation(discretized in space) is:</p>
+<pre>def H (m k : ℝ) (x p : ℝ^n) := 
+  let Δx := (1 : ℝ)/(n : ℝ)
+  (Δx/(2*m)) * ∥p∥² + (Δx * k/2) * (∑ i, ∥x[i] - x[i-1]∥²)
+</pre>
+<p dir="auto">The rest of the code can stay the same. Running this <a href="https://github.com/lecopivo/SciLean/blob/master/examples/WaveEquation.lean">example</a>:</p>
+<pre>lake env lean --run examples/WaveEquation.lean
+</pre>
+<p dir="auto">Produces the following animation:
+  <a target="_blank" rel="noopener noreferrer" href="wave.gif"><img src="wave.gif" alt="wave.gif" style="max-width: 100%;"></a></p>
+<p dir="auto">Or when nicely rendered:</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="wavering.gif"><img src="wavering.gif" alt="wavering.gif" style="max-width: 100%;"></a></p>
+</article></div></main>
 </body>
 </html>

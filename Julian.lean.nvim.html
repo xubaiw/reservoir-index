@@ -21,10 +21,455 @@
 </header>
 <main>
 <h1>Julian/lean.nvim</h1>
+<p>neovim support for the Lean theorem prover</p>
 <a href="https://github.com/Julian/lean.nvim">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="rst" data-path="README.rst" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean.nvim</h1>
+<p dir="auto"><code>neovim</code> support for the <a href="https://leanprover.github.io/lean4/doc/" rel="nofollow">Lean Theorem Prover</a>.</p>
+<details class="details-reset border rounded-2" open="">
+  <summary class="px-3 py-2">
+    <svg aria-hidden="true" class="octicon octicon-device-camera-video" data-view-component="true" height="16" version="1.1" viewBox="0 0 16 16" width="16">
+    <path d="M16 3.75a.75.75 0 00-1.136-.643L11 5.425V4.75A1.75 1.75 0 009.25 3h-7.5A1.75 1.75 0 000 4.75v6.5C0 12.216.784 13 1.75 13h7.5A1.75 1.75 0 0011 11.25v-.675l3.864 2.318A.75.75 0 0016 12.25v-8.5zm-5 5.075l3.5 2.1v-5.85l-3.5 2.1v1.65zM9.5 6.75v-2a.25.25 0 00-.25-.25h-7.5a.25.25 0 00-.25.25v6.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-4.5z" fill-rule="evenodd"></path>
+</svg>
+    <span aria-label="Video description lean.nvim.Demo.mp4" class="m-1">lean.nvim.Demo.mp4</span>
+    <span class="dropdown-caret"></span>
+  </summary>
+
+  <video class="d-block rounded-bottom-2 border-top width-fit" controls="controls" data-canonical-src="https://user-images.githubusercontent.com/329822/122589781-acbbe480-d02e-11eb-9bcd-3351b35e1a69.mp4" muted="muted" src="https://user-images.githubusercontent.com/329822/122589781-acbbe480-d02e-11eb-9bcd-3351b35e1a69.mp4" style="max-height:640px;">
+
+  </video>
+</details>
+
+<a name="user-content-prerequisites"></a>
+<h2 dir="auto">Prerequisites</h2>
+<p dir="auto"><code>lean.nvim</code> supports neovim 0.6 or a recent neovim nightly (one
+newer than December 25, 2021).</p>
+<p dir="auto">If you are on neovim 0.5.1, ensure you have <code>set hidden</code> in
+your neovim <code>init.lua</code> or <code>init.vim</code>, otherwise you may see
+degraded performance from the infoview when opening and closing Lean
+files. See <a href="https://github.com/Julian/lean.nvim/issues/19">here</a> for
+details. Newer versions of neovim <code>set hidden</code> by default.</p>
+<a name="user-content-installation"></a>
+<h2 dir="auto">Installation</h2>
+<p dir="auto">Install via your favorite plugin manager. E.g., with
+<a href="https://github.com/junegunn/vim-plug">vim-plug</a> via:</p>
+<div class="highlight highlight-source-viml position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'Julian/lean.nvim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvim-lua/plenary.nvim'
+
+" Optional Dependencies:
+
+Plug 'hrsh7th/nvim-cmp'        " For LSP completion
+Plug 'hrsh7th/vim-vsnip'       " For snippets
+Plug 'andrewradev/switch.vim'  " For Lean switch support
+Plug 'tomtom/tcomment_vim'     " For commenting motions"><pre>Plug <span class="pl-s"><span class="pl-pds">'</span>Julian/lean.nvim<span class="pl-pds">'</span></span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>neovim/nvim-lspconfig<span class="pl-pds">'</span></span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>nvim-lua/plenary.nvim<span class="pl-pds">'</span></span>
+
+<span class="pl-c"><span class="pl-c">"</span><span class="pl-c1"> Optional Dependencies:</span></span>
+
+Plug <span class="pl-s"><span class="pl-pds">'</span>hrsh7th/nvim-cmp<span class="pl-pds">'</span></span><span class="pl-c">        <span class="pl-c">"</span> For LSP completion</span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>hrsh7th/vim-vsnip<span class="pl-pds">'</span></span><span class="pl-c">       <span class="pl-c">"</span> For snippets</span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>andrewradev/switch.vim<span class="pl-pds">'</span></span><span class="pl-c">  <span class="pl-c">"</span> For Lean switch support</span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>tomtom/tcomment_vim<span class="pl-pds">'</span></span><span class="pl-c">     <span class="pl-c">"</span> For commenting motions</span></pre></div>
+<p dir="auto"><code>lean.nvim</code> already includes syntax highlighting and Lean filetype
+support, so installing the <code>lean.vim</code> (i.e. non-neovim) plugin is not
+required or recommended.</p>
+<p dir="auto"><code>lean.nvim</code> supports both <a href="https://github.com/leanprover-community/lean">Lean 3</a> as well as the emerging
+<a href="https://github.com/leanprover/lean4">Lean 4</a>.</p>
+<a name="user-content-id1"></a>
+<h3 dir="auto">Lean 3</h3>
+<p dir="auto">For Lean 3 support, in addition to the instructions above, you should
+install <code>lean-language-server</code>, which can be done via e.g.:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ npm install -g lean-language-server"><pre>$ npm install -g lean-language-server</pre></div>
+<p dir="auto">Given that Lean 3's language server is separate from
+Lean itself, also ensure you've <a href="https://leanprover-community.github.io/get_started.html" rel="nofollow">installed Lean 3 itself</a>.</p>
+<a name="user-content-id2"></a>
+<h3 dir="auto">Lean 4</h3>
+<p dir="auto">For Lean 4 support, a recent Lean 4 nightly build is recommended (one at
+least from mid-October 2021).</p>
+<p dir="auto">In addition to the instructions above, there is experimental <a href="https://github.com/nvim-treesitter/nvim-treesitter">nvim-treesitter</a> support being
+developed in <a href="https://github.com/Julian/tree-sitter-lean">https://github.com/Julian/tree-sitter-lean</a> which can
+be used for enhanced indentation (TODO), text object (TODO), syntax
+highlighting and querying but which is still very nascent.</p>
+<p dir="auto">If you wish to try it, it can be installed by adding e.g.:</p>
+<div class="highlight highlight-source-viml position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-treesitter/nvim-treesitter-textobjects'"><pre>Plug <span class="pl-s"><span class="pl-pds">'</span>nvim-treesitter/nvim-treesitter<span class="pl-pds">'</span></span>
+Plug <span class="pl-s"><span class="pl-pds">'</span>nvim-treesitter/nvim-treesitter-textobjects<span class="pl-pds">'</span></span></pre></div>
+<p dir="auto">if you do not already have tree sitter installed.</p>
+<p dir="auto">As above, many simple syntactical things are not yet implemented (help
+is of course welcome). You likely will want to flip back and forth
+between it and the standard syntax highlighting via <code>:TSBufDisable
+highlight</code> whenever encountering misparsed terms. Bug reports (to the
+aforementioned repository) are also welcome.</p>
+<a name="user-content-features"></a>
+<h2 dir="auto">Features</h2>
+<ul dir="auto">
+<li>Abbreviation (unicode character) insertion, can also provide a
+<a href="https://github.com/hrsh7th/nvim-compe">nvim-compe</a> source.</li>
+<li>An infoview which can show persistent goal, term & tactic state,
+as well as interactive widgets in both
+<a href="https://github.com/leanprover/lean4/pull/596">Lean 4</a> and
+<a href="https://www.youtube.com/watch?v=8NUBQEZYuis" rel="nofollow">3</a>!</li>
+<li>Hover (preview) commands:<ul dir="auto">
+<li><code>:LeanGoal</code> for showing goal state in a preview window</li>
+<li><code>:LeanTermGoal</code> for showing term-mode type information
+in a preview window</li>
+</ul>
+</li>
+<li><a href="https://github.com/AndrewRadev/switch.vim/">switch.vim</a> base
+definitions for Lean</li>
+<li>Simple snippets (in <a href="https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax" rel="nofollow">VSCode-compatible format</a>,
+so usable with e.g. <a href="https://github.com/hrsh7th/vim-vsnip">vim-vsnip</a>)</li>
+<li>Lean library search path access via
+<code>lean.current_search_path()</code>, suitable for use with e.g.
+<a href="https://github.com/nvim-telescope/telescope.nvim/">telescope.nvim</a> for
+live grepping. See the wiki for <a href="https://github.com/Julian/lean.nvim/wiki/Configuring-&-Extending#live-grep">a sample configuration</a>.</li>
+<li>Simple (or simplistic) implementations of some editing helpers, such as <code>try
+this</code> suggestion replacement</li>
+</ul>
+<a name="user-content-configuration-usage"></a>
+<h2 dir="auto">Configuration & Usage</h2>
+<p dir="auto">The short version -- after following the installation instructions above,
+add the below to <code>~/.config/nvim/plugin/lean.lua</code> or an equivalent:</p>
+<div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
+  abbreviations = { builtin = true },
+  lsp = { on_attach = on_attach },
+  lsp3 = { on_attach = on_attach },
+  mappings = true,
+}"><pre><span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>lean<span class="pl-pds">'</span></span>).<span class="pl-c1">setup</span>{
+  abbreviations <span class="pl-k">=</span> { builtin <span class="pl-k">=</span> <span class="pl-c1">true</span> },
+  lsp <span class="pl-k">=</span> { on_attach <span class="pl-k">=</span> on_attach },
+  lsp3 <span class="pl-k">=</span> { on_attach <span class="pl-k">=</span> on_attach },
+  mappings <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+}</pre></div>
+<p dir="auto">where <code>on_attach</code> should be your preferred LSP attach handler.</p>
+<p dir="auto">If you do not already have a preferred setup which includes LSP key
+mappings and (auto)completion, you may find the <a href="https://github.com/Julian/lean.nvim/wiki/Getting-Started">fuller example here in
+the wiki</a>
+helpful.</p>
+<p dir="auto">More detail on the full list of supported configuration options can be
+found below.</p>
+<a name="user-content-mappings"></a>
+<h2 dir="auto">Mappings</h2>
+<p dir="auto">If you've set <code>mappings = true</code> in your configuration (or have called
+<code>lean.use_suggested_mappings()</code> explicitly), a number of keys will be mapped
+either within Lean source files or within Infoview windows:</p>
+<a name="user-content-in-lean-files"></a>
+<h3 dir="auto">In Lean Files</h3>
+<table>
+
+
+
+
+<thead valign="bottom">
+<tr><th>Key</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><code><LocalLeader>i</code></td>
+<td>toggle the infoview open or closed</td>
+</tr>
+<tr><td><code><LocalLeader>p</code></td>
+<td>pause the current infoview</td>
+</tr>
+<tr><td><code><LocalLeader>x</code></td>
+<td>place an infoview pin</td>
+</tr>
+<tr><td><code><LocalLeader>c</code></td>
+<td>clear all current infoview pins</td>
+</tr>
+<tr><td><code><LocalLeader>dx</code></td>
+<td>place an infoview diff pin</td>
+</tr>
+<tr><td><code><LocalLeader>dc</code></td>
+<td>clear current infoview diff pin</td>
+</tr>
+<tr><td><code><LocalLeader>dd</code></td>
+<td>toggle auto diff pin mode</td>
+</tr>
+<tr><td><code><LocalLeader>dt</code></td>
+<td>toggle auto diff pin mode without clearing diff pin</td>
+</tr>
+<tr><td><code><LocalLeader>s</code></td>
+<td>insert a <code>sorry</code> for each open goal</td>
+</tr>
+<tr><td><code><LocalLeader>t</code></td>
+<td>replace a "try this:" suggestion under the cursor</td>
+</tr>
+<tr><td><code><LocalLeader><Tab></code></td>
+<td>jump into the infoview window associated with the
+current lean file</td>
+</tr>
+<tr><td><code><LocalLeader>\\</code></td>
+<td>show what abbreviation produces the symbol under
+the cursor</td>
+</tr>
+</tbody>
+</table>
+<div dir="auto">
+<p dir="auto">Note</p>
+<p dir="auto">See <code>:help <LocalLeader></code> if you haven't previously interacted
+with the local leader key. Some vim users remap this key to make it
+easier to reach, so you may want to consider what key that means
+for your own keyboard layout. My (Julian's) <code><Leader></code> is set to
+<code><Space></code>, and my <code><LocalLeader></code> to <code><Space><Space></code>, which
+may be a good choice for you if you have no other preference.</p>
+</div>
+<a name="user-content-in-infoview-windows"></a>
+<h3 dir="auto">In Infoview Windows</h3>
+<table>
+
+
+
+
+<thead valign="bottom">
+<tr><th>Key</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><code><CR></code></td>
+<td>click a widget or interactive area of the infoview</td>
+</tr>
+<tr><td><code>K</code></td>
+<td>click a widget or interactive area of the infoview</td>
+</tr>
+<tr><td><code><Tab></code></td>
+<td>jump into a tooltip (from a widget click)</td>
+</tr>
+<tr><td><code><Shift-Tab></code></td>
+<td>jump out of a tooltip and back to its parent</td>
+</tr>
+<tr><td><code><Esc></code></td>
+<td>clear all open tooltips</td>
+</tr>
+<tr><td><code>J</code></td>
+<td>jump into a tooltip (from a widget click)</td>
+</tr>
+<tr><td><code>C</code></td>
+<td>clear all open tooltips</td>
+</tr>
+<tr><td><code>I</code></td>
+<td>mouse-enter what is under the cursor</td>
+</tr>
+<tr><td><code>i</code></td>
+<td>mouse-leave what is under the cursor</td>
+</tr>
+<tr><td><code><LocalLeader><Tab></code></td>
+<td>jump to the lean file associated with the current
+infoview window</td>
+</tr>
+</tbody>
+</table>
+<a name="user-content-full-configuration-settings-information"></a>
+<h2 dir="auto">Full Configuration & Settings Information</h2>
+<div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
+  -- Enable the Lean language server(s)?
+  --
+  -- false to disable, otherwise should be a table of options to pass to
+  --  `leanls` and/or `lean3ls`.
+  --
+  -- See https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#leanls for details.
+
+  -- Lean 4  (on_attach is as above, your LSP handler)
+  lsp = { on_attach = on_attach },
+
+  -- Lean 3  (on_attach is as above, your LSP handler)
+  lsp3 = { on_attach = on_attach },
+
+  -- mouse_events = true will simulate mouse events in the Lean 3 infoview, this is buggy at the moment
+  -- so you can use the I/i keybindings to manually trigger these
+  lean3 = { mouse_events = false },
+
+  ft = {
+    -- What filetype should be associated with standalone Lean files?
+    -- Can be set to "lean3" if you prefer that default.
+    -- Having a leanpkg.toml or lean-toolchain file should always mean
+    -- autodetection works correctly.
+    default = "lean",
+
+    -- A list of patterns which will be used to protect any matching
+    -- Lean file paths from being accidentally modified (by marking the
+    -- buffer as `nomodifiable`).
+    nomodifiable = {
+        -- by default, this list includes the Lean standard libraries,
+        -- as well as files within dependency directories (e.g. `_target`)
+        -- Set this to an empty table to disable.
+    }
+  },
+
+  -- Abbreviation support
+  abbreviations = {
+    -- Set one of the following to true to enable abbreviations
+    builtin = false, -- built-in expander
+    compe = false, -- nvim-compe source
+    -- additional abbreviations:
+    extra = {
+      -- Add a \wknight abbreviation to insert ♘
+      --
+      -- Note that the backslash is implied, and that you of
+      -- course may also use a snippet engine directly to do
+      -- this if so desired.
+      wknight = '♘',
+    },
+    -- Change if you don't like the backslash
+    -- (comma is a popular choice on French keyboards)
+    leader = '\\',
+  },
+
+  -- Enable suggested mappings?
+  --
+  -- false by default, true to enable
+  mappings = false,
+
+  -- Infoview support
+  infoview = {
+    -- Automatically open an infoview on entering a Lean buffer?
+    autoopen = true,
+
+    -- Set infoview windows' starting dimensions.
+    -- Windows are opened horizontally or vertically depending on spacing.
+    width = 50,
+    height = 20,
+
+    -- Show indicators for pin locations when entering an infoview window?
+    -- always | never | auto (= only when there are multiple pins)
+    indicators = "auto",
+  },
+
+  -- Progress bar support
+  progress_bars = {
+    -- Enable the progress bars?
+    enable = true,
+    -- Use a different priority for the signs
+    priority = 10,
+  },
+
+  -- Print Lean's stderr messages to a vim buffer
+  stderr = { enable = true },
+}"><pre><span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>lean<span class="pl-pds">'</span></span>).<span class="pl-c1">setup</span>{
+  <span class="pl-c"><span class="pl-c">--</span> Enable the Lean language server(s)?</span>
+  <span class="pl-c"><span class="pl-c">--</span></span>
+  <span class="pl-c"><span class="pl-c">--</span> false to disable, otherwise should be a table of options to pass to</span>
+  <span class="pl-c"><span class="pl-c">--</span>  `leanls` and/or `lean3ls`.</span>
+  <span class="pl-c"><span class="pl-c">--</span></span>
+  <span class="pl-c"><span class="pl-c">--</span> See https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#leanls for details.</span>
+
+  <span class="pl-c"><span class="pl-c">--</span> Lean 4  (on_attach is as above, your LSP handler)</span>
+  lsp <span class="pl-k">=</span> { on_attach <span class="pl-k">=</span> on_attach },
+
+  <span class="pl-c"><span class="pl-c">--</span> Lean 3  (on_attach is as above, your LSP handler)</span>
+  lsp3 <span class="pl-k">=</span> { on_attach <span class="pl-k">=</span> on_attach },
+
+  <span class="pl-c"><span class="pl-c">--</span> mouse_events = true will simulate mouse events in the Lean 3 infoview, this is buggy at the moment</span>
+  <span class="pl-c"><span class="pl-c">--</span> so you can use the I/i keybindings to manually trigger these</span>
+  lean3 <span class="pl-k">=</span> { mouse_events <span class="pl-k">=</span> <span class="pl-c1">false</span> },
+
+  ft <span class="pl-k">=</span> {
+    <span class="pl-c"><span class="pl-c">--</span> What filetype should be associated with standalone Lean files?</span>
+    <span class="pl-c"><span class="pl-c">--</span> Can be set to "lean3" if you prefer that default.</span>
+    <span class="pl-c"><span class="pl-c">--</span> Having a leanpkg.toml or lean-toolchain file should always mean</span>
+    <span class="pl-c"><span class="pl-c">--</span> autodetection works correctly.</span>
+    default <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>lean<span class="pl-pds">"</span></span>,
+
+    <span class="pl-c"><span class="pl-c">--</span> A list of patterns which will be used to protect any matching</span>
+    <span class="pl-c"><span class="pl-c">--</span> Lean file paths from being accidentally modified (by marking the</span>
+    <span class="pl-c"><span class="pl-c">--</span> buffer as `nomodifiable`).</span>
+    nomodifiable <span class="pl-k">=</span> {
+        <span class="pl-c"><span class="pl-c">--</span> by default, this list includes the Lean standard libraries,</span>
+        <span class="pl-c"><span class="pl-c">--</span> as well as files within dependency directories (e.g. `_target`)</span>
+        <span class="pl-c"><span class="pl-c">--</span> Set this to an empty table to disable.</span>
+    }
+  },
+
+  <span class="pl-c"><span class="pl-c">--</span> Abbreviation support</span>
+  abbreviations <span class="pl-k">=</span> {
+    <span class="pl-c"><span class="pl-c">--</span> Set one of the following to true to enable abbreviations</span>
+    builtin <span class="pl-k">=</span> <span class="pl-c1">false</span>, <span class="pl-c"><span class="pl-c">--</span> built-in expander</span>
+    compe <span class="pl-k">=</span> <span class="pl-c1">false</span>, <span class="pl-c"><span class="pl-c">--</span> nvim-compe source</span>
+    <span class="pl-c"><span class="pl-c">--</span> additional abbreviations:</span>
+    extra <span class="pl-k">=</span> {
+      <span class="pl-c"><span class="pl-c">--</span> Add a \wknight abbreviation to insert ♘</span>
+      <span class="pl-c"><span class="pl-c">--</span></span>
+      <span class="pl-c"><span class="pl-c">--</span> Note that the backslash is implied, and that you of</span>
+      <span class="pl-c"><span class="pl-c">--</span> course may also use a snippet engine directly to do</span>
+      <span class="pl-c"><span class="pl-c">--</span> this if so desired.</span>
+      wknight <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>♘<span class="pl-pds">'</span></span>,
+    },
+    <span class="pl-c"><span class="pl-c">--</span> Change if you don't like the backslash</span>
+    <span class="pl-c"><span class="pl-c">--</span> (comma is a popular choice on French keyboards)</span>
+    leader <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\\</span><span class="pl-pds">'</span></span>,
+  },
+
+  <span class="pl-c"><span class="pl-c">--</span> Enable suggested mappings?</span>
+  <span class="pl-c"><span class="pl-c">--</span></span>
+  <span class="pl-c"><span class="pl-c">--</span> false by default, true to enable</span>
+  mappings <span class="pl-k">=</span> <span class="pl-c1">false</span>,
+
+  <span class="pl-c"><span class="pl-c">--</span> Infoview support</span>
+  infoview <span class="pl-k">=</span> {
+    <span class="pl-c"><span class="pl-c">--</span> Automatically open an infoview on entering a Lean buffer?</span>
+    autoopen <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+
+    <span class="pl-c"><span class="pl-c">--</span> Set infoview windows' starting dimensions.</span>
+    <span class="pl-c"><span class="pl-c">--</span> Windows are opened horizontally or vertically depending on spacing.</span>
+    width <span class="pl-k">=</span> <span class="pl-c1">50</span>,
+    height <span class="pl-k">=</span> <span class="pl-c1">20</span>,
+
+    <span class="pl-c"><span class="pl-c">--</span> Show indicators for pin locations when entering an infoview window?</span>
+    <span class="pl-c"><span class="pl-c">--</span> always | never | auto (= only when there are multiple pins)</span>
+    indicators <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>auto<span class="pl-pds">"</span></span>,
+  },
+
+  <span class="pl-c"><span class="pl-c">--</span> Progress bar support</span>
+  progress_bars <span class="pl-k">=</span> {
+    <span class="pl-c"><span class="pl-c">--</span> Enable the progress bars?</span>
+    enable <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+    <span class="pl-c"><span class="pl-c">--</span> Use a different priority for the signs</span>
+    priority <span class="pl-k">=</span> <span class="pl-c1">10</span>,
+  },
+
+  <span class="pl-c"><span class="pl-c">--</span> Print Lean's stderr messages to a vim buffer</span>
+  stderr <span class="pl-k">=</span> { enable <span class="pl-k">=</span> <span class="pl-c1">true</span> },
+}</pre></div>
+<a name="user-content-other-plugins"></a>
+<h2 dir="auto">Other Plugins</h2>
+<p dir="auto">Particularly if you're also a VSCode user, there may be other plugins
+you're interested in. Below is a (hopelessly incomplete) list of a few:</p>
+<ul dir="auto">
+<li><a href="https://github.com/kosayoda/nvim-lightbulb">nvim-lightbulb</a> for
+signalling when code actions are available</li>
+<li><a href="https://github.com/rmagatti/goto-preview">goto-preview</a> for
+peeking definitions (instead of jumping to them)</li>
+<li><a href="https://github.com/nvim-lua/lsp-status.nvim">lsp-status.nvim</a> for
+showing LSP information in your status bar</li>
+<li><a href="https://github.com/folke/lsp-trouble.nvim">lsp-trouble</a> for
+showing a grouped view of diagnostics to pair with the "infauxview"</li>
+</ul>
+<a name="user-content-contributing"></a>
+<h2 dir="auto">Contributing</h2>
+<p dir="auto">Contributions are most welcome. Feel free to send pull requests for anything
+you'd like to see, or open an issue if you'd like to discuss.</p>
+<p dir="auto">Running the tests can be done via the <code>Makefile</code>:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make test"><pre>$ make <span class="pl-c1">test</span></pre></div>
+<p dir="auto">which will execute against a minimal <code>vimrc</code> isolated from your own setup.</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ TEST_FILE=lua/tests/foo_spec.lua make test"><pre>$ TEST_FILE=lua/tests/foo_spec.lua make <span class="pl-c1">test</span></pre></div>
+<p dir="auto">can be used to run just one specific test file, which can be faster.</p>
+<p dir="auto">Some linting and style checking is done via <a href="https://pre-commit.com/#install" rel="nofollow">pre-commit</a>, which once installed (via the linked
+instructions) can be run via:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make lint"><pre>$ make lint</pre></div>
+<p dir="auto">or on each commit automatically by running <code>pre-commit install</code> in your
+repository checkout.</p>
+<p dir="auto">You can also use</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make nvim SETUP_TABLE='{ lsp3 = { enable = true }, mappings = true }'"><pre>$ make nvim SETUP_TABLE=<span class="pl-s"><span class="pl-pds">'</span>{ lsp3 = { enable = true }, mappings = true }<span class="pl-pds">'</span></span></pre></div>
+<p dir="auto">to get a normal running neovim (again isolated from your own configuration),
+where <code>SETUP_TABLE</code> is a (Lua) table like one would pass to <code>lean.setup</code>.</p>
+
+</article></div></main>
 </body>
 </html>

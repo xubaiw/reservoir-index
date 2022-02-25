@@ -21,10 +21,26 @@
 </header>
 <main>
 <h1>lecopivo/leanPluginTest</h1>
+<p>None Description</p>
 <a href="https://github.com/lecopivo/leanPluginTest">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="org" data-path="readme.org" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><p dir="auto">To build and run:</p>
+<pre>lake build
+cd build; mkdir debug; cd debug
+cmake ../..
+make -j
+./main
+./main2
+</pre>
+<p dir="auto">Quick rebuild command from <code>build/debug</code> directory</p>
+<pre>pushd ../../; lake build; popd; make -j
+</pre>
+<p dir="auto">Potentially set up <code>LD_LIBRARY_PATH</code> to have <code>libleanshared.so</code> available</p>
+<pre>export LD_LIBRARY_PATH=~/.elan/toolchains/leanprover--lean4---nightly/lib/lean
+</pre>
+</article></div></main>
 </body>
 </html>

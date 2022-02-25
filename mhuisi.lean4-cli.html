@@ -21,10 +21,602 @@
 </header>
 <main>
 <h1>mhuisi/lean4-cli</h1>
+<p>A Lean 4 library for configuring Command Line Interfaces and parsing command line arguments.</p>
 <a href="https://github.com/mhuisi/lean4-cli">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean4-cli</h1>
+<h2 dir="auto">Usage</h2>
+<p dir="auto">See <a href="https://github.com/leanprover/lake">the documentation of Lake</a>.</p>
+<h3 dir="auto">Configuration</h3>
+<p dir="auto">Commands are configured with a lightweight DSL. The following declarations define a command <code>exampleCmd</code> with two subcommands <code>installCmd</code> and <code>testCmd</code>. <code>doNothing</code> and <code>runExampleCmd</code> denote the handlers that are called when the command is called and are written out further down below in the <strong>Command Handlers</strong> subsection.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="open Cli
+
+def installCmd := `[Cli|
+  installCmd VIA doNothing; ["0.0.1"]
+  "installCmd provides an example for a subcommand without flags or arguments."
+]
+
+def testCmd := `[Cli|
+  testCmd VIA doNothing; ["0.0.1"]
+  "testCmd provides another example for a subcommand without flags or arguments."
+]
+
+def exampleCmd : Cmd := `[Cli|
+  exampleCmd VIA runExampleCmd; ["0.0.1"]
+  "This string denotes the description of `exampleCmd`."
+
+  FLAGS:
+    verbose;                    "Declares a flag `--verbose`. This is the description of the flag."
+    i, invert;                  "Declares a flag `--invert` with an associated short alias `-i`."
+    o, optimize;                "Declares a flag `--optimize` with an associated short alias `-o`."
+    p, priority : Nat;          "Declares a flag `--priority` with an associated short alias `-p` " ++
+                                "that takes an argument of type `Nat`."
+    "set-paths" : Array String; "Declares a flag `--set-paths` " ++
+                                "that takes an argument of type `Array Nat`. " ++
+                                "Quotation marks allow the use of hyphens."
+
+  ARGS:
+    input : String;      "Declares a positional argument <input> " ++
+                         "that takes an argument of type `String`."
+    ...outputs : String; "Declares a variable argument <output>... " ++
+                         "that takes an arbitrary amount of arguments of type `String`."
+
+  SUBCOMMANDS:
+    installCmd;
+    testCmd
+
+  -- The EXTENSIONS section denotes features that
+  -- were added as an external extension to the library.
+  -- `./Cli/Extensions.lean` provides some commonly useful examples.
+  EXTENSIONS:
+    author "mhuisi";
+    defaultValues! #[("priority", "0")]
+]"><pre><span class="pl-k">open</span> Cli
+
+<span class="pl-k">def</span> <span class="pl-en">installCmd</span> := `[Cli|
+  installCmd VIA doNothing; [<span class="pl-s"><span class="pl-pds">"</span>0.0.1<span class="pl-pds">"</span></span>]
+  <span class="pl-s"><span class="pl-pds">"</span>installCmd provides an example for a subcommand without flags or arguments.<span class="pl-pds">"</span></span>
+]
+
+<span class="pl-k">def</span> <span class="pl-en">testCmd</span> := `[Cli|
+  testCmd VIA doNothing; [<span class="pl-s"><span class="pl-pds">"</span>0.0.1<span class="pl-pds">"</span></span>]
+  <span class="pl-s"><span class="pl-pds">"</span>testCmd provides another example for a subcommand without flags or arguments.<span class="pl-pds">"</span></span>
+]
+
+<span class="pl-k">def</span> <span class="pl-en">exampleCmd</span> : Cmd := `[Cli|
+  exampleCmd VIA runExampleCmd; [<span class="pl-s"><span class="pl-pds">"</span>0.0.1<span class="pl-pds">"</span></span>]
+  <span class="pl-s"><span class="pl-pds">"</span>This string denotes the description of `exampleCmd`.<span class="pl-pds">"</span></span>
+
+  FLAGS:
+    verbose;                    <span class="pl-s"><span class="pl-pds">"</span>Declares a flag `--verbose`. This is the description of the flag.<span class="pl-pds">"</span></span>
+    i, invert;                  <span class="pl-s"><span class="pl-pds">"</span>Declares a flag `--invert` with an associated short alias `-i`.<span class="pl-pds">"</span></span>
+    o, optimize;                <span class="pl-s"><span class="pl-pds">"</span>Declares a flag `--optimize` with an associated short alias `-o`.<span class="pl-pds">"</span></span>
+    p, priority : Nat;          <span class="pl-s"><span class="pl-pds">"</span>Declares a flag `--priority` with an associated short alias `-p` <span class="pl-pds">"</span></span> ++
+                                <span class="pl-s"><span class="pl-pds">"</span>that takes an argument of type `Nat`.<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>set-paths<span class="pl-pds">"</span></span> : Array String; <span class="pl-s"><span class="pl-pds">"</span>Declares a flag `--set-paths` <span class="pl-pds">"</span></span> ++
+                                <span class="pl-s"><span class="pl-pds">"</span>that takes an argument of type `Array Nat`. <span class="pl-pds">"</span></span> ++
+                                <span class="pl-s"><span class="pl-pds">"</span>Quotation marks allow the use of hyphens.<span class="pl-pds">"</span></span>
+
+  ARGS:
+    input : String;      <span class="pl-s"><span class="pl-pds">"</span>Declares a positional argument <input> <span class="pl-pds">"</span></span> ++
+                         <span class="pl-s"><span class="pl-pds">"</span>that takes an argument of type `String`.<span class="pl-pds">"</span></span>
+    ...outputs : String; <span class="pl-s"><span class="pl-pds">"</span>Declares a variable argument <output>... <span class="pl-pds">"</span></span> ++
+                         <span class="pl-s"><span class="pl-pds">"</span>that takes an arbitrary amount of arguments of type `String`.<span class="pl-pds">"</span></span>
+
+  SUBCOMMANDS:
+    installCmd;
+    testCmd
+
+  <span class="pl-c"><span class="pl-c">--</span> The EXTENSIONS section denotes features that</span>
+  <span class="pl-c"><span class="pl-c">--</span> were added as an external extension to the library.</span>
+  <span class="pl-c"><span class="pl-c">--</span> `./Cli/Extensions.lean` provides some commonly useful examples.</span>
+  EXTENSIONS:
+    author <span class="pl-s"><span class="pl-pds">"</span>mhuisi<span class="pl-pds">"</span></span>;
+    defaultValues! #[(<span class="pl-s"><span class="pl-pds">"</span>priority<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span>)]
+]</pre></div>
+<h3 dir="auto">Command handlers</h3>
+<p dir="auto">The command handlers <code>doNothing</code> and <code>runExampleCmd</code> demonstrate how to use the parsed user input.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def doNothing (p : Parsed) : IO UInt32 :=
+  return 0
+
+def runExampleCmd (p : Parsed) : IO UInt32 := do
+  let input   : String       := p.positionalArg! "input" |>.as! String
+  let outputs : Array String := p.variableArgsAs! String
+  IO.println <| "Input: " ++ input
+  IO.println <| "Outputs: " ++ toString outputs
+
+  if p.hasFlag "verbose" then
+    IO.println "Flag `--verbose` was set."
+  if p.hasFlag "invert" then
+    IO.println "Flag `--invert` was set."
+  if p.hasFlag "optimize" then
+    IO.println "Flag `--optimize` was set."
+
+  let priority : Nat := p.flag! "priority" |>.as! Nat
+  IO.println <| "Flag `--priority` always has at least a default value: " ++ toString priority
+
+  if let some setPathsFlag := p.flag? "set-paths" then
+    IO.println <| toString <| setPathsFlag.as! (Array String)
+  return 0"><pre><span class="pl-k">def</span> <span class="pl-en">doNothing</span> (p : Parsed) : IO UInt32 :=
+  return <span class="pl-c1">0</span>
+
+<span class="pl-k">def</span> <span class="pl-en">runExampleCmd</span> (p : Parsed) : IO UInt32 := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> input   : String       := p.positionalArg! <span class="pl-s"><span class="pl-pds">"</span>input<span class="pl-pds">"</span></span> |>.as! String
+  <span class="pl-k">let</span> outputs : Array String := p.variableArgsAs! String
+  IO.println <| <span class="pl-s"><span class="pl-pds">"</span>Input: <span class="pl-pds">"</span></span> ++ input
+  IO.println <| <span class="pl-s"><span class="pl-pds">"</span>Outputs: <span class="pl-pds">"</span></span> ++ toString outputs
+
+  <span class="pl-k">if</span> p.hasFlag <span class="pl-s"><span class="pl-pds">"</span>verbose<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+    IO.println <span class="pl-s"><span class="pl-pds">"</span>Flag `--verbose` was set.<span class="pl-pds">"</span></span>
+  <span class="pl-k">if</span> p.hasFlag <span class="pl-s"><span class="pl-pds">"</span>invert<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+    IO.println <span class="pl-s"><span class="pl-pds">"</span>Flag `--invert` was set.<span class="pl-pds">"</span></span>
+  <span class="pl-k">if</span> p.hasFlag <span class="pl-s"><span class="pl-pds">"</span>optimize<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+    IO.println <span class="pl-s"><span class="pl-pds">"</span>Flag `--optimize` was set.<span class="pl-pds">"</span></span>
+
+  <span class="pl-k">let</span> priority : Nat := p.flag! <span class="pl-s"><span class="pl-pds">"</span>priority<span class="pl-pds">"</span></span> |>.as! Nat
+  IO.println <| <span class="pl-s"><span class="pl-pds">"</span>Flag `--priority` always has at least a default value: <span class="pl-pds">"</span></span> ++ toString priority
+
+  <span class="pl-k">if</span> <span class="pl-k">let</span> some setPathsFlag := p.flag? <span class="pl-s"><span class="pl-pds">"</span>set-paths<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+    IO.println <| toString <| setPathsFlag.as! (Array String)
+  return <span class="pl-c1">0</span></pre></div>
+<h3 dir="auto">Running the command</h3>
+<p dir="auto">Below you can find some simple examples of how to pass user input to the Cli library.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def main (args : List String) : IO UInt32 :=
+  exampleCmd.validate args
+
+#eval main <| "-i -o -p 1 --set-paths=path1,path2,path3 input output1 output2".splitOn " "
+/-
+Yields:
+  Input: input
+  Outputs: #[output1, output2]
+  Flag `--invert` was set.
+  Flag `--optimize` was set.
+  Flag `--priority` always has at least a default value: 1
+  #[path1, path2, path3]
+-/
+
+-- Short parameterless flags can be grouped,
+-- short flags with parameters do not need to be separated from
+-- the corresponding value.
+#eval main <| "-io -p1 input".splitOn " "
+/-
+Yields:
+  Input: input
+  Outputs: #[]
+  Flag `--invert` was set.
+  Flag `--optimize` was set.
+  Flag `--priority` always has at least a default value: 1
+-/
+
+#eval main <| "--version".splitOn " "
+/-
+Yields:
+  0.0.1
+-/"><pre><span class="pl-k">def</span> <span class="pl-en">main</span> (args : List String) : IO UInt32 :=
+  exampleCmd.validate args
+
+<span class="pl-k">#eval</span> main <| <span class="pl-s"><span class="pl-pds">"</span>-i -o -p 1 --set-paths=path1,path2,path3 input output1 output2<span class="pl-pds">"</span></span>.splitOn <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span>
+<span class="pl-c">/-</span>
+<span class="pl-c">Yields:</span>
+<span class="pl-c">  Input: input</span>
+<span class="pl-c">  Outputs: #[output1, output2]</span>
+<span class="pl-c">  Flag `--invert` was set.</span>
+<span class="pl-c">  Flag `--optimize` was set.</span>
+<span class="pl-c">  Flag `--priority` always has at least a default value: 1</span>
+<span class="pl-c">  #[path1, path2, path3]</span>
+<span class="pl-c">-/</span>
+
+<span class="pl-c"><span class="pl-c">--</span> Short parameterless flags can be grouped,</span>
+<span class="pl-c"><span class="pl-c">--</span> short flags with parameters do not need to be separated from</span>
+<span class="pl-c"><span class="pl-c">--</span> the corresponding value.</span>
+<span class="pl-k">#eval</span> main <| <span class="pl-s"><span class="pl-pds">"</span>-io -p1 input<span class="pl-pds">"</span></span>.splitOn <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span>
+<span class="pl-c">/-</span>
+<span class="pl-c">Yields:</span>
+<span class="pl-c">  Input: input</span>
+<span class="pl-c">  Outputs: #[]</span>
+<span class="pl-c">  Flag `--invert` was set.</span>
+<span class="pl-c">  Flag `--optimize` was set.</span>
+<span class="pl-c">  Flag `--priority` always has at least a default value: 1</span>
+<span class="pl-c">-/</span>
+
+<span class="pl-k">#eval</span> main <| <span class="pl-s"><span class="pl-pds">"</span>--version<span class="pl-pds">"</span></span>.splitOn <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span>
+<span class="pl-c">/-</span>
+<span class="pl-c">Yields:</span>
+<span class="pl-c">  0.0.1</span>
+<span class="pl-c">-/</span></pre></div>
+<h3 dir="auto">Help</h3>
+<p dir="auto">Upon calling <code>-h</code>, the above configuration produces the following help.</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="exampleCmd [0.0.1]
+mhuisi
+This string denotes the description of `exampleCmd`.
+
+USAGE:
+    exampleCmd [SUBCOMMAND] [FLAGS] <input> <outputs>...
+
+FLAGS:
+    -h, --help                  Prints this message.
+    --version                   Prints the version.
+    --verbose                   Declares a flag `--verbose`. This is the
+                                description of the flag.
+    -i, --invert                Declares a flag `--invert` with an associated
+                                short alias `-i`.
+    -o, --optimize              Declares a flag `--optimize` with an associated
+                                short alias `-o`.
+    -p, --priority : Nat        Declares a flag `--priority` with an associated
+                                short alias `-p` that takes an argument of type
+                                `Nat`. [Default: `0`]
+    --set-paths : Array String  Declares a flag `--set-paths` that takes an
+                                argument of type `Array Nat`. Quotation marks
+                                allow the use of hyphens.
+
+ARGS:
+    input : String    Declares a positional argument <input> that takes an
+                      argument of type `String`.
+    outputs : String  Declares a variable argument <output>... that takes an
+                      arbitrary amount of arguments of type `String`.
+
+SUBCOMMANDS:
+    installCmd  installCmd provides an example for a subcommand without flags or
+                arguments.
+    testCmd     testCmd provides another example for a subcommand without flags
+                or arguments."><pre><code>exampleCmd [0.0.1]
+mhuisi
+This string denotes the description of `exampleCmd`.
+
+USAGE:
+    exampleCmd [SUBCOMMAND] [FLAGS] <input> <outputs>...
+
+FLAGS:
+    -h, --help                  Prints this message.
+    --version                   Prints the version.
+    --verbose                   Declares a flag `--verbose`. This is the
+                                description of the flag.
+    -i, --invert                Declares a flag `--invert` with an associated
+                                short alias `-i`.
+    -o, --optimize              Declares a flag `--optimize` with an associated
+                                short alias `-o`.
+    -p, --priority : Nat        Declares a flag `--priority` with an associated
+                                short alias `-p` that takes an argument of type
+                                `Nat`. [Default: `0`]
+    --set-paths : Array String  Declares a flag `--set-paths` that takes an
+                                argument of type `Array Nat`. Quotation marks
+                                allow the use of hyphens.
+
+ARGS:
+    input : String    Declares a positional argument <input> that takes an
+                      argument of type `String`.
+    outputs : String  Declares a variable argument <output>... that takes an
+                      arbitrary amount of arguments of type `String`.
+
+SUBCOMMANDS:
+    installCmd  installCmd provides an example for a subcommand without flags or
+                arguments.
+    testCmd     testCmd provides another example for a subcommand without flags
+                or arguments.
+</code></pre></div>
+<p dir="auto">The full example can be found under <code>./Cli/Example.lean</code>.</p>
+<h2 dir="auto">Ad Hoc Documentation</h2>
+<p dir="auto">This section documents only the most common features of the library. For the full documentation, peek into <code>./Cli/Basic.lean</code> and <code>./Cli/Extensions.lean</code>! All definitions below live in the <code>Cli</code> namespace.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="-- For many terms below, when the term is an identifier, it is expanded literally.
+syntax positionalArg := colGe term " : " term "; " term
+
+syntax variableArg := colGe "..." term " : " term "; " term
+
+syntax flag := colGe term ("," term)? (" : " term)? "; " term
+
+syntax "`[Cli|\n"
+    term " VIA " term "; " "[" term "]"
+    term
+    ("FLAGS:\n" withPosition((flag)*))?
+    ("ARGS:\n" withPosition((positionalArg)* (variableArg)?))?
+    ("SUBCOMMANDS: " sepBy(term, ";", "; "))?
+    ("EXTENSIONS: " sepBy(term, ";", "; "))?
+  "\n]" : term"><pre><span class="pl-c"><span class="pl-c">--</span> For many terms below, when the term is an identifier, it is expanded literally.</span>
+syntax positionalArg := colGe term <span class="pl-s"><span class="pl-pds">"</span> : <span class="pl-pds">"</span></span> term <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span> term
+
+syntax variableArg := colGe <span class="pl-s"><span class="pl-pds">"</span>...<span class="pl-pds">"</span></span> term <span class="pl-s"><span class="pl-pds">"</span> : <span class="pl-pds">"</span></span> term <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span> term
+
+syntax flag := colGe term (<span class="pl-s"><span class="pl-pds">"</span>,<span class="pl-pds">"</span></span> term)? (<span class="pl-s"><span class="pl-pds">"</span> : <span class="pl-pds">"</span></span> term)? <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span> term
+
+syntax <span class="pl-s"><span class="pl-pds">"</span>`[Cli|<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>
+    term <span class="pl-s"><span class="pl-pds">"</span> VIA <span class="pl-pds">"</span></span> term <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>[<span class="pl-pds">"</span></span> term <span class="pl-s"><span class="pl-pds">"</span>]<span class="pl-pds">"</span></span>
+    term
+    (<span class="pl-s"><span class="pl-pds">"</span>FLAGS:<span class="pl-cce">\n</span><span class="pl-pds">"</span></span> withPosition((flag)*))?
+    (<span class="pl-s"><span class="pl-pds">"</span>ARGS:<span class="pl-cce">\n</span><span class="pl-pds">"</span></span> withPosition((positionalArg)* (variableArg)?))?
+    (<span class="pl-s"><span class="pl-pds">"</span>SUBCOMMANDS: <span class="pl-pds">"</span></span> sepBy(term, <span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span>))?
+    (<span class="pl-s"><span class="pl-pds">"</span>EXTENSIONS: <span class="pl-pds">"</span></span> sepBy(term, <span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>; <span class="pl-pds">"</span></span>))?
+  <span class="pl-s"><span class="pl-pds">"</span><span class="pl-cce">\n</span>]<span class="pl-pds">"</span></span> : term</pre></div>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="/--
+Validates `args` by `Cmd.process?`ing the input according to `c`.
+Note that `args` designates the list `<foo>` in `somebinary <foo>`.
+Prints the help or the version of the called (sub)command if the respective flag was passed and
+returns `0` for the exit code.
+If neither of these flags were passed and processing was successful, the `run` handler of the
+called command is executed.
+In the case of a processing error, the error is printed and an exit code of `1` is returned.
+-/
+def validate (c : Cmd) (args : List String) : IO UInt32 := do
+  let result := c.process args
+  match result with
+  | Except.ok (cmd, parsed) =>
+    if parsed.hasFlag "help" then
+      cmd.printHelp
+      return 0
+    if parsed.hasFlag "version" then
+      cmd.printVersion
+      return 0
+    cmd.run parsed
+  | Except.error (cmd, err) =>
+    cmd.printError err
+    return 1"><pre><span class="pl-c">/--</span>
+<span class="pl-c">Validates `args` by `Cmd.process?`ing the input according to `c`.</span>
+<span class="pl-c">Note that `args` designates the list `<foo>` in `somebinary <foo>`.</span>
+<span class="pl-c">Prints the help or the version of the called (sub)command if the respective flag was passed and</span>
+<span class="pl-c">returns `0` for the exit code.</span>
+<span class="pl-c">If neither of these flags were passed and processing was successful, the `run` handler of the</span>
+<span class="pl-c">called command is executed.</span>
+<span class="pl-c">In the case of a processing error, the error is printed and an exit code of `1` is returned.</span>
+<span class="pl-c">-/</span>
+<span class="pl-k">def</span> <span class="pl-en">validate</span> (c : Cmd) (args : List String) : IO UInt32 := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> result := c.process args
+  <span class="pl-k">match</span> result <span class="pl-k">with</span>
+  | Except.ok (cmd, parsed) =>
+    <span class="pl-k">if</span> parsed.hasFlag <span class="pl-s"><span class="pl-pds">"</span>help<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+      cmd.printHelp
+      return <span class="pl-c1">0</span>
+    <span class="pl-k">if</span> parsed.hasFlag <span class="pl-s"><span class="pl-pds">"</span>version<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+      cmd.printVersion
+      return <span class="pl-c1">0</span>
+    cmd.run parsed
+  | Except.error (cmd, err) =>
+    cmd.printError err
+    return <span class="pl-c1">1</span></pre></div>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="structure Parsed where
+  /-- Non-recursive meta-data of the associated command. -/
+  cmd            : Cmd.Meta
+  /-- Parsed flags. -/
+  flags          : Array Parsed.Flag
+  /-- Parsed positional arguments. -/
+  positionalArgs : Array Parsed.Arg
+  /-- Parsed variable arguments. -/
+  variableArgs   : Array Parsed.Arg
+
+namespace Parsed
+  /-- Finds the parsed flag in `p` with the corresponding `longName`. -/
+  def flag?          (p : Parsed) (longName : String) : Option Flag
+  /-- Finds the parsed positional argument in `p` with the corresponding `name`. -/
+  def positionalArg? (p : Parsed) (name : String)     : Option Arg
+
+  /-- Finds the parsed flag in `p` with the corresponding `longName`. -/
+  def flag!          (p : Parsed) (longName : String) : Flag
+  /-- Finds the parsed positional argument in `p` with the corresponding `name`. -/
+  def positionalArg! (p : Parsed) (name : String)     : Arg
+
+  /-- Checks whether `p` has a parsed flag with the corresponding `longName`. -/
+  def hasFlag          (p : Parsed) (longName : String) : Bool
+  /-- Checks whether `p` has a positional argument with the corresponding `longName`. -/
+  def hasPositionalArg (p : Parsed) (name : String)     : Bool
+
+  /--
+  Converts all `p.variableArgs` values to `τ`, which should be the same type
+  that was designated in the corresponding `Cli.Arg`.
+  Yields `none` if the conversion was unsuccessful, which can only
+  happen if `τ` is not the same type as the one designated in the corresponding `Cli.Arg`.
+  -/
+  def variableArgsAs? (p : Parsed) (τ) [ParseableType τ] : Option (Array τ)
+
+  /--
+  Converts all `p.variableArgs` values to `τ`, which should be the same type
+  that was designated in the corresponding `Cli.Arg`.
+  Panics if the conversion was unsuccessful, which can only
+  happen if `τ` is not the same type as the one designated in the corresponding `Cli.Arg`.
+  -/
+  def variableArgsAs! (p : Parsed) (τ) [Inhabited τ] [ParseableType τ] : Array τ
+end Parsed"><pre><span class="pl-k">structure</span> <span class="pl-en">Parsed</span> <span class="pl-en">where</span>
+  <span class="pl-c">/-- Non-recursive meta-data of the associated command. -/</span>
+  <span class="pl-en">cmd</span>            : Cmd.Meta
+  <span class="pl-c">/-- Parsed flags. -/</span>
+  flags          : Array Parsed.Flag
+  <span class="pl-c">/-- Parsed positional arguments. -/</span>
+  positionalArgs : Array Parsed.Arg
+  <span class="pl-c">/-- Parsed variable arguments. -/</span>
+  variableArgs   : Array Parsed.Arg
+
+<span class="pl-k">namespace</span> Parsed
+  <span class="pl-c">/-- Finds the parsed flag in `p` with the corresponding `longName`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">flag</span>?          (p : Parsed) (longName : String) : Option Flag
+  <span class="pl-c">/-- Finds the parsed positional argument in `p` with the corresponding `name`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">positionalArg</span>? (p : Parsed) (name : String)     : Option Arg
+
+  <span class="pl-c">/-- Finds the parsed flag in `p` with the corresponding `longName`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">flag</span>!          (p : Parsed) (longName : String) : Flag
+  <span class="pl-c">/-- Finds the parsed positional argument in `p` with the corresponding `name`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">positionalArg</span>! (p : Parsed) (name : String)     : Arg
+
+  <span class="pl-c">/-- Checks whether `p` has a parsed flag with the corresponding `longName`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">hasFlag</span>          (p : Parsed) (longName : String) : Bool
+  <span class="pl-c">/-- Checks whether `p` has a positional argument with the corresponding `longName`. -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">hasPositionalArg</span> (p : Parsed) (name : String)     : Bool
+
+  <span class="pl-c">/--</span>
+<span class="pl-c">  Converts all `p.variableArgs` values to `τ`, which should be the same type</span>
+<span class="pl-c">  that was designated in the corresponding `Cli.Arg`.</span>
+<span class="pl-c">  Yields `none` if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">  happen if `τ` is not the same type as the one designated in the corresponding `Cli.Arg`.</span>
+<span class="pl-c">  -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">variableArgsAs</span>? (p : Parsed) (τ) [ParseableType τ] : Option (Array τ)
+
+  <span class="pl-c">/--</span>
+<span class="pl-c">  Converts all `p.variableArgs` values to `τ`, which should be the same type</span>
+<span class="pl-c">  that was designated in the corresponding `Cli.Arg`.</span>
+<span class="pl-c">  Panics if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">  happen if `τ` is not the same type as the one designated in the corresponding `Cli.Arg`.</span>
+<span class="pl-c">  -/</span>
+  <span class="pl-k">def</span> <span class="pl-en">variableArgsAs</span>! (p : Parsed) (τ) [Inhabited τ] [ParseableType τ] : Array τ
+<span class="pl-k">end</span> Parsed</pre></div>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="namespace Parsed
+  /--
+  Represents a flag and its parsed value.
+  Use `Parsed.Flag.as!` to convert the value to some `ParseableType`.
+  -/
+  structure Flag where
+    /-- Associated flag meta-data. -/
+    flag  : Flag
+    /-- Parsed value that was validated and conforms to `flag.type`. -/
+    value : String
+
+  namespace Flag
+    /--
+    Converts `f.value` to `τ`, which should be the same type
+    that was designated in `f.flag.type`.
+    Yields `none` if the conversion was unsuccessful, which can only
+    happen if `τ` is not the same type as the one designated in `f.flag.type`.
+    -/
+    def as? (f : Flag) (τ) [ParseableType τ] : Option τ
+    /--
+    Converts `f.value` to `τ`, which should be the same type
+    that was designated in `f.flag.type`.
+    Panics if the conversion was unsuccessful, which can only
+    happen if `τ` is not the same type as the one designated in `f.flag.type`.
+    -/
+    def as! (f : Flag) (τ) [Inhabited τ] [ParseableType τ] : τ
+  end Flag
+
+  /--
+  Represents an argument and its parsed value.
+  Use `Parsed.Arg.as!` to convert the value to some `ParseableType`.
+  -/
+  structure Arg where
+    /-- Associated argument meta-data. -/
+    arg   : Arg
+    /-- Parsed value that was validated and conforms to `arg.type`. -/
+    value : String
+
+  namespace Arg
+    /--
+    Converts `a.value` to `τ`, which should be the same type
+    that was designated in `a.arg.type`.
+    Yields `none` if the conversion was unsuccessful, which can only
+    happen if `τ` is not the same type as the one designated in `a.arg.type`.
+    -/
+    def as? (a : Arg) (τ) [ParseableType τ] : Option τ
+    /--
+    Converts `a.value` to `τ`, which should be the same type
+    that was designated in `a.arg.type`.
+    Panics if the conversion was unsuccessful, which can only
+    happen if `τ` is not the same type as the one designated in `a.arg.type`.
+    -/
+    def as! (a : Arg) (τ) [Inhabited τ] [ParseableType τ] : τ
+  end Arg
+end Parsed"><pre><span class="pl-k">namespace</span> Parsed
+  <span class="pl-c">/--</span>
+<span class="pl-c">  Represents a flag and its parsed value.</span>
+<span class="pl-c">  Use `Parsed.Flag.as!` to convert the value to some `ParseableType`.</span>
+<span class="pl-c">  -/</span>
+  <span class="pl-k">structure</span> <span class="pl-en">Flag</span> <span class="pl-en">where</span>
+    <span class="pl-c">/-- Associated flag meta-data. -/</span>
+    <span class="pl-en">flag</span>  : Flag
+    <span class="pl-c">/-- Parsed value that was validated and conforms to `flag.type`. -/</span>
+    value : String
+
+  <span class="pl-k">namespace</span> Flag
+    <span class="pl-c">/--</span>
+<span class="pl-c">    Converts `f.value` to `τ`, which should be the same type</span>
+<span class="pl-c">    that was designated in `f.flag.type`.</span>
+<span class="pl-c">    Yields `none` if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">    happen if `τ` is not the same type as the one designated in `f.flag.type`.</span>
+<span class="pl-c">    -/</span>
+    <span class="pl-k">def</span> <span class="pl-en">as</span>? (f : Flag) (τ) [ParseableType τ] : Option τ
+    <span class="pl-c">/--</span>
+<span class="pl-c">    Converts `f.value` to `τ`, which should be the same type</span>
+<span class="pl-c">    that was designated in `f.flag.type`.</span>
+<span class="pl-c">    Panics if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">    happen if `τ` is not the same type as the one designated in `f.flag.type`.</span>
+<span class="pl-c">    -/</span>
+    <span class="pl-k">def</span> <span class="pl-en">as</span>! (f : Flag) (τ) [Inhabited τ] [ParseableType τ] : τ
+  <span class="pl-k">end</span> Flag
+
+  <span class="pl-c">/--</span>
+<span class="pl-c">  Represents an argument and its parsed value.</span>
+<span class="pl-c">  Use `Parsed.Arg.as!` to convert the value to some `ParseableType`.</span>
+<span class="pl-c">  -/</span>
+  <span class="pl-k">structure</span> <span class="pl-en">Arg</span> <span class="pl-en">where</span>
+    <span class="pl-c">/-- Associated argument meta-data. -/</span>
+    <span class="pl-en">arg</span>   : Arg
+    <span class="pl-c">/-- Parsed value that was validated and conforms to `arg.type`. -/</span>
+    value : String
+
+  <span class="pl-k">namespace</span> Arg
+    <span class="pl-c">/--</span>
+<span class="pl-c">    Converts `a.value` to `τ`, which should be the same type</span>
+<span class="pl-c">    that was designated in `a.arg.type`.</span>
+<span class="pl-c">    Yields `none` if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">    happen if `τ` is not the same type as the one designated in `a.arg.type`.</span>
+<span class="pl-c">    -/</span>
+    <span class="pl-k">def</span> <span class="pl-en">as</span>? (a : Arg) (τ) [ParseableType τ] : Option τ
+    <span class="pl-c">/--</span>
+<span class="pl-c">    Converts `a.value` to `τ`, which should be the same type</span>
+<span class="pl-c">    that was designated in `a.arg.type`.</span>
+<span class="pl-c">    Panics if the conversion was unsuccessful, which can only</span>
+<span class="pl-c">    happen if `τ` is not the same type as the one designated in `a.arg.type`.</span>
+<span class="pl-c">    -/</span>
+    <span class="pl-k">def</span> <span class="pl-en">as</span>! (a : Arg) (τ) [Inhabited τ] [ParseableType τ] : τ
+  <span class="pl-k">end</span> Arg
+<span class="pl-k">end</span> Parsed</pre></div>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="/--
+Creates a new command. Adds a `-h, --help` and a `--version` flag.
+Updates the `parentNames` of all subcommands.
+- `name`:                Name that is displayed in the help.
+- `version`:             Version that is displayed in the help and when the version is queried.
+- `description`:         Description that is displayed in the help.
+- `furtherInformation?`: Information appended to the end of the help. Useful for command extensions.
+- `flags`:               Supported flags ("options" in standard terminology).
+- `positionalArgs`:      Supported positional arguments ("operands" in standard terminology).
+- `variableArg?`:        Variable argument at the end of the positional arguments.
+- `run`:                 Handler to run when the command is called and flags/arguments have been successfully processed.
+- `subCmds`:             Subcommands.
+- `extension?`:          Extension of the Cli library.
+-/
+def Cmd.mk
+  (name                : String)
+  (version             : String)
+  (description         : String)
+  (furtherInformation? : Option String := none)
+  (flags               : Array Flag    := #[])
+  (positionalArgs      : Array Arg     := #[])
+  (variableArg?        : Option Arg    := none)
+  (run                 : Parsed → IO UInt32)
+  (subCmds             : Array Cmd        := #[])
+  (extension?          : Option Extension := none)
+  : Cmd"><pre><span class="pl-c">/--</span>
+<span class="pl-c">Creates a new command. Adds a `-h, --help` and a `--version` flag.</span>
+<span class="pl-c">Updates the `parentNames` of all subcommands.</span>
+<span class="pl-c"><span class="pl-ml">- `name`:                Name that is displayed in the help.</span></span>
+<span class="pl-c"><span class="pl-ml">- `version`:             Version that is displayed in the help and when the version is queried.</span></span>
+<span class="pl-c"><span class="pl-ml">- `description`:         Description that is displayed in the help.</span></span>
+<span class="pl-c"><span class="pl-ml">- `furtherInformation?`: Information appended to the end of the help. Useful for command extensions.</span></span>
+<span class="pl-c"><span class="pl-ml">- `flags`:               Supported flags ("options" in standard terminology).</span></span>
+<span class="pl-c"><span class="pl-ml">- `positionalArgs`:      Supported positional arguments ("operands" in standard terminology).</span></span>
+<span class="pl-c"><span class="pl-ml">- `variableArg?`:        Variable argument at the end of the positional arguments.</span></span>
+<span class="pl-c"><span class="pl-ml">- `run`:                 Handler to run when the command is called and flags/arguments have been successfully processed.</span></span>
+<span class="pl-c"><span class="pl-ml">- `subCmds`:             Subcommands.</span></span>
+<span class="pl-c"><span class="pl-ml">- `extension?`:          Extension of the Cli library.</span></span>
+<span class="pl-c"><span class="pl-ml"></span>-/</span>
+<span class="pl-k">def</span> <span class="pl-en">Cmd.mk</span>
+  (name                : String)
+  (version             : String)
+  (description         : String)
+  (furtherInformation? : Option String := none)
+  (flags               : Array Flag    := #[])
+  (positionalArgs      : Array Arg     := #[])
+  (variableArg?        : Option Arg    := none)
+  (run                 : Parsed → IO UInt32)
+  (subCmds             : Array Cmd        := #[])
+  (extension?          : Option Extension := none)
+  : Cmd</pre></div>
+</article></div></main>
 </body>
 </html>

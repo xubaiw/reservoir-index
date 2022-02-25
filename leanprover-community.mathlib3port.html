@@ -21,10 +21,25 @@
 </header>
 <main>
 <h1>leanprover-community/mathlib3port</h1>
+<p>Stub for downloading mathport artifacts for mathlib3</p>
 <a href="https://github.com/leanprover-community/mathlib3port">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><p dir="auto">You should use this repository to inspect the Lean 4 files that <code>mathport</code> has generated from mathlib3.
+Please run <code>lake build</code> first, to download a copy of the generated <code>.olean</code> files.
+After that, you should be able to open any of the <code>.lean</code> files under the <code>Mathbin</code> directory.
+These will use binported <code>.olean</code>s for the imports, and there is a synported <code>.lean</code> file for each file in mathlib3.
+Please expect <em>many</em> errors at this stage.</p>
+<p dir="auto">Although the <code>Mathbin</code> directory is committed in the repository,
+at this stage you should not attempt to make any changes on the master branch.</p>
+<p dir="auto">If you delete the <code>Mathbin</code> directory,
+then running <code>lake build</code> will download a new copy from the <code>mathport</code> release page.
+(It's probably safest to delete <code>mathlib3-synport.tar.gz*</code>, and probably <code>lean_packages</code>, too...
+This requires further automation.)</p>
+<p dir="auto">It's fine, however, to make branches containing "by-hand" edits,
+if you want to be able to link to diffs when reporting issues in <code>mathport</code>.</p>
+</article></div></main>
 </body>
 </html>

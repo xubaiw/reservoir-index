@@ -21,10 +21,362 @@
 </header>
 <main>
 <h1>JLimperg/aesop</h1>
+<p>White-box automation for Lean 4</p>
 <a href="https://github.com/JLimperg/aesop">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Aesop</h1>
+<p dir="auto">This is a work-in-progress proof search tactic for Lean 4.</p>
+<h2 dir="auto">Building</h2>
+<p dir="auto">With <a href="https://github.com/leanprover/elan">elan</a> installed, <code>lake build</code>
+should suffice.</p>
+<h2 dir="auto">Adding Aesop to Your Project</h2>
+<p dir="auto">To use Aesop in a Lean 4 project, first add this package as a dependency. In
+your <code>lakefile.lean</code>, add</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="dependencies := #[
+  { name := `aesop
+    src := Source.git "https://github.com/JLimperg/aesop" "<current HEAD commit of this repo>" }
+]"><pre>dependencies := #[
+  { name := <span class="pl-en">`aesop</span>
+    src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/JLimperg/aesop<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><current HEAD commit of this repo><span class="pl-pds">"</span></span> }
+]</pre></div>
+<p dir="auto">Now run <code>lake configure</code>. Unless you use the exact same Lean 4 nightly as
+this project (see our <code>lean-toolchain</code>), you'll get a warning. If you use a later
+nightly, you'll probably be fine and Aesop will compile anyway. If not, please
+open an issue and we'll update the tactic.</p>
+<p dir="auto">You should now be able to use the <code>aesop</code> tactic:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Aesop
+
+def id' : α → α :=
+  by aesop"><pre><span class="pl-k">import</span> Aesop
+
+<span class="pl-k">def</span> <span class="pl-en">id'</span> : α → α :=
+  <span class="pl-k">by</span> aesop</pre></div>
+<p dir="auto">TODO Document (and, indeed, find out) how to use Aesop as a plugin.</p>
+<h2 dir="auto">Usage</h2>
+<p dir="auto">This section gives an overview of what Aesop does and how to use it. I first
+explain how the tactic works (as far as users need to know), then explain how to
+configure and use it. Aesop is very work in progress and this text may be out of
+date, so if you have questions, please ping me (Jannis Limperg) on the Lean
+Zulip or via email.</p>
+<h3 dir="auto">Overview</h3>
+<p dir="auto">Aesop does best-first search over a collection of rules. A rule is an arbitrary
+tactic plus some metadata, particularly an estimate of how likely the rule is to
+lead to a successful proof. This estimate is used to prioritise goals and rules.
+Rules are registered with an attribute or with arguments to the tactic.</p>
+<h3 dir="auto">Rules</h3>
+<p dir="auto">A rule is a metaprogram of type</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="RuleTacInput → MetaM RuleTacOutput"><pre>RuleTacInput → MetaM RuleTacOutput</pre></div>
+<p dir="auto">This is essentially <code>MVarId → MetaM (List MVarId)</code> plus some additional
+metadata, so rules are at their core just <code>MetaM</code> tactics.</p>
+<p dir="auto">Rules come in three flavours: normalisation rules, safe rules and unsafe rules.
+Normalisation rules are applied to bring a goal into normal form. They cannot
+fail and must produce at most one goal. Safe rules are rules that are never
+backtracked: if a safe rule succeeds on a goal, it is applied and no other rule
+is considered. Unsafe rules (which comprise most rules), in contrast, are
+backtrackable.</p>
+<p dir="auto">Rules may not modify the environment. I do not think this will be a problem, but
+it means no <code>evalExpr</code>. (More precisely, environment modifications are reverted
+when the tactic finishes, which will likely cause the rule to fail. In
+principle, we could support environment modifications, but it would require some
+engineering and perhaps cooperation from the rule tactics.)</p>
+<h3 dir="auto">Simplification</h3>
+<p dir="auto">During goal normalisation, we invoke the simplifier once with the default simp
+lemmas as a builtin rule. I expect this rule will do most of the normalisation
+work. Users can also register additional simp lemmas which are only used by
+Aesop.</p>
+<p dir="auto">(Ideally, users should be able to easily define and enable/disable sets of Aesop
+simp lemmas, as well as sets of Aesop rules.)</p>
+<h3 dir="auto">Search Tree</h3>
+<p dir="auto">As we apply rules to goals, we build a (mutable) search tree. This is an and-or
+tree containing goal nodes and rule application nodes. The root node is the
+initial goal. A rule application (rapp for short) produces a rule application
+node, which has zero or more subgoals. The rapps of a goal form a disjunction
+(we must prove any of them to prove the goal) while the subgoals of a rapp form
+a conjunction (we must prove all of them).</p>
+<p dir="auto">At any point during the search, a goal or rapp can be in one of three states:</p>
+<ul dir="auto">
+<li>proven: A goal is proven if it has a proven rapp. A rapp is proven if all its
+subgoals are proven.</li>
+<li>unprovable: A goal is unprovable if all of its rapps are unprovable <em>and</em> we
+have attempted to apply all possible rules to the goal. A rapp is unprovable
+if any of its subgoals is unprovable.</li>
+<li>irrelevant: A goal is irrelevant if one of its siblings is unprovable. (Then
+the parent rapp is already unprovable.) Similarly, a rapp is irrelevant if
+one of its siblings is already proven.</li>
+</ul>
+<p dir="auto">As soon as a goal or rapp is marked as irrelevant, it is not considered in the
+search.</p>
+<h3 dir="auto">Prioritisation</h3>
+<p dir="auto">We prioritise goals based on an estimate of how likely they are to be part of a
+successful proof. To form this estimate, we associate each unsafe rule with a
+success probability, which gives a rough estimate of how likely the rule is to
+solve the goal. E.g. both or-introduction rules might be assigned a 50% success
+probability. Safe rules are treated as having 100% success probability.</p>
+<p dir="auto">The success probability of a goal is then the product of the success
+probabilities of all rapps in its branch. Thus, if we search for a proof of <code>P ∨ Q ∨ R</code>, we may end up with goals <code>P (50%)</code>, <code>Q (25%)</code> and <code>R (25%)</code> (which, I
+suppose, illustrates that this is hardly an exact method).</p>
+<p dir="auto">When we have picked the highest-priority goal, we must also prioritise the rules
+to be applied. The three rule flavours have different prioritisation mechanisms:</p>
+<ul dir="auto">
+<li>Norm and safe rules have an integer penalty. They are applied in order of
+penalty, lowest first. The builtin <code>simp</code> normalisation rule has penalty 0.</li>
+<li>Unsafe rules are applied in order of success probability, highest first.</li>
+</ul>
+<h3 dir="auto">Search</h3>
+<p dir="auto">The search state contains a priority queue of active goals and a search tree.
+Initially, they both contain only the goal on which the tactic was called. Then
+the tactic executes the following loop until the root goal is either proven or
+unprovable:</p>
+<ol dir="auto">
+<li>From the active goal queue, pick the goal with the highest success
+probability. If it is already proven/unprovable/irrelevant, skip it.</li>
+<li>Run all applicable normalisation rules on the goal (in penalty order). Record
+the new goal in the search tree. If any of the normalisation rules produces
+no subgoals, the goal is proven. If any of the normalisation rules produces
+more than one goal, the tactic fails.</li>
+<li>Try to apply the applicable safe rules to the goal, in penalty order. If any
+applies, record a new rapp and its subgoals. Since we do not want to apply
+any other rules to the goal, it is not reinserted into the active goal queue.</li>
+<li>If no safe rule succeeded, try to apply the applicable unsafe rules to the
+goal, in order of success probability. If any applies, record the rapp and
+its subgoals, then reinsert the goal into the active goal queue (unless there
+are no more unsafe rules to apply).</li>
+</ol>
+<h3 dir="auto">Indexing</h3>
+<p dir="auto">Rules can be indexed with an expression (or, more accurately, a discrimination
+tree key). Such rules are stored in a discrimination tree and are only used if a
+goal's target matches the key. (This is why I wrote 'applicable rules' above.)</p>
+<p dir="auto">Other indexing methods, particularly by hypothesis, are WIP.</p>
+<h3 dir="auto">Default Rules</h3>
+<p dir="auto">Aesop includes a collection of rules that are always part of the rule set.
+Currently, this collection is rather small and haphazard. See
+<code>Aesop/DefaultRules.lean</code>.</p>
+<h3 dir="auto">Attribute</h3>
+<p dir="auto">With these preliminaries out of the way, we can get to the practical part. Rules
+are added to the global Aesop rule set by annotating definitions with the
+<code>@[aesop]</code> attribute. The syntax of this attribute is</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop <flavour>? <priority>? <clause>*]"><pre><span class="pl-k">@[aesop <flavour>? <priority>? <clause>*]</span></pre></div>
+<p dir="auto">where</p>
+<ul dir="auto">
+<li><code>flavour</code> is <code>norm</code> for a normalisation rule, <code>safe</code> for a safe rule,
+<code>unsafe</code> for an unsafe rule. If it is omitted, the default is <code>unsafe</code>.</li>
+<li><code>priority</code> is an integer for <code>norm</code> and <code>safe</code> rules or a success probability
+for unsafe rule. The success probability is written <code>n%</code> with <code>0 <= n <= 100</code>.
+(The percent sign is mandatory.) The priority may be omitted for <code>norm</code> and
+<code>safe</code> rules (the default is 1), but not for <code>unsafe</code> rules.</li>
+<li><code>clause</code> is one of the following configuration clauses (which must be enclosed
+in parentheses unless they consist of only one word):
+<ul dir="auto">
+<li><code>(builder <builder>)</code>: determines how the definition is interpreted as a
+rule. See below.</li>
+<li>Other clauses WIP.</li>
+</ul>
+</li>
+</ul>
+<p dir="auto">The semantics of this attribute are the same (slightly unfortunate) ones as for
+all Lean attributes: as soon as a file is transitively imported, all its
+<code>aesop</code>-annotated definitions are added to the rule set. The attribute can be
+scoped to tame this proliferation a little.</p>
+<h4 dir="auto">Rule Builders</h4>
+<p dir="auto">Rule builders (or just builders) interpret a definition as a rule (i.e., a
+tactic). The following builders are currently implemented:</p>
+<ul dir="auto">
+<li><code>apply</code>: Turns any definition <code>f : ∀ xᵢ, T xᵢ</code> into the tactic <code>apply f</code>.</li>
+<li><code>tactic</code>: Turns a tactic definition into a tactic. A tactic definition must
+have one of the following types:
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="RuleTac = RuleTacInput → MetaM RuleTacOutput
+  -- Is directly used as a rule tactic.
+UserRuleTac = RuleTacInput → MetaM UserRuleTacOutput
+  -- Can omit some of the information from `RuleTacOutput`. Somewhat less
+  -- performant since Aesop then has to calculate this information itself.
+TacticM Unit
+  -- Is converted into a UserRuleTac."><pre>RuleTac = RuleTacInput → MetaM RuleTacOutput
+  <span class="pl-c"><span class="pl-c">--</span> Is directly used as a rule tactic.</span>
+UserRuleTac = RuleTacInput → MetaM UserRuleTacOutput
+  <span class="pl-c"><span class="pl-c">--</span> Can omit some of the information from `RuleTacOutput`. Somewhat less</span>
+  <span class="pl-c"><span class="pl-c">--</span> performant since Aesop then has to calculate this information itself.</span>
+TacticM Unit
+  <span class="pl-c"><span class="pl-c">--</span> Is converted into a UserRuleTac.</span></pre></div>
+</li>
+<li><code>simp</code>: Turns a definition <code>e : ∀ xᵢ, y = z</code> into a simp lemma used by the
+builtin normalisation <code>simp</code> rule. This is like tagging <code>e</code> with <code>@[simp]</code>.
+Applies only to normalisation rules.</li>
+<li><code>unfold</code>: Makes the builtin normalisation <code>simp</code> rule unfold the tagged
+definition. Applies only to normalisation rules.</li>
+</ul>
+<p dir="auto">If no builder is given, a default builder is chosen based on the type of the
+tagged definition. For safe and unsafe rules, the <code>tactic</code> and <code>apply</code> builders
+are tried. For normalisation rules, the <code>tactic</code>, <code>simp</code> and <code>apply</code> builders
+are tried.</p>
+<p dir="auto">More builders, particularly for forward rules (i.e. rules applied to a
+hypothesis), are WIP.</p>
+<h4 dir="auto">Examples</h4>
+<p dir="auto">Some possibly useful rules:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="-- This is a default rule.
+@[aesop safe 1 (builder tactic)] -- penalty and builder could be omitted
+def aesopAssumption : TacticM Unit := do
+  evalTactic (← `(tactic|assumption))
+
+-- This should be a default rule.
+@[aesop unsafe 50% (builder apply)] -- 'unsafe' and builder could be omitted
+def aesopOrIntroLeft : α → α ∨ β :=
+  Or.inl"><pre><span class="pl-c"><span class="pl-c">--</span> This is a default rule.</span>
+<span class="pl-k">@[aesop safe <span class="pl-c1">1</span> (builder tactic)]</span> <span class="pl-c"><span class="pl-c">--</span> penalty and builder could be omitted</span>
+<span class="pl-k">def</span> <span class="pl-en">aesopAssumption</span> : TacticM Unit := <span class="pl-k">do</span>
+  evalTactic (← `(tactic|assumption))
+
+<span class="pl-c"><span class="pl-c">--</span> This should be a default rule.</span>
+<span class="pl-k">@[aesop unsafe <span class="pl-c1">50</span>% (builder apply)]</span> <span class="pl-c"><span class="pl-c">--</span> 'unsafe' and builder could be omitted</span>
+<span class="pl-k">def</span> <span class="pl-en">aesopOrIntroLeft</span> : α → α ∨ β :=
+  Or.inl</pre></div>
+<h3 dir="auto">Tactic Invocation</h3>
+<p dir="auto">The tactic has this syntax:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="aesop <clause>*"><pre>aesop <clause>*</pre></div>
+<p dir="auto">Clauses may be added to configure the tactic. Currently implemented are:</p>
+<ul dir="auto">
+<li><code>(norm [<ident> <penalty>? <clause>*, ...])</code>: adds one or more normalisation
+rules. For each rule, give the name of the definition that should be added,
+the penalty (default 1) and configuration clauses. This is equivalent to
+tagging <code><ident></code> with <code>@[aesop norm <penalty> <clause>*]</code> (but only for this
+invocation). <code><ident></code> may also be a hypothesis, but not all builders support
+this (yet).</li>
+<li><code>(safe [<ident> <penalty>? <clause>*, ...])</code>: same for safe rules.</li>
+<li><code>(unsafe [<ident> <percent>% <clause>*, ...])</code>: same for unsafe rules (but
+with a success probability instead of a penalty).</li>
+</ul>
+<h3 dir="auto">Debugging</h3>
+<p dir="auto">To see step-by-step what Aesop is doing, use</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
+<p dir="auto">There are also various <code>trace.aesop.steps.*</code> options which you can
+set to <code>false</code> to disable certain parts of the output. See <code>Aesop/Tracing.lean</code>.</p>
+<p dir="auto">To see the rule set used by a particular tactic invocation, use</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.ruleSet true"><pre><span class="pl-k">set_option</span> trace.aesop.ruleSet true</pre></div>
+<h2 dir="auto">Implementation</h2>
+<p dir="auto">Some notes on major implementation choices (very incomplete).</p>
+<h3 dir="auto">Search Tree</h3>
+<p dir="auto">The search tree is a mutable, non-persistent tree, so nodes contain pointers
+(<code>IO.Ref</code>s) to their children and parents and when we update a node, we do so
+destructively. This is a bit of work because we must deal with unsafe data
+types, but it should be very fast. See <code>MutAltTree.lean</code> and <code>Tree.lean</code>.</p>
+<h3 dir="auto">Propagating 'proven'/'unprovable'/'irrelevant'</h3>
+<p dir="auto">When we determine that a goal is proven or unprovable, we must propagate this
+information to its ancestors and siblings, like this:</p>
+<ul dir="auto">
+<li>When a goal is proven, we iterate through its ancestors. Then, for each
+ancestor:
+<ul dir="auto">
+<li>If the ancestor is a goal, we mark it as proven.</li>
+<li>If the ancestor is a rapp and all its subgoals are proven, we mark it
+as proven. We also mark the siblings of this rapp and their descendants as
+irrelevant.</li>
+<li>If the ancestor is a rapp and not all its subgoals are proven, we stop the
+iteration.</li>
+</ul>
+</li>
+<li>When a goal is unprovable, we also iterate through its ancestors:
+<ul dir="auto">
+<li>If the ancestor is a rapp, we mark it as unprovable.</li>
+<li>If the ancestor is a goal and all its rapps are unprovable and the goal
+does not have any applicable rules, we mark it as unprovable. We also
+mark the siblings of this goal and their descendands as irrelevant.</li>
+<li>If the ancestor is a goal which has rules that may succeed, we stop the
+iteration.</li>
+</ul>
+</li>
+</ul>
+<p dir="auto">See <code>setProven</code> and friends in <code>Tree.lean</code>.</p>
+<h3 dir="auto">Metavariables</h3>
+<p dir="auto">This is not fully implemented yet. But basically, the problem is that when a
+rule generates metavariables, its subgoals are not independent any more.
+Example:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="                   ⊢ x ~ z
+                      |
+                    ~-trans
+                    /      \
+              ⊢ x ~ ?y    ⊢ ?y ~ z"><pre lang="text"><code>                   ⊢ x ~ z
+                      |
+                    ~-trans
+                    /      \
+              ⊢ x ~ ?y    ⊢ ?y ~ z
+</code></pre></div>
+<p dir="auto">When we apply a rule to the goal <code>x ~ ?y</code>, it may instantiate the meta <code>?y</code>,
+thus irreversibly changing the goal <code>?y ~ z</code>. This is bad if the applied rule
+is unsafe and should thus be backtrackable.</p>
+<p dir="auto">There are several possible solutions to this problem. The one I'm currently
+implementing is essentially this: when a rule instantiates a meta, we duplicate
+the entire branch of the tree that depends on the meta. In the example:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="                   ⊢ x ~ z
+                      |-------------------------------|
+                    ~-trans [?y := x]              ~-trans
+                    /      \                       /      \
+              ⊢ x ~ x    ⊢ x ~ z             ⊢ x ~ ?y    ⊢ ?y ~ z
+                 |
+               ~-refl [?y := x]"><pre lang="text"><code>                   ⊢ x ~ z
+                      |-------------------------------|
+                    ~-trans [?y := x]              ~-trans
+                    /      \                       /      \
+              ⊢ x ~ x    ⊢ x ~ z             ⊢ x ~ ?y    ⊢ ?y ~ z
+                 |
+               ~-refl [?y := x]
+</code></pre></div>
+<p dir="auto">Then we perhaps prioritise the branch with the instantiated meta.</p>
+<h3 dir="auto">Metavariable Contexts</h3>
+<p dir="auto">To implement the above solution (and also for general hygiene), it is useful
+to give every rapp its own metavariable context. A rapp thus stores a
+<code>Meta.SavedState</code> reflecting the <code>MetaM</code> state after the rule was applied to
+its parent goal. In this state, the parent goal meta is assigned to the proof
+term produced by the rule tactic and the produced subgoal metas are in scope.</p>
+<p dir="auto">With this setup, we can easily duplicate a branch by just copying all the nodes
+and their meta states. If we operated on the global <code>MetaM</code> state instead, we
+would have to be very careful to duplicate all relevant metavariables. The
+tradeoff is that we now have to be careful to always operate in the metavariable
+context of the correct rapp. See <code>runMetaM</code> and friends in
+<code>BestFirstSearch.lean</code>. I've tried a few approaches to make this less of a
+footgun, but none of them pulled its weight.</p>
+<p dir="auto">When we switch between different rapps' <code>MetaM</code> states, we use <code>saveState</code> and
+<code>restoreState</code>. These only affect the backtrackable parts of the state, notably
+excluding trace messages and caches. The non-backtrackable parts are merged into
+the global <code>MetaM</code> state, which serves us well since it lets us collect the
+trace messages from all rules we run.</p>
+<p dir="auto">The environment, on the other hand, is backtrackable, so changes to it are not
+merged into the global state. This is a good thing since we probably do not want
+rules which end up not contributing to the proof to change the environment.
+However, it also means that, at least without special support from the proof
+reconstruction procedure below, even the rules that do contribute to the proof
+cannot change the environment (and will probably fail in mysterious ways if they
+try).</p>
+<h3 dir="auto">Proof Reconstruction</h3>
+<p dir="auto">When Aesop has proven a goal, we must still extract the proof term. This is
+not entirely trivial since the proof is stored as a sequence of metavariable
+assignments in the <code>MetaM</code> states of the relevant rapps. These assignments are
+as follows:</p>
+<ul dir="auto">
+<li>When we normalise a goal <code>G</code>, we run the normalisation tactics on <code>G</code>'s goal
+meta in the context of <code>G</code>'s parent rapp. The new goal meta resulting from
+this process then becomes <code>G</code>'s goal meta.</li>
+<li>When we run a regular (safe or unsafe) rule on a goal <code>G</code>, we run the rule
+tactic on <code>G</code>'s goal meta in the context of <code>G</code>'s parent rapp. The resulting
+<code>MetaM</code> state then becomes the state of the new rapp. In this state, <code>G</code>'s
+goal meta is assigned and the subgoals produced by the rule tactic are in
+scope. Note that the <code>MetaM</code> state of <code>G</code>'s parent rapp is not modified at
+all.</li>
+</ul>
+<p dir="auto">This means that to reconstruct the proof term, we must iterate through the
+successful branch of the search tree, starting at the leaf nodes (which are
+rapps without subgoals). From there, we proceed up the tree as follows:</p>
+<ul dir="auto">
+<li>For each goal <code>G</code>, we find the rapp that proves <code>G</code>. Then we assign <code>G</code>'s goal
+meta (in the <code>MetaM</code> context of <code>G</code>'s parent rapp) to the proof term extracted
+from the proven rapp.</li>
+<li>To get the proof term of a rapp <code>R</code>, we instantiate the goal meta of <code>R</code>'s
+parent goal in the <code>MetaM</code> context of <code>R</code>. This should give us a meta-free
+proof term since all metas that previously occurred in the assignment of this
+meta -- particularly the subgoals of <code>R</code> -- have been assigned in previous
+steps of the iteration.</li>
+</ul>
+</article></div></main>
 </body>
 </html>

@@ -21,10 +21,40 @@
 </header>
 <main>
 <h1>xubaiw/lean4-terminal</h1>
+<p>(WIP) Cross platform terminal package for Lean 4.</p>
 <a href="https://github.com/xubaiw/lean4-terminal">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean4-terminal</h1>
+<p dir="auto">WIP: event feature not finished.</p>
+<p dir="auto">A Lean package for programming the terminal.</p>
+<p dir="auto">This pacakge is mostly "translated" from Rust's <a href="https://github.com/crossterm-rs/crossterm"><code>crossterm</code></a>.</p>
+<h2 dir="auto">Example</h2>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Terminal
+
+open Terminal
+
+def main : IO Unit := do
+  queue #[
+    Terminal.SetBackgroundColor.mk Color.red
+  ]
+  IO.println "Hello, world""><pre><span class="pl-k">import</span> Terminal
+
+<span class="pl-k">open</span> Terminal
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  queue #[
+    Terminal.SetBackgroundColor.mk Color.red
+  ]
+  IO.println <span class="pl-s"><span class="pl-pds">"</span>Hello, world<span class="pl-pds">"</span></span></pre></div>
+<h2 dir="auto">Limitations</h2>
+<ul dir="auto">
+<li><code>stdout</code> only, until IO primitives for Lean 4 is more usable.</li>
+<li>ANSI only (Win 10 and *nix). Adding support for legacy systems is important, but not our focus now.</li>
+<li><code>poll</code> unavailable, lacking of async IO in Lean 4.</li>
+</ul>
+</article></div></main>
 </body>
 </html>

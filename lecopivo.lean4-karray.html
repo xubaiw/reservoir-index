@@ -21,10 +21,38 @@
 </header>
 <main>
 <h1>lecopivo/lean4-karray</h1>
+<p>None Description</p>
 <a href="https://github.com/lecopivo/lean4-karray">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean4-karray</h1>
+<p dir="auto">A WIP package that allows automatic C code generation for functions defined in
+Lean.</p>
+<h2 dir="auto">Usage</h2>
+<p dir="auto">Setup <code>KArray</code> according to our <a href="examples/KArrayExample">example</a>. It will allow
+you to use the <code>kcompile</code> tag in your functions.</p>
+<p dir="auto">The <code>kcompile</code> tag needs to be used along with the <code>extern</code> tag. Example:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import KArray
+
+instance : Reflected Float := ⟨"double"⟩
+
+@[kcompile, extern "c_my_fun"] def myFun (x : Float) := x"><pre><span class="pl-k">import</span> KArray
+
+<span class="pl-k">instance</span> : Reflected Float := ⟨<span class="pl-s"><span class="pl-pds">"</span>double<span class="pl-pds">"</span></span>⟩
+
+<span class="pl-k">@[kcompile, extern <span class="pl-s"><span class="pl-pds">"</span>c_my_fun<span class="pl-pds">"</span></span>]</span> <span class="pl-k">def</span> <span class="pl-en">myFun</span> (x : Float) := x</pre></div>
+<p dir="auto"><code>KArray</code> will then generate a C file with a function called <code>c_my_fun</code>, using
+<code>double</code> as the reflected type for Lean's <code>Float</code>.</p>
+<p dir="auto">You can now run the <code>kcompile</code> script to generate the C file:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake script run kcompile"><pre>$ lake script run kcompile</pre></div>
+<p dir="auto">If you create other functions of change the ones tagged with <code>kcompile</code>, you
+will need to run the script again.</p>
+<p dir="auto">After the C file has been generated and your <code>lakefile.lean</code> has been configured,
+you're good to call</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build"><pre>$ lake build</pre></div>
+<p dir="auto">Which will generate the executable file for your application.</p>
+</article></div></main>
 </body>
 </html>

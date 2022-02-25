@@ -21,10 +21,101 @@
 </header>
 <main>
 <h1>arthurpaulino/LeanMySQL</h1>
+<p>A MySQL API for Lean 4</p>
 <a href="https://github.com/arthurpaulino/LeanMySQL">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
-</main>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">LeanMySQL</h1>
+<p dir="auto">This Lean 4 package provides an API for the MySQL database.</p>
+<p dir="auto">Usage example:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import LeanMySQL
+
+def main : IO Unit := do
+  let mysql ← MySQL.mk
+  IO.println $ mysql.version
+  mysql.login "localhost" "root" "root"
+  mysql.createDB "test_db"
+  mysql.useDB "test_db"
+
+  mysql.createTable "job" [
+    ("id", "INT PRIMARY KEY"),
+    ("job_name", "VARCHAR(255)")
+  ]
+  mysql.insertIntoTable "job" [1, "Computer Scientist"]
+  mysql.insertIntoTable "job" [2, "Mathematician"]
+
+  mysql.createTable "person" [
+      ("id", "INT PRIMARY KEY"),
+      ("name", "VARCHAR(255)"),
+      ("age", "INT"),
+      ("height", "FLOAT"),
+      ("job_id", "INT"),
+      ("country_id", "INT")
+    ]
+  mysql.insertIntoTable "person" [1, "Alice", 20, 1.72, 1, 1]
+  mysql.insertIntoTable "person" [2, "Bob", 21, 1.64, 2, 3]
+  mysql.insertIntoTable "person" [3, "Craig", 22, 1.76, NULL, 2]
+
+  let df ← mysql.query ("select name, age, height, job_name " ++
+    "from person left join job on person.job_id = job.id")
+
+  IO.println $ df
+
+  mysql.close"><pre><span class="pl-k">import</span> LeanMySQL
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> mysql ← MySQL.mk
+  IO.println $ mysql.version
+  mysql.login <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>root<span class="pl-pds">"</span></span>
+  mysql.createDB <span class="pl-s"><span class="pl-pds">"</span>test_db<span class="pl-pds">"</span></span>
+  mysql.useDB <span class="pl-s"><span class="pl-pds">"</span>test_db<span class="pl-pds">"</span></span>
+
+  mysql.createTable <span class="pl-s"><span class="pl-pds">"</span>job<span class="pl-pds">"</span></span> [
+    (<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>INT PRIMARY KEY<span class="pl-pds">"</span></span>),
+    (<span class="pl-s"><span class="pl-pds">"</span>job_name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>VARCHAR(255)<span class="pl-pds">"</span></span>)
+  ]
+  mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>job<span class="pl-pds">"</span></span> [<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>Computer Scientist<span class="pl-pds">"</span></span>]
+  mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>job<span class="pl-pds">"</span></span> [<span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>Mathematician<span class="pl-pds">"</span></span>]
+
+  mysql.createTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [
+      (<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>INT PRIMARY KEY<span class="pl-pds">"</span></span>),
+      (<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>VARCHAR(255)<span class="pl-pds">"</span></span>),
+      (<span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>INT<span class="pl-pds">"</span></span>),
+      (<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>FLOAT<span class="pl-pds">"</span></span>),
+      (<span class="pl-s"><span class="pl-pds">"</span>job_id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>INT<span class="pl-pds">"</span></span>),
+      (<span class="pl-s"><span class="pl-pds">"</span>country_id<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>INT<span class="pl-pds">"</span></span>)
+    ]
+  mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>Alice<span class="pl-pds">"</span></span>, <span class="pl-c1">20</span>, <span class="pl-c1">1</span>.<span class="pl-c1">72</span>, <span class="pl-c1">1</span>, <span class="pl-c1">1</span>]
+  mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [<span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>Bob<span class="pl-pds">"</span></span>, <span class="pl-c1">21</span>, <span class="pl-c1">1</span>.<span class="pl-c1">64</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]
+  mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [<span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>Craig<span class="pl-pds">"</span></span>, <span class="pl-c1">22</span>, <span class="pl-c1">1</span>.<span class="pl-c1">76</span>, NULL, <span class="pl-c1">2</span>]
+
+  <span class="pl-k">let</span> df ← mysql.query (<span class="pl-s"><span class="pl-pds">"</span>select name, age, height, job_name <span class="pl-pds">"</span></span> ++
+    <span class="pl-s"><span class="pl-pds">"</span>from person left join job on person.job_id = job.id<span class="pl-pds">"</span></span>)
+
+  IO.println $ df
+
+  mysql.close</pre></div>
+<p dir="auto">The example above prints out:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="8.0.27
+|   name|age|height|            job_name|
+|-------|---|------|--------------------|
+|'Alice'| 20|  1.72|'Computer Scientist'|
+|  'Bob'| 21|  1.64|     'Mathematician'|
+|'Craig'| 22|  1.76|                NULL|"><pre><code>8.0.27
+|   name|age|height|            job_name|
+|-------|---|------|--------------------|
+|'Alice'| 20|  1.72|'Computer Scientist'|
+|  'Bob'| 21|  1.64|     'Mathematician'|
+|'Craig'| 22|  1.76|                NULL|
+</code></pre></div>
+<h2 dir="auto">What's next?</h2>
+<ul dir="auto">
+<li>Replace lists by arrays in the implementation of dataframes</li>
+<li>Provide a proper SQL DSL instead of relying on unsafe strings</li>
+</ul>
+<p dir="auto">Feel free to contribute! :D</p>
+</article></div></main>
 </body>
 </html>
