@@ -30,11 +30,6 @@ jobs:
         cd ..
       shell: bash
 
-    - name: Prospect GitHub
-      run: |
-        ./reservoir/build/bin/reservoir prospect -i lakes.json -o build/lakes.json
-      shell: bash
-
     - name: Generate Pages
       run: |
         ./reservoir/build/bin/reservoir generate -i lakes.json -o build/
