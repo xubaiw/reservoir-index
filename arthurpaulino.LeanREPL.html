@@ -1,0 +1,86 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>arthurpaulino/LeanREPL</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>arthurpaulino/LeanREPL</h1>
+<p>None Description</p>
+<a href="https://github.com/arthurpaulino/LeanREPL">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">LeanREPL</h3>
+<p dir="auto">A simple REPL environment for Lean 4 that also supports meta-commands
+(commands starting with "!").</p>
+<p dir="auto">The code in this repository was adapted from:</p>
+<ul dir="auto">
+<li><a href="https://github.com/dselsam/lean-gym"><code>dselsam/lean-gym</code></a></li>
+<li><a href="https://github.com/abentkamp/hoare-logic"><code>abentkamp/hoare-logic</code></a></li>
+</ul>
+<h4 dir="auto">Usage</h4>
+<p dir="auto">Run <code>.../LeanREPL$ lake build</code> and an executable file will be created under
+<code>build/bin</code>.</p>
+<p dir="auto">Then you can run it and pass the initial imported modules. <code>Init</code> is already
+added by default. Example:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content=".../LeanREPL$ ./build/bin/LeanREPL Std"><pre>.../LeanREPL$ ./build/bin/LeanREPL Std</pre></div>
+<h4 dir="auto">Meta-commands</h4>
+<p dir="auto">Meta-commands are just commands that start with "!" and allow extra control
+of the REPL. The ones available are:</p>
+<ul dir="auto">
+<li><code>!rb <n></code> rolls the REPL back to the state it was <code>n</code> commands ago</li>
+<li><code>!reset</code> resets the REPL to the initial state</li>
+<li><code>!quit</code> exits the REPL</li>
+</ul>
+<p dir="auto">Example:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="> def a := 1
+> def a := 2 -- causes an error and doesn't stack a new state
+repl:1:4: error: 'a' has already been declared
+> def b := 2
+> def c := 3
+> !rb 2      -- undoes the definitions of `b` and `c`
+> #check a
+a : Nat
+> #check b
+repl:1:7: error: unknown identifier 'b'
+> #check c
+repl:1:7: error: unknown identifier 'c'
+> !reset     -- undoes all definitions
+> #check a
+repl:1:7: error: unknown identifier 'a'
+> !quit"><pre>> <span class="pl-k">def</span> <span class="pl-en">a</span> := <span class="pl-c1">1</span>
+> <span class="pl-k">def</span> <span class="pl-en">a</span> := <span class="pl-c1">2</span> <span class="pl-c"><span class="pl-c">--</span> causes an error and doesn't stack a new state</span>
+repl:<span class="pl-c1">1</span>:<span class="pl-c1">4</span>: error: <span class="pl-s">'a'</span> has already been declared
+> <span class="pl-k">def</span> <span class="pl-en">b</span> := <span class="pl-c1">2</span>
+> <span class="pl-k">def</span> <span class="pl-en">c</span> := <span class="pl-c1">3</span>
+> !rb <span class="pl-c1">2</span>      <span class="pl-c"><span class="pl-c">--</span> undoes the definitions of `b` and `c`</span>
+> <span class="pl-k">#check</span> a
+a : Nat
+> <span class="pl-k">#check</span> b
+repl:<span class="pl-c1">1</span>:<span class="pl-c1">7</span>: error: unknown identifier <span class="pl-s">'b'</span>
+> <span class="pl-k">#check</span> c
+repl:<span class="pl-c1">1</span>:<span class="pl-c1">7</span>: error: unknown identifier <span class="pl-s">'c'</span>
+> !reset     <span class="pl-c"><span class="pl-c">--</span> undoes all definitions</span>
+> <span class="pl-k">#check</span> a
+repl:<span class="pl-c1">1</span>:<span class="pl-c1">7</span>: error: unknown identifier <span class="pl-s">'a'</span>
+> !quit</pre></div>
+</article></div></main>
+</body>
+</html>
