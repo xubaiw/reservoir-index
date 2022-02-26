@@ -27,7 +27,7 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Expression quotations for Lean 4</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Expression quotations for Lean 4</h3>
 <p dir="auto">This package implements type-safe expression
 quotations, which are a particularly
 convenient way of constructing object-level
@@ -54,7 +54,7 @@ allowing us to construct values in <code>Q(·)</code>:</p>
 -----------------------------------------
  a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)
 </code></pre></div>
-<h2 dir="auto">Example</h2>
+<h4 dir="auto">Example</h4>
 <p dir="auto">Let us write a type-safe version of <code>mkApp</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
 open Qq
@@ -125,7 +125,7 @@ Furthermore,
 if <code>n</code> were a concrete value,
 then we could not call <code>tryProve</code> on
 the subterm <code>t</code> of <code>fun n : Nat => t</code>.</p>
-<h2 dir="auto">Implementation</h2>
+<h4 dir="auto">Implementation</h4>
 <p dir="auto">The type family on which this package is built is called <code>QQ</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre><span class="pl-k">def</span> <span class="pl-en">QQ</span> (α : Expr) := Expr</pre></div>
 <p dir="auto">The intended meaning of <code>e : QQ t</code> is that
@@ -137,7 +137,7 @@ but it can be checked with <code>QQ.check</code>.)
 The <code>QQ</code> type is not meant to be used manually.
 You should only interact with it
 using the <code>Q(·)</code> and <code>q(·)</code> macros.</p>
-<h2 dir="auto">Comparison</h2>
+<h4 dir="auto">Comparison</h4>
 <p dir="auto">Template Haskell provides a similar mechanism
 for type-safe quotations,
 writing <code>Q Int</code> for an expression of type <code>Int</code>.
@@ -154,7 +154,7 @@ Another lack of expressivity concerns dependent types:
 a telescope such as <code>{α : Q Type} (a : Q α)</code> is not well-typed
 with TH's <code>Q</code> constructor,
 because <code>α</code> is not a type.</p>
-<h2 dir="auto">To do</h2>
+<h4 dir="auto">To do</h4>
 <ul dir="auto">
 <li>
 <p dir="auto">This has almost certainly been done before

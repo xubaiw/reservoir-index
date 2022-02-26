@@ -27,7 +27,7 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="rst" data-path="README.rst" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean.nvim</h1>
+<div class="rst" data-path="README.rst" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean.nvim</h3>
 <p dir="auto"><code>neovim</code> support for the <a href="https://leanprover.github.io/lean4/doc/" rel="nofollow">Lean Theorem Prover</a>.</p>
 <details class="details-reset border rounded-2" open="">
   <summary class="px-3 py-2">
@@ -44,7 +44,7 @@
 </details>
 
 <a name="user-content-prerequisites"></a>
-<h2 dir="auto">Prerequisites</h2>
+<h4 dir="auto">Prerequisites</h4>
 <p dir="auto"><code>lean.nvim</code> supports neovim 0.6 or a recent neovim nightly (one
 newer than December 25, 2021).</p>
 <p dir="auto">If you are on neovim 0.5.1, ensure you have <code>set hidden</code> in
@@ -53,7 +53,7 @@ degraded performance from the infoview when opening and closing Lean
 files. See <a href="https://github.com/Julian/lean.nvim/issues/19">here</a> for
 details. Newer versions of neovim <code>set hidden</code> by default.</p>
 <a name="user-content-installation"></a>
-<h2 dir="auto">Installation</h2>
+<h4 dir="auto">Installation</h4>
 <p dir="auto">Install via your favorite plugin manager. E.g., with
 <a href="https://github.com/junegunn/vim-plug">vim-plug</a> via:</p>
 <div class="highlight highlight-source-viml position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'Julian/lean.nvim'
@@ -81,14 +81,14 @@ required or recommended.</p>
 <p dir="auto"><code>lean.nvim</code> supports both <a href="https://github.com/leanprover-community/lean">Lean 3</a> as well as the emerging
 <a href="https://github.com/leanprover/lean4">Lean 4</a>.</p>
 <a name="user-content-id1"></a>
-<h3 dir="auto">Lean 3</h3>
+<h5 dir="auto">Lean 3</h5>
 <p dir="auto">For Lean 3 support, in addition to the instructions above, you should
 install <code>lean-language-server</code>, which can be done via e.g.:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ npm install -g lean-language-server"><pre>$ npm install -g lean-language-server</pre></div>
 <p dir="auto">Given that Lean 3's language server is separate from
 Lean itself, also ensure you've <a href="https://leanprover-community.github.io/get_started.html" rel="nofollow">installed Lean 3 itself</a>.</p>
 <a name="user-content-id2"></a>
-<h3 dir="auto">Lean 4</h3>
+<h5 dir="auto">Lean 4</h5>
 <p dir="auto">For Lean 4 support, a recent Lean 4 nightly build is recommended (one at
 least from mid-October 2021).</p>
 <p dir="auto">In addition to the instructions above, there is experimental <a href="https://github.com/nvim-treesitter/nvim-treesitter">nvim-treesitter</a> support being
@@ -106,7 +106,7 @@ between it and the standard syntax highlighting via <code>:TSBufDisable
 highlight</code> whenever encountering misparsed terms. Bug reports (to the
 aforementioned repository) are also welcome.</p>
 <a name="user-content-features"></a>
-<h2 dir="auto">Features</h2>
+<h4 dir="auto">Features</h4>
 <ul dir="auto">
 <li>Abbreviation (unicode character) insertion, can also provide a
 <a href="https://github.com/hrsh7th/nvim-compe">nvim-compe</a> source.</li>
@@ -132,7 +132,7 @@ live grepping. See the wiki for <a href="https://github.com/Julian/lean.nvim/wik
 this</code> suggestion replacement</li>
 </ul>
 <a name="user-content-configuration-usage"></a>
-<h2 dir="auto">Configuration & Usage</h2>
+<h4 dir="auto">Configuration & Usage</h4>
 <p dir="auto">The short version -- after following the installation instructions above,
 add the below to <code>~/.config/nvim/plugin/lean.lua</code> or an equivalent:</p>
 <div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
@@ -154,12 +154,12 @@ helpful.</p>
 <p dir="auto">More detail on the full list of supported configuration options can be
 found below.</p>
 <a name="user-content-mappings"></a>
-<h2 dir="auto">Mappings</h2>
+<h4 dir="auto">Mappings</h4>
 <p dir="auto">If you've set <code>mappings = true</code> in your configuration (or have called
 <code>lean.use_suggested_mappings()</code> explicitly), a number of keys will be mapped
 either within Lean source files or within Infoview windows:</p>
 <a name="user-content-in-lean-files"></a>
-<h3 dir="auto">In Lean Files</h3>
+<h5 dir="auto">In Lean Files</h5>
 <table>
 
 
@@ -221,7 +221,7 @@ for your own keyboard layout. My (Julian's) <code><Leader></code> is set to
 may be a good choice for you if you have no other preference.</p>
 </div>
 <a name="user-content-in-infoview-windows"></a>
-<h3 dir="auto">In Infoview Windows</h3>
+<h5 dir="auto">In Infoview Windows</h5>
 <table>
 
 
@@ -267,7 +267,7 @@ infoview window</td>
 </tbody>
 </table>
 <a name="user-content-full-configuration-settings-information"></a>
-<h2 dir="auto">Full Configuration & Settings Information</h2>
+<h4 dir="auto">Full Configuration & Settings Information</h4>
 <div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
   -- Enable the Lean language server(s)?
   --
@@ -438,7 +438,7 @@ infoview window</td>
   stderr <span class="pl-k">=</span> { enable <span class="pl-k">=</span> <span class="pl-c1">true</span> },
 }</pre></div>
 <a name="user-content-other-plugins"></a>
-<h2 dir="auto">Other Plugins</h2>
+<h4 dir="auto">Other Plugins</h4>
 <p dir="auto">Particularly if you're also a VSCode user, there may be other plugins
 you're interested in. Below is a (hopelessly incomplete) list of a few:</p>
 <ul dir="auto">
@@ -452,7 +452,7 @@ showing LSP information in your status bar</li>
 showing a grouped view of diagnostics to pair with the "infauxview"</li>
 </ul>
 <a name="user-content-contributing"></a>
-<h2 dir="auto">Contributing</h2>
+<h4 dir="auto">Contributing</h4>
 <p dir="auto">Contributions are most welcome. Feel free to send pull requests for anything
 you'd like to see, or open an issue if you'd like to discuss.</p>
 <p dir="auto">Running the tests can be done via the <code>Makefile</code>:</p>

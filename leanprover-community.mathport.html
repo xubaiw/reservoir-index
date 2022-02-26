@@ -27,13 +27,13 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Mathport</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Mathport</h3>
 <p dir="auto">Mathport is a tool for porting Lean3 projects to Lean4. It consists of two (loosely coupled) components:</p>
 <ul dir="auto">
 <li>"binport", which translates Lean3 <code>.lean</code> files to Lean4 <code>.olean</code> files</li>
 <li>"synport", which best-effort translates Lean3 <code>.lean</code> files to Lean4 <code>.lean</code> files</li>
 </ul>
-<h2 dir="auto">Running with artifacts from continuous integration</h2>
+<h4 dir="auto">Running with artifacts from continuous integration</h4>
 <p dir="auto">A full run of <code>mathport</code> (see below) on Lean 3 and mathlib3 takes several hours.
 We provide artifacts on the github releases page,
 and separate repositories
@@ -61,7 +61,7 @@ project should work to enable <code>import Mathbin.All</code>.)</p>
 feel free to commit new versions
 if you have updated the dependencies in the relevant lakefile
 and downloaded fresh <code>.lean</code> files.</p>
-<h2 dir="auto">Running mathport locally</h2>
+<h4 dir="auto">Running mathport locally</h4>
 <p dir="auto">See the <code>Makefile</code> for usage (it takes several hours to rebuild the mathlib3 port from scratch).
 Basic usage is <code>make build source predata port</code>.</p>
 <p dir="auto">We provide artifacts for various stages of the build on the releases page of the <code>mathport</code> repository.

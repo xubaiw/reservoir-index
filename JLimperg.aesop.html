@@ -27,12 +27,12 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Aesop</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Aesop</h3>
 <p dir="auto">This is a work-in-progress proof search tactic for Lean 4.</p>
-<h2 dir="auto">Building</h2>
+<h4 dir="auto">Building</h4>
 <p dir="auto">With <a href="https://github.com/leanprover/elan">elan</a> installed, <code>lake build</code>
 should suffice.</p>
-<h2 dir="auto">Adding Aesop to Your Project</h2>
+<h4 dir="auto">Adding Aesop to Your Project</h4>
 <p dir="auto">To use Aesop in a Lean 4 project, first add this package as a dependency. In
 your <code>lakefile.lean</code>, add</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="dependencies := #[
@@ -55,18 +55,18 @@ def id' : α → α :=
 <span class="pl-k">def</span> <span class="pl-en">id'</span> : α → α :=
   <span class="pl-k">by</span> aesop</pre></div>
 <p dir="auto">TODO Document (and, indeed, find out) how to use Aesop as a plugin.</p>
-<h2 dir="auto">Usage</h2>
+<h4 dir="auto">Usage</h4>
 <p dir="auto">This section gives an overview of what Aesop does and how to use it. I first
 explain how the tactic works (as far as users need to know), then explain how to
 configure and use it. Aesop is very work in progress and this text may be out of
 date, so if you have questions, please ping me (Jannis Limperg) on the Lean
 Zulip or via email.</p>
-<h3 dir="auto">Overview</h3>
+<h5 dir="auto">Overview</h5>
 <p dir="auto">Aesop does best-first search over a collection of rules. A rule is an arbitrary
 tactic plus some metadata, particularly an estimate of how likely the rule is to
 lead to a successful proof. This estimate is used to prioritise goals and rules.
 Rules are registered with an attribute or with arguments to the tactic.</p>
-<h3 dir="auto">Rules</h3>
+<h5 dir="auto">Rules</h5>
 <p dir="auto">A rule is a metaprogram of type</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="RuleTacInput → MetaM RuleTacOutput"><pre>RuleTacInput → MetaM RuleTacOutput</pre></div>
 <p dir="auto">This is essentially <code>MVarId → MetaM (List MVarId)</code> plus some additional
@@ -82,14 +82,14 @@ it means no <code>evalExpr</code>. (More precisely, environment modifications ar
 when the tactic finishes, which will likely cause the rule to fail. In
 principle, we could support environment modifications, but it would require some
 engineering and perhaps cooperation from the rule tactics.)</p>
-<h3 dir="auto">Simplification</h3>
+<h5 dir="auto">Simplification</h5>
 <p dir="auto">During goal normalisation, we invoke the simplifier once with the default simp
 lemmas as a builtin rule. I expect this rule will do most of the normalisation
 work. Users can also register additional simp lemmas which are only used by
 Aesop.</p>
 <p dir="auto">(Ideally, users should be able to easily define and enable/disable sets of Aesop
 simp lemmas, as well as sets of Aesop rules.)</p>
-<h3 dir="auto">Search Tree</h3>
+<h5 dir="auto">Search Tree</h5>
 <p dir="auto">As we apply rules to goals, we build a (mutable) search tree. This is an and-or
 tree containing goal nodes and rule application nodes. The root node is the
 initial goal. A rule application (rapp for short) produces a rule application
@@ -109,7 +109,7 @@ one of its siblings is already proven.</li>
 </ul>
 <p dir="auto">As soon as a goal or rapp is marked as irrelevant, it is not considered in the
 search.</p>
-<h3 dir="auto">Prioritisation</h3>
+<h5 dir="auto">Prioritisation</h5>
 <p dir="auto">We prioritise goals based on an estimate of how likely they are to be part of a
 successful proof. To form this estimate, we associate each unsafe rule with a
 success probability, which gives a rough estimate of how likely the rule is to
@@ -125,7 +125,7 @@ to be applied. The three rule flavours have different prioritisation mechanisms:
 penalty, lowest first. The builtin <code>simp</code> normalisation rule has penalty 0.</li>
 <li>Unsafe rules are applied in order of success probability, highest first.</li>
 </ul>
-<h3 dir="auto">Search</h3>
+<h5 dir="auto">Search</h5>
 <p dir="auto">The search state contains a priority queue of active goals and a search tree.
 Initially, they both contain only the goal on which the tactic was called. Then
 the tactic executes the following loop until the root goal is either proven or
@@ -145,16 +145,16 @@ goal, in order of success probability. If any applies, record the rapp and
 its subgoals, then reinsert the goal into the active goal queue (unless there
 are no more unsafe rules to apply).</li>
 </ol>
-<h3 dir="auto">Indexing</h3>
+<h5 dir="auto">Indexing</h5>
 <p dir="auto">Rules can be indexed with an expression (or, more accurately, a discrimination
 tree key). Such rules are stored in a discrimination tree and are only used if a
 goal's target matches the key. (This is why I wrote 'applicable rules' above.)</p>
 <p dir="auto">Other indexing methods, particularly by hypothesis, are WIP.</p>
-<h3 dir="auto">Default Rules</h3>
+<h5 dir="auto">Default Rules</h5>
 <p dir="auto">Aesop includes a collection of rules that are always part of the rule set.
 Currently, this collection is rather small and haphazard. See
 <code>Aesop/DefaultRules.lean</code>.</p>
-<h3 dir="auto">Attribute</h3>
+<h5 dir="auto">Attribute</h5>
 <p dir="auto">With these preliminaries out of the way, we can get to the practical part. Rules
 are added to the global Aesop rule set by annotating definitions with the
 <code>@[aesop]</code> attribute. The syntax of this attribute is</p>
@@ -180,7 +180,7 @@ rule. See below.</li>
 all Lean attributes: as soon as a file is transitively imported, all its
 <code>aesop</code>-annotated definitions are added to the rule set. The attribute can be
 scoped to tame this proliferation a little.</p>
-<h4 dir="auto">Rule Builders</h4>
+<h6 dir="auto">Rule Builders</h6>
 <p dir="auto">Rule builders (or just builders) interpret a definition as a rule (i.e., a
 tactic). The following builders are currently implemented:</p>
 <ul dir="auto">
@@ -213,7 +213,7 @@ are tried. For normalisation rules, the <code>tactic</code>, <code>simp</code> a
 are tried.</p>
 <p dir="auto">More builders, particularly for forward rules (i.e. rules applied to a
 hypothesis), are WIP.</p>
-<h4 dir="auto">Examples</h4>
+<h6 dir="auto">Examples</h6>
 <p dir="auto">Some possibly useful rules:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="-- This is a default rule.
 @[aesop safe 1 (builder tactic)] -- penalty and builder could be omitted
@@ -232,7 +232,7 @@ def aesopOrIntroLeft : α → α ∨ β :=
 <span class="pl-k">@[aesop unsafe <span class="pl-c1">50</span>% (builder apply)]</span> <span class="pl-c"><span class="pl-c">--</span> 'unsafe' and builder could be omitted</span>
 <span class="pl-k">def</span> <span class="pl-en">aesopOrIntroLeft</span> : α → α ∨ β :=
   Or.inl</pre></div>
-<h3 dir="auto">Tactic Invocation</h3>
+<h5 dir="auto">Tactic Invocation</h5>
 <p dir="auto">The tactic has this syntax:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="aesop <clause>*"><pre>aesop <clause>*</pre></div>
 <p dir="auto">Clauses may be added to configure the tactic. Currently implemented are:</p>
@@ -247,21 +247,21 @@ this (yet).</li>
 <li><code>(unsafe [<ident> <percent>% <clause>*, ...])</code>: same for unsafe rules (but
 with a success probability instead of a penalty).</li>
 </ul>
-<h3 dir="auto">Debugging</h3>
+<h5 dir="auto">Debugging</h5>
 <p dir="auto">To see step-by-step what Aesop is doing, use</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
 <p dir="auto">There are also various <code>trace.aesop.steps.*</code> options which you can
 set to <code>false</code> to disable certain parts of the output. See <code>Aesop/Tracing.lean</code>.</p>
 <p dir="auto">To see the rule set used by a particular tactic invocation, use</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.ruleSet true"><pre><span class="pl-k">set_option</span> trace.aesop.ruleSet true</pre></div>
-<h2 dir="auto">Implementation</h2>
+<h4 dir="auto">Implementation</h4>
 <p dir="auto">Some notes on major implementation choices (very incomplete).</p>
-<h3 dir="auto">Search Tree</h3>
+<h5 dir="auto">Search Tree</h5>
 <p dir="auto">The search tree is a mutable, non-persistent tree, so nodes contain pointers
 (<code>IO.Ref</code>s) to their children and parents and when we update a node, we do so
 destructively. This is a bit of work because we must deal with unsafe data
 types, but it should be very fast. See <code>MutAltTree.lean</code> and <code>Tree.lean</code>.</p>
-<h3 dir="auto">Propagating 'proven'/'unprovable'/'irrelevant'</h3>
+<h5 dir="auto">Propagating 'proven'/'unprovable'/'irrelevant'</h5>
 <p dir="auto">When we determine that a goal is proven or unprovable, we must propagate this
 information to its ancestors and siblings, like this:</p>
 <ul dir="auto">
@@ -288,7 +288,7 @@ iteration.</li>
 </li>
 </ul>
 <p dir="auto">See <code>setProven</code> and friends in <code>Tree.lean</code>.</p>
-<h3 dir="auto">Metavariables</h3>
+<h5 dir="auto">Metavariables</h5>
 <p dir="auto">This is not fully implemented yet. But basically, the problem is that when a
 rule generates metavariables, its subgoals are not independent any more.
 Example:</p>
@@ -323,7 +323,7 @@ the entire branch of the tree that depends on the meta. In the example:</p>
                ~-refl [?y := x]
 </code></pre></div>
 <p dir="auto">Then we perhaps prioritise the branch with the instantiated meta.</p>
-<h3 dir="auto">Metavariable Contexts</h3>
+<h5 dir="auto">Metavariable Contexts</h5>
 <p dir="auto">To implement the above solution (and also for general hygiene), it is useful
 to give every rapp its own metavariable context. A rapp thus stores a
 <code>Meta.SavedState</code> reflecting the <code>MetaM</code> state after the rule was applied to
@@ -348,7 +348,7 @@ However, it also means that, at least without special support from the proof
 reconstruction procedure below, even the rules that do contribute to the proof
 cannot change the environment (and will probably fail in mysterious ways if they
 try).</p>
-<h3 dir="auto">Proof Reconstruction</h3>
+<h5 dir="auto">Proof Reconstruction</h5>
 <p dir="auto">When Aesop has proven a goal, we must still extract the proof term. This is
 not entirely trivial since the proof is stored as a sequence of metavariable
 assignments in the <code>MetaM</code> states of the relevant rapps. These assignments are

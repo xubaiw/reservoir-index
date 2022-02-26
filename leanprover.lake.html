@@ -27,13 +27,13 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">Lake</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lake</h3>
 <p dir="auto">Lake (Lean Make) is a new build system and package manager for Lean 4.
 With Lake, package configuration is written in Lean inside a dedicated <code>lakefile.lean</code> stored in the root of the package directory. Each <code>lakefile.lean</code> includes a <code>package</code> declaration (akin to <code>main</code>) which defines the package's configuration.</p>
-<h2 dir="auto">Getting Lake</h2>
+<h4 dir="auto">Getting Lake</h4>
 <p dir="auto">Lake is part of the <a href="https://github.com/leanprover/lean4">lean4</a> repository and is distributed along with its official releases (e.g., as part of the <a href="https://github.com/leanprover/elan">elan</a> toolchain). So if you have installed a semi-recent Lean 4 nightly, you should already have it!</p>
 <p dir="auto">Note that the Lake included with Lean is not updated as frequently as this repository, so some bleeding edge features may be missing. If you want to build the latest version from the source yourself, check out the build instructions at the bottom of this README.</p>
-<h2 dir="auto">Creating and Building a Package</h2>
+<h4 dir="auto">Creating and Building a Package</h4>
 <p dir="auto">To create a new package, either run <code>lake init <package-name></code> to setup the package in the current directory or <code>lake new <package-name></code> to create it in a new directory. For example, we could create the package <code>hello</code> like so:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ mkdir hello
 $ cd hello
@@ -76,7 +76,7 @@ Hello, world!"><pre><code>$ lake build
 $ ./build/bin/hello
 Hello, world!
 </code></pre></div>
-<h2 dir="auto">Adding Dependencies</h2>
+<h4 dir="auto">Adding Dependencies</h4>
 <p dir="auto">Lake packages can also have dependencies. Dependencies are other Lake packages the current package needs in order to function. To define a dependency, add an entry to the <code>dependencies</code> field of the package configuration. Each entry includes the name of the package and where to find it. Dependencies can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. When sourcing from a Git repository, specify the revision of the package to clone, which can be a commit hash, branch, or tag.</p>
 <p dir="auto">For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello {
@@ -92,14 +92,14 @@ Hello, world!
 }</pre></div>
 <p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it.</p>
 <p dir="auto">Further examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
-<h2 dir="auto">Package Configuration Options</h2>
+<h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>
-<h3 dir="auto">Workspace</h3>
+<h5 dir="auto">Workspace</h5>
 <p dir="auto">Workspace options are shared across a package and its dependencies.</p>
 <ul dir="auto">
 <li><code>packagesDir</code>: The directory to which Lake should download remote dependencies. Defaults to <code>lean_packages</code>.</li>
 </ul>
-<h3 dir="auto">General</h3>
+<h5 dir="auto">General</h5>
 <ul dir="auto">
 <li><code>dependencies</code>: An <code>Array</code> of the package's dependencies.</li>
 <li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>.</li>
@@ -112,7 +112,7 @@ Hello, world!
 <li><code>libGlobs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the package's library. Defaults to a <code>Glob.one</code> of each of the module's <code>libRoots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the package) are also recursively built.</li>
 <li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
 </ul>
-<h3 dir="auto">Library / Binary Compilation</h3>
+<h5 dir="auto">Library / Binary Compilation</h5>
 <ul dir="auto">
 <li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes <code>-O3</code> and <code>-DNDEBUG</code> automatically, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
 <li><code>irDir</code>: The build subdirectory to which Lake should output the package's intermediary results (e.g., <code>.c</code> and <code>.o</code> files). Defaults to <code>ir</code>.</li>
@@ -125,7 +125,7 @@ Hello, world!
 <li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
 <li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the package's binary executable. These will come <em>after</em> the paths of libraries built with <code>moreLibTargets</code>.</li>
 </ul>
-<h2 dir="auto">Scripts</h2>
+<h4 dir="auto">Scripts</h4>
 <p dir="auto">A configuration file can also contain a number of <code>scripts</code> declaration. A script is an arbitrary <code>(args : List String) → ScriptM UInt32</code> definition that can be run by <code>lake script run</code>. For example, given the following <code>lakefile.lean</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
 open Lake DSL
@@ -188,18 +188,18 @@ USAGE:
 
 Greet the entity with the given name. Otherwise, greet the whole world.
 </code></pre></div>
-<h2 dir="auto">Building and Running Lake from the Source</h2>
+<h4 dir="auto">Building and Running Lake from the Source</h4>
 <p dir="auto">If you already have a Lean installation with <code>lake</code> packaged with it, you can build a new <code>lake</code> by just running <code>lake build</code>.</p>
 <p dir="auto">Otherwise, there is a pre-packaged <code>build.sh</code> shell script that can be used to build Lake. It passes it arguments down to a <code>make</code> command. So, if you have more than one core, you will probably want to use a <code>-jX</code> option to specify how many build tasks you want it to run in parallel. For example:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ ./build.sh -j4"><pre>$ ./build.sh -j4</pre></div>
 <p dir="auto">After building, the <code>lake</code> binary will be located at <code>build/bin/lake</code> and the library's <code>.olean</code> files will be located in <code>build/lib</code>.</p>
-<h3 dir="auto">Building with Nix Flakes</h3>
+<h5 dir="auto">Building with Nix Flakes</h5>
 <p dir="auto">It is also possible to build Lake with the Nix setup <code>buildLeanPackage</code> from the <a href="https://github.com/leanprover/lean4"><code>lean4</code></a> repository. To do so, you need to have Nix installed with flakes enabled. It is recommended to also set up the Lean 4 binary cache as described in the Lean 4 repository.</p>
 <p dir="auto">It is then possible to build Lake with <code>nix build .</code> or run it from anywhere with <code>nix run github:leanprover/lake</code>.</p>
 <p dir="auto">A development environment with Lean 4 installed can be loaded automatically by running <code>nix develop</code> or automatically on <code>cd</code> with <code>direnv</code> by running <code>direnv allow</code>.</p>
 <p dir="auto">The versions of <code>nixpkgs</code> and <code>lean4</code> are fixed to specific hashes. They can be updated by running <code>nix flake update</code>.</p>
 <p dir="auto">Thank Anders Christiansen Sørby (<a href="https://github.com/Anderssorby">@Anderssorby</a>) for this support!</p>
-<h3 dir="auto">Augmenting Lake's Search Path</h3>
+<h5 dir="auto">Augmenting Lake's Search Path</h5>
 <p dir="auto">The <code>lake</code> executable needs to know where to find the <code>.olean</code> files for the modules used in the package configuration file. Lake will intelligently setup an initial search path based on the location of its own executable and <code>lean</code>.</p>
 <p dir="auto">Specifically, if Lake is co-located with <code>lean</code> (i.e., there is <code>lean</code> executable in the same directory as itself), it will assume it was installed with Lean and that both Lean and Lake are located in <code><lean-home>/bin</code> with Lean's <code>.olean</code> files at <code><lean-home/lib/lean</code> and Lake's <code>.olean</code> files at <code><lean-home/lib/lean</code>. Otherwise, it will run <code>lean --print-prefix</code> to find Lean's home and assume that its <code>.olean</code> files are at <code><lean-home>/lib/lean</code> and that <code>lake</code> is at <code><lake-home>/bin/lake</code> with its <code>.olean</code> files at <code><lake-home>/lib</code>.</p>
 <p dir="auto">This search path can be augmented by including other directories of <code>.olean</code> files in the <code>LEAN_PATH</code> environment variable. Such directories will take precedence over the initial search path, so <code>LEAN_PATH</code> can also be used to correct Lake's search if the <code>.olean</code> files for Lean (or Lake itself) are in non-standard locations.</p>

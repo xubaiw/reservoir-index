@@ -27,11 +27,11 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean4-terminal</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean4-terminal</h3>
 <p dir="auto">WIP: event feature not finished.</p>
 <p dir="auto">A Lean package for programming the terminal.</p>
 <p dir="auto">This pacakge is mostly "translated" from Rust's <a href="https://github.com/crossterm-rs/crossterm"><code>crossterm</code></a>.</p>
-<h2 dir="auto">Example</h2>
+<h4 dir="auto">Example</h4>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Terminal
 
 open Terminal
@@ -49,7 +49,7 @@ def main : IO Unit := do
     Terminal.SetBackgroundColor.mk Color.red
   ]
   IO.println <span class="pl-s"><span class="pl-pds">"</span>Hello, world<span class="pl-pds">"</span></span></pre></div>
-<h2 dir="auto">Limitations</h2>
+<h4 dir="auto">Limitations</h4>
 <ul dir="auto">
 <li><code>stdout</code> only, until IO primitives for Lean 4 is more usable.</li>
 <li>ANSI only (Win 10 and *nix). Adding support for legacy systems is important, but not our focus now.</li>

@@ -27,10 +27,10 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto">lean4-cli</h1>
-<h2 dir="auto">Usage</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean4-cli</h3>
+<h4 dir="auto">Usage</h4>
 <p dir="auto">See <a href="https://github.com/leanprover/lake">the documentation of Lake</a>.</p>
-<h3 dir="auto">Configuration</h3>
+<h5 dir="auto">Configuration</h5>
 <p dir="auto">Commands are configured with a lightweight DSL. The following declarations define a command <code>exampleCmd</code> with two subcommands <code>installCmd</code> and <code>testCmd</code>. <code>doNothing</code> and <code>runExampleCmd</code> denote the handlers that are called when the command is called and are written out further down below in the <strong>Command Handlers</strong> subsection.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="open Cli
 
@@ -117,7 +117,7 @@ def exampleCmd : Cmd := `[Cli|
     author <span class="pl-s"><span class="pl-pds">"</span>mhuisi<span class="pl-pds">"</span></span>;
     defaultValues! #[(<span class="pl-s"><span class="pl-pds">"</span>priority<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span>)]
 ]</pre></div>
-<h3 dir="auto">Command handlers</h3>
+<h5 dir="auto">Command handlers</h5>
 <p dir="auto">The command handlers <code>doNothing</code> and <code>runExampleCmd</code> demonstrate how to use the parsed user input.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def doNothing (p : Parsed) : IO UInt32 :=
   return 0
@@ -162,7 +162,7 @@ def runExampleCmd (p : Parsed) : IO UInt32 := do
   <span class="pl-k">if</span> <span class="pl-k">let</span> some setPathsFlag := p.flag? <span class="pl-s"><span class="pl-pds">"</span>set-paths<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
     IO.println <| toString <| setPathsFlag.as! (Array String)
   return <span class="pl-c1">0</span></pre></div>
-<h3 dir="auto">Running the command</h3>
+<h5 dir="auto">Running the command</h5>
 <p dir="auto">Below you can find some simple examples of how to pass user input to the Cli library.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def main (args : List String) : IO UInt32 :=
   exampleCmd.validate args
@@ -227,7 +227,7 @@ Yields:
 <span class="pl-c">Yields:</span>
 <span class="pl-c">  0.0.1</span>
 <span class="pl-c">-/</span></pre></div>
-<h3 dir="auto">Help</h3>
+<h5 dir="auto">Help</h5>
 <p dir="auto">Upon calling <code>-h</code>, the above configuration produces the following help.</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="exampleCmd [0.0.1]
 mhuisi
@@ -298,7 +298,7 @@ SUBCOMMANDS:
                 or arguments.
 </code></pre></div>
 <p dir="auto">The full example can be found under <code>./Cli/Example.lean</code>.</p>
-<h2 dir="auto">Ad Hoc Documentation</h2>
+<h4 dir="auto">Ad Hoc Documentation</h4>
 <p dir="auto">This section documents only the most common features of the library. For the full documentation, peek into <code>./Cli/Basic.lean</code> and <code>./Cli/Extensions.lean</code>! All definitions below live in the <code>Cli</code> namespace.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="-- For many terms below, when the term is an identifier, it is expanded literally.
 syntax positionalArg := colGe term " : " term "; " term

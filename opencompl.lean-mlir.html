@@ -27,7 +27,7 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto"><code>mlir-lean</code>: embedded MLIR in LEAN</h1>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto"><code>mlir-lean</code>: embedded MLIR in LEAN</h3>
 <p dir="auto">This provides infrastructure for:</p>
 <ul dir="auto">
 <li>An embedding of the MLIR AST in lean (<code>MLIR/AST.lean</code>)</li>
@@ -70,12 +70,12 @@
 <li>Purely functional, immutable rewriter with a carefully chosen set of
 primitives to enable reasoning and efficient rewriting.</li>
 </ul>
-<h1 dir="auto">Build instructions</h1>
+<h3 dir="auto">Build instructions</h3>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
 $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>"><pre><code>$ lake build
 $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
 </code></pre></div>
-<h2 dir="auto">Nix</h2>
+<h4 dir="auto">Nix</h4>
 <p dir="auto">Start a "lean shell" per the <a href="https://leanprover.github.io/lean4/doc/setup.html#nix-setup" rel="nofollow">Nix Setup documentation</a> for lean:</p>
 <blockquote>
 <p dir="auto">After installing (any version of) Nix (<a href="https://nixos.org/download.html" rel="nofollow">https://nixos.org/download.html</a>), you can easily open a shell with the particular pre-release version of Nix needed by and tested with our setup (called the "Lean shell" from here on):</p>
@@ -107,14 +107,14 @@ $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
       '';
   };
 </code></pre></div>
-<h1 dir="auto">Test instructions</h1>
+<h3 dir="auto">Test instructions</h3>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd examples; lit -v . # run all examples, report failures."><pre><code>$ cd examples; lit -v . # run all examples, report failures.
 </code></pre></div>
-<h1 dir="auto">Documentation</h1>
+<h3 dir="auto">Documentation</h3>
 <ul dir="auto">
 <li>Go to <a href="./docs/README.md"><code>docs/README.md</code></a> for library documentation.</li>
 </ul>
-<h1 dir="auto">Other projects of interest</h1>
+<h3 dir="auto">Other projects of interest</h3>
 <ul dir="auto">
 <li><a href="https://github.com/tydeu/lean4-papyrus"><code>tydeu/lean4-papyrus</code></a> is an LLVM interface for Lean 4.</li>
 <li><a href="https://github.com/GaloisInc/lean-llvm"><code>GaloisInc/lean-llvm</code></a> is Lean4 bindings to the LLVM library.</li>
