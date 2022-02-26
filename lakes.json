@@ -64,4 +64,5 @@
  "xubaiw/Socket.lean",
  "xubaiw/Unicode.lean",
  "xubaiw/csv",
- "xubaiw/lean4-terminal"]
+ "xubaiw/lean4-terminal",
+ "xubaiw/sjtu-math2501-ode"]
