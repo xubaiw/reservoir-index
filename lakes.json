@@ -47,6 +47,7 @@
  "leanprover/lake",
  "leanprover/lean4",
  "leanprover/lean4-samples",
+ "leanprover/vscode-lean4",
  "lecopivo/SciLean",
  "lecopivo/lean4-karray",
  "lecopivo/leanPluginTest",
