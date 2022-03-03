@@ -1,0 +1,120 @@
+
+/* Some styles specific to the infoview. */
+
+html,body {
+    height: 100%;
+}
+
+/* These are syntax highlights for the string goal view. */
+.goal-goals { color: #569cd6; }
+.goal-vdash { color: #569cd6; }
+.goal-case { color: #a1df90; }
+.goal-hyp { color: #ffcc00; }
+.goal-inaccessible { color: #808080 }
+
+.vscode-light .goal-goals { color: #367cb6; }
+.vscode-light .goal-vdash { color: #367cb6; }
+.vscode-light .goal-case { color: #1f7a1f; }
+.vscode-light .goal-hyp { color: #cc7a00; }
+.vscode-light .goal-inaccessible { color: #777; }
+
+/* Used to denote text highlighted by the pretty-print expression widget. */
+.highlightable {
+    border-radius: 2pt;
+    transition: background-color 100ms ease-in-out;
+}
+.highlight {
+    background-color: #96ccff;
+}
+.vscode-dark .highlight {
+    background-color: #3c6c92;
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
+}
+
+.error {
+    color: #e51400;
+}
+
+.warning {
+    color: #bf8803;
+}
+
+.information {
+    color: darkgreen;
+}
+
+.vscode-dark .error {
+    color: #f14c4c;
+}
+
+.vscode-dark .warning {
+    color: #cca700;
+}
+
+.vscode-dark .information {
+    color: #89d185;
+}
+
+.vscode-high-contrast .error {
+    color: lightpink;
+}
+
+.vscode-high-contrast .warning {
+    color: yellow;
+}
+
+.vscode-high-contrast .information {
+    color: lightgreen;
+}
+
+/* Headers for infoview */
+
+select {
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+    border-color: var(--vscode-dropdown-border);
+}
+
+/* Styles for the tooltips shown in the widget view. */
+.tooltip {
+    /* tooltips are _always_ dark.  */
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    font-size: 13px;
+    border-radius: 4px;
+    box-shadow: 1px 1px 5px black;
+}
+
+.tooltip-arrow,
+.tooltip-arrow::before {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    z-index: -1;
+}
+
+.tooltip-arrow::before {
+    content: '';
+    transform: rotate(45deg);
+    background: #333;
+}
+
+.tooltip[data-popper-placement^='top'] > .tooltip-arrow {
+    bottom: -4px;
+}
+
+.tooltip[data-popper-placement^='bottom'] > .tooltip-arrow {
+    top: -4px;
+}
+
+.tooltip[data-popper-placement^='left'] > .tooltip-arrow {
+    right: -4px;
+}
+
+.tooltip[data-popper-placement^='right'] > .tooltip-arrow {
+    left: -4px;
+}

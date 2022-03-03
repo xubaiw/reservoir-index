@@ -1,0 +1,7 @@
+/build
+/include
+/lean_src
+/lean_packages
+/lean-toolchain
+/tmp
+/.vscode

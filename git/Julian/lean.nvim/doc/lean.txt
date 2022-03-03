@@ -1,0 +1,10 @@
+================================================================================
+                                                                     *lean.nvim*
+
+lean.nvim is a plugin providing Neovim support for the Lean interactive theorem
+prover, developed by Leonardo de Moura at Microsoft Research.
+
+To find out more, see https://github.com/Julian/lean.nvim.
+
+
+ vim:tw=78:ts=8:ft=help:norl:

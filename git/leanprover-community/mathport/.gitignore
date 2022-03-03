@@ -1,0 +1,9 @@
+*~
+*#*
+build/
+Logs/
+PreData/
+Outputs/
+lean_packages/
+sources/
+*.tar.gz

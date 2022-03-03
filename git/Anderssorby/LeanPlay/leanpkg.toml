@@ -1,0 +1,7 @@
+[package]
+name = "LeanPlay"
+version = "0.1"
+lean_version = "leanprover/lean4:v4.0.0-m2"
+path = "src"
+
+[dependencies]

@@ -1,0 +1,12 @@
+leanpkg.path
+*.olean
+
+/luapath
+/packpath
+
+/lua/tests/fixtures/example-lean4-project/build
+/lua/tests/fixtures/example-lean4-project/foo/build
+/lua/tests/fixtures/example-lean3-project/_target
+
+doc/tags
+luacov.*.out

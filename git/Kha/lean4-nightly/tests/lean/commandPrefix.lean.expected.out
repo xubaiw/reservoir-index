@@ -1,0 +1,3 @@
+let_fun this := ();
+this : Id Unit
+commandPrefix.lean:3:0: error: expected command

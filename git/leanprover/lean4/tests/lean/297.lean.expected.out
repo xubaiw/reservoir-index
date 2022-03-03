@@ -1,0 +1,2 @@
+297.lean:1:10-1:11: error: failed to synthesize instance
+  OfNat (Sort ?u) 0

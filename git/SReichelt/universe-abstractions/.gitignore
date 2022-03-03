@@ -1,0 +1,15 @@
+*.olean
+*.aux
+*.fls
+*.fdb*
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex*
+/_target
+/leanpkg.path
+/.leanpkg-lock
+/lean-packages
+/build
+/UniverseAbstractions/Scratch

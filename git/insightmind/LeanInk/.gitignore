@@ -1,0 +1,10 @@
+/build
+/lean_packages
+
+/test/**/*.html
+/test/**/*.css
+/test/**/*.js
+/test/**/lean_packages
+/test/**/.git
+/test/**/*.leanInk
+/.vscode

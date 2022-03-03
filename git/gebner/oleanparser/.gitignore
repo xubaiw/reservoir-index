@@ -1,0 +1,5 @@
+/build
+/lean_packages
+/Demo.notolean
+*.olean
+result*

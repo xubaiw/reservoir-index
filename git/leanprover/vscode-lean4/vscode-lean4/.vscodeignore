@@ -1,0 +1,12 @@
+# HACK: see https://github.com/Microsoft/vscode-vsce/issues/12#issuecomment-306078884
+*
+*/**
+../**
+
+!dist
+!media
+!images
+!syntaxes
+!package.json
+!language-configuration.json
+!LICENSE

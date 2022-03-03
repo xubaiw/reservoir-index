@@ -1,0 +1,7 @@
+.vscode
+.DS_Store
+*.olean
+/_target
+/leanpkg.path
+/src/build
+/src/lean_packages

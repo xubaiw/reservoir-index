@@ -1,0 +1,340 @@
+/-
+Copyright (c) 2020 Yury G. Kudryashov. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Yury G. Kudryashov
+-/
+import Mathbin.Data.Nat.Prime
+import Mathbin.Dynamics.FixedPoints.Basic
+import Mathbin.Data.Pnat.Basic
+import Mathbin.Data.Set.Lattice
+
+/-!
+# Periodic points
+
+A point `x : α` is a periodic point of `f : α → α` of period `n` if `f^[n] x = x`.
+
+## Main definitions
+
+* `is_periodic_pt f n x` : `x` is a periodic point of `f` of period `n`, i.e. `f^[n] x = x`.
+  We do not require `n > 0` in the definition.
+* `pts_of_period f n` : the set `{x | is_periodic_pt f n x}`. Note that `n` is not required to
+  be the minimal period of `x`.
+* `periodic_pts f` : the set of all periodic points of `f`.
+* `minimal_period f x` : the minimal period of a point `x` under an endomorphism `f` or zero
+  if `x` is not a periodic point of `f`.
+
+## Main statements
+
+We provide “dot syntax”-style operations on terms of the form `h : is_periodic_pt f n x` including
+arithmetic operations on `n` and `h.map (hg : semiconj_by g f f')`. We also prove that `f`
+is bijective on each set `pts_of_period f n` and on `periodic_pts f`. Finally, we prove that `x`
+is a periodic point of `f` of period `n` if and only if `minimal_period f x | n`.
+
+## References
+
+* https://en.wikipedia.org/wiki/Periodic_point
+
+-/
+
+
+open Set
+
+namespace Function
+
+variable {α : Type _} {β : Type _} {f fa : α → α} {fb : β → β} {x y : α} {m n : ℕ}
+
+/-- A point `x` is a periodic point of `f : α → α` of period `n` if `f^[n] x = x`.
+Note that we do not require `0 < n` in this definition. Many theorems about periodic points
+need this assumption. -/
+def IsPeriodicPt (f : α → α) (n : ℕ) (x : α) :=
+  IsFixedPt (f^[n]) x
+
+/-- A fixed point of `f` is a periodic point of `f` of any prescribed period. -/
+theorem IsFixedPt.is_periodic_pt (hf : IsFixedPt f x) (n : ℕ) : IsPeriodicPt f n x :=
+  hf.iterate n
+
+/-- For the identity map, all points are periodic. -/
+theorem is_periodic_id (n : ℕ) (x : α) : IsPeriodicPt id n x :=
+  (is_fixed_pt_id x).IsPeriodicPt n
+
+/-- Any point is a periodic point of period `0`. -/
+theorem is_periodic_pt_zero (f : α → α) (x : α) : IsPeriodicPt f 0 x :=
+  is_fixed_pt_id x
+
+namespace IsPeriodicPt
+
+instance [DecidableEq α] {f : α → α} {n : ℕ} {x : α} : Decidable (IsPeriodicPt f n x) :=
+  is_fixed_pt.decidable
+
+protected theorem is_fixed_pt (hf : IsPeriodicPt f n x) : IsFixedPt (f^[n]) x :=
+  hf
+
+protected theorem map (hx : IsPeriodicPt fa n x) {g : α → β} (hg : Semiconj g fa fb) : IsPeriodicPt fb n (g x) :=
+  hx.map (hg.iterate_right n)
+
+theorem apply_iterate (hx : IsPeriodicPt f n x) (m : ℕ) : IsPeriodicPt f n ((f^[m]) x) :=
+  hx.map <| Commute.iterate_self f m
+
+protected theorem apply (hx : IsPeriodicPt f n x) : IsPeriodicPt f n (f x) :=
+  hx.apply_iterate 1
+
+protected theorem add (hn : IsPeriodicPt f n x) (hm : IsPeriodicPt f m x) : IsPeriodicPt f (n + m) x := by
+  rw [is_periodic_pt, iterate_add]
+  exact hn.comp hm
+
+theorem left_of_add (hn : IsPeriodicPt f (n + m) x) (hm : IsPeriodicPt f m x) : IsPeriodicPt f n x := by
+  rw [is_periodic_pt, iterate_add] at hn
+  exact hn.left_of_comp hm
+
+theorem right_of_add (hn : IsPeriodicPt f (n + m) x) (hm : IsPeriodicPt f n x) : IsPeriodicPt f m x := by
+  rw [add_commₓ] at hn
+  exact hn.left_of_add hm
+
+protected theorem sub (hm : IsPeriodicPt f m x) (hn : IsPeriodicPt f n x) : IsPeriodicPt f (m - n) x := by
+  cases' le_totalₓ n m with h h
+  · refine' left_of_add _ hn
+    rwa [tsub_add_cancel_of_le h]
+    
+  · rw [tsub_eq_zero_iff_le.mpr h]
+    apply is_periodic_pt_zero
+    
+
+protected theorem mul_const (hm : IsPeriodicPt f m x) (n : ℕ) : IsPeriodicPt f (m * n) x := by
+  simp only [is_periodic_pt, iterate_mul, hm.is_fixed_pt.iterate n]
+
+protected theorem const_mul (hm : IsPeriodicPt f m x) (n : ℕ) : IsPeriodicPt f (n * m) x := by
+  simp only [mul_comm n, hm.mul_const n]
+
+theorem trans_dvd (hm : IsPeriodicPt f m x) {n : ℕ} (hn : m ∣ n) : IsPeriodicPt f n x :=
+  let ⟨k, hk⟩ := hn
+  hk.symm ▸ hm.mul_const k
+
+protected theorem iterate (hf : IsPeriodicPt f n x) (m : ℕ) : IsPeriodicPt (f^[m]) n x := by
+  rw [is_periodic_pt, ← iterate_mul, mul_comm, iterate_mul]
+  exact hf.is_fixed_pt.iterate m
+
+theorem comp {g : α → α} (hco : Commute f g) (hf : IsPeriodicPt f n x) (hg : IsPeriodicPt g n x) :
+    IsPeriodicPt (f ∘ g) n x := by
+  rw [is_periodic_pt, hco.comp_iterate]
+  exact hf.comp hg
+
+theorem comp_lcm {g : α → α} (hco : Commute f g) (hf : IsPeriodicPt f m x) (hg : IsPeriodicPt g n x) :
+    IsPeriodicPt (f ∘ g) (Nat.lcmₓ m n) x :=
+  (hf.trans_dvd <| Nat.dvd_lcm_leftₓ _ _).comp hco (hg.trans_dvd <| Nat.dvd_lcm_rightₓ _ _)
+
+theorem left_of_comp {g : α → α} (hco : Commute f g) (hfg : IsPeriodicPt (f ∘ g) n x) (hg : IsPeriodicPt g n x) :
+    IsPeriodicPt f n x := by
+  rw [is_periodic_pt, hco.comp_iterate] at hfg
+  exact hfg.left_of_comp hg
+
+theorem iterate_mod_apply (h : IsPeriodicPt f n x) (m : ℕ) : (f^[m % n]) x = (f^[m]) x := by
+  conv_rhs => rw [← Nat.mod_add_divₓ m n, iterate_add_apply, (h.mul_const _).Eq]
+
+protected theorem mod (hm : IsPeriodicPt f m x) (hn : IsPeriodicPt f n x) : IsPeriodicPt f (m % n) x :=
+  (hn.iterate_mod_apply m).trans hm
+
+protected theorem gcd (hm : IsPeriodicPt f m x) (hn : IsPeriodicPt f n x) : IsPeriodicPt f (m.gcd n) x := by
+  revert hm hn
+  refine' Nat.gcdₓ.induction m n (fun n h0 hn => _) fun m n hm ih hm hn => _
+  · rwa [Nat.gcd_zero_leftₓ]
+    
+  · rw [Nat.gcd_recₓ]
+    exact ih (hn.mod hm) hm
+    
+
+/-- If `f` sends two periodic points `x` and `y` of the same positive period to the same point,
+then `x = y`. For a similar statement about points of different periods see `eq_of_apply_eq`. -/
+theorem eq_of_apply_eq_same (hx : IsPeriodicPt f n x) (hy : IsPeriodicPt f n y) (hn : 0 < n) (h : f x = f y) : x = y :=
+  by
+  rw [← hx.eq, ← hy.eq, ← iterate_pred_comp_of_pos f hn, comp_app, h]
+
+/-- If `f` sends two periodic points `x` and `y` of positive periods to the same point,
+then `x = y`. -/
+theorem eq_of_apply_eq (hx : IsPeriodicPt f m x) (hy : IsPeriodicPt f n y) (hm : 0 < m) (hn : 0 < n) (h : f x = f y) :
+    x = y :=
+  (hx.mul_const n).eq_of_apply_eq_same (hy.const_mul m) (mul_pos hm hn) h
+
+end IsPeriodicPt
+
+/-- The set of periodic points of a given (possibly non-minimal) period. -/
+def PtsOfPeriod (f : α → α) (n : ℕ) : Set α :=
+  { x : α | IsPeriodicPt f n x }
+
+@[simp]
+theorem mem_pts_of_period : x ∈ PtsOfPeriod f n ↔ IsPeriodicPt f n x :=
+  Iff.rfl
+
+theorem Semiconj.maps_to_pts_of_period {g : α → β} (h : Semiconj g fa fb) (n : ℕ) :
+    MapsTo g (PtsOfPeriod fa n) (PtsOfPeriod fb n) :=
+  (h.iterate_right n).maps_to_fixed_pts
+
+theorem bij_on_pts_of_period (f : α → α) {n : ℕ} (hn : 0 < n) : BijOn f (PtsOfPeriod f n) (PtsOfPeriod f n) :=
+  ⟨(Commute.refl f).maps_to_pts_of_period n, fun x hx y hy hxy => hx.eq_of_apply_eq_same hy hn hxy, fun x hx =>
+    ⟨(f^[n.pred]) x, hx.apply_iterate _, by
+      rw [← comp_app f, comp_iterate_pred_of_pos f hn, hx.eq]⟩⟩
+
+theorem directed_pts_of_period_pnat (f : α → α) : Directed (· ⊆ ·) fun n : ℕ+ => PtsOfPeriod f n := fun m n =>
+  ⟨m * n, fun x hx => hx.mul_const n, fun x hx => hx.const_mul m⟩
+
+/-- The set of periodic points of a map `f : α → α`. -/
+def PeriodicPts (f : α → α) : Set α :=
+  { x : α | ∃ n > 0, IsPeriodicPt f n x }
+
+theorem mk_mem_periodic_pts (hn : 0 < n) (hx : IsPeriodicPt f n x) : x ∈ PeriodicPts f :=
+  ⟨n, hn, hx⟩
+
+theorem mem_periodic_pts : x ∈ PeriodicPts f ↔ ∃ n > 0, IsPeriodicPt f n x :=
+  Iff.rfl
+
+variable (f)
+
+theorem bUnion_pts_of_period : (⋃ n > 0, PtsOfPeriod f n) = PeriodicPts f :=
+  Set.ext fun x => by
+    simp [mem_periodic_pts]
+
+theorem Union_pnat_pts_of_period : (⋃ n : ℕ+, PtsOfPeriod f n) = PeriodicPts f :=
+  supr_subtype.trans <| bUnion_pts_of_period f
+
+theorem bij_on_periodic_pts : BijOn f (PeriodicPts f) (PeriodicPts f) :=
+  Union_pnat_pts_of_period f ▸
+    bij_on_Union_of_directed (directed_pts_of_period_pnat f) fun i => bij_on_pts_of_period f i.Pos
+
+variable {f}
+
+theorem Semiconj.maps_to_periodic_pts {g : α → β} (h : Semiconj g fa fb) : MapsTo g (PeriodicPts fa) (PeriodicPts fb) :=
+  fun x ⟨n, hn, hx⟩ => ⟨n, hn, hx.map h⟩
+
+open_locale Classical
+
+noncomputable section
+
+/-- Minimal period of a point `x` under an endomorphism `f`. If `x` is not a periodic point of `f`,
+then `minimal_period f x = 0`. -/
+def minimalPeriod (f : α → α) (x : α) :=
+  if h : x ∈ PeriodicPts f then Nat.findₓ h else 0
+
+theorem is_periodic_pt_minimal_period (f : α → α) (x : α) : IsPeriodicPt f (minimalPeriod f x) x := by
+  delta' minimal_period
+  split_ifs with hx
+  · exact (Nat.find_specₓ hx).snd
+    
+  · exact is_periodic_pt_zero f x
+    
+
+theorem iterate_eq_mod_minimal_period : (f^[n]) x = (f^[n % minimalPeriod f x]) x :=
+  ((is_periodic_pt_minimal_period f x).iterate_mod_apply n).symm
+
+theorem minimal_period_pos_of_mem_periodic_pts (hx : x ∈ PeriodicPts f) : 0 < minimalPeriod f x := by
+  simp only [minimal_period, dif_pos hx, (Nat.find_specₓ hx).fst.lt]
+
+theorem IsPeriodicPt.minimal_period_pos (hn : 0 < n) (hx : IsPeriodicPt f n x) : 0 < minimalPeriod f x :=
+  minimal_period_pos_of_mem_periodic_pts <| mk_mem_periodic_pts hn hx
+
+theorem minimal_period_pos_iff_mem_periodic_pts : 0 < minimalPeriod f x ↔ x ∈ PeriodicPts f :=
+  ⟨not_imp_not.1 fun h => by
+      simp only [minimal_period, dif_neg h, lt_irreflₓ 0, not_false_iff],
+    minimal_period_pos_of_mem_periodic_pts⟩
+
+theorem IsPeriodicPt.minimal_period_le (hn : 0 < n) (hx : IsPeriodicPt f n x) : minimalPeriod f x ≤ n := by
+  rw [minimal_period, dif_pos (mk_mem_periodic_pts hn hx)]
+  exact Nat.find_min'ₓ (mk_mem_periodic_pts hn hx) ⟨hn, hx⟩
+
+theorem minimal_period_id : minimalPeriod id x = 1 :=
+  ((is_periodic_id _ _).minimal_period_le Nat.one_posₓ).antisymm
+    (Nat.succ_le_of_ltₓ ((is_periodic_id _ _).minimal_period_pos Nat.one_posₓ))
+
+theorem is_fixed_point_iff_minimal_period_eq_one : minimalPeriod f x = 1 ↔ IsFixedPt f x := by
+  refine' ⟨fun h => _, fun h => _⟩
+  · rw [← iterate_one f]
+    refine' Function.IsPeriodicPt.is_fixed_pt _
+    rw [← h]
+    exact is_periodic_pt_minimal_period f x
+    
+  · exact
+      ((h.is_periodic_pt 1).minimal_period_le Nat.one_posₓ).antisymm
+        (Nat.succ_le_of_ltₓ ((h.is_periodic_pt 1).minimal_period_pos Nat.one_posₓ))
+    
+
+theorem IsPeriodicPt.eq_zero_of_lt_minimal_period (hx : IsPeriodicPt f n x) (hn : n < minimalPeriod f x) : n = 0 :=
+  Eq.symm <| (eq_or_lt_of_le <| n.zero_le).resolve_right fun hn0 => not_ltₓ.2 (hx.minimal_period_le hn0) hn
+
+theorem not_is_periodic_pt_of_pos_of_lt_minimal_period :
+    ∀ {n : ℕ} n0 : n ≠ 0 hn : n < minimalPeriod f x, ¬IsPeriodicPt f n x
+  | 0, n0, _ => (n0 rfl).elim
+  | n + 1, _, hn => fun hp => Nat.succ_ne_zero _ (hp.eq_zero_of_lt_minimal_period hn)
+
+theorem IsPeriodicPt.minimal_period_dvd (hx : IsPeriodicPt f n x) : minimalPeriod f x ∣ n :=
+  ((eq_or_lt_of_le <| n.zero_le).elim fun hn0 => hn0 ▸ dvd_zero _) fun hn0 =>
+    (Nat.dvd_iff_mod_eq_zeroₓ _ _).2 <|
+      (hx.mod <| is_periodic_pt_minimal_period f x).eq_zero_of_lt_minimal_period <|
+        Nat.mod_ltₓ _ <| hx.minimal_period_pos hn0
+
+theorem is_periodic_pt_iff_minimal_period_dvd : IsPeriodicPt f n x ↔ minimalPeriod f x ∣ n :=
+  ⟨IsPeriodicPt.minimal_period_dvd, fun h => (is_periodic_pt_minimal_period f x).trans_dvd h⟩
+
+open Nat
+
+theorem minimal_period_eq_minimal_period_iff {g : β → β} {y : β} :
+    minimalPeriod f x = minimalPeriod g y ↔ ∀ n, IsPeriodicPt f n x ↔ IsPeriodicPt g n y := by
+  simp_rw [is_periodic_pt_iff_minimal_period_dvd, dvd_right_iff_eq]
+
+theorem minimal_period_eq_prime {p : ℕ} [hp : Fact p.Prime] (hper : IsPeriodicPt f p x) (hfix : ¬IsFixedPt f x) :
+    minimalPeriod f x = p :=
+  (hp.out.eq_one_or_self_of_dvd _ hper.minimal_period_dvd).resolve_left
+    (mt is_fixed_point_iff_minimal_period_eq_one.1 hfix)
+
+theorem minimal_period_eq_prime_pow {p k : ℕ} [hp : Fact p.Prime] (hk : ¬IsPeriodicPt f (p ^ k) x)
+    (hk1 : IsPeriodicPt f (p ^ (k + 1)) x) : minimalPeriod f x = p ^ (k + 1) := by
+  apply Nat.eq_prime_pow_of_dvd_least_prime_pow hp.out <;> rwa [← is_periodic_pt_iff_minimal_period_dvd]
+
+theorem Commute.minimal_period_of_comp_dvd_lcm {g : α → α} (h : Function.Commute f g) :
+    minimalPeriod (f ∘ g) x ∣ Nat.lcmₓ (minimalPeriod f x) (minimalPeriod g x) := by
+  rw [← is_periodic_pt_iff_minimal_period_dvd]
+  exact (is_periodic_pt_minimal_period f x).comp_lcm h (is_periodic_pt_minimal_period g x)
+
+theorem Commute.minimal_period_of_comp_dvd_mul {g : α → α} (h : Function.Commute f g) :
+    minimalPeriod (f ∘ g) x ∣ minimalPeriod f x * minimalPeriod g x :=
+  dvd_trans h.minimal_period_of_comp_dvd_lcm (lcm_dvd_mul _ _)
+
+theorem Commute.minimal_period_of_comp_eq_mul_of_coprime {g : α → α} (h : Function.Commute f g)
+    (hco : Coprime (minimalPeriod f x) (minimalPeriod g x)) :
+    minimalPeriod (f ∘ g) x = minimalPeriod f x * minimalPeriod g x := by
+  apply dvd_antisymm h.minimal_period_of_comp_dvd_mul
+  suffices :
+    ∀ {f g : α → α},
+      Commute f g → coprime (minimal_period f x) (minimal_period g x) → minimal_period f x ∣ minimal_period (f ∘ g) x
+  exact hco.mul_dvd_of_dvd_of_dvd (this h hco) (h.comp_eq.symm ▸ this h.symm hco.symm)
+  clear hco h f g
+  intro f g h hco
+  refine' hco.dvd_of_dvd_mul_left (is_periodic_pt.left_of_comp h _ _).minimal_period_dvd
+  · exact (is_periodic_pt_minimal_period _ _).const_mul _
+    
+  · exact (is_periodic_pt_minimal_period _ _).mul_const _
+    
+
+private theorem minimal_period_iterate_eq_div_gcd_aux (h : 0 < gcdₓ (minimalPeriod f x) n) :
+    minimalPeriod (f^[n]) x = minimalPeriod f x / Nat.gcdₓ (minimalPeriod f x) n := by
+  apply Nat.dvd_antisymm
+  · apply is_periodic_pt.minimal_period_dvd
+    rw [is_periodic_pt, is_fixed_pt, ← iterate_mul, ← Nat.mul_div_assocₓ _ (gcd_dvd_left _ _), mul_comm,
+      Nat.mul_div_assocₓ _ (gcd_dvd_right _ _), mul_comm, iterate_mul]
+    exact (is_periodic_pt_minimal_period f x).iterate _
+    
+  · apply coprime.dvd_of_dvd_mul_right (coprime_div_gcd_div_gcd h)
+    apply dvd_of_mul_dvd_mul_right h
+    rw [Nat.div_mul_cancelₓ (gcd_dvd_left _ _), mul_assoc, Nat.div_mul_cancelₓ (gcd_dvd_right _ _), mul_comm]
+    apply is_periodic_pt.minimal_period_dvd
+    rw [is_periodic_pt, is_fixed_pt, iterate_mul]
+    exact is_periodic_pt_minimal_period _ _
+    
+
+theorem minimal_period_iterate_eq_div_gcd (h : n ≠ 0) :
+    minimalPeriod (f^[n]) x = minimalPeriod f x / Nat.gcdₓ (minimalPeriod f x) n :=
+  minimal_period_iterate_eq_div_gcd_aux <| gcd_pos_of_pos_rightₓ _ (Nat.pos_of_ne_zeroₓ h)
+
+theorem minimal_period_iterate_eq_div_gcd' (h : x ∈ PeriodicPts f) :
+    minimalPeriod (f^[n]) x = minimalPeriod f x / Nat.gcdₓ (minimalPeriod f x) n :=
+  minimal_period_iterate_eq_div_gcd_aux <| gcd_pos_of_pos_leftₓ n (minimal_period_pos_iff_mem_periodic_pts.mpr h)
+
+end Function
+
