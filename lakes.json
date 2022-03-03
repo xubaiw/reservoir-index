@@ -55,6 +55,7 @@
  "marcusrossel/reactor-model",
  "mhuisi/lean4-cli",
  "opencompl/lean-mlir",
+ "pnwamk/lean4-assert-command",
  "siddhartha-gadgil/Polylean",
  "siddhartha-gadgil/Saturn",
  "siddhartha-gadgil/lean-loris",
