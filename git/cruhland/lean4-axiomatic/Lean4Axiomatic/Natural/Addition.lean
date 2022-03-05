@@ -43,11 +43,8 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   /-- Exchanging the operands of an addition does not change the result. -/
   add_commutative : AA.Commutative (α := ℕ) (· + ·)
 
-  /--
-  When three natural numbers are added together, the result is the same
-  regardless of which two numbers are added first.
-  -/
-  add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k)
+  /-- The grouping of the terms in a sum doesn't matter. -/
+  add_associative : AA.Associative (α := ℕ) (· + ·)
 
   /--
   If two equal sums of natural numbers have the same left operand, then their
@@ -63,20 +60,16 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   -/
   zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0
 
+attribute [instance] Addition.Derived.add_associative
 attribute [instance] Addition.Derived.add_commutative
 attribute [instance] Addition.Derived.add_substitutive
 
 namespace Addition
 export Addition.Base (addOp step_add zero_add)
 export Addition.Derived (
-  add_assoc add_commutative add_one_step add_step add_substitutive add_zero cancel_add
-  zero_sum_split
+  add_associative add_commutative add_one_step add_step add_substitutive
+  add_zero cancel_add zero_sum_split
 )
 end Addition
-
-export Addition (
-  add_assoc add_commutative add_one_step addOp add_step add_substitutive
-  add_zero cancel_add step_add zero_add zero_sum_split
-)
 
 end Lean4Axiomatic.Natural

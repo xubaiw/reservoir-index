@@ -51,7 +51,6 @@ partial def unpackWeighted (expr: Expr) : TermElabM (List (Expr × Nat)) :=
       | some (h, t) => 
         match (← split? h) with
         | some (x, wexp) =>
-            -- logInfo m!"weight: {← whnf wexp} with type {← whnf (← inferType wexp)}"
             let w ←  exprNat (← whnf wexp)
             let h := (← whnf x, w)
             return h :: (← unpackWeighted t)
@@ -102,10 +101,7 @@ partial def lambdaUnpack (expr: Expr) : TermElabM (List Expr) :=
           do throwError m!"{expr} is neither product nor unit" 
         return []
 
-syntax (name:= roundtripWtd) "roundtrip-weighted!" term : term
-@[termElab roundtripWtd] def roundtripWtdImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(roundtrip-weighted! $t) => 
+elab (name:= roundtripWtd) "roundtrip-weighted!" t:term : term =>
     do
       let expr ← elabTerm t none
       let l ← unpackWeighted expr
@@ -116,9 +112,9 @@ syntax (name:= roundtripWtd) "roundtrip-weighted!" term : term
       let ll ← unpackWeighted e
       let ee ← packWeighted ll
       return ee
-  | _ => throwIllFormedSyntax
 
--- #eval roundtrip-weighted! (((), 9), (2, 7), ("Hello", 12), ())
+
+#eval roundtrip-weighted! (((), 9), (2, 7), ("Hello", 12), ())
 
 partial def unpack (expr: Expr) : TermElabM (List Expr) :=
     do
@@ -150,10 +146,7 @@ def packTerms : List Expr →  TermElabM Expr
         let expr ← mkAppM `Prod.mk #[x, t]
         return expr
 
-syntax (name := prodHead) "prodHead!" term : term
-@[termElab prodHead] def prodHeadImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(prodHead! $t) => 
+elab (name := prodHead) "prodHead!" t:term : term => 
     do
       let expr ← elabTerm t none
       let hOpt ← splitPProd? expr 
@@ -161,29 +154,21 @@ syntax (name := prodHead) "prodHead!" term : term
       match (hOpt.orElse (fun _ => hpOpt)) with
       | some (h, t) => return h
       | none => throwAbortTerm    
-  | _ => throwIllFormedSyntax
 
 -- #eval prodHead! (10, 12, 15, 13)
 
 
-syntax (name := prodlHead) "prodlHead!" term : term
-@[termElab prodlHead] def prodlHeadImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(prodlHead! $t) => 
+elab "prodlHead!" t:term : term => 
     do
       let expr ← elabTerm t none
       let l ← try 
         unpack expr
         catch exc => throwError m!"Error {exc.toMessageData} while unpacking {expr}"
       return l.head!   
-  | _ => throwIllFormedSyntax
 
--- #eval prodlHead! (3, 10, 12, 13, ())
+#eval prodlHead! (3, 10, 12, 13, ())
 
-syntax (name:= roundtrip) "roundtrip!" term : term
-@[termElab roundtrip] def roundtripImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(roundtrip! $t) => 
+elab (name:= roundtrip) "roundtrip!" t:term : term => 
     do
       let expr ← elabTerm t none
       let l ← unpack expr
@@ -191,18 +176,13 @@ syntax (name:= roundtrip) "roundtrip!" term : term
       let ll ← unpack e
       let ee ← pack ll
       return ee
-  | _ => throwIllFormedSyntax
 
-syntax (name:= justterms) "terms!" term : term
-@[termElab justterms] def justtermsImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(terms! $t) => 
+elab (name:= justterms) "terms!" t:term : term => 
     do
       let expr ← elabTerm t none
       let l ← unpack expr
       let e ← packTerms l
       return e
-  | _ => throwIllFormedSyntax
 
 infixr:65 ":::" => PProd.mk
 
@@ -220,13 +200,13 @@ def ExprDist.save (name: Name)(es: ExprDist) : TermElabM (Unit) := do
   let espair ← es.mapM (fun e => do 
        return (← Term.levelMVarToParam (← instantiateMVars e)).1)
   let es ← espair.mapM (fun e => do whnf <| ←  mkLambdaFVars fvars e)
-  logInfo m!"saving relative to: {fvars}"
+  -- logInfo m!"saving relative to: {fvars}"
   let varPack ← ProdSeq.lambdaPack fvars.toList
   let cache ← exprDistCache.get
   exprDistCache.set (cache.insert name (varPack, es))
   return ()
 
-def ExprDist.load (name: Name) : TermElabM (ExprDist) := do
+def ExprDist.load (name: Name) : TermElabM ExprDist := do
   let cache ← exprDistCache.get
   match cache.find? name with
   | some (varPack, es) =>

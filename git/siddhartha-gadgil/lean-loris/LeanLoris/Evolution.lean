@@ -259,14 +259,11 @@ instance {D: Type}: Pow (EvolverM D) (RecEvolverM D) :=
 instance {D: Type}: Append <| EvolverM D := ⟨fun fst snd => fst.merge snd⟩
 
 def isleM {D: Type}[IsleData D](type: Expr)(evolve : EvolverM D)(weightBound: Nat)(cardBound: Nat)
-      (init : ExprDist)(initData: D)(includePi : Bool := true)(excludeProofs: Bool := false)(excludeLambda : Bool := false)(excludeInit : Bool := false): TermElabM (ExprDist) := 
+      (init : ExprDist)(initData: D)(includePi : Bool := true)(excludeProofs: Bool := false)(excludeLambda : Bool := false)(excludeInit : Bool := false): TermElabM ExprDist := 
     withLocalDecl Name.anonymous BinderInfo.default (type)  $ fun x => 
         do
           -- IO.println s!"Isle variable type: {← view <| ← whnf <| ← inferType x}; is-proof? : {← isProof x}"
           let dist ←  init.updateExprM x 0
-          -- let pts ← dist.allTermsArr.mapM (fun (term, w) => do 
-          --   return (← view term, ← view <| ← inferType term, w))
-          -- IO.println s!"initial terms in isle: {pts}"
           let foldedFuncs : Array (Expr × Nat) ← 
             (← init.funcs).filterMapM (
               fun (f, w) => do
@@ -274,10 +271,6 @@ def isleM {D: Type}[IsleData D](type: Expr)(evolve : EvolverM D)(weightBound: Na
                   let y ← (mkAppOpt f x)
                   return y.map (fun y => (y, w))
               )
-          -- IO.println s!"folded functions in isle: {foldedFuncs.size}"
-          -- let pts ← foldedFuncs.mapM (fun (term, w) => do 
-          --   return (← view term, ← view <| ← inferType term, w))
-          -- IO.println s!"folded terms in isle: {pts}"
           let dist ← dist.mergeArray foldedFuncs
           -- logInfo "started purging terms"
           let purgedTerms ← dist.termsArr.filterM (fun (term, w) => do
@@ -293,22 +286,11 @@ def isleM {D: Type}[IsleData D](type: Expr)(evolve : EvolverM D)(weightBound: Na
                 return res
               | _ => pure true
           )
-          -- logInfo "finished purging terms"
-          -- let pts ← purgedTerms.mapM (fun (term, w) => do (← inferType term, w))
-          -- IO.println s!"terms in isle: {pts.size}"
           let dist := ⟨purgedTerms, dist.proofsArr⟩
-          -- IO.println s!"entered isle: {← IO.monoMsNow} "
-          -- let pts ← dist.allTermsArr.mapM (fun (term, w) => do 
-          --   return (← view term, ← view <| ← inferType term, w))
-          -- IO.println s!"modified terms in isle: {pts}"
 
           let eva ← evolve weightBound cardBound  
                   (isleData initData dist weightBound cardBound) dist
-          -- IO.println s!"inner isle distribution obtained: {← IO.monoMsNow} "
-          -- IO.println s!"initial size: {eva.termsArr.size}, {eva.proofsArr.size}"
           let evb ← if excludeInit then eva.diffM dist else pure eva
-          -- IO.println s!"diff size ({excludeInit}): {evb.termsArr.size}, {evb.proofsArr.size}"
-          -- IO.println s!"dist: {← dist.existsM x 0}, eva: {← eva.existsM x 0}, evb: {← evb.existsM x 0}"
           let innerTerms : Array (Expr × Nat) :=  if excludeProofs 
           then ← evb.termsArr.filterM ( fun (t, _) => do
               let b ← isDefEq t x
@@ -490,10 +472,10 @@ def eqIsleEvolver(D: Type)[IsNew D][NewElem Expr D][IsleData D] : RecEvolverM D 
 
 def allIsleEvolver(D: Type)[IsNew D][IsleData D] : RecEvolverM D := fun wb c init d evolve => 
   do
-    let typeDist ← init.allSorts
-    let typesCum := typeDist.cumulWeightCount wb
+    let typeDist ← init.allSortsArr
+    let typesCum := weightAbove typeDist wb
     let mut finalDist: ExprDist := ExprDist.empty
-    for (type, w) in typeDist.toArray do
+    for (type, w) in typeDist do
       if wb - w > 0 then
         let ic := c / (typesCum.find! w)
         let isleDist ←   isleM type evolve (wb -w -1) ic init d   
@@ -717,37 +699,53 @@ def refineWeight(weight? : Expr → TermElabM (Option Nat)):
   return finalDist
 
 
-def logResults(goals : Array Expr) : ExprDist →  TermElabM Unit := fun dist => do
-    IO.println s!"number of terms : {dist.termsArr.size}"
-    IO.println s!"number of proofs: {dist.proofsArr.size}"
-    IO.println s!"term distribution : {(arrWeightCount dist.termsArr).toArray}"
-    IO.println s!"proof distribution: {(arrWeightCount <| dist.proofsArr.map (fun (l, _, w) => (l, w))).toArray}"
+def logResults(tk?: Option Syntax): Array Expr →  
+  ExprDist →  TermElabM Unit := fun goals dist => do
+    if tk?.isNone then
+      IO.println s!"number of terms : {dist.termsArr.size}"
+      IO.println s!"number of proofs: {dist.proofsArr.size}"
+      IO.println s!"term distribution : {(arrWeightCount dist.termsArr).toArray}"
+      IO.println s!"proof distribution: {(arrWeightCount <| dist.proofsArr.map (fun (l, _, w) => (l, w))).toArray}"
     let mut count := 0
     for g in goals do
       count := count + 1
-      IO.println s!"goal {count}: {← view g}"
+      if tk?.isNone then
+        IO.println s!"goal {count}: {← view g}"
       let statement ←  (dist.allTermsArr.findM? $ fun (s, _) => isDefEq s g)
       -- let statement ←  statement.mapM $ fun (e, w) => do
       --   let e ← whnf e
       --   pure (← view e, w) 
       if ← isProp g then
-        IO.println s!"proposition generated: {statement}"
+        if tk?.isNone then
+          IO.println s!"proposition generated: {statement}"
         let proof ←  dist.proofsArr.findM? $ fun (l, t, w) => 
                 do isDefEq l g
         match proof with
         | some (_, pf, w) =>
-          logInfo m!"found proof {pf} for proposition goal {count} : {g}"
-          IO.println s!"proof generated: {← view pf}, weight : {w}"
+          match tk? with 
+          | some tk => 
+              logInfoAt tk m!"found proof {pf} for proposition goal {count} : {g}; weight {w}"
+          | none =>  
+              IO.println s!"proof generated: {← view pf}, weight : {w}"
         | none =>  
-          logWarning m!"no proof found for proposition goal {count} : {g}"
+          match tk? with 
+          | some tk => 
+              logWarningAt tk m!"no proof found for proposition goal {count} : {g}"
+          | none =>  pure ()          
           pure ()
       else
         match statement with
         | some (e, w) =>
-          logInfo m!"generated term {e} for goal {count} : {g}, weight : {w}"
-          IO.println s!"generated term: {← view e} for goal {count} : {g} , weight : {w}"
+          match tk? with 
+            | some tk => 
+                logInfoAt tk m!"generated term {e} for goal {count} : {g}, weight : {w}"
+            | none =>            
+                IO.println s!"generated term: {← view e} for goal {count} : {g} , weight : {w}"
         | none => 
-          logWarning m!"no term found for goal {count} : {g}"
+          match tk? with 
+          | some tk => 
+            logWarningAt tk m!"no term found for goal {count} : {g}"
+          | none => pure ()
           pure ()
 
 abbrev EvolutionM := ExprDist → TermElabM ExprDist

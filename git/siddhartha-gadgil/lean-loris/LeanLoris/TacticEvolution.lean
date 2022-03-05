@@ -73,7 +73,7 @@ def tacticLambdaMVars(tactic : MVarId → TermElabM (List MVarId))(goalType: Exp
         Term.synthesizeSyntheticMVarsNoPostponing
         return some <| (←  metaToLambda mvars goal, mvars)
       catch exc =>
-        logInfo m!"tacticLambdaMVars failed for {goal}: ${exc.toMessageData}"
+        -- logInfo m!"tacticLambdaMVars failed for {goal}: ${exc.toMessageData}"
         return none
 
 
@@ -197,7 +197,7 @@ def applyTacticEvolver(D: Type)[IsNew D][NewElem Expr D] : EvolverM D :=
 
 def forallIsleM {D: Type}[IsleData D](type: Expr)(typedEvolve : Expr → EvolverM D)
     (weightBound: Nat)(cardBound: Nat)
-      (init : ExprDist)(initData: D): TermElabM (ExprDist) := 
+      (init : ExprDist)(initData: D): TermElabM ExprDist := 
       forallTelescope type <| fun xs y => do
       let isleInit ← xs.foldlM (fun d x => d.updateExprM x 0) init
       let isleFinal ← typedEvolve y weightBound cardBound 
@@ -207,7 +207,7 @@ def forallIsleM {D: Type}[IsleData D](type: Expr)(typedEvolve : Expr → Evolver
 def forallBoundedIsleM {D: Type}[IsleData D](bound: Nat)(type: Expr)
     (typedEvolve : Expr → EvolverM D)
     (weightBound: Nat)(cardBound: Nat)
-      (init : ExprDist)(initData: D): TermElabM (ExprDist) := 
+      (init : ExprDist)(initData: D): TermElabM ExprDist := 
       forallBoundedTelescope type (some bound) <| fun xs y => do
       let isleInit ← xs.foldlM (fun d x => d.updateExprM x 0) init
       let isleFinal ← typedEvolve y weightBound cardBound 
@@ -296,11 +296,9 @@ def sumEl : TermElabM Expr := do
 
 -- #eval sumEl
 
-syntax(name:=sm) "sumEl!" : term
-@[termElab sm] def smImpl : TermElab := fun _ _ =>
-    sumEl
+elab "sumEl!" : term => sumEl
 
--- #eval sumEl! 1 2
+#eval sumEl! 1 2
 
 theorem constFn2{α : Type}(f: Nat → α):
     (∀ n : Nat, f n = f (n + 1)) →

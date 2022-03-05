@@ -1,3 +1,4 @@
+import Lean4Axiomatic.Natural.Addition
 import Lean4Axiomatic.Natural.Multiplication
 import Lean4Axiomatic.Natural.Sign
 
@@ -74,11 +75,11 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       (n * m + n) + step m
     ≃ _ := Addition.add_step
       step ((n * m + n) + m)
-    ≃ _ := AA.subst Addition.add_assoc
+    ≃ _ := AA.subst AA.assoc
       step (n * m + (n + m))
     ≃ _ := AA.subst (AA.substR AA.comm)
       step (n * m + (m + n))
-    ≃ _ := Eqv.symm (AA.subst Addition.add_assoc)
+    ≃ _ := Eqv.symm (AA.subst AA.assoc)
       step ((n * m + m) + n)
     ≃ _ := Eqv.symm (AA.subst (AA.substL Base.step_mul))
       step (step n * m + n)
@@ -233,6 +234,76 @@ theorem mul_positive [Sign.Base ℕ] {n m : ℕ}
     show False
     exact absurd ‹m ≃ 0› ‹m ≄ 0›
 
+/--
+Multiplication on the left distributes over addition.
+
+**Intuition**: Viewing `a * b` as the sum of `a` copies of `b`, this theorem
+says that the sum of `n` copies of `m + k` is the same as the sum of `n` copies
+of `m` added to the sum of `n` copies of `k`. Using the commutativity and
+associativity of addition to rearrange the sums shows this is clearly true.
+-/
+theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
+  apply Axioms.ind_on (motive := λ x => x * (m + k) ≃ x * m + x * k) n
+  case zero =>
+    show 0 * (m + k) ≃ 0 * m + 0 * k
+    calc
+      0 * (m + k)   ≃ _ := Base.zero_mul
+      0             ≃ _ := Eqv.symm Addition.zero_add
+      0 + 0         ≃ _ := Eqv.symm (AA.substL Base.zero_mul)
+      0 * m + 0     ≃ _ := Eqv.symm (AA.substR Base.zero_mul)
+      0 * m + 0 * k ≃ _ := Eqv.refl
+  case step =>
+    intro n (ih : n * (m + k) ≃ n * m + n * k)
+    show step n * (m + k) ≃ step n * m + step n * k
+    calc
+      step n * (m + k)          ≃ _ := Base.step_mul
+      n * (m + k) + (m + k)     ≃ _ := AA.substL ih
+      n * m + n * k + (m + k)   ≃ _ := AA.assoc
+      n * m + (n * k + (m + k)) ≃ _ := Eqv.symm (AA.substR AA.assoc)
+      n * m + ((n * k + m) + k) ≃ _ := AA.substR (AA.substL AA.comm)
+      n * m + ((m + n * k) + k) ≃ _ := AA.substR AA.assoc
+      n * m + (m + (n * k + k)) ≃ _ := Eqv.symm AA.assoc
+      (n * m + m) + (n * k + k) ≃ _ := Eqv.symm (AA.substL Base.step_mul)
+      step n * m + (n * k + k)  ≃ _ := Eqv.symm (AA.substR Base.step_mul)
+      step n * m + step n * k   ≃ _ := Eqv.refl
+
+def mul_distributiveL : AA.DistributiveOn AA.Hand.L (α := ℕ) (· * ·) (· + ·) :=
+  AA.DistributiveOn.mk mul_distribL_add
+
+instance mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·) where
+  distributiveL := mul_distributiveL
+  distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL
+
+/--
+The grouping of the factors in a product doesn't matter.
+
+**Intuition**: Imagine a collection of identical objects arranged into a
+rectangle `n * m` objects long and `k` objects high. Partition this into `m`
+smaller rectangles having length `n` and height `k`. Clearly the number of
+objects remains the same in both arrangements.
+-/
+def mul_associative : AA.Associative (α := ℕ) (· * ·) := by
+  constructor
+  intro n m k
+  show (n * m) * k ≃ n * (m * k)
+  apply Axioms.ind_on (motive := λ x => (x * m) * k ≃ x * (m * k))
+  case zero =>
+    show (0 * m) * k ≃ 0 * (m * k)
+    calc
+      (0 * m) * k ≃ _ := AA.substL Base.zero_mul
+      0 * k       ≃ _ := Base.zero_mul
+      0           ≃ _ := Eqv.symm Base.zero_mul
+      0 * (m * k) ≃ _ := Eqv.refl
+  case step =>
+    intro n (ih : (n * m) * k ≃ n * (m * k))
+    show (step n * m) * k ≃ step n * (m * k)
+    calc
+      (step n * m) * k    ≃ _ := AA.substL Base.step_mul
+      (n * m + m) * k     ≃ _ := AA.distribR
+      (n * m) * k + m * k ≃ _ := AA.substL ih
+      n * (m * k) + m * k ≃ _ := Eqv.symm Base.step_mul
+      step n * (m * k)    ≃ _ := Eqv.refl
+
 instance multiplication_derived [Sign.Base ℕ] : Multiplication.Derived ℕ where
   mul_substitutive := mul_substitutive
   mul_zero := mul_zero
@@ -240,5 +311,7 @@ instance multiplication_derived [Sign.Base ℕ] : Multiplication.Derived ℕ whe
   mul_commutative := mul_commutative
   zero_product_split := zero_product_split
   mul_positive := mul_positive
+  mul_distributive := mul_distributive
+  mul_associative := mul_associative
 
 end Lean4Axiomatic.Natural.Derived

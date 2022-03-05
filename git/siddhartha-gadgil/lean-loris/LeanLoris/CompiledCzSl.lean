@@ -62,29 +62,29 @@ def nameDist := #[(``mul, 0), (``ax1, 0), (``ax2, 0)]
 def initData : FullData := (FinDist.fromArray nameDist, [], [])
 
 def goals : TermElabM (Array Expr) := do
-                  parseExprList (← 
+                  parseExprArray (← 
                   `(expr_list|exp![lem1!, lem2!, lem3!, lem4!, lem5!, lem6!, thm!]))
 
 def evolve1: TermElabM EvolutionM := do
             let step := initEv ++ nameAppl ++ nameBinOp ++ eqIsles
-            let ev  := step.evolve.andThenM (logResults <| ←  goals)
+            let ev  := step.evolve.andThenM (logResults none <| ←  goals)
             return ev 3 6000 initData
 
 def evolve2: TermElabM EvolutionM := do
             let step := initEv ++ eqClosure
-            let ev  := step.evolve.andThenM (logResults <| ←  goals)
+            let ev  := step.evolve.andThenM (logResults none <| ←  goals)
             return ev 1 6000 initData
 
 def evolve : TermElabM EvolutionM := do
       return (← evolve1) * (← evolve2) * (← evolve1) * (← evolve2)
 
-def init1 : TermElabM (Array (Expr × Nat)) := do
-                  parseExprMap (← `(expr_dist|exp!{(m, 0), (n, 0), (m *n, 0)}))
+def init1 : TermElabM ExprDist := do
+                  parseExprDist (← `(expr_dist|exp!{(m, 0), (n, 0), (m *n, 0)}))
 
 def goals4 : TermElabM (Array Expr) := do
-                  parseExprList (← `(expr_list|exp![thm!]))
+                  parseExprArray (← `(expr_list|exp![thm!]))
 def dist4 : TermElabM ExprDist := do
-                  (← evolve) (← ExprDist.fromArray <| ←  init1) 
+                  (← evolve) (←  init1) 
 
 def view4 : TermElabM String := do
                   (← dist4).viewGoals (← goals4)                

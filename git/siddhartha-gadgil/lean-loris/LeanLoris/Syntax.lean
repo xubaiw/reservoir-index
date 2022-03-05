@@ -11,8 +11,9 @@ declare_syntax_cat expr_dist
 syntax exprWt := "(" term "," num ")"
 syntax exprWtList := "exp!{" exprWt,* "}"
 syntax exprWtList : expr_dist
+syntax "@" ident : expr_dist
 
-def parseExprMap : Syntax → TermElabM (Array (Expr × Nat))
+def parseExprDist : Syntax → TermElabM ExprDist
   | `(expr_dist|exp!{$[$xs:exprWt],*}) =>
     do
           let m : Array (Expr × Nat) ←  xs.mapM (fun s => do
@@ -24,27 +25,35 @@ def parseExprMap : Syntax → TermElabM (Array (Expr × Nat))
               | _ =>
                 throwError m!"{s} is not a valid exprWt"
               )
-          return m
+          ExprDist.fromArray m
+  | `(expr_dist|@$x:ident) =>
+    do
+      let name := x.getId
+      ExprDist.load name
   | _ => throwIllFormedSyntax
 
-syntax (name:= exprDistPack) "packdist!" expr_dist : term
-@[termElab exprDistPack] def exprDistPackImpl : TermElab := fun stx _ =>
-    match stx with 
-    | `(packdist! $s:expr_dist) => 
-        do
-          let m : Array (Expr × Nat) ←  parseExprMap s
-          packWeighted m.toList
-    | _ => throwIllFormedSyntax
+elab (name:= exprDistPack) "packdist!" s:expr_dist : term => do
+  let m : Array (Expr × Nat)  := (←  parseExprDist s).allTermsArr
+  packWeighted m.toList
 
--- #eval packdist! exp!{(1, 2), ("Hello", 4)}
--- #check packdist! exp!{(1, 2), ("Hello", 4)}
+
+#eval packdist! exp!{(1, 2), ("Hello", 4)}
+#check packdist! exp!{(1, 2), ("Hello", 4)}
 
 #reduce (fun x y : Nat => packdist! exp!{ (1, 2), ("Hello", 4), (x + 1 + y, 3)}) 4 7
+
+elab "find-proof!" p:term "in" d:expr_dist : term => do
+  let dist ← parseExprDist d
+  let prop ← elabType p
+  let proofOpt ← dist.getProof? prop
+  match proofOpt with
+  | some (x, _) => return x
+  | none => throwError "No proof found"
 
 declare_syntax_cat expr_list
 syntax "exp![" term,* "]" : expr_list
 
-def parseExprList : Syntax → TermElabM (Array Expr)
+def parseExprArray : Syntax → TermElabM (Array Expr)
   | `(expr_list|exp![$[$xs],*]) =>
     do
           let m : Array Expr ←  xs.mapM <| fun s => 
@@ -56,16 +65,11 @@ def parseExprList : Syntax → TermElabM (Array Expr)
           return m
   | _ => throwIllFormedSyntax
 
-syntax (name:= exprPack) "pack!" expr_list : term
-@[termElab exprPack] def exprPackImpl : TermElab := fun stx expectedType =>
-  match stx with
-  | `(pack! $s:expr_list) => 
-    do
-          let m : Array (Expr) ←  parseExprList s
-          pack m.toList
-  | _ => throwIllFormedSyntax
+elab (name:= exprPack) "pack!" s:expr_list : term => do
+    let m : Array (Expr) ←  parseExprArray s
+    pack m.toList
 
--- #check pack! exp![(1, 2), 3, ("Hello", 4), "over here"]
+#check pack! exp![(1, 2), 3, ("Hello", 4), "over here"]
 
 declare_syntax_cat name_dist
 syntax nameWt := "(" ident "," num ")"
@@ -85,15 +89,10 @@ def parseNameMap : Syntax → TermElabM (Array (Name × Nat))
           return m
   | _ => throwIllFormedSyntax
 
-syntax (name:= constpack) "const!" name_dist : term
-@[termElab constpack] def constpackImpl : TermElab := fun stx _ =>
-    match stx with 
-    | `(const! $s:name_dist) => 
-        do
-          let m : Array (Name × Nat) ←  parseNameMap s
-          let c := m.map (fun (n, w) => (mkConst n, w))
-          packWeighted c.toList
-    | _ => throwIllFormedSyntax
+elab (name:= constpack) "const!" s:name_dist : term  => do
+    let m : Array (Name × Nat) ←  parseNameMap s
+    let c := m.map (fun (n, w) => (mkConst n, w))
+    packWeighted c.toList
 
 
 declare_syntax_cat evolver 
@@ -170,7 +169,7 @@ mutual
   | `(evolver|func-dom-isles) => return funcDomIsleEvolver FullData
   | `(evolver|eq-closure) => return (eqSymmTransEvolver FullData).tautRec
   | `(evolver|eq-closure $goals) => do
-          let goals ← parseExprList goals
+          let goals ← parseExprArray goals
           return (eqSymmTransEvolver FullData goals).tautRec
   | `(evolver|pi-goals) => return piGoalsEvolverM FullData
   | `(evolver|pi-goals-all) => return piGoalsEvolverM FullData false
@@ -196,26 +195,36 @@ mutual
     | _ => throwIllFormedSyntax
 end
 
+syntax save_target := "=:" ident
+
 syntax (name:= evolution) 
-  "evolve!" evolver_list (expr_list)? expr_dist (name_dist)? num num  : term
+  "evolve!" evolver_list (expr_list)? expr_dist (name_dist)? num num (save_target)?  : term
 @[termElab evolution] def evolutionImpl : TermElab := fun s _ =>
 match s with
-| `(evolve! $evolvers $(goals?)? $initDist $(nameDist?)? $wb $card) => do
+| `(evolve!%$tk $evolvers $(goals?)? $initDist $(nameDist?)? $wb $card $(saveTo?)?)  => do
   let ev ← parseEvolverList evolvers
-  let initDist ← parseExprMap initDist
+  let initDist ← parseExprDist initDist
   let nameDist? ← nameDist?.mapM  $ fun nameDist => parseNameMap nameDist
   let nameDist := nameDist?.getD #[]
   let nameDist := FinDist.fromList (nameDist.toList)
   let initData : FullData := (nameDist, [], [])
-  let goals? ← goals?.mapM $ fun goals => parseExprList goals
+  let goals? ← goals?.mapM $ fun goals => parseExprArray goals
   let goals := goals?.getD #[]
   let ev := ev.fixedPoint.evolve
+  let saveTo? := saveTo?.bind <| fun stx =>
+    match stx with  
+    | `(save_target|=:$x) => some x.getId
+    | _ => none
   let wb ← parseNat wb
   let card ← parseNat card
-  let finalDist ← ev wb card initData (← ExprDist.fromArray initDist) 
-  logInfo "logging results"
-  logResults goals finalDist
-  let reportDist ← goals.filterMapM $ fun g => finalDist.getProof? g
+  let finalDist ← ev wb card initData initDist 
+  match saveTo? with
+  | some name => ExprDist.save name finalDist
+  | none => pure ()
+  logResults (some tk) goals finalDist
+  let reportDist ← goals.mapM $ fun g => do
+    let pfOpt ←  (finalDist.getProof? g)
+    return pfOpt.getD (mkConst ``Unit, 0)
   return ← (ppackWeighted reportDist.toList)
 | _ => throwIllFormedSyntax
 
@@ -229,3 +238,23 @@ def lstfromsyn:  TermElabM (RecEvolverM FullData)  :=  do
         parseEvolverList syn
 
 -- #check lstfromsyn
+
+elab "hash!" t:term : term => do
+    let expr ← elabTerm t none
+    let expr ← whnf expr
+    let h ← exprHash expr
+    let n := h.toNat
+    logInfo m!"expr: {expr}"
+    logInfo m!"hash: {n}"
+    return ToExpr.toExpr n
+
+elab "hashv!" t:term : term => do
+    let expr ← elabTerm t none
+    let expr ← whnf expr
+    let h ← exprHashV expr
+    let n := h.toNat
+    logInfo m!"expr: {expr}"
+    logInfo m!"hash: {n}"
+    return ToExpr.toExpr n
+
+#check (3 : UInt64).toNat

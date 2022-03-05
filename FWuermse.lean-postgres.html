@@ -31,11 +31,49 @@
 <p dir="auto">This is mainly a project to learn about practical lean, networking and databases.</p>
 <p dir="auto">The Protocol documentation: <a href="https://www.postgresql.org/docs/9.3/protocol.html" rel="nofollow">Frontend/Backend Protocol</a></p>
 <p dir="auto">Heavily relies on <a href="https://github.com/xubaiw/Socket.lean">Socket.lean</a> for the TCP Socket.</p>
-<h3 dir="auto">TODOs</h3>
+<h4 dir="auto">Installation</h4>
+<h5 dir="auto">Lake</h5>
+<p dir="auto">Add the following dependency to your <code>lakefile.lean</code> :</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
+  dependencies := #[{
+    name := `postgres
+    src := Source.git "https://github.com/FWuermse/lean-postgres.git" "master"
+  }]"><pre>package your-package where
+  dependencies := #[{
+    name := <span class="pl-en">`postgres</span>
+    src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/FWuermse/lean-postgres.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
+  }]</pre></div>
+<h4 dir="auto">Usage</h4>
+<h5 dir="auto">Requirement</h5>
+<p dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
+<h5 dir="auto">Code</h5>
+<p dir="auto">Currently only simple queries are supported:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
+
+open Connect Query
+
+def main : IO Unit := do
+  let conn ← openConnection "localhost" "5432" "postgres" "postgres" "password"
+  let query := SELECT "customer_age" AS "age", "customer_name" FROM "company_data";
+  let resp ← sendQuery conn query
+  IO.println s!"ByteArray response: {resp}"
+  conn.close"><pre><span class="pl-k">import</span> Postgres
+
+<span class="pl-k">open</span> Connect Query
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> conn ← openConnection <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>
+  <span class="pl-k">let</span> query := SELECT <span class="pl-s"><span class="pl-pds">"</span>customer_age<span class="pl-pds">"</span></span> AS <span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>customer_name<span class="pl-pds">"</span></span> FROM <span class="pl-s"><span class="pl-pds">"</span>company_data<span class="pl-pds">"</span></span>;
+  <span class="pl-k">let</span> resp ← sendQuery conn query
+  IO.println s!<span class="pl-s"><span class="pl-pds">"</span>ByteArray response: {resp}<span class="pl-pds">"</span></span>
+  conn.close</pre></div>
+<p dir="auto">Please find more examples in the <a href="https://github.com/FWuermse/lean-postgres/tree/master/examples/open-connection">example folder</a>.</p>
+<h4 dir="auto">TODOs</h4>
 <ul dir="auto">
-<li>Better abstraction layer</li>
 <li>Include connection to <a href="https://github.com/hargoniX/lean-hm/blob/master/Hm/Relation.lean">mathematical relations</a></li>
-<li>Types for query building</li>
+<li>Extend query Syntax and TermElab</li>
+<li>Support insert, create table and delete statements</li>
 </ul>
 </article></div></main>
 </body>

@@ -141,7 +141,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     show n + (d + e) ≃ 0
     calc
       _ ≃ n + (d + e) := Eqv.refl
-      _ ≃ (n + d) + e := Eqv.symm Addition.add_assoc
+      _ ≃ (n + d) + e := Eqv.symm AA.assoc
       _ ≃ m + e       := AA.substL ‹n + d ≃ m›
       _ ≃ 0           := ‹m + e ≃ 0›
   case step =>
@@ -165,9 +165,9 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
   show (n₁ + m) + d ≃ n₂ + m
   calc
     _ ≃ (n₁ + m) + d := Eqv.refl
-    _ ≃ n₁ + (m + d) := Addition.add_assoc
+    _ ≃ n₁ + (m + d) := AA.assoc
     _ ≃ n₁ + (d + m) := AA.substR AA.comm
-    _ ≃ (n₁ + d) + m := Eqv.symm Addition.add_assoc
+    _ ≃ (n₁ + d) + m := Eqv.symm AA.assoc
     _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
 
 instance le_substL_add
@@ -193,7 +193,7 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
   show m₁ + d ≃ m₂
   have : n + (m₁ + d) ≃ n + m₂ := calc
     _ ≃ n + (m₁ + d) := Eqv.refl
-    _ ≃ (n + m₁) + d := Eqv.symm Addition.add_assoc
+    _ ≃ (n + m₁) + d := Eqv.symm AA.assoc
     _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
   exact Addition.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
 
@@ -217,7 +217,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := Order.Base.le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
     _ ≃ n + (d₁ + d₂) := Eqv.refl
-    _ ≃ (n + d₁) + d₂ := Eqv.symm Addition.add_assoc
+    _ ≃ (n + d₁) + d₂ := Eqv.symm AA.assoc
     _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
     _ ≃ n             := ‹m + d₂ ≃ n›
     _ ≃ n + 0         := Eqv.symm Addition.add_zero

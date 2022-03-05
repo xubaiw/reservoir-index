@@ -118,7 +118,18 @@ theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
     _ ≃ step (n + 0) := add_step
     _ ≃ step n       := AA.subst add_zero
 
-theorem add_assoc {n m k : ℕ} : (n + m) + k ≃ n + (m + k) := by
+/--
+The grouping of the terms in a sum doesn't matter.
+
+**Intuition**: the `step_add` and `add_step` properties allow `step`s to be
+moved arbitrarily between terms. Given any particular grouping of a sum, all of
+the `step`s can be moved over to the first term, always producing the same
+result.
+-/
+def add_associative : AA.Associative (α := ℕ) (· + ·) := by
+  constructor
+  intro n m k
+  show (n + m) + k ≃ n + (m + k)
   apply Axioms.ind_on (motive := λ n => (n + m) + k ≃ n + (m + k)) n
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
@@ -181,7 +192,7 @@ instance addition_derived : Addition.Derived ℕ where
   add_substitutive := add_substitutive
   add_one_step := add_one_step
   add_commutative := add_commutative
-  add_assoc := add_assoc
+  add_associative := add_associative
   cancel_add := cancel_add
   zero_sum_split := zero_sum_split
 

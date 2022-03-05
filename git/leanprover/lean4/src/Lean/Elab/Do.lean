@@ -1397,8 +1397,10 @@ mutual
       -/
       -- Extract second element
       let doForDecl := doForDecls[1]
-      let y  := doForDecl[0]
-      let ys := doForDecl[2]
+      unless doForDecl[0].isNone do
+        throwErrorAt doForDecl[0] "the proof annotation here has not been implemented yet"
+      let y  := doForDecl[1]
+      let ys := doForDecl[3]
       let doForDecls := doForDecls.eraseIdx 1
       let body := doFor[3]
       withFreshMacroScope do
@@ -1413,16 +1415,21 @@ mutual
                    do $body)
         doSeqToCode (getDoSeqElems (getDoSeq auxDo) ++ doElems)
     else withRef doFor do
-      let x         := doForDecls[0][0]
+      let h?        := if doForDecls[0][0].isNone then none else some doForDecls[0][0][0]
+      let x         := doForDecls[0][1]
       withRef x <| checkNotShadowingMutable (← getPatternVarsEx x)
-      let xs        := doForDecls[0][2]
+      let xs        := doForDecls[0][3]
       let forElems  := getDoSeqElems doFor[3]
       let forInBodyCodeBlock ← withFor (doSeqToCode forElems)
       let ⟨uvars, forInBody⟩ ← mkForInBody x forInBodyCodeBlock
       let uvarsTuple ← liftMacroM do mkTuple (← uvars.mapM mkIdentFromRef)
       if hasReturn forInBodyCodeBlock.code then
         let forInBody ← liftMacroM <| destructTuple uvars (← `(r)) forInBody
-        let forInTerm ← `(for_in% $(xs) (MProd.mk none $uvarsTuple) fun $x r => let r := r.2; $forInBody)
+        let forInTerm ←
+          if let some h := h? then
+            `(for_in'% $(xs) (MProd.mk none $uvarsTuple) fun $x $h r => let r := r.2; $forInBody)
+          else
+            `(for_in% $(xs) (MProd.mk none $uvarsTuple) fun $x r => let r := r.2; $forInBody)
         let auxDo ← `(do let r ← $forInTerm:term;
                          $uvarsTuple:term := r.2;
                          match r.1 with
@@ -1431,7 +1438,11 @@ mutual
         doSeqToCode (getDoSeqElems (getDoSeq auxDo) ++ doElems)
       else
         let forInBody ← liftMacroM <| destructTuple uvars (← `(r)) forInBody
-        let forInTerm ← `(for_in% $(xs) $uvarsTuple fun $x r => $forInBody)
+        let forInTerm ←
+          if let some h := h? then
+            `(for_in'% $(xs) $uvarsTuple fun $x $h r => $forInBody)
+          else
+            `(for_in% $(xs) $uvarsTuple fun $x r => $forInBody)
         if doElems.isEmpty then
           let auxDo ← `(do let r ← $forInTerm:term;
                            $uvarsTuple:term := r;

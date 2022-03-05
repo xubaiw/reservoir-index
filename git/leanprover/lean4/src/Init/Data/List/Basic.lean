@@ -81,6 +81,11 @@ theorem append_assoc (as bs cs : List α) : (as ++ bs) ++ cs = as ++ (bs ++ cs) 
   | nil => rfl
   | cons a as ih => simp [ih]
 
+theorem append_cons (as : List α) (b : α) (bs : List α) : as ++ b :: bs = as ++ [b] ++ bs := by
+  induction as with
+  | nil => simp
+  | cons a as ih => simp [ih]
+
 instance : EmptyCollection (List α) := ⟨List.nil⟩
 
 protected def erase {α} [BEq α] : List α → α → List α
@@ -211,6 +216,42 @@ def notElem [BEq α] (a : α) (as : List α) : Bool :=
 
 abbrev contains [BEq α] (as : List α) (a : α) : Bool :=
   elem a as
+
+inductive Mem : α → List α → Prop
+  | head (a : α) (as : List α) : Mem a (a::as)
+  | tail (a : α) {b : α} {as : List α} : Mem b as → Mem b (a::as)
+
+instance : Membership α (List α) where
+  mem := Mem
+
+theorem mem_of_elem_eq_true [DecidableEq α] {a : α} {as : List α} : elem a as = true → a ∈ as := by
+  match as with
+  | [] => simp [elem]
+  | a'::as =>
+    simp [elem]
+    split
+    next h => intros; simp [BEq.beq] at h; subst h; apply Mem.head
+    next _ => intro h; exact Mem.tail _ (mem_of_elem_eq_true h)
+
+theorem elem_eq_true_of_mem [DecidableEq α] {a : α} {as : List α} (h : a ∈ as) : elem a as = true := by
+  induction h with
+  | head _ => simp [elem]
+  | tail _ h ih => simp [elem]; split; rfl; assumption
+
+instance [DecidableEq α] (a : α) (as : List α) : Decidable (a ∈ as) :=
+  decidable_of_decidable_of_iff (Iff.intro mem_of_elem_eq_true elem_eq_true_of_mem)
+
+theorem mem_append_of_mem_left {a : α} {as : List α} (bs : List α) : a ∈ as → a ∈ as ++ bs := by
+  intro h
+  induction h with
+  | head => apply Mem.head
+  | tail => apply Mem.tail; assumption
+
+theorem mem_append_of_mem_right {b : α} {bs : List α} (as : List α) : b ∈ bs → b ∈ as ++ bs := by
+  intro h
+  induction as with
+  | nil  => simp [h]
+  | cons => apply Mem.tail; assumption
 
 def eraseDupsAux {α} [BEq α] : List α → List α → List α
   | [],    bs => bs.reverse

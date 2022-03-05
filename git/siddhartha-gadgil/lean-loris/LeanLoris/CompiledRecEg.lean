@@ -40,44 +40,44 @@ def initData : FullData := (FinDist.empty, [], [])
 -- the case that crashed
 
 def goals0 : TermElabM (Array Expr) := do
-                  parseExprList (← 
+                  parseExprArray (← 
                   `(expr_list|exp![thm!]))
 
 def goals : TermElabM (Array Expr) := do
-                  parseExprList (← 
+                  parseExprArray (← 
                   `(expr_list|exp![thm!, recFn!, base!, step!]))
 
 -- #eval goals0
 
-def init1 : TermElabM (Array (Expr × Nat)) := do
-                  parseExprMap (← `(expr_dist|exp!{(thm!, 0)}))
+def init1 : TermElabM ExprDist := do
+                  parseExprDist (← `(expr_dist|exp!{(thm!, 0)}))
 
 def evolve1 : TermElabM EvolutionM := do
       let step := initEv ++ piGoals ++ rflEv ++ eqClosure ++ natRecEv ++ appl
-      let ev := step.evolve.andThenM (logResults <| ←  goals)
+      let ev := step.evolve.andThenM (logResults none <| ←  goals)
       return ev 2 5000 initData
 
 def evolve2 : TermElabM EvolutionM := do
       let step := initEv ++ piGoals ++ eqClosure
-      let ev := step.evolve.andThenM (logResults <| ←  goals)
+      let ev := step.evolve.andThenM (logResults none <| ←  goals)
       return ev 2 5000 initData
 
 def evolve0 : TermElabM EvolutionM := do
       let step := initEv ++ simpleApp
       let evBase := step.iterate.fixedPoint
       let ev := (evBase ^ (piGoalsEvolverM FullData false)) ++ evBase
-      let ev := ev.andThenM (logResults <| ←  goals)
+      let ev := ev.andThenM (logResults none <| ←  goals)
       return ev 3 500000 initData
 
 def dist2 : TermElabM ExprDist := do
-                  (← evolve1) * (← evolve2) <| (← ExprDist.fromArray <| ←  init1)  
+                  (← evolve1) * (← evolve2) <| (← init1)  
 
 def view2 : TermElabM String := do
                   (← dist2).viewGoals (← goals)
 
 def dist3 : TermElabM ExprDist := do
                   (← evolve1) * (← evolve1) * (← evolve0) <| 
-                      (← ExprDist.fromArray <| ←  init1)  
+                      (←  init1)  
 
 def view3 : TermElabM String := do
               let res ← dist3
@@ -86,12 +86,12 @@ def view3 : TermElabM String := do
               IO.println s!"saved and loaded; terms: {loaded.termsArr.size}, proofs: {loaded.proofsArr.size}"
               loaded.viewGoals (← goals)
 
-def init0 : TermElabM (Array (Expr × Nat)) := do
-                  parseExprMap (← `(expr_dist|exp!{(hyp! → claim!, 0), (base, 1), (recFn, 1), (step, 1)}))
+def init0 : TermElabM ExprDist := do
+                  parseExprDist (← `(expr_dist|exp!{(hyp! → claim!, 0), (base, 1), (recFn, 1), (step, 1)}))
 -- #eval init0
 
 def dist0 : TermElabM ExprDist := do
-                  (← evolve0) (← ExprDist.fromArray <| ←  init0) 
+                  (← evolve0) (←  init0) 
 
 def view0 : TermElabM String := do
                   (← dist0).viewGoals (← goals0)  

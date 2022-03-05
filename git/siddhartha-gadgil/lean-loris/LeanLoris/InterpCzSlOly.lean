@@ -28,16 +28,20 @@ def exploreProofs(ax1 : ∀ a b : M, (a * b) * b = a)(ax2 : ∀ a b : M, a * (a 
                   let lem1! := (m * n) * n = m 
                   let lem2! := (m * n) * ((m * n) * n) = n 
                   let lem3! := ((m * n) * m) * m = m * n  
-                  let seek123 := evolve! ev![app, name-app] exp![lem1!, lem2!, lem3!] exp!{(ax1, 0), (ax2, 0), (m, 0), (n, 0)} name!{(mul, 0)} 5 1000
-                  let seekmn := evolve! ev![app, name-app] exp![m * n] exp!{(m, 0), (n, 0)} name!{(mul, 0)} 5 1000
-                  -- let seek123mn := evolve! ev![app, name-app, name-binop, binop] exp![lem1!, lem2!, lem3!] exp!{(ax1, 0), (ax2, 0), (m, 0), (n, 0), (m *n, 0)} !{(mul, 0), (Eq, 0)} 3 1000
-                  -- let ⟨⟨lem1, w1⟩, ⟨lem2, w2⟩, ⟨lem3, w3⟩, _⟩ := seek123mn
                   let lem4! := (m * n) * ((m * n) * n) = (m * n) * m
                   let lem5! := (m * n) * m = n
-                  -- let seek4 := evolve! ev![app, name-app, name-binop, eq-isles, binop] exp![lem1!, lem4!] exp!{(ax1, 0), (ax2, 0), (m, 0), (n, 0), (m *n, 0)} !{(mul, 0), (Eq, 0)} 4 2000
-                  -- let ⟨_, ⟨lem4, w4⟩, _⟩ := seek4
-                  -- let seek5 := evolve! ev![name-binop, eq-closure exp![n, (m * n) * ((m * n) * n)]] exp![m * n * n, (m * n) * ((m * n) * n), lem2!, lem4!, lem5!] exp!{(m, 0), (n, 0), (m *n, 0), (lem2, 1), (lem4, 3)} !{(mul, 0)} 4 2000
-                  -- seek5
-                  ()
-             
+                  let lem6! := ((m * n) * m) * m = n * m
+                  let thm! := m * n = n * m
+                  let step1a := evolve! ev![app, name-app, name-binop, binop] exp![lem1!, lem2!, lem3!] exp!{(ax1, 0), (ax2, 0), (m, 0), (n, 0), (m *n, 0)} name!{(mul, 0), (Eq, 0)} 3 6000
+                  let ⟨⟨lem1, w1⟩, ⟨lem2, w2⟩, ⟨lem3, w3⟩, _⟩ := step1a
+                  let step1b := evolve! ev![eq-isles, name-binop] exp![lem4!] exp!{(m, 0), (n, 0), (m *n, 0), (lem1, 1), (lem2, 1), (lem3, 1)} name!{(mul, 0)} 3 6000
+                  let ⟨⟨lem4, w4⟩, _⟩ := step1b
+                  let step2 := evolve! ev![eq-closure, name-binop] exp![lem5!] exp!{(m, 0), (n, 0), (m *n, 0),  (lem2, 1), (lem4, 3)} name!{(mul, 0)} 2 6000
+                  let ⟨⟨lem5, w5⟩, _⟩ := step2
+                  let step3 := evolve! ev![eq-isles, name-binop] exp![lem6!] exp!{(m, 0), (n, 0), (m *n, 0), (lem5, 1)} name!{(mul, 0)} 3 6000
+                  let ⟨⟨lem6, w6⟩, _⟩ := step3
+                  let step7 := evolve! ev![eq-closure, name-binop] exp![thm!] exp!{(m, 0), (n, 0), (m *n, 0),  (lem3, 1), (lem6, 1)} name!{(mul, 0)} 1 6000  
+                  let ⟨⟨thm, w7⟩, _⟩ := step7                
+                  thm
+
 #check @exploreProofs
