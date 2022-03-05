@@ -52,19 +52,23 @@ inductive MLIRTy : Type where
 | int : Int -> MLIRTy
 | float: Int -> MLIRTy
 | tuple : List MLIRTy -> MLIRTy
-| vector: Int -> MLIRTy -> MLIRTy
+| vector: List Dimension -> MLIRTy -> MLIRTy
 | tensor: List Dimension -> MLIRTy -> MLIRTy
 | user: String -> MLIRTy -- user defined type
 
 inductive SSAVal : Type where
   | SSAVal : String -> SSAVal
 
+inductive TensorElem := 
+| int: Int -> TensorElem
+| nested: List TensorElem -> TensorElem
+
 inductive AttrVal : Type where
 | symbol: String -> AttrVal -- symbol ref attr
 | str : String -> AttrVal
 | int : Int -> MLIRTy -> AttrVal
 | type :MLIRTy -> AttrVal
-| dense: Int -> MLIRTy -> AttrVal -- dense<10> : vector<i32>
+| dense: TensorElem -> MLIRTy -> AttrVal -- dense<10> : vector<i32>
 | affine: AffineMap -> AttrVal
 | list: List AttrVal -> AttrVal
 
@@ -155,11 +159,18 @@ partial instance :  Pretty MLIRTy where
     | MLIRTy.float k => "f" ++ doc k
     | MLIRTy.tuple ts => "(" ++ (intercalate_doc (ts.map go) (doc ", ") ) ++ ")"
     | MLIRTy.fn dom codom => (go dom) ++ " -> " ++ (go codom)
-    | MLIRTy.vector sz ty => "vector<" ++ toString sz ++ "x" ++ go ty ++ ">"
+    | MLIRTy.vector dims ty => "vector<" ++ (intercalate_doc dims "x") ++ "x" ++ go ty ++ ">"
     | MLIRTy.tensor dims ty => "tensor<" ++ (intercalate_doc dims "x") ++ "x" ++ go ty ++ ">"
     go ty
 
 
+partial instance : Pretty TensorElem where
+  doc (t: TensorElem) := 
+    let rec go (t: TensorElem) := 
+      match t with
+       | TensorElem.int i => doc i
+       | TensorElem.nested ts => "[" ++ intercalate_doc (ts.map go) "," ++ "]" 
+    go t
 
 partial instance : Pretty AttrVal where
  doc (v: AttrVal) := 
@@ -169,7 +180,7 @@ partial instance : Pretty AttrVal where
    | AttrVal.str str => doc_surround_dbl_quot str 
    | AttrVal.type ty => doc ty
    | AttrVal.int i ty => doc i ++ " : " ++ doc ty
-   | AttrVal.dense i ty => "dense<" ++ doc i ++ ">" ++ ":" ++ doc ty
+   | AttrVal.dense elem ty => "dense<" ++ doc elem ++ ">" ++ ":" ++ doc ty
    | AttrVal.affine aff => "affine_map<" ++ doc aff ++ ">" 
    | AttrVal.list xs => "[" ++ Doc.Nest (vintercalate_doc (xs.map go) ", ") ++ "]"
   go v
@@ -191,6 +202,17 @@ instance : Pretty AttrDefn where
         if List.isEmpty attrs
         then Doc.Text ""
         else "{" ++ Doc.Nest (vintercalate_doc attrs ", ")  ++ "}" 
+
+instance : Coe Int TensorElem where 
+  coe (i: Int) := TensorElem.int i
+
+instance : Coe  (List Int) TensorElem where 
+  coe (xs: List Int) := TensorElem.nested (xs.map TensorElem.int) 
+
+def AttrVal.dense_vector (xs: List Int) (ity: MLIRTy := MLIRTy.int 32): AttrVal :=
+  let vshape := [Dimension.Known (xs.length)]
+  let vty := MLIRTy.vector vshape ity 
+  AttrVal.dense xs vty
 
 instance : Coe (String × AttrVal) AttrEntry where 
   coe (v: String × AttrVal) := AttrEntry.mk v.fst v.snd
@@ -304,10 +326,10 @@ def AttrDict.add (attrs: AttrDict) (entry: AttrEntry): AttrDict :=
     coe $ (entry :: coe attrs)
 
 -- | Note: AttrEntry can be given as String × AttrVal
-def Op.addAttr (o: Op) (k: String) (entry: AttrEntry): Op :=
+def Op.addAttr (o: Op) (k: String) (v: AttrVal): Op :=
  match o with
  | Op.mk name args bbs regions attrs ty => 
-    Op.mk name args bbs regions (attrs.add entry) ty
+    Op.mk name args bbs regions (attrs.add (k, v)) ty
 
 def BasicBlock.empty (name: String): BasicBlock := BasicBlock.mk name [] []
 def BasicBlock.appendStmt (bb: BasicBlock) (stmt: BasicBlockStmt): BasicBlock := 

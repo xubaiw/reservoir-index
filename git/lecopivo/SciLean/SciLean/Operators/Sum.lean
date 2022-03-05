@@ -23,11 +23,28 @@ theorem sum_into_lambda {X Y ι} [Enumtype ι] [Vec Y]
   := sorry
 
 @[simp] 
-theorem sum_of_sum {X ι} [Enumtype ι] [Vec X]
+theorem sum_of_add {X ι} [Enumtype ι] [Vec X]
   (f g : ι → X)
   : (∑ i, f i + g i) = (∑ i, f i) + (∑ i, g i)
   := sorry
 
+@[simp] 
+theorem sum_of_sub {X ι} [Enumtype ι] [Vec X]
+  (f g : ι → X)
+  : (∑ i, f i - g i) = (∑ i, f i) - (∑ i, g i)
+  := sorry
+
+@[simp] 
+theorem sum_of_smul {X ι} [Enumtype ι] [Vec X]
+  (f : ι → X) (c : ℝ)
+  : (∑ i, c * f i ) = c * (∑ i, f i)
+  := sorry
+
+@[simp] 
+theorem sum_of_neg {X ι} [Enumtype ι] [Vec X]
+  (f : ι → X)
+  : (∑ i, - f i ) = - (∑ i, f i)
+  := sorry
 
 --- Kronecker delta simplifications ---
 ---------------------------------------
@@ -71,6 +88,8 @@ end KronSimps
 
 section SumKronSimps
 
+  -- TODO: Switch to Enumtype instead of Fin.
+  --       What was the problem with Enumtype?
   -- variable {ι κ} [Enumtype ι] [Enumtype κ] [Inhabited ι]
 
   @[simp] 
@@ -100,12 +119,15 @@ end SumKronSimps
 --   : (∑ i, f (kron (g i) j) i j) = f 1 (g⁻¹ j) j
 --   := sorry
 
+example [NonZero n] (j : Fin n) (f : Fin n → ℝ)
+  : (∑ i : Fin n, kron i j * f i) = f j
+  :=
+  by simp done
 
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, kron (i+1) j) = 1
   :=
   by simp done
-
 
 example [NonZero n] (j : Fin n) 
   : (∑ i : Fin n, i * (kron (i+1) j)) = (j-1)
@@ -116,3 +138,7 @@ example [NonZero n] (j : Fin n)
   : (∑ i : Fin n, (kron (i+1) j) * i) = (j-1)
   :=
   by simp done
+
+
+
+--- TODO: add tactics sum_together sum_apart sum_expand 

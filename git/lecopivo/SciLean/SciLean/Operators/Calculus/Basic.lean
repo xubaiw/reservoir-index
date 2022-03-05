@@ -8,7 +8,7 @@ namespace SciLean
 
 variable {α β γ : Type}
 variable {X Y Z : Type} [Vec X] [Vec Y] [Vec Z]
-variable {U V W : Type} {R D e} [Vec R] [SemiHilbert U R D e] [SemiHilbert V R D e] [SemiHilbert W R D e]
+variable {U V W : Type} [SemiHilbert U] [SemiHilbert V] [SemiHilbert W]
 
 ------------------
 -- Differential --
@@ -53,9 +53,7 @@ prefix:max "𝓣" => forward_diff
 ------------------
 open SemiInner in
 noncomputable 
-def reverse_diff {U V} [Trait₂ U V] [Vec (Trait₂.R U V)] 
-  [SemiHilbert U (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
-  [SemiHilbert V (Trait₂.R U V) (Trait₂.D U V) Trait₂.eval]
+def reverse_diff 
   (f : U → V) : U → V × (V → U) := λ x => (f x, (δ f x)†)
 
 prefix:max "𝓑" => reverse_diff
