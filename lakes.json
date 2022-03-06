@@ -62,6 +62,7 @@
  "tydeu/lean4-alloy",
  "tydeu/lean4-itertools",
  "ufmg-smite/lean-smt",
+ "xubaiw/BaseN.lean",
  "xubaiw/CMark.lean",
  "xubaiw/Reservoir.lean",
  "xubaiw/Socket.lean",
