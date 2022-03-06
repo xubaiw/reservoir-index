@@ -28,7 +28,7 @@ class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   Positivity respects equality: if two natural numbers are equal and one of
   them is positive, then the other one must be positive.
   -/
-  positive_substitutive : AA.Substitutive Positive (· ≃ ·) (· → ·)
+  positive_substitutive : AA.Substitutive₁ Positive (· ≃ ·) (· → ·)
 
   /--
   Every positive natural number is the successor of another natural number.

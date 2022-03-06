@@ -44,7 +44,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   The _less than or equal to_ relation is preserved when both sides are
   incremented.
   -/
-  le_substitutive_step : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·)
+  le_substitutive_step : AA.Substitutive₁ (α := ℕ) step (· ≤ ·) (· ≤ ·)
 
   /--
   The _less than or equal to_ relation is preserved when both sides are

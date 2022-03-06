@@ -2,16 +2,51 @@ import Lean4Axiomatic.AbstractAlgebra.Commutative
 import Lean4Axiomatic.AbstractAlgebra.Core
 import Lean4Axiomatic.Eqv
 
-open Relation (EqvOp Swap Trans)
-
 namespace AA
 
-class Substitutive
+open Relation (EqvOp Swap Trans)
+
+/-!
+# (Generalized) substitution and related properties
+
+Generalized substitution allows the equalities of the ordinary substitution
+property to be replaced by arbitrary binary relations.
+-/
+
+/--
+Class for types and operations that satisfy the unary generalized substitution
+property.
+
+For more information see `Substitutive₁.subst₁`.
+
+**Named parameters**
+- `α`: the argument type of the unary operation `f`.
+- `β`: the result type of the unary operation `f`.
+- `f`: the unary operation that obeys the generalized substitution property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
+class Substitutive₁
     {α : Sort u} {β : Sort v}
     (f : α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
-  subst {x₁ x₂ : α} : rα x₁ x₂ → rβ (f x₁) (f x₂)
+  /--
+  The generalized substitution property of an unary operation `f`.
 
-export Substitutive (subst)
+  An `f` that satisfies this property must map values of type `α` that are
+  related by `rα` to values of type `β` that are related by `rβ`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. The canonical example is the ordinary
+  [substitution property of equality](https://w.wiki/4vEu): if we have `x = y`
+  for any values `x` and `y`, then we know `f x = f y`.
+
+  **Named parameters**
+  - see `Substitutive₁` for the class parameters.
+  - `x₁` and `x₂`: the arguments to `f`, related by `rα`.
+  -/
+  subst₁ {x₁ x₂ : α} : rα x₁ x₂ → rβ (f x₁) (f x₂)
+
+export Substitutive₁ (subst₁)
 
 class Injective
     {α : Sort u} {β : Sort v} (f : α → β)

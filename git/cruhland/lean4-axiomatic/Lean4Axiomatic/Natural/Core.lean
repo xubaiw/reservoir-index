@@ -85,7 +85,7 @@ class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ, Literals ℕ whe
   The `step` function preserves equality of natural numbers; if two natural
   numbers are equal, they are still equal after `step` is applied to both.
    -/
-  step_substitutive : AA.Substitutive (α := ℕ) step (· ≃ ·) (· ≃ ·)
+  step_substitutive : AA.Substitutive₁ (α := ℕ) step (· ≃ ·) (· ≃ ·)
 
 attribute [instance] Core.step_substitutive
 

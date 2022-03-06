@@ -27,8 +27,8 @@ instance literals : Literals Nat where
   literal_step := Eqv.refl
 
 instance step_substitutive
-    : AA.Substitutive (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
-  subst := congrArg step
+    : AA.Substitutive₁ (step : Nat → Nat) (· ≃ ·) (· ≃ ·) where
+  subst₁ := congrArg step
 
 instance core : Core Nat where
   step_substitutive := step_substitutive

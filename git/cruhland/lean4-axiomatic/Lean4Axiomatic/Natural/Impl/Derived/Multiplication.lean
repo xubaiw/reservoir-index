@@ -75,13 +75,13 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       (n * m + n) + step m
     ≃ _ := Addition.add_step
       step ((n * m + n) + m)
-    ≃ _ := AA.subst AA.assoc
+    ≃ _ := AA.subst₁ AA.assoc
       step (n * m + (n + m))
-    ≃ _ := AA.subst (AA.substR AA.comm)
+    ≃ _ := AA.subst₁ (AA.substR AA.comm)
       step (n * m + (m + n))
-    ≃ _ := Eqv.symm (AA.subst AA.assoc)
+    ≃ _ := Eqv.symm (AA.subst₁ AA.assoc)
       step ((n * m + m) + n)
-    ≃ _ := Eqv.symm (AA.subst (AA.substL Base.step_mul))
+    ≃ _ := Eqv.symm (AA.subst₁ (AA.substL Base.step_mul))
       step (step n * m + n)
     ≃ _ := Eqv.symm Addition.add_step
       step n * m + step n

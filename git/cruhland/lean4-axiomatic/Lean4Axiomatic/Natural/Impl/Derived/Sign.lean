@@ -23,8 +23,8 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   exact AA.substL (self := AA.neq_substL) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
 
 instance positive_substitutive
-    : AA.Substitutive (α := ℕ) Positive (· ≃ ·) (· → ·) where
-  subst := positive_subst
+    : AA.Substitutive₁ (α := ℕ) Positive (· ≃ ·) (· → ·) where
+  subst₁ := positive_subst
 
 theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
   apply Axioms.cases_on (motive := λ n => Positive n → ∃ m, step m ≃ n) n
@@ -48,12 +48,12 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   apply Axioms.cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    apply AA.subst (rβ := (· → ·)) (Eqv.symm Addition.add_zero)
+    apply AA.subst₁ (rβ := (· → ·)) (Eqv.symm Addition.add_zero)
     exact ‹Positive n›
   case step =>
     intro m
     show Positive (n + step m)
-    apply AA.subst (rβ := (· → ·)) (Eqv.symm Addition.add_step)
+    apply AA.subst₁ (rβ := (· → ·)) (Eqv.symm Addition.add_step)
     show Positive (step (n + m))
     apply Sign.Base.positive_defn.mpr
     show step (n + m) ≄ 0

@@ -23,7 +23,7 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
     calc
       _ ≃ step n + 0   := Eqv.refl
       _ ≃ step (n + 0) := Addition.step_add
-      _ ≃ step n       := AA.subst ih
+      _ ≃ step n       := AA.subst₁ ih
 
 theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
   apply Axioms.ind_on (motive := λ n => n + step m ≃ step (n + m)) n
@@ -32,15 +32,15 @@ theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
     calc
       _ ≃ 0 + step m   := Eqv.refl
       _ ≃ step m       := Addition.zero_add
-      _ ≃ step (0 + m) := AA.subst (Eqv.symm Addition.zero_add)
+      _ ≃ step (0 + m) := AA.subst₁ (Eqv.symm Addition.zero_add)
   case step =>
     intro n (ih : n + step m ≃ step (n + m))
     show step n + step m ≃ step (step n + m)
     calc
       _ ≃ step n + step m     := Eqv.refl
       _ ≃ step (n + step m)   := Addition.step_add
-      _ ≃ step (step (n + m)) := AA.subst ih
-      _ ≃ step (step n + m)   := AA.subst (Eqv.symm Addition.step_add)
+      _ ≃ step (step (n + m)) := AA.subst₁ ih
+      _ ≃ step (step n + m)   := AA.subst₁ (Eqv.symm Addition.step_add)
 
 theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
   apply Axioms.ind_on (motive := λ n => n + m ≃ m + n) n
@@ -56,7 +56,7 @@ theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
     calc
       _ ≃ step n + m   := Eqv.refl
       _ ≃ step (n + m) := Addition.step_add
-      _ ≃ step (m + n) := AA.subst ih
+      _ ≃ step (m + n) := AA.subst₁ ih
       _ ≃ m + step n   := Eqv.symm add_step
 
 instance add_commutative : AA.Commutative (α := ℕ) (· + ·) where
@@ -95,7 +95,7 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
       calc
         _ ≃ step n₁ + m   := Eqv.refl
         _ ≃ step (n₁ + m) := Addition.step_add
-        _ ≃ step (n₂ + m) := AA.subst (ih _ ‹n₁ ≃ n₂›)
+        _ ≃ step (n₂ + m) := AA.subst₁ (ih _ ‹n₁ ≃ n₂›)
         _ ≃ step n₂ + m   := Eqv.symm Addition.step_add
 
 instance add_substL
@@ -116,7 +116,7 @@ theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
     _ ≃ n + 1        := Eqv.refl
     _ ≃ n + step 0   := AA.substR Literals.literal_step
     _ ≃ step (n + 0) := add_step
-    _ ≃ step n       := AA.subst add_zero
+    _ ≃ step n       := AA.subst₁ add_zero
 
 /--
 The grouping of the terms in a sum doesn't matter.
@@ -144,7 +144,7 @@ def add_associative : AA.Associative (α := ℕ) (· + ·) := by
       _ ≃ (step n + m) + k   := Eqv.refl
       _ ≃ step (n + m) + k   := AA.substL Addition.step_add
       _ ≃ step ((n + m) + k) := Addition.step_add
-      _ ≃ step (n + (m + k)) := AA.subst ih
+      _ ≃ step (n + (m + k)) := AA.subst₁ ih
       _ ≃ step n + (m + k)   := Eqv.symm Addition.step_add
 
 theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by

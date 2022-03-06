@@ -24,11 +24,11 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
   calc
     _ ≃ step n₁ + d := Eqv.refl
     _ ≃ step (n₁ + d) := Addition.step_add
-    _ ≃ step n₂ := AA.subst ‹n₁ + d ≃ n₂›
+    _ ≃ step n₂ := AA.subst₁ ‹n₁ + d ≃ n₂›
 
 instance le_substitutive_step
-    : AA.Substitutive (α := ℕ) step (· ≤ ·) (· ≤ ·) where
-  subst := le_subst_step
+    : AA.Substitutive₁ (α := ℕ) step (· ≤ ·) (· ≤ ·) where
+  subst₁ := le_subst_step
 
 theorem le_inject_step {n₁ n₂ : ℕ} : step n₁ ≤ step n₂ → n₁ ≤ n₂ := by
   intro (_ : step n₁ ≤ step n₂)
@@ -128,7 +128,7 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   calc
     _ ≃ n + step d   := Eqv.refl
     _ ≃ step (n + d) := Addition.add_step
-    _ ≃ step m       := AA.subst ‹n + d ≃ m›
+    _ ≃ step m       := AA.subst₁ ‹n + d ≃ m›
 
 theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
   intro (_ : n ≤ m)
@@ -480,7 +480,7 @@ theorem trichotomy {n m : ℕ}
       | AA.OneOfThree.second (_ : n ≃ m) =>
         have : m ≃ n := Eqv.symm ‹n ≃ m›
         have : m ≤ n := le_from_eqv ‹m ≃ n›
-        have : step m ≤ step n := AA.subst ‹m ≤ n›
+        have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
         apply AA.OneOfThree.third
         exact ‹m < step n›
