@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Addition
+import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
@@ -37,7 +38,7 @@ attribute [instance default+1] Order.Base.leOp
 attribute [instance default+1] Order.Base.ltOp
 
 /-- Properties that follow from those provided in `Order.Base`. -/
-class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
+class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
     extends Order.Base ℕ where
   /--
   The _less than or equal to_ relation is preserved when both sides are
@@ -115,6 +116,13 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m
 
   /--
+  The _less than_ relation between two natural numbers `n` and `m` is
+  equivalent to there being a positive natural number -- the _difference_
+  between `n` and `m` -- that, when added to `n`, results in `m`.
+  -/
+  lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n + k
+
+  /--
   Useful result when needing to decrement the larger number in a _less than_
   relation.
   -/
@@ -132,13 +140,8 @@ namespace Order
 export Order.Base (le_defn leOp lt_defn ltOp)
 export Order.Derived (
   le_antisymm le_reflexive le_split le_transitive
-  lt_split lt_step lt_step_le lt_zero trichotomy
+  lt_defn_add lt_split lt_step lt_step_le lt_zero trichotomy
 )
 end Order
-
-export Order (
-  le_antisymm le_defn le_reflexive le_split le_transitive leOp
-  lt_defn ltOp lt_split lt_step lt_step_le lt_zero trichotomy
-)
 
 end Lean4Axiomatic.Natural

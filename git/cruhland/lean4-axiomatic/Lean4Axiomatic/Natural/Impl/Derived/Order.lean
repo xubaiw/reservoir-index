@@ -10,7 +10,9 @@ variable [Addition.Derived ℕ]
 variable [Sign.Derived ℕ]
 variable [Order.Base ℕ]
 
-open Sign (Positive)
+namespace Base
+export Order (le_defn)
+end Base
 
 theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
   intro (_ : n₁ ≤ n₂)
@@ -288,8 +290,8 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         _ ≃ n + 0 := Eqv.symm Addition.add_zero
         _ ≃ n + d := Eqv.symm (AA.substR ‹d ≃ 0›)
         _ ≃ m     := ‹n + d ≃ m›
-    have : Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
-    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Positive d›
+    have : Sign.Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
+    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Sign.Positive d›
     show step n ≤ m
     apply Order.Base.le_defn.mpr
     exists d'
@@ -323,6 +325,48 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     show n < m
     apply Order.Base.lt_defn.mpr
     exact ⟨‹n ≤ m›, ‹n ≄ m›⟩
+
+/--
+The _less than_ relation between two natural numbers `n` and `m` is
+equivalent to there being a positive natural number -- the _difference_
+between `n` and `m` -- that, when added to `n`, results in `m`.
+
+**Intuition**: This is already quite intuitive, as it's clear that for one
+number to be less than another, there must be a nonzero gap between them.
+-/
+theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n + k := by
+  apply Iff.intro
+  · intro (_ : n < m)
+    show ∃ k, Sign.Positive k ∧ m ≃ n + k
+    have : step n ≤ m := Derived.lt_step_le.mp ‹n < m›
+    have ⟨k, (_ : step n + k ≃ m)⟩ := Base.le_defn.mp ‹step n ≤ m›
+    exists step k
+    apply And.intro
+    · show Sign.Positive (step k)
+      apply Sign.positive_defn.mpr
+      show step k ≄ 0
+      exact Axioms.step_neq_zero
+    · show m ≃ n + step k
+      calc
+        _ ≃ m            := Eqv.refl
+        _ ≃ step n + k   := Eqv.symm ‹step n + k ≃ m›
+        _ ≃ step (n + k) := Addition.step_add
+        _ ≃ n + step k   := Eqv.symm Addition.add_step
+  · intro ⟨k, (_ : Sign.Positive k), (_ : m ≃ n + k)⟩
+    show n < m
+    apply Derived.lt_step_le.mpr
+    show step n ≤ m
+    apply Base.le_defn.mpr
+    show ∃ k, step n + k ≃ m
+    have ⟨k', (_ : step k' ≃ k)⟩ := Sign.positive_step ‹Sign.Positive k›
+    exists k'
+    show step n + k' ≃ m
+    calc
+      _ ≃ step n + k'   := Eqv.refl
+      _ ≃ step (n + k') := Addition.step_add
+      _ ≃ n + step k'   := Eqv.symm Addition.add_step
+      _ ≃ n + k         := AA.substR ‹step k' ≃ k›
+      _ ≃ m             := Eqv.symm ‹m ≃ n + k›
 
 theorem lt_zero {n : ℕ} : n ≮ 0 := by
   intro (_ : n < 0)
@@ -479,6 +523,7 @@ instance order_derived : Order.Derived ℕ where
   lt_zero := lt_zero
   lt_step := lt_step
   lt_step_le := lt_step_le
+  lt_defn_add := lt_defn_add
   lt_split := lt_split
   trichotomy := trichotomy
 
