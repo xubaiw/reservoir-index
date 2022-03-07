@@ -153,11 +153,11 @@ theorem subst_mul {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m 
         step n₂ * m  ≃ _ := Eqv.refl
 
 instance mul_substL
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) where
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) where
   subst₂ := subst_mul
 
 instance mul_substR
-    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) :=
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) :=
   AA.substR_from_substL_swap mul_substL
 
 instance mul_substitutive

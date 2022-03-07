@@ -16,7 +16,7 @@ open Std.HashMap
 open Nat
 open ProdSeq
 
-structure GenDist where
+structure GeneratedDist where
   weight: Nat
   card : Nat
   exprDist : HashExprDist
@@ -34,6 +34,7 @@ instance : DataUpdate Unit := idUpate
 
 instance : DataUpdate NameDist := idUpate
 
+-- Deprecated
 class IsNew (D: Type) where
   isNew: D → Nat → Nat →  Expr → Nat →  TermElabM Bool
   isNewPair : D → Nat → Nat →  Expr → Nat →  Expr → Nat → TermElabM Bool
@@ -71,8 +72,8 @@ instance : IsNew NameDist := allNew
 instance : NewElem Expr NameDist := constNewElem (true, true)
 
 class DistHist (D: Type) where
-  distHist: D → List GenDist
-  extHist : D → List HashExprDist
+  distHist: D → List GeneratedDist
+  extDists : D → List HashExprDist
 
 def newFromHistory {D: Type}[cl: DistHist D] : IsNew D :=
   ⟨fun d wb c e w => do
@@ -91,7 +92,7 @@ def newFromHistory {D: Type}[cl: DistHist D] : IsNew D :=
 def newElemFromHistory {D: Type}[cl: DistHist D] : NewElem Expr D :=
   ⟨fun d  e w => do
     let exst ← ((cl.distHist d).anyM <| fun dist =>  dist.exprDist.existsM e w)
-    let extrn ← ((cl.extHist d).anyM <| fun dist =>  dist.existsM e w)
+    let extrn ← ((cl.extDists d).anyM <| fun dist =>  dist.existsM e w)
     return (!exst, !extrn)⟩
 
 instance {D: Type}[cl: DistHist D] : IsNew D := newFromHistory 
@@ -109,7 +110,7 @@ instance : IsleData Unit := idIsleData
 
 instance : IsleData NameDist := idIsleData
 
-abbrev FullData := NameDist × (List GenDist) × (List HashExprDist)
+abbrev FullData := NameDist × (List GeneratedDist) × (List HashExprDist)
 
 instance : DistHist FullData := ⟨fun (nd, hist, ehist) => hist,
                                 fun (nd, hist, ehist) => ehist⟩
@@ -167,11 +168,11 @@ def evolveAux{D: Type}[DataUpdate D](ev : EvolverM D)(incWt accumWt cardBound: N
                      | 0 => fun initDist _ _ => return initDist
                      | m + 1 => fun initDist d  => 
                       do
-                        IO.println s!"Evolver step: weight-bound = {accumWt+ 1}; cardinality-bound = {cardBound}; mono-time = {← IO.monoMsNow}"
-                        IO.println s!"initial terms: {initDist.termsArray.size}, initial proofs: {initDist.proofsArray.size}"
+                        -- IO.println s!"Evolver step: weight-bound = {accumWt+ 1}; cardinality-bound = {cardBound}; mono-time = {← IO.monoMsNow}"
+                        -- IO.println s!"initial terms: {initDist.termsArray.size}, initial proofs: {initDist.proofsArray.size}"
                         let newDist ← ev (accumWt + 1) cardBound d initDist 
-                        IO.println s!"step completed: weight-bound = {accumWt+ 1}; cardinality-bound = {cardBound}; mono-time = {← IO.monoMsNow}"
-                        IO.println s!"final terms: {newDist.termsArray.size}, final proofs: {newDist.proofsArray.size}"
+                        -- IO.println s!"step completed: weight-bound = {accumWt+ 1}; cardinality-bound = {cardBound}; mono-time = {← IO.monoMsNow}"
+                        -- IO.println s!"final terms: {newDist.termsArray.size}, final proofs: {newDist.proofsArray.size}"
                         let newData := dataUpdate initDist accumWt cardBound d
                         -- IO.println s!"data updated: wb = {accumWt+ 1} cardBound = {cardBound} time = {← IO.monoMsNow} "
                         evolveAux ev m (accumWt + 1) cardBound newDist newData 
@@ -268,7 +269,7 @@ def isleM {D: Type}[IsleData D](type: Expr)(evolve : EvolverM D)(weightBound: Na
             (← init.funcs).filterMapM (
               fun (f, w) => do
                 if !(f.isLambda) then pure none else
-                  let y ← (mkAppOpt f x)
+                  let y ← (mkApp? f x)
                   return y.map (fun y => (y, w))
               )
           let dist ← dist.mergeArray foldedFuncs
@@ -320,11 +321,11 @@ def isleM {D: Type}[IsleData D](type: Expr)(evolve : EvolverM D)(weightBound: Na
 def applyEvolver(D: Type)[NewElem Expr D] : EvolverM D := fun wb c d init => 
   do
     -- logInfo m!"apply evolver started, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
-    let res ← prodGenArrM applyOpt wb c (← init.funcs) init.allTermsArray d 
+    let res ← prodGenArrM apply? wb c (← init.funcs) init.allTermsArray d 
     -- logInfo m!"apply evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
 
-def applyPairEvolver(D: Type)[cs : IsNew D][NewElem Expr D]: EvolverM D := 
+def applyPairEvolver(D: Type)[NewElem Expr D]: EvolverM D := 
   fun wb c d init =>
   do
     -- logInfo m!"apply pair evolver started, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
@@ -332,7 +333,7 @@ def applyPairEvolver(D: Type)[cs : IsNew D][NewElem Expr D]: EvolverM D :=
        do return Expr.isForall <| ← inferType e
     let pfFuncs ← init.proofsArray.filterMapM <| fun (l, f, w) =>
       do if (l.isForall) then return some (f, w) else return none
-    let res ← tripleProdGenArrM applyPairOpt wb c 
+    let res ← tripleProdGenArrM applyPair? wb c 
           (← init.funcs) init.allTermsArray init.allTermsArray d
     -- logInfo m!"apply pair evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
@@ -386,48 +387,48 @@ def simpleApplyEvolver(D: Type)[NewElem Expr D] : EvolverM D := fun wb c d init 
               Term.synthesizeSyntheticMVarsNoPostponing
               resTerms := resTerms.push (y, w)
     let res ←  ExprDist.fromArrayM resTerms
-    -- let res ← prodGenArrM mkAppOpt wb c (← init.funcs) init.allTermsArray d 
+    -- let res ← prodGenArrM mkApp? wb c (← init.funcs) init.allTermsArray d 
     -- IO.println s!"simple apply evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
 
-def simpleApplyPairEvolver(D: Type)[cs : IsNew D][NewElem Expr D]: EvolverM D := 
+def simpleApplyPairEvolver(D: Type)[NewElem Expr D]: EvolverM D := 
   fun wb c d init =>
   do
     -- logInfo m!"apply pair evolver started, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
-    let res ← tripleProdGenArrM mkAppPairOpt wb c 
+    let res ← tripleProdGenArrM mkAppPair? wb c 
           (← init.funcs) init.allTermsArray init.allTermsArray d
     -- logInfo m!"apply pair evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
 
-def nameApplyEvolver(D: Type)[IsNew D][GetNameDist D][NewElem Expr D]: EvolverM D := 
+def nameApplyEvolver(D: Type)[GetNameDist D][NewElem Expr D]: EvolverM D := 
   fun wb c d init =>
   do
     -- logInfo m!"name apply evolver started, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     let names := (nameDist d).toArray
-    let res ← prodGenArrM nameApplyOpt wb c names init.allTermsArray d
+    let res ← prodGenArrM nameApply? wb c names init.allTermsArray d
     -- logInfo m!"name apply evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
 
-def nameApplyPairEvolver(D: Type)[cs: IsNew D][GetNameDist D][NewElem Expr D]: 
+def nameApplyPairEvolver(D: Type)[GetNameDist D][NewElem Expr D]: 
         EvolverM D := fun wb c d init  =>
   do
     -- logInfo m!"name apply pair evolver started, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     let names := (nameDist d).toArray
-    let res ← tripleProdGenArrM nameApplyPairOpt wb c names init.allTermsArray init.allTermsArray d
+    let res ← tripleProdGenArrM nameApplyPair? wb c names init.allTermsArray init.allTermsArray d
     -- logInfo m!"name apply pair evolver finished, wb: {wb}, c: {c}, time: {← IO.monoMsNow}"
     return res
 
-def rewriteEvolver(D: Type)(flip: Bool := true)[IsNew D][NewElem Expr D] : EvolverM D := 
+def rewriteEvolver(D: Type)(flip: Bool := true)[NewElem Expr D] : EvolverM D := 
   fun wb c d init => 
   do
-    prodGenArrM (rwPushOpt flip) wb c init.allTermsArray (← init.forallOfEquality) d
+    prodGenArrM (rwPush? flip) wb c init.allTermsArray (← init.forallOfEquality) d
 
-def congrEvolver(D: Type)[IsNew D][NewElem Expr D] : EvolverM D := 
+def congrEvolver(D: Type)[NewElem Expr D] : EvolverM D := 
   fun wb c d init  => 
   do
-    prodGenArrM congrArgOpt wb c (← init.funcs) (← init.eqls) d
+    prodGenArrM congrArg? wb c (← init.funcs) (← init.eqls) d
 
-def eqIsleEvolver(D: Type)[IsNew D][NewElem Expr D][IsleData D] : RecEvolverM D := 
+def eqIsleEvolver(D: Type)[NewElem Expr D][IsleData D] : RecEvolverM D := 
   fun wb c init d evolve => 
   do
     -- logInfo m!"isle called: weight-bound {wb}, cardinality: {c}"
@@ -459,7 +460,7 @@ def eqIsleEvolver(D: Type)[IsNew D][NewElem Expr D][IsleData D] : RecEvolverM D 
             let isleDist := (isleDistBase.bound (wb -weq -1) xc).termsArray
             isleDist.foldlM (
                 fun d (f, wf) => do 
-                  match ← congrArgOpt f eq with 
+                  match ← congrArg? f eq with 
                   | none => pure d
                   | some y => 
                       d.updateExprM y (wf + weq + 1)
@@ -470,7 +471,7 @@ def eqIsleEvolver(D: Type)[IsNew D][NewElem Expr D][IsleData D] : RecEvolverM D 
     -- logInfo m!"isles done time: {← IO.monoMsNow}, isles: {finDists.size}"
     res
 
-def allIsleEvolver(D: Type)[IsNew D][IsleData D] : RecEvolverM D := fun wb c init d evolve => 
+def allIsleEvolver(D: Type)[IsleData D] : RecEvolverM D := fun wb c init d evolve => 
   do
     let typeDist ← init.allSortsArray
     let typesCum := weightAbove typeDist wb
@@ -482,7 +483,7 @@ def allIsleEvolver(D: Type)[IsNew D][IsleData D] : RecEvolverM D := fun wb c ini
         finalDist ←  finalDist ++ isleDist
     return finalDist
 
-def eqSymmTransEvolver (D: Type)[IsNew D](goalterms: Array Expr := #[]) : EvolverM D 
+def eqSymmTransEvolver (D: Type)(goalterms: Array Expr := #[]) : EvolverM D 
   := fun wb card d init => 
   do
     -- IO.println s!"eqSymmTrans called: weight-bound {wb}, cardinality: {card}"
@@ -595,7 +596,7 @@ def eqSymmTransEvolver (D: Type)[IsNew D](goalterms: Array Expr := #[]) : Evolve
     return eqs
 
 
-def funcDomIsleEvolver(D: Type)[IsNew D][IsleData D] : RecEvolverM D := fun wb c init d evolve => 
+def funcDomIsleEvolver(D: Type)[IsleData D] : RecEvolverM D := fun wb c init d evolve => 
   do
     let mut typeDist := FinDist.empty
     for (x, w) in init.allTermsArray do
@@ -630,7 +631,7 @@ def piDomains(terms: Array (Expr × Nat)) : TermElabM (Array (Expr × Nat)) := d
   return domains
 
 -- generating from domains of pi-types
-def piGoalsEvolverM(D: Type)[IsNew D][NewElem Expr D][IsleData D](excludeInit: Bool := true) : RecEvolverM D := 
+def piGoalsEvolverM(D: Type)[IsleData D](excludeInit: Bool := true) : RecEvolverM D := 
   fun wb c init d evolve => 
   -- if wb = 0 then init else
   do
@@ -702,22 +703,24 @@ def refineWeight(weight? : Expr → TermElabM (Option Nat)):
 def logResults(tk?: Option Syntax): Array Expr →  
   ExprDist →  TermElabM Unit := fun goals dist => do
     if tk?.isNone then
-      IO.println s!"number of terms : {dist.termsArray.size}"
-      IO.println s!"number of proofs: {dist.proofsArray.size}"
-      IO.println s!"term distribution : {(arrWeightCount dist.termsArray).toArray}"
-      IO.println s!"proof distribution: {(arrWeightCount <| dist.proofsArray.map (fun (l, _, w) => (l, w))).toArray}"
+      IO.println "# Results of evolution step:\n"
+      IO.println s!"* number of terms : {dist.termsArray.size}"
+      IO.println s!"* number of proofs: {dist.proofsArray.size}\n"
     let mut count := 0
     for g in goals do
       count := count + 1
       if tk?.isNone then
-        IO.println s!"goal {count}: {← view g}"
+        IO.println s!"- goal {count}: {← view g}"
       let statement ←  (dist.allTermsArray.findM? $ fun (s, _) => isDefEq s g)
       -- let statement ←  statement.mapM $ fun (e, w) => do
       --   let e ← whnf e
       --   pure (← view e, w) 
       if ← isProp g then
         if tk?.isNone then
-          IO.println s!"proposition generated: {statement}"
+          match statement with
+          | some (s, w) => 
+            IO.println s!"  statement generated: ({← view s}, {w})"
+          | none => pure ()
         let proof ←  dist.proofsArray.findM? $ fun (l, t, w) => 
                 do isDefEq l g
         match proof with
@@ -726,21 +729,22 @@ def logResults(tk?: Option Syntax): Array Expr →
           | some tk => 
               logInfoAt tk m!"found proof {pf} for proposition goal {count} : {g}; weight {w}"
           | none =>  
-              IO.println s!"proof generated: {← view pf}, weight : {w}"
+              IO.println s!"  proof generated: {← view pf}; weight: {w}\n"
         | none =>  
           match tk? with 
           | some tk => 
               logWarningAt tk m!"no proof found for proposition goal {count} : {g}"
-          | none =>  pure ()          
+          | none =>  
+              IO.println s!"  no proof found for goal {count}\n"         
           pure ()
       else
         match statement with
         | some (e, w) =>
           match tk? with 
             | some tk => 
-                logInfoAt tk m!"generated term {e} for goal {count} : {g}, weight : {w}"
+                logInfoAt tk m!"generated term {e} for goal {count} : {g}; weight: {w}"
             | none =>            
-                IO.println s!"generated term: {← view e} for goal {count} : {g} , weight : {w}"
+                IO.println s!"  generated term: {← view e} for goal {count} : {g}; weight: {w}"
         | none => 
           match tk? with 
           | some tk => 

@@ -16,7 +16,7 @@ elab "gen1!" t:term : term => do
       let m := FinDist.fromList l
       for (x, w) in arr do
         logInfo m!"{x} : {w}" 
-      let m1 ← prodGenArrM  applyOpt 4 100 arr arr ()
+      let m1 ← prodGenArrM  apply? 4 100 arr arr ()
       for (x, w) in m1.allTermsArray do
         logInfo m!"{x} : {w}" 
       let m2 ← egEvolver  4 100 () (← (ExprDist.fromArrayM arr)) 
@@ -81,5 +81,3 @@ def eveg(α : Type):= fun (f g: α →  α) (a: α) =>
 
 #reduce eveg
 
-def egEqProp(a b c: Nat)(p: a = b)(q: a = c) :=
-    evolve! ev![eq-closure] exp![b = c, b = a, a = b] exp!{(p, 0), (q, 0)} 5 1000

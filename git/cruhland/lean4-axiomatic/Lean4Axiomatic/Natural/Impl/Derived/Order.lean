@@ -60,7 +60,7 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
     _ ≃ m      := ‹n₁ + d ≃ m›
 
 instance le_substL_eqv
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
   subst₂ := le_subst_eqv
 
 theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
@@ -73,7 +73,7 @@ theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n �
   exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
 
 instance le_substR_eqv
-    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
   subst₂ := le_eqv_subst
 
 instance le_substitutive_eqv
@@ -173,11 +173,11 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
     _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
 
 instance le_substL_add
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
   subst₂ := le_subst_add
 
 instance le_substR_add
-    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
   AA.substR_from_substL_swap le_substL_add
 
 instance le_substitutive_add
@@ -241,7 +241,7 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
 instance lt_substL_eqv
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
   subst₂ := lt_subst_eqv
 
 theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
@@ -254,7 +254,7 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
 instance lt_substR_eqv
-    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
   subst₂ := lt_eqv_subst
 
 instance lt_substitutive_eqv

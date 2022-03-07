@@ -48,20 +48,51 @@ class Substitutive₁
 
 export Substitutive₁ (subst₁)
 
+/--
+Class for types and operations that satisfy the unary generalized injective
+property.
+
+For more information see `Injective.inject`.
+
+**Named parameters**
+- `α`: the argument type of the unary operation `f`.
+- `β`: the result type of the unary operation `f`.
+- `f`: the unary operation that obeys the generalized injective property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
 class Injective
     {α : Sort u} {β : Sort v} (f : α → β)
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+  /--
+  The generalized injective property of an unary operation `f`.
+
+  Operations `f` that have this property can be traced backward in some sense.
+  It is the converse of the substitution property. In other words, if we know
+  that the results of two operations, `f x₁` and `f x₂`, are related by `rβ`,
+  then we can conclude that the inputs `x₁` and `x₂` are related by `rα`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. The canonical example is the ordinary
+  [injective property of functions](https://w.wiki/4vTb): if we have
+  `f x = f y` for any values `x` and `y`, then we know `x = y`.
+
+  **Named parameters**
+  - see `Injective` for the class parameters.
+  - `x₁` and `x₂`: the arguments to `f`.
+  -/
   inject {x₁ x₂ : α} : rβ (f x₁) (f x₂) → rα x₁ x₂
 
 export Injective (inject)
 
-class SubstitutiveForHand
-    (hand : Hand) {α : Sort u} {β : Sort v} (f : α → α → β)
-    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+class SubstitutiveOn
+    (hand : Hand) {α : Sort u} {β : Sort v}
+    (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    where
   subst₂
     {x₁ x₂ y : α} : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
 
-export SubstitutiveForHand (subst₂)
+export SubstitutiveOn (subst₂)
 
 abbrev substL := @subst₂ Hand.L
 abbrev substR := @subst₂ Hand.R
@@ -70,8 +101,8 @@ class Substitutive₂
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : α → α → Prop) (rβ : β → β → Prop)
     where
-  substitutiveL : SubstitutiveForHand Hand.L f rα rβ
-  substitutiveR : SubstitutiveForHand Hand.R f rα rβ
+  substitutiveL : SubstitutiveOn Hand.L f rα rβ
+  substitutiveR : SubstitutiveOn Hand.R f rα rβ
 
 attribute [instance] Substitutive₂.substitutiveL
 attribute [instance] Substitutive₂.substitutiveR
@@ -79,7 +110,7 @@ attribute [instance] Substitutive₂.substitutiveR
 instance
     {α : Type u} {β : Type v} {f : α → α → β} {rel : β → β → Prop}
     [EqvOp β] [Commutative f] [Relation.Refl rel]
-    [SubstitutiveForHand Hand.R rel (· ≃ ·) (· → ·)]
+    [SubstitutiveOn Hand.R rel (· ≃ ·) (· → ·)]
     : Swap f rel where
   swap := by
     intro x y
@@ -88,11 +119,10 @@ instance
     exact substR (rβ := (· → ·)) comm ‹rel (f x y) (f x y)›
 
 def substR_from_substL_swap
-    {α : Sort u} {β : Sort v} {f : α → α → β}
-    {rα : α → α → Prop} {rβ : β → β → Prop}
+    {α : Sort u} {β : Sort v}
+    {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
     [Trans rβ] [Swap f rβ]
-    : SubstitutiveForHand Hand.L f rα rβ →
-    SubstitutiveForHand Hand.R f rα rβ := by
+    : SubstitutiveOn Hand.L f rα rβ → SubstitutiveOn Hand.R f rα rβ := by
   intro
   constructor
   intro x₁ x₂ y (_ : rα x₁ x₂)
@@ -102,15 +132,17 @@ def substR_from_substL_swap
     rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
     rβ (f x₂ y) (f y x₂) := Swap.swap
 
-instance eqv_substL {α : Sort u} [EqvOp α]
-    : SubstitutiveForHand Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
+instance eqv_substL
+    {α : Sort u} [EqvOp α]
+    : SubstitutiveOn Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
   constructor
   intro x₁ x₂ y (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
-instance eqv_substR {α : Sort u} [EqvOp α]
-    : SubstitutiveForHand Hand.R (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
+instance eqv_substR
+    {α : Sort u} [EqvOp α]
+    : SubstitutiveOn Hand.R (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
   substR_from_substL_swap eqv_substL
 
 instance eqv_substitutive {α : Sort u} [EqvOp α]
@@ -120,7 +152,7 @@ instance eqv_substitutive {α : Sort u} [EqvOp α]
 
 instance neq_substL
     {α : Sort u} [EqvOp α]
-    : SubstitutiveForHand Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
+    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
   constructor
   intro x₁ x₂ y (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
   show False

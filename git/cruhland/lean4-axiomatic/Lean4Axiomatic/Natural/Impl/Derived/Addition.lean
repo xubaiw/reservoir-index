@@ -99,11 +99,11 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
         _ ≃ step n₂ + m   := Eqv.symm Addition.step_add
 
 instance add_substL
-    : AA.SubstitutiveForHand AA.Hand.L (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
   subst₂ := subst_add
 
 instance add_substR
-    : AA.SubstitutiveForHand AA.Hand.R (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
   AA.substR_from_substL_swap add_substL
 
 instance add_substitutive
