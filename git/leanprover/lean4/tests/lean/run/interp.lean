@@ -2,14 +2,14 @@ inductive Vector (α : Type u) : Nat → Type u
   | nil : Vector α 0
   | cons : α → Vector α n → Vector α (n+1)
 
-infix:67 (priority := high) " :: " => Vector.cons
+infix:67 " :: " => Vector.cons
 
 inductive Ty where
   | int
   | bool
   | fn (a r : Ty)
 
-@[reducible] def Ty.interp : Ty → Type
+abbrev Ty.interp : Ty → Type
   | int    => Int
   | bool   => Bool
   | fn a r => a.interp → r.interp

@@ -11,7 +11,7 @@ declare_syntax_cat expr_dist
 syntax exprWt := "(" term "," num ")"
 syntax exprWtList := "exp!{" exprWt,* "}"
 syntax exprWtList : expr_dist
-syntax "load:[" name "]" : expr_dist
+syntax ident : expr_dist
 
 def parseExprDist : Syntax → TermElabM ExprDist
   | `(expr_dist|exp!{$[$xs:exprWt],*}) =>
@@ -19,21 +19,21 @@ def parseExprDist : Syntax → TermElabM ExprDist
           let m : Array (Expr × Nat) ←  xs.mapM (fun s => do
               match s with 
               | `(exprWt|($x:term , $n:numLit)) => 
-                  let expr ← whnf <| ←  elabTerm x none
+                  let expr ← whnf <| ← reduce <| ←  elabTerm x none
                   Term.synthesizeSyntheticMVarsNoPostponing
                   return (expr, (Syntax.isNatLit? n).get!)
               | _ =>
                 throwError m!"{s} is not a valid exprWt"
               )
-          ExprDist.fromArray m
-  | `(expr_dist|load:[$x:nameLit]) =>
+          ExprDist.fromArrayM m
+  | `(expr_dist|$x:ident) =>
     do
       let name := x.getId
       ExprDist.load name
   | _ => throwIllFormedSyntax
 
 elab (name:= exprDistPack) "packdist!" s:expr_dist : term => do
-  let m : Array (Expr × Nat)  := (←  parseExprDist s).allTermsArr
+  let m : Array (Expr × Nat)  := (←  parseExprDist s).allTermsArray
   packWeighted m.toList
 
 
@@ -45,7 +45,7 @@ elab (name:= exprDistPack) "packdist!" s:expr_dist : term => do
 elab "find-proof!" p:term "in" d:expr_dist : term => do
   let dist ← parseExprDist d
   let prop ← elabType p
-  let proofOpt ← dist.getProof? prop
+  let proofOpt ← dist.getProofM? prop
   match proofOpt with
   | some (x, _) => return x
   | none => throwError "No proof found"
@@ -195,7 +195,7 @@ mutual
     | _ => throwIllFormedSyntax
 end
 
-syntax save_target := "=:" name
+syntax save_target := "=:" ident
 
 syntax (name:= evolution) 
   "evolve!" evolver_list (expr_list)? expr_dist (name_dist)? num num (save_target)?  : term
@@ -223,7 +223,7 @@ match s with
   | none => pure ()
   logResults (some tk) goals finalDist
   let reportDist ← goals.mapM $ fun g => do
-    let pfOpt ←  (finalDist.getProof? g)
+    let pfOpt ←  (finalDist.getProofM? g)
     return pfOpt.getD (mkConst ``Unit, 0)
   return ← (ppackWeighted reportDist.toList)
 | _ => throwIllFormedSyntax
