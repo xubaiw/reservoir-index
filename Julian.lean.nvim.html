@@ -330,6 +330,11 @@ infoview window</td>
   -- Infoview support
   infoview = {
     -- Automatically open an infoview on entering a Lean buffer?
+    -- Should be a function that will be called anytime a new Lean file
+    -- is opened. Return true to open an infoview, otherwise false.
+    -- Setting this to `true` is the same as `function() return true end`,
+    -- i.e. autoopen for any Lean file, or setting it to `false` is the
+    -- same as `function() return false end`, i.e. never autoopen.
     autoopen = true,
 
     -- Set infoview windows' starting dimensions.
@@ -414,6 +419,11 @@ infoview window</td>
   <span class="pl-c"><span class="pl-c">--</span> Infoview support</span>
   infoview <span class="pl-k">=</span> {
     <span class="pl-c"><span class="pl-c">--</span> Automatically open an infoview on entering a Lean buffer?</span>
+    <span class="pl-c"><span class="pl-c">--</span> Should be a function that will be called anytime a new Lean file</span>
+    <span class="pl-c"><span class="pl-c">--</span> is opened. Return true to open an infoview, otherwise false.</span>
+    <span class="pl-c"><span class="pl-c">--</span> Setting this to `true` is the same as `function() return true end`,</span>
+    <span class="pl-c"><span class="pl-c">--</span> i.e. autoopen for any Lean file, or setting it to `false` is the</span>
+    <span class="pl-c"><span class="pl-c">--</span> same as `function() return false end`, i.e. never autoopen.</span>
     autoopen <span class="pl-k">=</span> <span class="pl-c1">true</span>,
 
     <span class="pl-c"><span class="pl-c">--</span> Set infoview windows' starting dimensions.</span>

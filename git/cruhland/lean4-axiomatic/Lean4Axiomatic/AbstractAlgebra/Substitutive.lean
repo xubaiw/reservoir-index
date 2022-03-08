@@ -85,18 +85,76 @@ class Injective
 
 export Injective (inject)
 
+/--
+Class for types and operations that satisfy either the left- or right-handed
+binary generalized substitution property.
+
+For more information see `SubstitutiveOn.subst₂`.
+
+**Named parameters**
+- `hand`: indicates whether the property is left- or right-handed.
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized substitution property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
 class SubstitutiveOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
     where
+  /--
+  The left- or right-handed generalized substitution property of a binary
+  operation `f`.
+
+  An `f` that satisfies this property must map values of type `α` that are
+  related by `rα` -- given as arguments in the position specified by `hand` --
+  to values of type `β` that are related by `rβ`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. A simple example is of addition on natural numbers: if we know
+  `n₁ ≃ n₂`, then we can conclude that `n₁ + m ≃ n₂ + m`, or that
+  `m + n₁ ≃ m + n₂`.
+
+  **Named parameters**
+  - see `SubstitutiveOn` for the class parameters.
+  - `x₁` and `x₂`: the arguments to `f`, related by `rα`; the `hand` parameter
+    indicates which side of `f` they are given on.
+  - `y`: the other argument to `f`; goes on the side opposite `hand`.
+  -/
   subst₂
     {x₁ x₂ y : α} : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
 
 export SubstitutiveOn (subst₂)
 
+/--
+Convenience function for the left-handed binary generalized substitution
+property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `subst₂` function.
+
+See `SubstitutiveOn.subst₂` for detailed documentation.
+-/
 abbrev substL := @subst₂ Hand.L
+
+/--
+Convenience function for the right-handed binary generalized substitution
+property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `subst₂` function.
+
+See `SubstitutiveOn.subst₂` for detailed documentation.
+-/
 abbrev substR := @subst₂ Hand.R
 
+/--
+Convenience class for types and operations that satisfy the full (left- **and**
+right-handed) binary generalized substitution property.
+
+See `SubstitutiveOn` for detailed documentation.
+-/
 class Substitutive₂
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : α → α → Prop) (rβ : β → β → Prop)
