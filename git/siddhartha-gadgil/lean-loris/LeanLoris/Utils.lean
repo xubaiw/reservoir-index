@@ -2,7 +2,7 @@ import Lean.Meta
 import Lean.Elab
 import Std
 import Lean
-open Lean Meta Elab
+open Lean Meta Elab Nat Term
 
 -- Auxiliary functions mainly from lean source for finding subexpressions
 
@@ -27,6 +27,20 @@ def isWhiteListed (declName : Name) : MetaM Bool := do
   let bl ← isBlackListed  declName
   return !bl
 
+
+partial def exprNat : Expr → TermElabM Nat := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
+    let sExp := mkApp (mkConst ``Nat.succ) mvar
+    if ← isDefEq sExp expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      let prev ← exprNat (← whnf mvar)
+      return succ prev
+    else 
+    if ← isDefEq (mkConst `Nat.zero) expr then
+      return zero
+    else
+      throwError m!"{expr} not a Nat expression"
 
 def view(expr: Expr): MetaM String := do
   let stx ← PrettyPrinter.delab (← getCurrNamespace) (← getOpenDecls) expr

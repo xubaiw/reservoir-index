@@ -165,6 +165,27 @@ class Substitutive₂
 attribute [instance] Substitutive₂.substitutiveL
 attribute [instance] Substitutive₂.substitutiveR
 
+/--
+Convenience definition that converts instances of `Commutative` into instances
+of `Swap`.
+
+The `Swap` class is a generalization of the commutative and symmetric
+properties, and is used in very abstract, general definitions. This instance
+makes it easy for those definitions to apply to commutative functions.
+
+**Named parameters**
+- `α`: the argument type of the commutative function `f`.
+- `β`: the result type of the commutative function `f`.
+- `f`: the commutative function to produce a `Swap` instance for.
+- `rel`: the binary relation that connects the two sides of the `Swap`.
+
+**Class parameters**
+- `EqvOp β`: required by `Commutative f`.
+- `Commutative f`: the property to translate into a `Swap` instance.
+- `Relation.Refl rel`: necessary to provide a starting point for substitution.
+- `SubstitutitveOn Hand.R rel (· ≃ ·) (· → ·)`: necessary for transfering
+  commutativity from `EqvOp β` to `rel`.
+-/
 instance
     {α : Type u} {β : Type v} {f : α → α → β} {rel : β → β → Prop}
     [EqvOp β] [Commutative f] [Relation.Refl rel]

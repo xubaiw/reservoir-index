@@ -38,6 +38,8 @@ To understand the (automated) reasoning steps (and for use during tuning and deb
 * `def thm! := m * n = n * m`
 
 The `view4` function below is run in the `Main` module and its result is output (as are indicators of progress in intermediate steps).
+
+The forward reasoning we use is mainly function application and closure of equality under symmetry and transitivity. In the latter we implicitly use our key "lemma recognition" principle: proofs of simple statements are treated like simple terms while generating.
 -/
 namespace CzSl
 constant M : Type
@@ -83,13 +85,13 @@ def thm! := m * n = n * m
 def nameDist := #[(``mul, 0), (``ax1, 0), (``ax2, 0)]
 
 def init1 : TermElabM ExprDist := do
-                  parseExprDist (← `(expr_dist|exp!{(m, 0), (n, 0), (m *n, 0)}))
+                  parseExprDist (← `(expr_dist|expr!{(m, 0), (n, 0), (m *n, 0)}))
 
 def initData : FullData := (FinDist.fromArray nameDist, [], [])
 
 def goals : TermElabM (Array Expr) := do
                   parseExprArray (← 
-                  `(expr_list|exp![lem1!, lem2!, lem3!, lem4!, lem5!, lem6!, thm!]))
+                  `(expr_list|expr![lem1!, lem2!, lem3!, lem4!, lem5!, lem6!, thm!]))
 
 def evolve1: TermElabM EvolutionM := do
             let step := initEv ++ nameAppl ++ nameBinOp ++ eqIsles
@@ -105,7 +107,7 @@ def evolve : TermElabM EvolutionM := do
       return (← evolve1) * (← evolve2) * (← evolve1) * (← evolve2)
 
 def goals4 : TermElabM (Array Expr) := do
-                  parseExprArray (← `(expr_list|exp![thm!]))
+                  parseExprArray (← `(expr_list|expr![thm!]))
 def dist4 : TermElabM ExprDist := do
                   (← evolve) (←  init1) 
 

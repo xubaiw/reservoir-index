@@ -11,29 +11,6 @@ open Std
 open Std.HashMap
 open Nat
 
-partial def exprNat : Expr → TermElabM Nat := fun expr => 
-  do
-    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
-    let sExp := mkApp (mkConst ``Nat.succ) mvar
-    if ← isDefEq sExp expr then
-      Term.synthesizeSyntheticMVarsNoPostponing
-      let prev ← exprNat (← whnf mvar)
-      return succ prev
-    else 
-    if ← isDefEq (mkConst `Nat.zero) expr then
-      return zero
-    else
-      throwError m!"{expr} not a Nat expression"
-
--- #eval exprNat (ToExpr.toExpr 3)
-
-def parseNat : Syntax → TermElabM Nat := fun s => 
-  do
-    let expr ← elabTerm s none
-    exprNat expr
-
-
-
 -- Basic functions for generation
 
 -- (optional) function application with unification
@@ -203,7 +180,6 @@ def prodGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageData α
     (compose: α → β → TermElabM (Option Expr))
     (maxWeight card: Nat)(fst: Array (α × Nat))(snd: Array (β × Nat))
     (data: D) : TermElabM ExprDist := do 
-    -- logInfo m!"generating from pairs {← IO.monoMsNow}"
     if maxWeight > 0 then
       let mut fstTagGrouped: HashMap Nat (Array (α × Bool × Bool)) := HashMap.empty
       let mut sndTagGrouped: HashMap Nat (Array (β × Bool × Bool)) := HashMap.empty
@@ -213,7 +189,6 @@ def prodGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageData α
       for (b, w2) in snd do
         let prev := sndTagGrouped.findD w2 #[]
         sndTagGrouped := sndTagGrouped.insert w2 <| prev.push (b, ← newElem data b w2)
-      -- logInfo m!"finisher tagging whether new {← IO.monoMsNow}"
       let fstAbove := weightAbove fst maxWeight
       let sndAbove := weightAbove snd maxWeight
       let mut wtdPairs : Array (α × β  × Nat) := #[]
@@ -227,15 +202,12 @@ def prodGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageData α
                     || ((be1 || be2) && w1 + w2  + 1 = maxWeight)) 
                   then
                     wtdPairs := wtdPairs.push (e1, e2, w1 + w2  + 1)
-      -- logInfo m!"obtained weighted pairs {← IO.monoMsNow}"
       let arr1 : Array (TermElabM (Option (Expr × Nat))) := 
           wtdPairs.map <| fun (e1, e2, w) => 
                 (compose e1 e2).map (fun oe => 
                       oe.map (fun e4 => (e4, w) ))
       let arr2 ←  arr1.filterMapM <| fun t => t
-      -- logInfo m!"obtained resulting compositions {← IO.monoMsNow}; size: {arr2.size}"
       let res ← ExprDist.fromArrayM arr2 
-      -- logInfo m!"obtained merged result {← IO.monoMsNow}; size : {res.termsArray.size} + {res.proofsArray.size}"
       return res
     else return ExprDist.empty
 
@@ -243,7 +215,6 @@ def prodPolyGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageDat
     (compose: α → β → TermElabM (Option (Array Expr)))
     (maxWeight card: Nat)(fst: Array (α × Nat))(snd: Array (β × Nat))
     (data: D) : TermElabM ExprDist := do 
-    -- logInfo m!"generating from pairs {← IO.monoMsNow}"
     if maxWeight > 0 then
       let mut fstTagGrouped: HashMap Nat (Array (α × Bool × Bool)) := HashMap.empty
       let mut sndTagGrouped: HashMap Nat (Array (β × Bool × Bool)) := HashMap.empty
@@ -253,7 +224,6 @@ def prodPolyGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageDat
       for (b, w2) in snd do
         let prev := sndTagGrouped.findD w2 #[]
         sndTagGrouped := sndTagGrouped.insert w2 <| prev.push (b, ← newElem data b w2)
-      -- logInfo m!"finisher tagging whether new {← IO.monoMsNow}"
       let fstAbove := weightAbove fst maxWeight
       let sndAbove := weightAbove snd maxWeight
       let mut wtdPairs : Array (α × β  × Nat) := #[]
@@ -267,7 +237,6 @@ def prodPolyGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageDat
                     || ((be1 || be2) && w1 + w2  + 1 = maxWeight)) 
                   then
                     wtdPairs := wtdPairs.push (e1, e2, w1 + w2  + 1)
-      -- logInfo m!"obtained weighted pairs {← IO.monoMsNow}"
       let mut arr1 : Array (Option (Expr × Nat)) := #[]
       for (e1, e2, w) in wtdPairs do 
         match ← compose e1 e2 with
@@ -276,9 +245,7 @@ def prodPolyGenArrM{α β D: Type}[NewElem α D][nb : NewElem β D][ToMessageDat
           for e3 in a do 
             arr1 := arr1.push (some (e3, w))        
       let arr2 :=  arr1.filterMap <| fun t => t
-      -- logInfo m!"obtained resulting compositions {← IO.monoMsNow}; size: {arr2.size}"
       let res ← ExprDist.fromArrayM arr2 
-      -- logInfo m!"obtained merged result {← IO.monoMsNow}; size : {res.termsArray.size} + {res.proofsArray.size}"
       return res
     else return ExprDist.empty
 
@@ -286,7 +253,6 @@ def tripleProdGenArrM{α β γ  D: Type}[NewElem α D][NewElem β D][NewElem γ 
     (compose: α → β → γ → TermElabM (Option Expr))
     (maxWeight card: Nat)(fst: Array (α × Nat))(snd: Array (β × Nat))
     (third : Array (γ × Nat))(data: D) : TermElabM ExprDist := do 
-    -- logInfo m!"generating from triples {← IO.monoMsNow}"
     if maxWeight > 0 then
       let mut fstTagGrouped: HashMap Nat (Array (α × Bool × Bool)) := HashMap.empty
       let mut sndTagGrouped: HashMap Nat (Array (β × Bool × Bool)) := HashMap.empty
@@ -300,7 +266,6 @@ def tripleProdGenArrM{α β γ  D: Type}[NewElem α D][NewElem β D][NewElem γ 
       for (c, w3) in third do
         let prev := thirdTagGrouped.findD w3 #[]
         thirdTagGrouped := thirdTagGrouped.insert w3 <| prev.push (c, ← newElem data c w3) 
-      -- logInfo m!"finisher tagging whether new {← IO.monoMsNow}"
       let fstAbove := weightAbove fst maxWeight
       let sndAbove := weightAbove snd maxWeight
       let thirdAbove := weightAbove third maxWeight    
@@ -317,70 +282,12 @@ def tripleProdGenArrM{α β γ  D: Type}[NewElem α D][NewElem β D][NewElem γ 
                     || ((be1 || be2 || be3) && w1 + w2 + w3 + 1 = maxWeight)) 
                   then
                     wtdTriples := wtdTriples.push (e1, e2, e3, w1 + w2 + w3 + 1)
-      -- logInfo m!"obtained weighted triples {← IO.monoMsNow}; size : {wtdTriples.size}"
       let arr1 : Array (TermElabM (Option (Expr × Nat))) := 
           wtdTriples.map <| fun (e1, e2, e3, w) => 
                 (compose e1 e2 e3).map (fun oe => 
                       oe.map (fun e4 => (e4, w) ))
       let arr2 ←  arr1.filterMapM <| fun t => t
-      -- logInfo m!"obtained resulting compositions {← IO.monoMsNow}; size: {arr2.size}"
       let res ← ExprDist.fromArrayM arr2
-      -- logInfo m!"obtained merged result {← IO.monoMsNow}; size : {res.termsArray.size} + {res.proofsArray.size}"
       return res
     else return ExprDist.empty
-
--- Deprecated
-
-def prodGenM{α β : Type}[Hashable α][BEq α][Hashable β][BEq β]
-    (compose: α → β → TermElabM (Option Expr))
-    (maxWeight card: Nat)(fst: FinDist α)(snd: FinDist β)
-    (newPair: Nat → Nat →  α × β → Nat × Nat → TermElabM Bool) : TermElabM ExprDist := do 
-    let mut w := ExprDist.empty
-    if maxWeight > 0 then
-      let fstBdd := fst.bound (maxWeight - 1) card
-      let fstCount := fstBdd.cumulWeightCount maxWeight
-      for (key, val) in fstBdd.toArray do
-      if maxWeight - val > 0 then
-        let fstNum := fstCount.find! val 
-        let sndCard := card / fstNum
-        let sndBdd := snd.bound (maxWeight - val - 1) sndCard
-        for (key2, val2) in sndBdd.toArray do
-          if ←  newPair maxWeight card (key, key2) (val, val2) then
-            match ← compose key key2 with
-            | some key3 =>
-                w ←  ExprDist.updateExprM w key3 (val + val2 + 1)
-            | none => pure ()
-          -- else logWarning m!"newPair failed {val} {val2} ; {maxWeight}"
-    return w
-
-def tripleProdGenM{α β γ : Type}[Hashable α][BEq α][Hashable β][BEq β]
-    [Hashable γ][BEq γ]
-    (compose: α → β → γ  →  TermElabM (Option Expr))
-    (maxWeight card: Nat)
-    (fst: FinDist α)(snd: FinDist β)(third : FinDist γ)
-    (newTriple: Nat → Nat →  α × β × γ → Nat × Nat × Nat → TermElabM Bool) : TermElabM ExprDist := do 
-    let mut w := ExprDist.empty
-    if maxWeight > 0 then
-      let fstBdd := fst.bound (maxWeight - 1) card
-      let fstCount := fstBdd.cumulWeightCount maxWeight
-      let fstTop := (fstCount.toList.map (fun (k, v) => v)).maximum?.getD 1 
-      for (key, val) in fstBdd.toArray do
-      if maxWeight - val > 0 then
-        let fstNum := fstCount.findD val 0
-        let sndCard := card / fstNum
-        let sndBdd := snd.bound (maxWeight - val - 1) sndCard
-        let sndCount := sndBdd.cumulWeightCount maxWeight
-        let sndTop := (sndCount.toList.map (fun (k, v) => v)).maximum?.getD 1 
-        for (key2, val2) in sndBdd.toArray do
-        if maxWeight - val - val2 > 0 then
-          let sndNum := sndCount.findD val2 0
-          let thirdCard := sndCard / sndNum
-          let thirdBdd := third.bound (maxWeight - val - val2 - 1) thirdCard
-          for (key3, val3) in thirdBdd.toArray do
-            if ←  newTriple maxWeight card (key, key2, key3) (val, val2, val3) then
-              match ← compose key key2 key3 with
-              | some key3 =>
-                  w ←  ExprDist.updateExprM w key3 (val + val2 + val3 + 1)
-              | none => pure ()
-    return w
 

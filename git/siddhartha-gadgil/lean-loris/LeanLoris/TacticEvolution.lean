@@ -73,7 +73,6 @@ def tacticLambdaMVars(tactic : MVarId → TermElabM (List MVarId))(goalType: Exp
         Term.synthesizeSyntheticMVarsNoPostponing
         return some <| (←  metaToLambda mvars goal, mvars)
       catch exc =>
-        -- logInfo m!"tacticLambdaMVars failed for {goal}: ${exc.toMessageData}"
         return none
 
 
@@ -113,16 +112,12 @@ def typeSumEvolverM{D: Type}(types : Nat → Nat → D → ExprDist →
           (tacList : Expr → TermElabM (Option (Array Expr))) : EvolverM D := 
             fun wb cb data dist => do
             let typeArray ← types wb cb data dist
-            -- logInfo m!"applying tactic to {typeArray.size} types: {typeArray}"
             let mut terms : Array (Expr × Nat) := Array.empty
             for (type, w) in typeArray do
               match ← tacList type with
               | none =>
-                -- logInfo m!"tactic failed for {type}" 
                 pure ()
               | some ys =>
-                -- logInfo m!"tactic succeeded for {type}, giving {ys}"
-                -- logInfo m!"head type : {← inferType ys[0]}" 
                 for y in ys do terms := terms.push (y, w + 1)
             ExprDist.fromArrayM terms
 
@@ -131,16 +126,12 @@ def weightedTypeSumEvolverM{D: Type}(types : Nat → Nat → D → ExprDist →
           (tacList : Expr → TermElabM (Option (Array (Expr × Nat)))) : EvolverM D := 
             fun wb cb data dist => do
             let typeArray ← types wb cb data dist
-            -- logInfo m!"applying tactic to {typeArray.size} types: {typeArray}"
             let mut terms : Array (Expr × Nat) := Array.empty
             for (type, w) in typeArray do
               match ← tacList type with
               | none =>
-                -- logInfo m!"tactic failed for {type}" 
                 pure ()
               | some ys =>
-                -- logInfo m!"tactic succeeded for {type}, giving {ys}"
-                -- logInfo m!"head type : {← inferType ys[0].1}" 
                 for (y, w0) in ys do terms := terms.push (y, w + w0)
             ExprDist.fromArrayM terms
 
@@ -188,7 +179,7 @@ def applyPairing(type func: Expr) : TermElabM (Option (Array Expr)) := do
     return some (goalLambda :: newGoals).toArray
   catch _ => return none
 
-def applyTacticEvolver(D: Type)[IsNew D][NewElem Expr D] : EvolverM D := 
+def applyTacticEvolver(D: Type)[NewElem Expr D] : EvolverM D := 
   fun wb c d init => 
   do
     prodPolyGenArrM applyPairing wb c (← init.typesArr) (← init.funcs) d
@@ -271,54 +262,3 @@ def natRecEvolverM(D: Type) : EvolverM D :=
         (← whnf <| ← mkAppM ``natRecStep #[fmly], 1)] 
   weightedTypeSumEvolverM (fun wb cb data dist => (dist.bound wb cb).goalsArr) tactic
 
-def egProp := ∀ n: Nat, n = n
-
-def egFamily := natRecFamily <| mkConst `egProp
-
--- #eval egFamily
-
-def pp : Prop := 1 = 2
-
--- #eval isProp (mkConst ``pp)
--- #eval isProp (mkConst ``Nat)
--- #eval isType (mkConst ``Nat)
--- #eval isType (mkConst ``pp)
--- #check Expr.isForall
-
-def sumEl : TermElabM Expr := do 
-  let mvar1 ← mkFreshExprMVar (some (mkConst ``Nat))
-  let mvar2 ← mkFreshExprMVar (some (mkConst ``Nat)) -- none works too
-  let value ← mkAppM ``Nat.add #[mvar1, mvar2]
-  let mvar ← mkFreshExprMVar (some (mkConst ``Nat))
-  let mvarId := mvar.mvarId!
-  assignExprMVar mvarId value
-  metaToLambda [mvar1, mvar2] mvar
-
--- #eval sumEl
-
-elab "sumEl!" : term => sumEl
-
-#eval sumEl! 1 2
-
-theorem constFn2{α : Type}(f: Nat → α):
-    (∀ n : Nat, f n = f (n + 1)) →
-    (∀ n : Nat, f n = f 0) := by
-      intro hyp 
-      apply natRec
-      focus
-        rfl
-      focus
-        intro n ih 
-        rw [← hyp]
-        assumption
-
-def factorial : Nat →  Nat := by
-  apply natRec
-  focus
-    exact 1
-  focus
-    intro n ih
-    exact ((n + 1) * ih)
-
--- #eval factorial 5
-example : 1 = 1 := by exact rfl
