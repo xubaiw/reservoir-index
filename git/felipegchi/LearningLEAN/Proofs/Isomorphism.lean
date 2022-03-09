@@ -19,19 +19,19 @@ structure Iso (A B : Type) where
   FromTo : ∀ (x : A), (From (To x) = x)
   ToFrom : ∀ (y : B), (To (From y) = y)
 
-macro_rules | `($x iso= $y)  => `(Iso $x $y)
+infixl:60 "≅" => Iso
 
-theorem Iso.refl : ∀ {a : Type}, a iso= a 
+theorem Iso.refl : ∀ {a : Type}, a ≅ a 
   | a => { To := λx => x, From := λy => y, FromTo := λx => rfl, ToFrom := λx => rfl }
 
-theorem Iso.sym : ∀ {A B : Type}, A iso= B → B iso= A
+theorem Iso.sym : ∀ {A B : Type}, A ≅ B → B ≅ A
   | x, y, t => { To := t.From, 
                  From := t.To, 
                  FromTo := Iso.ToFrom t, 
                  ToFrom := Iso.FromTo t
                }
 
-theorem Iso.trans : ∀ { a b c : Type }, a iso= b → b iso= c → a iso= c 
+theorem Iso.trans : ∀ { a b c : Type }, a ≅ b → b ≅ c → a ≅ c 
   | x, y, z, h1, h2 => 
     { To     := h2.To ∘ h1.To,
       From   := h1.From ∘ h2.From,

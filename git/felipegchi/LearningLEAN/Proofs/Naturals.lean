@@ -101,7 +101,7 @@ theorem Nt.Add.comm : ∀ (m n : ℕ), m + n = n + m
   | ℕ.s m, n => by 
     rw [Nt.Add.sucAssoc m n, comm m n, ← Nt.Add.sucShift n m]
     rfl
-
+    
 theorem Nt.Mul.leftId : ∀ (m : ℕ), ℕ.s 0 * m = m 
   | 0 => rfl
   | ℕ.s m => rfl 
