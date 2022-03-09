@@ -58,8 +58,10 @@ def main : IO Unit := do
   mysql.insertIntoTable "person" [2, "Bob", 21, 1.64, 2, 3]
   mysql.insertIntoTable "person" [3, "Craig", 22, 1.76, NULL, 2]
 
-  let df ← mysql.query ("select name, age, height, job_name " ++
-    "from person left join job on person.job_id = job.id")
+  let df ← mysql.query $
+    SELECT name, age, height, job_name
+    FROM person LEFT JOIN job ON person.job_id = job.id
+    WHERE person.age > 20
 
   IO.println $ df
 
@@ -91,29 +93,28 @@ def main : IO Unit := do
   mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [<span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>Bob<span class="pl-pds">"</span></span>, <span class="pl-c1">21</span>, <span class="pl-c1">1</span>.<span class="pl-c1">64</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]
   mysql.insertIntoTable <span class="pl-s"><span class="pl-pds">"</span>person<span class="pl-pds">"</span></span> [<span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>Craig<span class="pl-pds">"</span></span>, <span class="pl-c1">22</span>, <span class="pl-c1">1</span>.<span class="pl-c1">76</span>, NULL, <span class="pl-c1">2</span>]
 
-  <span class="pl-k">let</span> df ← mysql.query (<span class="pl-s"><span class="pl-pds">"</span>select name, age, height, job_name <span class="pl-pds">"</span></span> ++
-    <span class="pl-s"><span class="pl-pds">"</span>from person left join job on person.job_id = job.id<span class="pl-pds">"</span></span>)
+  <span class="pl-k">let</span> df ← mysql.query $
+    SELECT name, age, height, job_name
+    FROM person LEFT JOIN job ON person.job_id = job.id
+    WHERE person.age > <span class="pl-c1">20</span>
 
   IO.println $ df
 
   mysql.close</pre></div>
 <p dir="auto">The example above prints out:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="8.0.27
-|   name|age|height|            job_name|
-|-------|---|------|--------------------|
-|'Alice'| 20|  1.72|'Computer Scientist'|
-|  'Bob'| 21|  1.64|     'Mathematician'|
-|'Craig'| 22|  1.76|                NULL|"><pre><code>8.0.27
-|   name|age|height|            job_name|
-|-------|---|------|--------------------|
-|'Alice'| 20|  1.72|'Computer Scientist'|
-|  'Bob'| 21|  1.64|     'Mathematician'|
-|'Craig'| 22|  1.76|                NULL|
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="8.0.28
+|   name|age|height|       job_name|
+|-------|---|------|---------------|
+|  'Bob'| 21|  1.64|'Mathematician'|
+|'Craig'| 22|  1.76|           NULL|"><pre><code>8.0.28
+|   name|age|height|       job_name|
+|-------|---|------|---------------|
+|  'Bob'| 21|  1.64|'Mathematician'|
+|'Craig'| 22|  1.76|           NULL|
 </code></pre></div>
 <h4 dir="auto">What's next?</h4>
 <ul dir="auto">
-<li>Replace lists by arrays in the implementation of dataframes</li>
-<li>Provide a proper SQL DSL instead of relying on unsafe strings</li>
+<li>Allow queries on the <code>FROM</code> clause</li>
 </ul>
 <p dir="auto">Feel free to contribute! :D</p>
 </article></div></main>

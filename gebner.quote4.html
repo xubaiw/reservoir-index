@@ -56,7 +56,7 @@ allowing us to construct values in <code>Q(·)</code>:</p>
 </code></pre></div>
 <h4 dir="auto">Example</h4>
 <p dir="auto">Let us write a type-safe version of <code>mkApp</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
 open Qq
 
 set_option trace.compiler.ir.result true in
@@ -69,20 +69,21 @@ def betterApp {α : Q(Sort u)} {β : Q($α → Sort v)}
   (f : Q((a : α) → $β a)) (a : Q($α)) : Q($β $a) :=
 q($f $a)
 
-#eval betterApp q(Int.toNat) q(42)"><pre><span class="pl-k">import</span> Qq
-<span class="pl-k">open</span> Qq
+#eval betterApp q(Int.toNat) q(42)"><pre lang="lean"><code>import Qq
+open Qq
 
-<span class="pl-k">set_option</span> trace.compiler.ir.result true <span class="pl-k">in</span>
+set_option trace.compiler.ir.result true in
 
-<span class="pl-c"><span class="pl-c">--</span> Note: `betterApp` actually has two additional parameters</span>
-<span class="pl-c"><span class="pl-c">--</span> `{u v : Lean.Level}` auto-generated due to option</span>
-<span class="pl-c"><span class="pl-c">--</span> `autoBoundImplicitLocal`.</span>
+-- Note: `betterApp` actually has two additional parameters
+-- `{u v : Lean.Level}` auto-generated due to option
+-- `autoBoundImplicitLocal`.
 
-<span class="pl-k">def</span> <span class="pl-en">betterApp</span> {α : Q(<span class="pl-k">Sort</span> u)} {β : Q($α → <span class="pl-k">Sort</span> v)}
+def betterApp {α : Q(Sort u)} {β : Q($α → Sort v)}
   (f : Q((a : α) → $β a)) (a : Q($α)) : Q($β $a) :=
 q($f $a)
 
-<span class="pl-k">#eval</span> betterApp q(Int.toNat) q(<span class="pl-c1">42</span>)</pre></div>
+#eval betterApp q(Int.toNat) q(42)
+</code></pre></div>
 <p dir="auto">There are many things going on here:</p>
 <ol dir="auto">
 <li>The <code>betterApp</code> function compiles to a single <code>mkApp</code> call.</li>
@@ -117,7 +118,8 @@ does what you think it does!</p>
 that we can write metaprograms
 transforming terms of nonconcrete types
 in inconsistent contexts:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ..."><pre><span class="pl-k">def</span> <span class="pl-en">tryProve</span> (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > <span class="pl-c1">0</span>) := ...</pre></div>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ..."><pre lang="lean"><code>def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ...
+</code></pre></div>
 <p dir="auto">If the <code>i > 0</code> in the return type were a concrete type in the metalanguage,
 then we could not call <code>tryProve</code> with <code>n := 0</code>
 (because we would need to provide a value for <code>i : Fin 0</code>).
@@ -127,7 +129,8 @@ then we could not call <code>tryProve</code> on
 the subterm <code>t</code> of <code>fun n : Nat => t</code>.</p>
 <h4 dir="auto">Implementation</h4>
 <p dir="auto">The type family on which this package is built is called <code>QQ</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre><span class="pl-k">def</span> <span class="pl-en">QQ</span> (α : Expr) := Expr</pre></div>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre lang="lean"><code>def QQ (α : Expr) := Expr
+</code></pre></div>
 <p dir="auto">The intended meaning of <code>e : QQ t</code> is that
 <code>e</code> is an expression of type <code>t</code>.
 Or if you will,
@@ -168,23 +171,25 @@ somewhere else, by somebody else.</p>
 Maybe something like this:</p>
 </li>
 </ul>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
   | ~q(∃ x, p x) => do
      q(∀ x, $(x => turnExistsIntoForall q($p $x)))
-  | e => e"><pre><span class="pl-k">def</span> <span class="pl-en">turnExistsIntoForall</span> : Q(<span class="pl-k">Prop</span>) → MetaM Q(<span class="pl-k">Prop</span>)
-  | ~q(∃ x, p x) => <span class="pl-k">do</span>
+  | e => e"><pre lang="lean"><code>def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
+  | ~q(∃ x, p x) => do
      q(∀ x, $(x => turnExistsIntoForall q($p $x)))
-  | e => e</pre></div>
+  | e => e
+</code></pre></div>
 <ul dir="auto">
 <li>Matching should provide control over type-class diamonds, such as</li>
 </ul>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="~q((a + b : α) where
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="~q((a + b : α) where
   Semiring α
   commutes ∀ n, OfNat α n
-  a + a defEq 0)"><pre>~q((a + b : α) where
+  a + a defEq 0)"><pre lang="lean"><code>~q((a + b : α) where
   Semiring α
   commutes ∀ n, OfNat α n
-  a + a defEq <span class="pl-c1">0</span>)</pre></div>
+  a + a defEq 0)
+</code></pre></div>
 <ul dir="auto">
 <li>Other bug fixes, documentation, and assorted polishing.</li>
 </ul>
