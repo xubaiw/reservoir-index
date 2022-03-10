@@ -81,6 +81,7 @@ import Mathlib.Tactic.Rename
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.RunCmd
 import Mathlib.Tactic.RunTac
+import Mathlib.Tactic.Sat.FromLRAT
 import Mathlib.Tactic.ShowTerm
 import Mathlib.Tactic.SimpRw
 import Mathlib.Tactic.Simps
@@ -92,6 +93,7 @@ import Mathlib.Tactic.Use
 import Mathlib.Util.DeclName
 import Mathlib.Util.Eval
 import Mathlib.Util.Export
+import Mathlib.Util.IncludeStr
 import Mathlib.Util.LibraryNote
 import Mathlib.Util.Simp
 import Mathlib.Util.TermUnsafe

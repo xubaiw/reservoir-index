@@ -1,5 +1,6 @@
 import LeanLoris.FinDist
 import LeanLoris.ExprPieces
+import LeanLoris.Utils
 import Lean.Meta
 import Lean.Elab
 import Std
@@ -362,7 +363,7 @@ def allSortsArray(dist: ExprDist) : TermElabM (Array (Expr × Nat)) := do
 /--
 Cutoff a distribution at a given degree with given bound on cardinality.
 -/
-def bound(dist: ExprDist)(degBnd cb: Nat) : ExprDist := Id.run do
+def bound(dist: ExprDist)(degBnd: Nat)(cb: Option Nat) : ExprDist := Id.run do
   let mut cumCount : HashMap Nat Nat := HashMap.empty
   for (_, deg) in dist.termsArray do
       for j in [deg:degBnd + 1] do
@@ -370,8 +371,10 @@ def bound(dist: ExprDist)(degBnd cb: Nat) : ExprDist := Id.run do
   for (_, _, deg) in dist.proofsArray do
       for j in [deg:degBnd + 1] do
         cumCount := cumCount.insert j (cumCount.findD j 0 + 1)
-  ⟨dist.termsArray.filter fun (_, deg) => deg ≤ degBnd && cumCount.find! deg ≤ cb,
-    dist.proofsArray.filter fun (_, _, deg) => deg ≤ degBnd && cumCount.find! deg ≤ cb⟩
+  ⟨dist.termsArray.filter fun (_, deg) => 
+      deg ≤ degBnd && (leqOpt (cumCount.find! deg) cb),
+    dist.proofsArray.filter fun (_, _, deg) => deg ≤ degBnd && 
+          (leqOpt (cumCount.find! deg) cb)⟩
   
 /--
 Array of types with degrees.

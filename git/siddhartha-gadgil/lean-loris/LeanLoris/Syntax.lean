@@ -108,7 +108,7 @@ syntax "simple-binop": evolver
 syntax "rewrite": evolver
 syntax "rewrite-flip": evolver
 syntax "congr": evolver
-syntax "eq-isles": evolver
+syntax "congr-rec": evolver
 syntax "all-isles": evolver
 syntax "func-dom-isles": evolver
 syntax "eq-closure": evolver
@@ -135,7 +135,7 @@ abbrev simpleBinOp := (simpleApplyPairEvolver FullData).tautRec
 abbrev rewriteEv := (rewriteEvolver FullData false).tautRec
 abbrev rewriteFlip := (rewriteEvolver FullData true).tautRec
 abbrev congrEv := (congrEvolver FullData).tautRec
-abbrev eqIsles := eqIsleEvolver FullData
+abbrev eqIsles := congrIsleEvolver FullData
 abbrev allIsles := allIsleEvolver FullData
 abbrev funcDomIsles := funcDomIsleEvolver FullData
 abbrev eqClosure := (eqSymmTransEvolver FullData).tautRec
@@ -171,7 +171,7 @@ mutual
   | `(evolver|rewrite) => return (rewriteEvolver FullData true).tautRec
   | `(evolver|rewrite-flip) => return (rewriteEvolver FullData false).tautRec
   | `(evolver|congr) => return (congrEvolver FullData).tautRec
-  | `(evolver|eq-isles) => return eqIsleEvolver FullData
+  | `(evolver|congr-rec) => return congrIsleEvolver FullData
   | `(evolver|all-isles) => return allIsleEvolver FullData
   | `(evolver|func-dom-isles) => return funcDomIsleEvolver FullData
   | `(evolver|eq-closure) => return (eqSymmTransEvolver FullData).tautRec
@@ -212,10 +212,10 @@ end
 syntax save_target := "=:" ident
 
 syntax (name:= evolution) 
-  "evolve!" evolver_list (expr_list)? expr_dist (name_dist)? num num (save_target)?  : term
+  "evolve!" evolver_list (expr_list)? expr_dist (name_dist)? num (num)? (save_target)?  : term
 @[termElab evolution] def evolutionImpl : TermElab := fun s _ =>
 match s with
-| `(evolve!%$tk $evolvers $(goals?)? $initDist $(nameDist?)? $degBnd $card $(saveTo?)?)  => do
+| `(evolve!%$tk $evolvers $(goals?)? $initDist $(nameDist?)? $degBnd $(card?)? $(saveTo?)?)  => do
   let ev ← parseEvolverList evolvers
   let initDist ← parseExprDist initDist
   let nameDist? ← nameDist?.mapM  $ fun nameDist => parseNameMap nameDist
@@ -230,7 +230,7 @@ match s with
     | `(save_target|=:$x) => some x.getId
     | _ => none
   let degBnd ← parseNat degBnd
-  let card := (Syntax.isNatLit? card).get!
+  let card := card?.map <| fun card => (Syntax.isNatLit? card).get!
   let finalDist ← ev degBnd card initData initDist 
   match saveTo? with
   | some name => ExprDist.save name finalDist
@@ -267,10 +267,10 @@ elab "hashv!" t:term : term => do
 open Lean.Elab.Tactic
 
 syntax (name:= evolveTactic) 
-  "evolve" evolver_list (expr_list)? (expr_dist)? (name_dist)? num num (save_target)?  : tactic
+  "evolve" evolver_list (expr_list)? (expr_dist)? (name_dist)? num (num)? (save_target)?  : tactic
 @[tactic evolveTactic] def evolveImpl : Tactic := fun stx =>
 match stx with
-| `(tactic|evolve%$tk $evolvers $(goals?)? $(initDist?)? $(nameDist?)? $degBnd $card $(saveTo?)?)  => 
+| `(tactic|evolve%$tk $evolvers $(goals?)? $(initDist?)? $(nameDist?)? $degBnd $(card?)? $(saveTo?)?)  => 
   withMainContext do
   let ev ← parseEvolverList evolvers
   let lctx ← getLCtx
@@ -301,7 +301,7 @@ match stx with
     | `(save_target|=:$x) => some x.getId
     | _ => none
   let degBnd ← parseNat degBnd
-  let card := (Syntax.isNatLit? card).get!
+  let card := card?.map <| fun card => (Syntax.isNatLit? card).get!
   let finalDist ← ev degBnd card initData initDist 
   match saveTo? with
   | some name => ExprDist.save name finalDist
