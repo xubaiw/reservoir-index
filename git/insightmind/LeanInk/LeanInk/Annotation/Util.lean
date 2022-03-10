@@ -27,6 +27,9 @@ namespace FragmentInterval
     | head _ f _ => f
     | tail _ f _ => f
 
+  def headPos [Positional a] (f : FragmentInterval a) : String.Pos := Positional.headPos (fragment f)
+  def tailPos [Positional a] (f : FragmentInterval a) : String.Pos := Positional.tailPos (fragment f)
+
   def enumerateFragment (self : FragmentInterval a) : (Nat × a) := (self.idx, self.fragment)
 
   def isHead : FragmentInterval a -> Bool
@@ -47,39 +50,53 @@ def toFragmentIntervals { x : Type } [Positional x] [Inhabited x] [Inhabited x] 
   let mergedPositionals := indexedPositionals.join
   List.sort (λ x y =>  x.position < y.position) mergedPositionals
 
-def matchCompounds [Positional a] [ToString a] (l : List (Compound a)) : List (FragmentInterval a) -> AnalysisM (List (Compound a))
-  | [] => pure l -- No events left, so we just return!
-  | e::es => do
-    match l.getLast? with
-    | none => do
+def maxTailPos (y : String.Pos) : Option String.Pos -> String.Pos
+  | none => y
+  | some x => if x < y then x else y
+
+@[inline]
+def _insertCompound [Positional a] [ToString a] (e : FragmentInterval a) (compounds : List (Compound a)) : AnalysisM (List (Compound a)) := do
+  match compounds with
+    | [] => do
       if e.isHead then
-        let newCompound : Compound a := { headPos := e.position, fragments := [e.enumerateFragment] }
+        let newCompound : Compound a := { headPos := e.position, tailPos := none, fragments := [e.enumerateFragment] }
         logInfo s!"NO COMPOUND -> GENERATING NEW FROM HEAD AT {e.position} -> {newCompound}"
-        return (← matchCompounds [newCompound] es)
+        return [newCompound]
       else
         logInfo s!"FAILURE: Unexpected tail!"
         return []
-    | some c => do
+    | c::cs => do
       if e.isHead then
         if c.headPos == e.position then
-          let updatedCompound := { c with fragments := c.fragments.append [e.enumerateFragment] }
+          let updatedCompound := { c with tailPos := none, fragments := c.fragments.append [e.enumerateFragment] }
           logInfo s!"FOUND COMPOUND {c} -> UPDATING CURRENT WITH HEAD {e.idx} -> {updatedCompound}"
-          return (← matchCompounds (l.dropLast.append [updatedCompound]) es)
+          return updatedCompound::cs
         else
-          let newCompound := { c with headPos := e.position, fragments := c.fragments.append [e.enumerateFragment] }
+          let oldCompound := { c with tailPos := e.position }
+          let newCompound := { c with headPos := e.position, tailPos := none, fragments := c.fragments.append [e.enumerateFragment] }
           logInfo s!"FOUND COMPOUND {c} -> CREATING NEW COMPOUND WITH HEAD {e.idx} -> {newCompound}"
-          return (← matchCompounds (l.append [newCompound]) es)
+          return newCompound::oldCompound::cs
       else
+        let newFragments := c.fragments.filter (λ x => x.1 != e.idx) -- Remove all fragments with the same idx
+        let mut newTailPos := c.tailPos
+        if newFragments.isEmpty then
+          newTailPos := none
         if c.headPos == e.position then
-          let updatedCompound := { c with fragments := c.fragments.filter (λ x => x.1 != e.idx)}
+          let updatedCompound := { c with tailPos := none, fragments := newFragments}
           logInfo s!"FOUND COMPOUND {c} -> UPDATING CURRENT WITH TAIL AT {e.position} -> {updatedCompound}"
-          return (← matchCompounds (l.dropLast.append [updatedCompound]) es)
+          return updatedCompound::cs
         else 
-          let newFragments := c.fragments.filter (λ x => x.1 != e.idx) -- Remove all fragments with the same idx
           /-
             It may be the case that the newFragments list isEmpty. This is totally fine as we need to
             insert text spacers later for the text. No we can simply generate a text fragment whenever a compound is empty.
           -/
-          let newCompound : Compound a := { headPos := e.position, fragments := newFragments }
+          let oldCompound := { c with tailPos := e.position }
+          let newCompound := { headPos := e.position, tailPos := none, fragments := newFragments }
           logInfo s!"FOUND COMPOUND {c} -> CREATING NEW COMPOUND WITH TAIL {e.idx} -> {newCompound}"
-          return (← matchCompounds (l.append [newCompound]) es)
+          return newCompound::oldCompound::cs
+
+def matchCompounds [Positional a] [ToString a] (events : List (FragmentInterval a)) : AnalysisM (List (Compound a)) := do
+  let mut compounds : List (Compound a) := [{ headPos := 0, tailPos := none, fragments := [] }]
+  for e in events do
+    compounds ← _insertCompound e compounds
+  return compounds.reverse

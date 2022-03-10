@@ -4,7 +4,7 @@ namespace List
 
 def sort [Inhabited α] (f: α -> α -> Bool) (xs : List α) : List α := (xs.toArray.qsort f).toList
 
-partial def mergeSortedLists [Inhabited α] (f: α -> α -> Bool) : List α -> List α -> List α
+partial def mergeSortedLists (f: α -> α -> Bool) : List α -> List α -> List α
   | [], xs => xs
   | xs, [] => xs
   | x::xs, y::ys => 

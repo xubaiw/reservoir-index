@@ -1,3 +1,6 @@
+import Init.System.IO
+import Init.Control.Except
+
 import LeanInk.Analysis.DataTypes
 import LeanInk.Analysis.SemanticToken
 
@@ -14,6 +17,7 @@ namespace LeanInk.Analysis
 open Lean
 open Lean.Elab
 open Lean.Meta
+open IO
 
 structure ContextBasedInfo (β : Type) where
   ctx : ContextInfo
@@ -46,16 +50,18 @@ namespace TraversalFragment
   | tactic fragment => (fragment.info.toElabInfo.stx.getTailPos? false).getD 0
   | unknown fragment => (fragment.info.stx.getTailPos? false).getD 0
 
-  def create (ctx : ContextInfo) (info : Info) : ((Option TraversalFragment) × (Option SemanticTraversalInfo)) :=
+  def create (ctx : ContextInfo) (info : Info) : AnalysisM ((Option TraversalFragment) × (Option SemanticTraversalInfo)) := do
     if Info.isExpanded info then
-      (none, none)
+      pure (none, none)
     else
-      let semantic : SemanticTraversalInfo := { node := info, stx := info.stx }
+      let mut semantic : Option SemanticTraversalInfo := none 
+      if (← read).experimentalSemanticType then
+        semantic := some { node := info, stx := info.stx }
       match info with 
-      | Info.ofTacticInfo info => (tactic { info := info, ctx := ctx }, semantic)
-      | Info.ofTermInfo info => (term { info := info, ctx := ctx }, semantic)
-      | Info.ofFieldInfo info => (field { info := info, ctx := ctx }, semantic)
-      | _ => (none, semantic)
+      | Info.ofTacticInfo info => pure (tactic { info := info, ctx := ctx }, semantic)
+      | Info.ofTermInfo info => pure (term { info := info, ctx := ctx }, semantic)
+      | Info.ofFieldInfo info => pure (field { info := info, ctx := ctx }, semantic)
+      | _ => pure (none, semantic)
 
   def runMetaM { α : Type } (func : TraversalFragment -> MetaM α) : TraversalFragment -> AnalysisM α
   | term fragment => fragment.ctx.runMetaM fragment.info.lctx (func (term fragment))
@@ -68,6 +74,7 @@ namespace TraversalFragment
   -/
   def inferType? : TraversalFragment -> MetaM (Option String)
     | term termFragment => do
+      -- This call requires almost half of the runtime of the tree traversal.
       let format ← try Meta.ppExpr (← Meta.inferType termFragment.info.expr) catch e => e.toMessageData.toString
       return s!"{format}"
     | _ => pure none
@@ -309,8 +316,7 @@ partial def _resolveTacticList (ctx?: Option ContextInfo := none) (aux : Travers
       let ctx? := info.updateContext? ctx
       let resolvedChildrenLeafs ← children.toList.mapM (_resolveTacticList ctx? aux)
       let sortedChildrenLeafs := resolvedChildrenLeafs.foldl TraversalAux.merge {}
-      let fragment := TraversalFragment.create ctx info
-      match fragment with
+      match (← TraversalFragment.create ctx info) with
       | (some fragment, some semantic) => do
         let sortedChildrenLeafs ← sortedChildrenLeafs.insertSemanticInfo semantic
         sortedChildrenLeafs.insertFragment fragment          
@@ -320,7 +326,37 @@ partial def _resolveTacticList (ctx?: Option ContextInfo := none) (aux : Travers
     | none => pure aux
   | _ => pure aux
 
-def resolveTacticList (trees: List InfoTree) : AnalysisM AnalysisResult := do
+inductive TraversalEvent
+| result (r : TraversalAux)
+| error (e : IO.Error)
+
+def _resolveTask (tree : InfoTree) : AnalysisM (Task TraversalEvent) := do
+  let taskBody : AnalysisM TraversalEvent := do
+    let res ← _resolveTacticList none {} tree
+    return TraversalEvent.result res
+  let task ← IO.asTask (taskBody $ ← read)
+  return task.map fun
+    | Except.ok ev => ev
+    | Except.error e => TraversalEvent.error e
+
+def _resolve (trees: List InfoTree) : AnalysisM AnalysisResult := do
   let auxResults ← (trees.map _resolveTacticList).mapM (λ x => x)
   let results := auxResults.map (λ x => x.result)
   return results.foldl AnalysisResult.merge AnalysisResult.empty
+
+def resolveTasks (tasks : Array (Task TraversalEvent)) : AnalysisM (Option (List TraversalAux)) := do
+  let mut results : List TraversalAux := []
+  for task in tasks do
+    let result ← BaseIO.toIO (IO.wait task)
+    match result with
+    | TraversalEvent.result r => results := r::results
+    | _ => return none
+  return results
+
+def resolveTacticList (trees: List InfoTree) : AnalysisM AnalysisResult := do
+  let tasks ← trees.toArray.mapM (λ t => _resolveTask t)
+  match (← resolveTasks tasks) with
+  | some auxResults => do
+    let results := auxResults.map (λ x => x.result)
+    return results.foldl AnalysisResult.merge AnalysisResult.empty
+  | _ => return { tokens := [], sentences := []}
