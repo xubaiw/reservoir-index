@@ -155,7 +155,7 @@ inductive HasType : {n : Nat} → Fin n → Vector Ty n → Ty → Type where
 ```
 
 * Eliminate auxiliary type annotations (e.g, `autoParam` and `optParam`) from recursor minor premises and projection declarations. Consider the following example
-```
+```lean
 structure A :=
   x : Nat
   h : x = 1 := by trivial
@@ -170,4 +170,46 @@ example (a : A) : a.x = 1 := by
   | mk x h =>
     -- `h` has now type `x = 1` instead of `autoParam (x = 1) auto✝`
     assumption
+```
+
+* We now accept overloaded notation in patterns, but we require the set of pattern variables in each alternative to be the same. Example:
+```lean
+inductive Vector (α : Type u) : Nat → Type u
+  | nil : Vector α 0
+  | cons : α → Vector α n → Vector α (n+1)
+
+infix:67 " :: " => Vector.cons -- Overloading the `::` notation
+
+def head1 (x : List α) (h : x ≠ []) : α :=
+  match x with
+  | a :: as => a -- `::` is `List.cons` here
+
+def head2 (x : Vector α (n+1)) : α :=
+  match x with
+  | a :: as => a -- `::` is `Vector.cons` here
+```
+
+* New notation `.<identifier>` based on Swift. The namespace is inferred from the expected type. See [issue #944](https://github.com/leanprover/lean4/issues/944). Examples:
+```lean
+def f (x : Nat) : Except String Nat :=
+  if x > 0 then
+    .ok x
+  else
+    .error "x is zero"
+
+namespace Lean.Elab
+open Lsp
+
+def identOf : Info → Option (RefIdent × Bool)
+  | .ofTermInfo ti => match ti.expr with
+    | .const n .. => some (.const n, ti.isBinder)
+    | .fvar id .. => some (.fvar id, ti.isBinder)
+    | _ => none
+  | .ofFieldInfo fi => some (.const fi.projName, false)
+  | _ => none
+
+def isImplicit (bi : BinderInfo) : Bool :=
+  bi matches .implicit
+
+end Lean.Elab
 ```
