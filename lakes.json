@@ -10,6 +10,7 @@
  "Kha/lean4-nightly",
  "NicolasRouquette/dimensional-calculus.lean4",
  "SReichelt/universe-abstractions",
+ "abentkamp/duper",
  "adamtopaz/lean4_advent_2021",
  "agentultra/LeanParsec",
  "agentultra/lean-4-hackers",
@@ -69,5 +70,6 @@
  "xubaiw/Socket.lean",
  "xubaiw/Unicode.lean",
  "xubaiw/csv",
+ "xubaiw/lean-problem-dynamic-link",
  "xubaiw/lean4-terminal",
  "xubaiw/sjtu-math2501-ode"]
