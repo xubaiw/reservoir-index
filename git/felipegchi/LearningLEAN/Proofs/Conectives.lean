@@ -32,11 +32,25 @@ inductive F : Type
 notation:65 "⊤" => T
 notation:65 "⊥" => F
 
+notation:66 "¬" e "´" => (e → F)
+
 theorem T.idₗ : ∀ {a : Type}, (⊤ ×´ a) ≅ a 
   := { To     := λ⟨a, b⟩´ => b
      , From   := λb       => ⟨T.t, b⟩´ 
      , FromTo := λx => rfl
      , ToFrom := λx => rfl  }
+
+theorem F.elim (h : ⊥) : a := F.rec (fun _ => a) h
+
+theorem Not.elim (e : a) (h : ¬a´) : ⊥ := h e
+
+def Imp.contraposition : ∀ {a b : Type}, (a → b) → (¬b´ → ¬a´)
+  | _, _, f, nb, na => nb (f na)  
+
+
+notation:60 a "≢" b => ¬(a = b)
+
+example : 2 ≢ 3 := λx => nomatch x
 
 -- Or
 
@@ -46,8 +60,16 @@ inductive Prod' (a: Type) (b: Type) : Type
 
 infixl:65 " ⊎ " => Prod'
 
-theorem Prod'.case : ∀ {a b c : Type}, (a → c) → (b → c) → a ⊎ b → c 
+def Prod'.case : ∀ {a b c : Type}, (a → c) → (b → c) → a ⊎ b → c 
   | _, _, _, h1, h2, Prod'.inj₁ a => h1 a
   | _, _, _, h1, h2, Prod'.inj₂ b => h2 b
 
-theorem Prod'.comm : ∀ {a b : Type}, a ⊎ b ≅ b ⊎ a := sorry
+theorem Prod'.comm : ∀ {a b : Type}, a ⊎ b ≅ b ⊎ a 
+  | a, b => { To     := Prod'.case Prod'.inj₂ Prod'.inj₁,   
+              From   := Prod'.case Prod'.inj₂ Prod'.inj₁
+              FromTo := fun | Prod'.inj₁ a => rfl
+                            | Prod'.inj₂ b => rfl,
+              ToFrom := fun | Prod'.inj₁ a => rfl
+                            | Prod'.inj₂ b => rfl,
+            }
+    

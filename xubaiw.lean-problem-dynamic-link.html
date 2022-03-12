@@ -1,0 +1,95 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>xubaiw/lean-problem-dynamic-link</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>xubaiw/lean-problem-dynamic-link</h1>
+<p>None Description</p>
+<a href="https://github.com/xubaiw/lean-problem-dynamic-link">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Problems with Lean Dynamic Link</h3>
+<h4 dir="auto">How to reproduce the error</h4>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd bar1
+$ lake build
+...
+$ cd ../bar2
+$ lake build
+...
+$ ./build/bin/bar2  -- running the program produce the error
+dyld[66116]: Library not loaded: ./build/lib/libbar1.dylib
+  Referenced from: /Users/xubaiw/bar/bar2/build/bin/bar2
+  Reason: tried: './build/lib/libbar1.dylib' (no such file), '/usr/local/lib/libbar1.dylib' (no such file), '/usr/lib/libbar1.dylib' (no such file), '/Users/xubaiw/bar/bar2/build/lib/libbar1.dylib' (no such file), '/usr/local/lib/libbar1.dylib' (no such file), '/usr/lib/libbar1.dylib' (no such file)
+zsh: abort      ./build/bin/bar2"><pre>$ <span class="pl-c1">cd</span> bar1
+$ lake build
+...
+$ <span class="pl-c1">cd</span> ../bar2
+$ lake build
+...
+$ ./build/bin/bar2  -- running the program produce the error
+dyld[66116]: Library not loaded: ./build/lib/libbar1.dylib
+  Referenced from: /Users/xubaiw/bar/bar2/build/bin/bar2
+  Reason: tried: <span class="pl-s"><span class="pl-pds">'</span>./build/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file), <span class="pl-s"><span class="pl-pds">'</span>/usr/local/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file), <span class="pl-s"><span class="pl-pds">'</span>/usr/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file), <span class="pl-s"><span class="pl-pds">'</span>/Users/xubaiw/bar/bar2/build/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file), <span class="pl-s"><span class="pl-pds">'</span>/usr/local/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file), <span class="pl-s"><span class="pl-pds">'</span>/usr/lib/libbar1.dylib<span class="pl-pds">'</span></span> (no such file)
+zsh: abort      ./build/bin/bar2</pre></div>
+<h4 dir="auto">Details</h4>
+<p dir="auto">In this repo we have two lean packages: <code>bar1</code> and <code>bar2</code>.</p>
+<p dir="auto">In <code>bar1</code> there is:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[export bar1_greet]
+def greet (name : String) := s!"Hello, {name}!""><pre><span class="pl-k">@[export bar1_greet]</span>
+<span class="pl-k">def</span> <span class="pl-en">greet</span> (name : String) := s!<span class="pl-s"><span class="pl-pds">"</span>Hello, {name}!<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto">Then <code>bar1</code> is compiled to  a sharedLib. In order to use the definition, in <code>bar2</code> we have:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[extern "bar1_greet"]
+constant greet : String → String
+
+def main : IO Unit :=
+  IO.println <| greet "Lean Programmers""><pre><span class="pl-k">@[extern <span class="pl-s"><span class="pl-pds">"</span>bar1_greet<span class="pl-pds">"</span></span>]</span>
+<span class="pl-k">constant</span> <span class="pl-en">greet</span> : String → String
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit :=
+  IO.println <| greet <span class="pl-s"><span class="pl-pds">"</span>Lean Programmers<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto">Both <code>moreLibTargets</code> and <code>moreLinkArgs</code> is used in <code>bar2</code>:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package bar2 (pkgDir) (args) do
+  let current ← IO.currentDir
+  let dylibDir := current / ".." / "bar1" / "build" / "lib" 
+  let dylib := dylibDir / s!"libbar1.{sharedLibExt}"
+  IO.println s!"link to {dylib}"
+  return {
+    name := `bar2
+    moreLibTargets := #[
+      inputFileTarget dylib
+    ]
+    moreLinkArgs := #["-l", "bar1", "-L", dylibDir.toString]
+  }"><pre>package bar2 (pkgDir) (args) <span class="pl-k">do</span>
+  <span class="pl-k">let</span> current ← IO.currentDir
+  <span class="pl-k">let</span> dylibDir := current / <span class="pl-s"><span class="pl-pds">"</span>..<span class="pl-pds">"</span></span> / <span class="pl-s"><span class="pl-pds">"</span>bar1<span class="pl-pds">"</span></span> / <span class="pl-s"><span class="pl-pds">"</span>build<span class="pl-pds">"</span></span> / <span class="pl-s"><span class="pl-pds">"</span>lib<span class="pl-pds">"</span></span> 
+  <span class="pl-k">let</span> dylib := dylibDir / s!<span class="pl-s"><span class="pl-pds">"</span>libbar1.{sharedLibExt}<span class="pl-pds">"</span></span>
+  IO.println s!<span class="pl-s"><span class="pl-pds">"</span>link to {dylib}<span class="pl-pds">"</span></span>
+  return {
+    name := <span class="pl-en">`bar2</span>
+    moreLibTargets := #[
+      inputFileTarget dylib
+    ]
+    moreLinkArgs := #[<span class="pl-s"><span class="pl-pds">"</span>-l<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>bar1<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>-L<span class="pl-pds">"</span></span>, dylibDir.toString]
+  }</pre></div>
+</article></div></main>
+</body>
+</html>
