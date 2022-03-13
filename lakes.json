@@ -28,6 +28,7 @@
  "cruhland/lean4-analysis",
  "cruhland/lean4-axiomatic",
  "felipegchi/LearningLEAN",
+ "felipegchi/books",
  "gebner/oleanparser",
  "gebner/quote4",
  "hargoniX/lean4-fixed",
@@ -72,4 +73,5 @@
  "xubaiw/csv",
  "xubaiw/lean-problem-dynamic-link",
  "xubaiw/lean4-terminal",
- "xubaiw/sjtu-math2501-ode"]
+ "xubaiw/sjtu-math2501-ode",
+ "yatima-inc/Http.lean"]
