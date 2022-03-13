@@ -1,5 +1,7 @@
-import ReactorModel.Components.Reactor.Basic
-import ReactorModel.Time 
+import ReactorModel.Primitives
+import ReactorModel.Time
+
+constant Reactor.Class : Type _
 
 -- In the semi-formal definition of the Reactor model, reactions' bodies are defined
 -- as "opaque code" that has access to a set of APIs for settings ports' values, 
@@ -14,10 +16,19 @@ inductive Change
   | action (target : ID) (time : Time) (value : Value)
   | connect (src : ID) (dst : ID)
   | disconnect (src : ID) (dst : ID)
-  | create (rtr : Reactor)
+  | create (cl : Reactor.Class)
   | delete (rtr : ID)
 
 namespace Change
+
+def image (f : ID → ID) : Change → Change
+  | port t v       => port (f t) v
+  | state t v      => state (f t) v
+  | action t tm v  => action (f t) tm v
+  | connect s d    => connect (f s) (f d)
+  | disconnect s d => disconnect (f s) (f d)
+  | create cl      => create cl
+  | delete i       => delete (f i)
 
 abbrev Equiv : Change → Change → Prop
   | port ..,       port ..       => True 

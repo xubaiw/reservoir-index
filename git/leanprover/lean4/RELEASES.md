@@ -1,6 +1,27 @@
 v4.0.0-m4 (WIP)
 ---------
 
+* Improve `#eval` command. Now, when it fails to synthesize a `Lean.MetaEval` instance for the result type, it reduces the type and tries again. The following example now works without additional annotations
+```lean
+def Foo := List Nat
+
+def test (x : Nat) : Foo :=
+  [x, x+1, x+2]
+
+#eval test 4
+```
+
+
+* `rw` tactic can now apply auto-generated equation theorems for a given definition. Example:
+```lean
+example (a : Nat) (h : n = 1) : [a].length = n := by
+  rw [List.length]
+  trace_state -- .. |- [].length + 1 = n
+  rw [List.length]
+  trace_state -- .. |- 0 + 1 = n
+  rw [h]
+```
+
 * [Fuzzy matching for auto completion](https://github.com/leanprover/lean4/pull/1023)
 
 * Extend dot-notation `x.field` for arrow types. If type of `x` is an arrow, we look up for `Function.field`.

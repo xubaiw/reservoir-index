@@ -1,15 +1,17 @@
+/-
+  Copyright (c) 2022 Florian Würmseer. All rights reserved.
+  Released under Apache 2.0 license as described in the file LICENSE.
+  Authors: Florian Würmseer
+-/
+
 import Postgres
 
 open Connect
 open Query
 
-def zeroToSpace : UInt8 → UInt8
-| 0 => 32
-| x => x
-
 def main : IO Unit := do
   let conn ← openConnection "localhost" "5432" "postgres" "postgres" "pw"
   let query := SELECT "pilot", "flugzeug" FROM "pf";
   let resp ← sendQuery conn query
-  IO.println $ String.fromUTF8Unchecked $ List.toByteArray $ List.map zeroToSpace resp.toList
+  IO.println resp
   conn.close

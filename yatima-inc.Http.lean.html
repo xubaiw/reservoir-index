@@ -1,0 +1,69 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>yatima-inc/Http.lean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>yatima-inc/Http.lean</h1>
+<p>Basic Http functionality in Lean (unfinished)</p>
+<a href="https://github.com/yatima-inc/Http.lean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Http basics for Lean</h3>
+<p dir="auto">Uses <a href="https://github.com/xubaiw/Socket.lean">Socket.lean</a> to create basic HTTP functionality.</p>
+<p dir="auto">Build with <code>nix build .</code></p>
+<h4 dir="auto">Command line examples</h4>
+<p dir="auto">It can be used from the commandline like so</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="nix run . -- --get http://www.example.com"><pre><code>nix run . -- --get http://www.example.com
+</code></pre></div>
+<h4 dir="auto">Code examples</h4>
+<p dir="auto">A basic snippet to perform a GET request.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Http
+
+open Http
+
+def main : IO Unit :=
+  -- Supports (basic) URL parsing
+  let url ← URI.parse "http://www.example.com"
+  let response ← Client.get url
+  if let some body := response.body then
+    println! body
+  else
+    println! "no body in response""><pre><span class="pl-k">import</span> Http
+
+<span class="pl-k">open</span> Http
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit :=
+  <span class="pl-c"><span class="pl-c">--</span> Supports (basic) URL parsing</span>
+  <span class="pl-k">let</span> url ← URI.parse <span class="pl-s"><span class="pl-pds">"</span>http://www.example.com<span class="pl-pds">"</span></span>
+  <span class="pl-k">let</span> response ← Client.get url
+  <span class="pl-k">if</span> <span class="pl-k">let</span> some body := response.body <span class="pl-k">then</span>
+    println! body
+  <span class="pl-k">else</span>
+    println! <span class="pl-s"><span class="pl-pds">"</span>no body in response<span class="pl-pds">"</span></span></pre></div>
+<h3 dir="auto">Features TODO</h3>
+<p dir="auto">[] Parsing and sanitizing special characters in URIs
+[] Https and OpenSSL.lean integration
+[] Simple server functionality
+[] Add doc-gen4</p>
+</article></div></main>
+</body>
+</html>

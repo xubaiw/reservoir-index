@@ -1,5 +1,5 @@
-import Tuple
+import Soup
 
 def main : IO Unit :=
-  IO.println s!"Hello, Tuples!"
+  IO.println s!"Hello, Heterogenous Lists!"
 

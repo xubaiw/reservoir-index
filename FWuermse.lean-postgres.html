@@ -44,29 +44,36 @@
     src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/FWuermse/lean-postgres.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
   }]</pre></div>
 <h4 dir="auto">Usage</h4>
-<h5 dir="auto">Requirement</h5>
+<h5 dir="auto">Requirements</h5>
 <p dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
+<p dir="auto">and currently only supports free text password auth, enabled by changing the following line in your <code>~/my-volume/pg_hba.conf</code></p>
+<p dir="auto">from</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre>host all all all scram-sha-256</pre></div>
+<p dir="auto">to</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre>host all all all password</pre></div>
 <h5 dir="auto">Code</h5>
 <p dir="auto">Currently only simple queries are supported:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
 
-open Connect Query
+open Connect
+open Query
 
 def main : IO Unit := do
-  let conn ← openConnection "localhost" "5432" "postgres" "postgres" "password"
-  let query := SELECT "customer_age" AS "age", "customer_name" FROM "company_data";
+  let conn ← openConnection "localhost" "5432" "postgres" "postgres" "pw"
+  let query := SELECT "pilot", "flugzeug" FROM "pf";
   let resp ← sendQuery conn query
-  IO.println s!"ByteArray response: {resp}"
+  IO.println resp
   conn.close"><pre><span class="pl-k">import</span> Postgres
 
-<span class="pl-k">open</span> Connect Query
+<span class="pl-k">open</span> Connect
+<span class="pl-k">open</span> Query
 
 <span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
-  <span class="pl-k">let</span> conn ← openConnection <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>
-  <span class="pl-k">let</span> query := SELECT <span class="pl-s"><span class="pl-pds">"</span>customer_age<span class="pl-pds">"</span></span> AS <span class="pl-s"><span class="pl-pds">"</span>age<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>customer_name<span class="pl-pds">"</span></span> FROM <span class="pl-s"><span class="pl-pds">"</span>company_data<span class="pl-pds">"</span></span>;
+  <span class="pl-k">let</span> conn ← openConnection <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>pw<span class="pl-pds">"</span></span>
+  <span class="pl-k">let</span> query := SELECT <span class="pl-s"><span class="pl-pds">"</span>pilot<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>flugzeug<span class="pl-pds">"</span></span> FROM <span class="pl-s"><span class="pl-pds">"</span>pf<span class="pl-pds">"</span></span>;
   <span class="pl-k">let</span> resp ← sendQuery conn query
-  IO.println s!<span class="pl-s"><span class="pl-pds">"</span>ByteArray response: {resp}<span class="pl-pds">"</span></span>
+  IO.println resp
   conn.close</pre></div>
 <p dir="auto">Please find more examples in the <a href="https://github.com/FWuermse/lean-postgres/tree/master/examples/open-connection">example folder</a>.</p>
 <h4 dir="auto">TODOs</h4>

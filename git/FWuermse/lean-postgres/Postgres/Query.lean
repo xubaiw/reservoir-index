@@ -1,8 +1,15 @@
+/-
+  Copyright (c) 2022 Florian Würmseer. All rights reserved.
+  Released under Apache 2.0 license as described in the file LICENSE.
+  Authors: Florian Würmseer, Jannis Limperg
+-/
+
 import Socket
 import Lean
 import Postgres.Postgres
+import Postgres.Response
 
-open Socket Connect Lean Meta Elab Elab.Term
+open Socket Connect Lean Meta Elab Elab.Term QueryResponse
 
 namespace Query
 
@@ -182,14 +189,12 @@ def elabSql : TermElab := λ stx _ =>
 -- 'Unit test' for elaboration
 set_option trace.debug true in
 #eval show TermElabM Unit from do
-  let stx ← `(SELECT "c₁", "c₂" FROM "t₁, t₂" WHERE TRUE OR FALSE;)
+  let stx ← `(SELECT "c₁" AS "c", "c₂" FROM "t₁, t₂" WHERE TRUE OR FALSE;)
   let query ← evalExpr Query ``Query (← elabSql stx none)
   trace[debug] s!"{query}"
 
-def sendQuery (socket : Socket) (query : Query) : IO ByteArray := do
+def sendQuery (socket : Socket) (query : Query) : IO Section := do
   let req ← socket.send $ toByteArray $ RegularMessage.mk 'Q' (toString query)
-  let x ← socket.recv 5
-  -- TODO: parse response
-  pure $ ← socket.recv 1000
+  parseQueryResponse socket
 
 end Query
