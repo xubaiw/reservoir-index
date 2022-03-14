@@ -39,6 +39,7 @@
  "joehendrix/lean-arith-solver",
  "joehendrix/lean-crypto",
  "justinfargnoli/koi",
+ "langfield/nflow",
  "leanprover-community/lean3port",
  "leanprover-community/mathlib3port",
  "leanprover-community/mathlib4",
