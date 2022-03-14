@@ -61,7 +61,7 @@ open Query
 
 def main : IO Unit := do
   let conn ← openConnection "localhost" "5432" "postgres" "postgres" "pw"
-  let query := SELECT "pilot", "flugzeug" FROM "pf";
+  let query := SELECT pilot, flugzeug FROM pf;
   let resp ← sendQuery conn query
   IO.println resp
   conn.close"><pre><span class="pl-k">import</span> Postgres
@@ -71,7 +71,7 @@ def main : IO Unit := do
 
 <span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
   <span class="pl-k">let</span> conn ← openConnection <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>pw<span class="pl-pds">"</span></span>
-  <span class="pl-k">let</span> query := SELECT <span class="pl-s"><span class="pl-pds">"</span>pilot<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>flugzeug<span class="pl-pds">"</span></span> FROM <span class="pl-s"><span class="pl-pds">"</span>pf<span class="pl-pds">"</span></span>;
+  <span class="pl-k">let</span> query := SELECT pilot, flugzeug FROM pf;
   <span class="pl-k">let</span> resp ← sendQuery conn query
   IO.println resp
   conn.close</pre></div>
