@@ -47,4 +47,7 @@ def HListPatternMatch (l: HList [Nat, String]) :=
 #eval toString [1, "2", 3.0, [4, 5, 6], #[7, 8]]
 #eval toString HList.nil
 
-#eval 1 ::: ["1", 5.4, '4']
+def baz : HList [Nat, String, Float, Char] := 
+  1 :: ["1", 5.4, '4']
+
+#eval baz
