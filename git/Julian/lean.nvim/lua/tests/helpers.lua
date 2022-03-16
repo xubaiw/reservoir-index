@@ -120,11 +120,7 @@ end
 function helpers.wait_for_line_diagnostics()
   local succeeded, _ = vim.wait(5000, function()
     if progress.is_processing(vim.uri_from_bufnr(0)) then return false end
-    local diags = vim.diagnostic ~= nil
-      and -- neovim 0.6
-        vim.diagnostic.get(0, {lnum = vim.api.nvim_win_get_cursor(0)[1] - 1})
-      or -- neovim 0.5
-        vim.lsp.diagnostic.get_line_diagnostics()
+    local diags = vim.diagnostic.get(0, {lnum = vim.api.nvim_win_get_cursor(0)[1] - 1})
 
     -- Lean 4 sends file progress notification too late :-(
     if #diags == 1 then
@@ -177,16 +173,28 @@ local function has_all(_, arguments)
   return true
 end
 
-assert:register('assertion', "has_all", has_all)
+assert:register('assertion', 'has_all', has_all)
 
---- Assert two list-tables have the same elements in any order.
-local function has_same_elements(_, arguments)
-  table.sort(arguments[1])
-  table.sort(arguments[2])
-  assert.are.same(arguments[1], arguments[2])
+--- Assert a tabpage has the given windows open in it.
+local function has_open_windows(_, arguments)
+  local expected, count
+  if arguments.n == 1 and type(arguments[1]) == 'table' then
+    expected = arguments[1]
+    count = #expected
+  else
+    count = arguments.n
+    arguments.n = nil
+    expected = arguments
+  end
+  local got = vim.api.nvim_tabpage_list_wins(0)
+  table.sort(expected)
+  table.sort(got)
+  assert.are.same(expected, got)
+  local wrong_count = 'Expected %d != %d windows'
+  assert.message(wrong_count:format(count, #got)).is.equal(count, #got)
   return true
 end
 
-assert:register('assertion', 'same_elements', has_same_elements)
+assert:register('assertion', 'windows', has_open_windows)
 
 return helpers
