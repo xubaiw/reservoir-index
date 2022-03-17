@@ -1,3 +1,5 @@
+import DocGen4
+
 open System
 open IO
 open Lean
@@ -26,11 +28,6 @@ open ExtraFuncs
 --   match f b with
 --   | none => []
 --   | some (a, ⟨b', h⟩) => a :: unfoldr' f b'
-
--- def List.unfoldr {α β : Type u} [sz : SizeOf β] (f : (b : β) → Option (α × { b' : β // sizeOf b' < sizeOf b})) (b : β) : List α :=
---   match f b with
---   | none => []
---   | some (a, ⟨b', h⟩) => a :: unfoldr f b'
 
 def foo := "helloworld".toList.toArray.map (toString ·)
 
