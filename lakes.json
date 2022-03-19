@@ -1,5 +1,6 @@
 ["Anderssorby/LeanPlay",
  "FWuermse/lean-postgres",
+ "FWuermse/lean4-sql-utils",
  "Ferinko/LeanAStar",
  "Ferinko/LeanSha",
  "GregorKikelj/Lean4AdventOfCode",
@@ -25,6 +26,7 @@
  "bollu/lean4_docs",
  "chasenorman/FormalizedFoundations",
  "cipher1024/lean4-prog",
+ "crabbo-rave/Soup",
  "crabbo-rave/lean4-Hangman",
  "crabbo-rave/lean4-Tuple",
  "cruhland/lean4-analysis",
@@ -76,4 +78,5 @@
  "xubaiw/lean-problem-dynamic-link",
  "xubaiw/lean4-terminal",
  "xubaiw/sjtu-math2501-ode",
- "yatima-inc/Http.lean"]
+ "yatima-inc/Http.lean",
+ "zygi/lean4-sha3"]
