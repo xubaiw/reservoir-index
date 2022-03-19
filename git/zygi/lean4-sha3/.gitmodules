@@ -1,0 +1,6 @@
+[submodule "keccak-tiny"]
+	path = keccak-tiny
+	url = https://github.com/coruus/keccak-tiny
+[submodule "tiny_sha3"]
+	path = tiny_sha3
+	url = https://github.com/mjosaarinen/tiny_sha3
