@@ -9,7 +9,7 @@ def ffiOTarget (pkgDir : FilePath) : FileTarget :=
 
 def keccakOTarget (pkgDir : FilePath) : FileTarget :=
   let oFile := pkgDir / defaultBuildDir / "sha3.o"
-  let srcTarget := inputFileTarget <| pkgDir / "tiny_sha3/sha3.c"
+  let srcTarget := inputFileTarget <| pkgDir / "vendor/tiny_sha3/sha3.c"
   fileTargetWithDep oFile srcTarget fun srcFile => do
     compileO oFile srcFile #["-std=c11", "-O3"] "cc"
 
