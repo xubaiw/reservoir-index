@@ -16,6 +16,7 @@ def isPrivateDeclNamed : Name → Name → Bool
 | num p s _, _ => False
 | anonymous, _ => False
 
+initialize registerTraceClass `importPrivate
 
 elab_rules : command
 | `(import_private $id:ident) => do
@@ -29,9 +30,25 @@ elab_rules : command
   let str _ s _ := id
     | throwError "invalid name: {id}"
   match ls with
-  | [] => throwError "no matches"
+  | [] =>
+    let (ls, ls') := env.constants.fold
+        (λ (l, l') n c =>
+          if n.getString! == s
+            then  (n :: l, l')
+          else if s.isPrefixOf n.getString!
+            then (l, n :: l')
+            else (l, l') ) ([], [])
+    if ls.contains id then
+      throwError "{id} is not private"
+    else
+      let ls := if ls.isEmpty then ls' else ls
+      let fmt := Std.Format.prefixJoin "\n· " ls
+      throwError "no matches for {id}\nDo you mean any of{fmt}"
   | [decl] =>
-    let s := Lean.mkIdent s
+    trace[importPrivate]"found: {decl}"
+    let id := (← getCurrNamespace) ++ id.getString!
+    trace[importPrivate]"creating private synonym: {(id)}"
+    let s    := mkIdent s
     let decl := mkIdent decl
     elabCommand (← `(private def $s:ident := $decl:ident))
   | ns =>

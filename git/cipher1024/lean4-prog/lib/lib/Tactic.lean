@@ -4,32 +4,11 @@ import Lean.Elab.Tactic.Location
 import Lean.Elab.Tactic.Match
 import Lean.Meta.Tactic.Split
 import Lean.PrettyPrinter
+
 import Lib.Data.List.Control
 import Lib.Data.Array.Control
-
-class Reflexive (R : α → α → Prop) where
-  refl x : R x x
-
-class Symmetric (R : α → α → Prop) where
-  symmetry {x y} : R x y → R y x
-
-instance : @Reflexive α (.=.) where
-  refl _ := rfl
-
-instance : Reflexive (.↔.) where
-  refl _ := Iff.rfl
-
-instance : @Symmetric α (.=.) where
-  symmetry := Eq.symm
-
-instance : Symmetric (.↔.) where
-  symmetry := Iff.symm
-
-instance : Reflexive (.→.) where
-  refl _ := id
-
-instance : @Reflexive Nat LE.le where
-  refl := Nat.le_refl
+import Lib.Logic.Relation
+import Lib.Meta.Dump
 
 macro "rintro1 " t:term : tactic =>
   `(tactic| intro x; match x with | $t:term => ?_)
@@ -330,18 +309,6 @@ macro_rules
       case inst => infer_instance
       rotate_right 2 )
 
-instance : @Trans Nat Nat Nat LE.le LE.le LE.le where
-  trans := Nat.le_trans
-
-instance : @Trans Nat Nat Nat LT.lt LT.lt LT.lt where
-  trans := Nat.lt_trans
-
-instance : @Trans Nat Nat Nat GE.ge GE.ge GE.ge where
-  trans h h' := Nat.le_trans h' h
-
-instance : @Trans Nat Nat Nat GT.gt GT.gt GT.gt where
-  trans h h' := Nat.lt_trans h' h
-
 open Lean.Elab.Tactic
 open Lean
 
@@ -617,3 +584,23 @@ macro "falseHyp" h:ident : tactic =>
   `(first
     | refine' Classical.contradiction _ $h; clear $h
     | apply Classical.contradiction $h; clear $h )
+
+elab "fold" foo:ident : tactic => do
+  let mut eqns := #[]
+  if let some xs ← Lean.Meta.getEqnsFor? foo.getId then
+    eqns := xs
+  else if let some x ← Lean.Meta.getUnfoldEqnFor? foo.getId then
+    eqns := #[x]
+  else
+    throwError "{foo.getId} has no equational lemmas"
+  liftMetaTactic1 λ mvar => do
+    let tgt ← inferType (mkMVar mvar)
+    let mut simpLmms : SimpTheorems := {}
+    for x in eqns do
+      simpLmms ← simpLmms.addConst (inv := true) x
+    let r ← Lean.Meta.simp tgt { simpTheorems := simpLmms }
+    let newGoal ← mkFreshExprMVar (some r.expr)
+    if let some pr := r.proof? then
+      assignExprMVar mvar (← mkEqMP pr newGoal)
+    else assignExprMVar mvar newGoal
+    return some newGoal.mvarId!
