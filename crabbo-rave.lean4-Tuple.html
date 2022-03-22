@@ -27,99 +27,33 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean4-Tuple</h3>
-<p dir="auto">Tuples for lean 4</p>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Soup</h3>
+<p dir="auto">Extra and extended datatypes for Lean 4</p>
 <h3 dir="auto">Use</h3>
 <p dir="auto">Go to <code>lakefile.lean</code> and add the git repo to your dependencies:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package PackageName {
   dependencies := #[
-    { name := `Tuple, src := Source.git "https://github.com/crabbo-rave/lean4-Tuple.git" "master"}
+    { name := `Soup, src := Source.git "https://github.com/crabbo-rave/Soup.git" "master"}
     ...
   ]
   ...
 }"><pre>package PackageName {
   dependencies := #[
-    { name := <span class="pl-en">`Tuple</span>, src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/crabbo-rave/lean4-Tuple.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>}
+    { name := <span class="pl-en">`Soup</span>, src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/crabbo-rave/Soup.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>}
     ...
   ]
   ...
 }</pre></div>
-<h3 dir="auto">Syntax</h3>
-<p dir="auto">Check <code>Examples.lean</code> for all the syntax.</p>
-<p dir="auto">To use tuples, at the top of your file, put</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Tuple
-open Tuple"><pre><span class="pl-k">import</span> Tuple
-<span class="pl-k">open</span> Tuple</pre></div>
-<p dir="auto">The tuple syntax looks like this:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval ⟪1, 4, 2.4, 'X', [1, 2, 45]⟫ -- ⟪1, 4, 2.4, 'X', [1, 2, 45]⟫
-#eval ⟪⟫ -- ⟪⟫"><pre><span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>, <span class="pl-c1">4</span>, <span class="pl-c1">2</span>.<span class="pl-c1">4</span>, <span class="pl-s">'X'</span>, [<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">45</span>]⟫ <span class="pl-c"><span class="pl-c">--</span> ⟪1, 4, 2.4, 'X', [1, 2, 45]⟫</span>
-<span class="pl-k">#eval</span> ⟪⟫ <span class="pl-c"><span class="pl-c">--</span> ⟪⟫</span></pre></div>
-<p dir="auto">And are essentially a list of types:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="-- cons 1 (cons 4 (cons 2.4 (cons (Char.ofNat 88) (cons [1, 2, 45] unit)))) 
--- : Tuple [Nat, Nat, Float, Char, List Nat]
-#check ⟪1, 4, 2.4, 'X', [1, 2, 45]⟫ 
-#check ⟪⟫ -- unit : Tuple []"><pre><span class="pl-c"><span class="pl-c">--</span> cons 1 (cons 4 (cons 2.4 (cons (Char.ofNat 88) (cons [1, 2, 45] unit)))) </span>
-<span class="pl-c"><span class="pl-c">--</span> : Tuple [Nat, Nat, Float, Char, List Nat]</span>
-<span class="pl-k">#check</span> ⟪<span class="pl-c1">1</span>, <span class="pl-c1">4</span>, <span class="pl-c1">2</span>.<span class="pl-c1">4</span>, <span class="pl-s">'X'</span>, [<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">45</span>]⟫ 
-<span class="pl-k">#check</span> ⟪⟫ <span class="pl-c"><span class="pl-c">--</span> unit : Tuple []</span></pre></div>
-<p dir="auto">If needed, you can convert them to strings:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval toString ⟪1, 4, 2.4, 'X', [1, 2, 45]⟫ -- "⟪1, 4, 2.4, 'X', [1, 2, 45]⟫"
-#eval toString ⟪⟫ -- "⟪⟫""><pre><span class="pl-k">#eval</span> toString ⟪<span class="pl-c1">1</span>, <span class="pl-c1">4</span>, <span class="pl-c1">2</span>.<span class="pl-c1">4</span>, <span class="pl-s">'X'</span>, [<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">45</span>]⟫ <span class="pl-c"><span class="pl-c">--</span> "⟪1, 4, 2.4, 'X', [1, 2, 45]⟫"</span>
-<span class="pl-k">#eval</span> toString ⟪⟫ <span class="pl-c"><span class="pl-c">--</span> "⟪⟫"</span></pre></div>
-<p dir="auto">You can get the length of them:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval ⟪⟫.length -- 0
-#eval ⟪1⟫.length -- 1
-#eval ⟪1, "4", #[1, 5, -2]⟫.length -- 3"><pre><span class="pl-k">#eval</span> ⟪⟫.length <span class="pl-c"><span class="pl-c">--</span> 0</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>⟫.length <span class="pl-c"><span class="pl-c">--</span> 1</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>4<span class="pl-pds">"</span></span>, #[<span class="pl-c1">1</span>, <span class="pl-c1">5</span>, -<span class="pl-c1">2</span>]⟫.length <span class="pl-c"><span class="pl-c">--</span> 3</span></pre></div>
-<p dir="auto">As well as the head and tail:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval ⟪1, 2, 3⟫.head -- 1
-#eval ⟪1, 2, 3⟫.tail -- ⟪2, 3⟫"><pre><span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>⟫.head <span class="pl-c"><span class="pl-c">--</span> 1</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>⟫.tail <span class="pl-c"><span class="pl-c">--</span> ⟪2, 3⟫</span></pre></div>
-<p dir="auto">Tuples are able to be used as function parameters and can be matched on:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def tuplePatternMatch (tup: Tuple [Nat, String]) :=
-  match tup with
-  | ⟪1, "2"⟫ => true
-  | ⟪2, "1"⟫ => true
-  | _ => false
-
-#eval tuplePatternMatch ⟪1, "2"⟫ -- true
-#eval tuplePatternMatch ⟪1, "3"⟫ -- false"><pre><span class="pl-k">def</span> <span class="pl-en">tuplePatternMatch</span> (tup: Tuple [Nat, String]) :=
-  <span class="pl-k">match</span> tup <span class="pl-k">with</span>
-  | ⟪<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>⟫ => true
-  | ⟪<span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span>⟫ => true
-  | _ => false
-
-<span class="pl-k">#eval</span> tuplePatternMatch ⟪<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>⟫ <span class="pl-c"><span class="pl-c">--</span> true</span>
-<span class="pl-k">#eval</span> tuplePatternMatch ⟪<span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>3<span class="pl-pds">"</span></span>⟫ <span class="pl-c"><span class="pl-c">--</span> false</span></pre></div>
-<p dir="auto">You can also get the <code>nth</code> item in many different ways:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval ⟪1,"2",3.0⟫.nth 1 -- "2"
-#eval ⟪1,"2",3.0⟫#1
-#eval ⟪1,"2",3.0⟫@1
-#eval ⟪1,"2",3.0⟫[1]
-#eval ⟪1,"2",3.0⟫::1
-#eval ⟪1,"2",3.0⟫∧1"><pre><span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫.nth <span class="pl-c1">1</span> <span class="pl-c"><span class="pl-c">--</span> "2"</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫#<span class="pl-c1">1</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫@<span class="pl-c1">1</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫[<span class="pl-c1">1</span>]
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫::<span class="pl-c1">1</span>
-<span class="pl-k">#eval</span> ⟪<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span>,<span class="pl-c1">3</span>.<span class="pl-c1">0</span>⟫∧<span class="pl-c1">1</span></pre></div>
-<p dir="auto">Lastly, probably the most powerful feature of these is that they dont have to of a fixed size when used as arguments. For instance, here is the length function:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def length {αs : List Type} (tup : Tuple (αs)) : Nat :=
-  let rec lengthAux {αs : List Type} (tup: Tuple (αs)) (length: Nat) : Nat :=
-    match tup with
-    | Tuple.unit => length
-    | Tuple.cons _ xs => lengthAux xs (length + 1)
-  match tup with
-  | ⟪⟫ => 0
-  | _ => lengthAux tup 0"><pre><span class="pl-k">def</span> <span class="pl-en">length</span> {αs : List <span class="pl-k">Type</span>} (tup : Tuple (αs)) : Nat :=
-  <span class="pl-k">let</span> rec lengthAux {αs : List <span class="pl-k">Type</span>} (tup: Tuple (αs)) (length: Nat) : Nat :=
-    <span class="pl-k">match</span> tup <span class="pl-k">with</span>
-    | Tuple.unit => length
-    | Tuple.cons _ xs => lengthAux xs (length + <span class="pl-c1">1</span>)
-  <span class="pl-k">match</span> tup <span class="pl-k">with</span>
-  | ⟪⟫ => <span class="pl-c1">0</span>
-  | _ => lengthAux tup <span class="pl-c1">0</span></pre></div>
+<h3 dir="auto">Features</h3>
+<p dir="auto">Contains:</p>
+<ul dir="auto">
+<li>Heterogeneous Lists</li>
+<li>Extra List Functions</li>
+<li>Accessing nth element of Prod</li>
+<li>Range functionality</li>
+<li>Unwrapping Fin type</li>
+<li>Functor instance for Sum</li>
+</ul>
 </article></div></main>
 </body>
 </html>

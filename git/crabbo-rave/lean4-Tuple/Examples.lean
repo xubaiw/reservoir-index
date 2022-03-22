@@ -38,8 +38,6 @@ def HListPatternMatch (l: HList [Nat, String]) :=
 
 -- Getting nth item. Start at 0
 #eval HList.nth [1,"2",3.0] #1-- "2"
-#eval [1,"2",3.0]#1
-#eval [1,"2",3.0]@1
 #eval [1,"2",3.0][1]
 
 #eval toString [1, "2", 3.0, [4, 5, 6], #[7, 8]]
@@ -60,3 +58,11 @@ def baz : HList [Nat, String, Float, Char] :=
 
 -- open List
 -- #eval foo'.get' foo
+
+def foo : HList [Int, String, Nat] := [-4, "cool", 28]
+
+def the (α : Type u) (a : α) := a
+
+#eval the (HList [Int, String, Nat]) (foo.mapNth 0 (·*-1))
+
+-- #eval foo.mapNth 0 (·*-1)
