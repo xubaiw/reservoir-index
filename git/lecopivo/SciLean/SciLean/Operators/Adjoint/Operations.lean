@@ -86,12 +86,12 @@ namespace SciLean
   theorem adjoint_of_add_funparm 
     (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g] [Nonempty ι]
     : (λ x i => f x i + g x i)† = f† + g† 
-  := by funext z; simp; done
+  := by funext z; simp [sum_of_linear]; done
   @[simp]
   theorem adjoint_of_sub_funparm 
     (f g : X → ι → Y) [HasAdjoint f] [HasAdjoint g] [Nonempty ι]
     : (λ x i => f x i - g x i)† = f† - g† 
-  := by funext z; simp; done
+  := by funext z; simp [sum_of_linear]; done
 
   -- Inner Product --
   -------------------
@@ -128,7 +128,7 @@ namespace SciLean
     (f : X → Y) [HasAdjoint f] 
     (y : Y) 
     : (λ x : X => ⟪f x, y⟫)† = (λ (s : ℝ) => s * f† y) 
-  := by rw[adjoint_of_comp_at_point2] simp done
+  := by simp; unfold hold; simp; done
 
   @[simp]
   theorem adjoint_of_inner2_comp 
@@ -136,7 +136,7 @@ namespace SciLean
     (f : X → Y) [HasAdjoint f] 
     (y : Y) 
     : (λ x : X => ⟪y, f x⟫)† = (λ (s : ℝ) => s * f† y) 
-  := by rw[adjoint_of_comp_at_point1] simp done
+  := by simp; unfold hold; simp; done
 
 
   -- Sum --
