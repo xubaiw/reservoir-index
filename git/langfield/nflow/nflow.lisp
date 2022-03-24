@@ -1,134 +1,103 @@
 (load "~/.quicklisp/setup.lisp")
 (ql:quickload :str)
-(ql:quickload :numcl)
 (ql:quickload :for)
+(ql:quickload :numcl)
+(ql:quickload :unix-opts)
 (ql:quickload :draw-cons-tree)
 
 (defun get-file (filename)
-  " Read in a file. "
+  "Read in a file."
   (with-open-file (stream filename)
     (loop for line = (read-line stream nil)
       while line
       collect line)))
 
-(defun print-list (printable-list)
-  " Print an arbitrary list. "
-  (format t "~{~A ~}~%" printable-list))
-
 (defun starts-with (prefix)
-  " Check whether STR starts with PREFIX. "
+  "Check whether STR starts with PREFIX."
   (defun starts-with-prefix (str)
     (str:starts-with? prefix str)))
 
 (defun get-undashed-lines (lines)
-  " Returns a list of the undashed lines. "
+  "Returns a list of the undashed lines."
   (cond
     ((equal (length lines) 0) '())
     (t (remove-if (starts-with "- ") lines))))
 
 (defun get-dashed-lines (lines)
-  " Returns a list of the dashed lines. "
+  "Returns a list of the dashed lines."
   (cond
     ((equal (length lines) 0) '())
     (t (remove-if-not (starts-with "- ") lines))))
 
 (defun get-n-items (lst num)
-  " Get ``lst[:num]``. "
+  "Get ``lst[:num]``."
   (if (> num 0)
     (cons (car lst) (get-n-items (cdr lst) (- num 1)))
     '()))
 
 (defun slice (lst start size)
-  " Take a slice of ``lst`` of the form ``lst[start:start + size]``. "
+  "Take a slice of ``lst`` of the form ``lst[start:start + size]``."
   (if (> start 0)
     (slice (cdr lst) (- start 1) size)
     (get-n-items lst size)))
 
-(defun print-elements-of-list (name lst)
-  " Print each element of LST on a line of its own. "
+(defun debug-print-elements-of-list (name lst)
+  "Print each element of LST on a line of its own."
   (format t "~A (length ~A):~%" name (length lst))
   (loop while lst do
     (format t "~A~%" (car lst))
     (setq lst (cdr lst)))
   (terpri))
 
-(defun dump-lines (lst)
-  " Print each element of LST on a line of its own. "
+(defun print-elements-of-list (lst)
+  "Print each element of LST on a line of its own."
   (loop while lst do
     (format t "~A~%" (car lst))
-    (setq lst (cdr lst))))
-
-(defun in-list (x lst)
-  " Check whether X is in LST. "
-   (cond
-      ((null lst) ())
-      ((equal (car lst) x) lst)
-      (t (in-list x (cdr lst)))))
-
-(defun subset (lst1 lst2)
-  " Check whether every element in LST1 is in LST2. "
-   (cond
-      ((null lst1) t)
-      ((in-list (car lst1) lst2)(subset (cdr lst1) lst2))
-      (t ())))
-
-(defun list-equals (lst1 lst2)
-  " Check if two lists are equal. "
-  (cond
-    ((and (subset lst1 lst2) (subset lst2 lst1)) t)
-    (t nil)))
-
+    (setq lst (cdr lst)))
+  (terpri))
 
 (defun make-tree (item)
    "Create a new node with item."
    (cons (cons item nil) nil))
 
-
 (defun first-child (tree)
-    " Access first child. "
+    "Access first child."
    (if (null tree)
       nil
       (cdr (car tree))))
 
-
 (defun children (tree)
-    " Get children of root. "
+    "Get children of root."
    (if (null tree)
       nil
       (cdr tree)))
 
-
 (defun next-sibling (tree)
-  " Get next sibling. "
+  "Get next sibling."
    (cdr tree))
 
-
 (defun data (tree)
-  " Get the data of the root node of a tree. "
+  "Get the data of the root node of a tree."
    (car (car tree)))
 
-
-(defun tree-replace-data (tree data)
-  " Return a copy of TREE with its data replaced with DATA. "
+(defun replace-tree-data (tree data)
+  "Return a copy of TREE with its data replaced with DATA."
   (let*
     ((copy (copy-tree tree))
      (children (cdr (car copy)))
      (inner (cons data children)))
     (cons inner nil)))
 
-
 (defun add-child (tree child)
-  " Add child to tree. "
+  "Add child to tree."
    (setf (car tree) (append (car tree) child))
    tree)
 
-
 (defun count-leading-spaces (s)
-  " Count leading spaces of a string. "
+  "Count leading spaces of a string."
   (let*
-    ((left-trimmed-s (str:trim-left s)))
+      ((left-trimmed-s (str:trim-left s)))
     (- (length s) (length left-trimmed-s))))
-
 
 (defun looks-like-node (node)
   (assert (equal (type-of node) 'cons))
@@ -136,31 +105,49 @@
   (assert (not (equal (type-of (car (car node))) 'cons)))
   t)
 
-(defun assert-is-cons (obj)
-  (assert (equal (type-of obj) 'cons)))
+(defun get-indent-size (delta indent-size)
+  "Get the indent size."
+  (if (> indent-size 0)
+    indent-size
+    (abs delta)))
 
+(defun get-children-as-roots (tree)
+  (mapcar (lambda (item) (cons item nil)) (first-child tree)))
 
-(defun assert-is-string (obj)
-  (format t "Checking if '~A' is a string~%" obj)
-  (assert (stringp obj)))
+(defun assert-is-cons-of-cons-of-strings (obj)
+  (assert (consp obj))
+  (assert (mapcar (lambda (elem) (assert (consp elem))) obj))
+  (assert (mapcar (lambda (elem) (mapcar (lambda (inner) (assert (stringp inner))) elem)) obj)))
 
+(defun assert-is-cons-of-strings (obj)
+  (assert (consp obj))
+  (assert (mapcar (lambda (elem) (assert (stringp elem))) obj)))
 
-(defun print-parent-stack (parent-stack)
-  (format t "Parent stack (bottom-to-top): ")
-  (for:for ((node over parent-stack))
-        (format t "'~A' " (data node)))
-  (terpri))
+(defun is-checked-off (tree)
+  "Check if the data of TREE has a dash prefix, i.e. is checked off."
+  (str:starts-with? "- " (data tree)))
 
+(defun get-first-child-from-wrapped-children (wrapped-children)
+  "Wrapped children are trees themselves, so we must unwrap them (CAR) and
+  then wrap the list of the unwrapped children (CONS <...> NIL)."
+  (car (cons (mapcar #'car wrapped-children) nil)))
 
-(defun print-node-list (node-list name display-prefix)
-  (format t "~A~A (data-only): " display-prefix name)
-  (for:for ((node over node-list))
-        (format t "~A'~A' " display-prefix (data node)))
-  (terpri))
-
+(defun check-no-undashed-lines-above-delimiter (lines position-of-empty-line)
+    "Check that there are no undashed lines above delimiter."
+    (let*
+      ((i 0))
+      (for:for ((line over lines))
+        (if (not (str:starts-with? "- " line))
+          (progn
+            (if (< i position-of-empty-line)
+              (error "Unchecked item: '~A' is above delimiter on line: ~A~%" line position-of-empty-line))
+            (if (equal i position-of-empty-line)
+              (assert (equal line "")))))
+        (setq i (1+ i)))
+      t))
 
 (defun pop-from-parent-stack (parent-stack num-indents)
-  " Go up NUM-INDENTS levels, returning the parent and the parent-stack. "
+  "Go up NUM-INDENTS levels, returning the parent and the parent-stack."
   (assert (> num-indents 0))
   (let*
     ((parent nil))
@@ -174,16 +161,8 @@
       (setq parent-stack (butlast parent-stack)))
     (list parent-stack parent)))
 
-
-(defun get-indent-size (delta indent-size)
-  " Get the indent size. "
-  (if (> indent-size 0)
-    indent-size
-    (abs delta)))
-
-
 (defun get-num-indents (indent-level old-indent-level indent-size line)
-  " Compute NUM-INDENTS and INDENT-SIZE from the indent levels. "
+  "Compute NUM-INDENTS and INDENT-SIZE from the indent levels."
   (let*
     ; Difference between the indent level and the previous indent level.
     ((indent-delta 0))
@@ -203,26 +182,41 @@
     ; Return (NUM-INDENTS, INDENT-SIZE).
     (list (floor indent-delta indent-size) indent-size)))
 
+(defun resolve-todo-tree (tree)
+  "Check off nodes if all their children are checked off.  This is a recursive
+  function that will return a tree with the root node checked off if and only
+  if all its children are 'resolved', which it determines by making recursive
+  calls on all the children."
 
-(defun wrap-in-list (item)
-  (cons item nil))
+  ; If TREE is a leaf node:
+  (if (equal (first-child tree) nil)
 
+    ; Return T if the leaf node is checked off, and NIL otherwise.
+    tree
 
-(defun get-children-as-roots (tree)
-  (mapcar #'wrap-in-list (first-child tree)))
+    ; Reduce the children with AND to determine if all of them are checked off or not.
+    (let*
+      ((tree-copy (copy-tree tree))
 
+       ; Recursively call RESOLVE-TODO-TREE to resolve each child.
+       (resolved-children (mapcar #'resolve-todo-tree (get-children-as-roots tree-copy)))
 
+       ; The first child contains all the data of all the children because of
+       ; how cons trees are structured, so we need only reconstruct the root
+       ; with MAKE-TREE and then attach our RESOLVED-FIRST-CHILD in order to
+       ; get a copy of the original tree with all its children resolved.
+       (resolved-first-child (get-first-child-from-wrapped-children resolved-children))
+       (tree-copy-with-resolved-children (add-child (make-tree (data tree)) resolved-first-child))
 
-(defun assert-is-cons-of-cons-of-strings (obj)
-  (assert (consp obj))
-  (assert (mapcar (lambda (elem) (assert (consp elem))) obj))
-  (assert (mapcar (lambda (elem) (mapcar (lambda (inner) (assert (stringp inner))) elem)) obj)))
+       (all-children-are-checked-off (reduce (lambda (a b) (and a b)) resolved-children :key #'is-checked-off :initial-value t)))
 
+      ; If all children are checked off, but root is not, then we check off the
+      ; data of the root and return the resulting tree.
+      (if (and all-children-are-checked-off (not (is-checked-off tree-copy-with-resolved-children)))
+        (replace-tree-data tree-copy-with-resolved-children (str:concat "- " (data tree-copy)))
 
-(defun assert-is-cons-of-strings (obj)
-  (assert (consp obj))
-  (assert (mapcar (lambda (elem) (assert (stringp elem))) obj)))
-
+        ; Otherwise, we just return the tree with children resolved.
+        tree-copy-with-resolved-children))))
 
 (defun unparse-tree (tree)
   ; If tree is LEAF, return line with data.
@@ -270,11 +264,30 @@
             (assert-is-cons-of-strings result)
             result))))))
 
+(defun get-checked-children (resolved-tree)
+  "Return a list[tree] of all the children whose data is checked-off, i.e. are
+  fully completed."
+  (remove-if-not #'is-checked-off (get-children-as-roots (copy-tree resolved-tree))))
 
+(defun get-unchecked-children (resolved-tree)
+  "Return a list[tree] of all the children whose data not is checked-off, i.e. are
+  at least partially incomplete."
+  (remove-if #'is-checked-off (get-children-as-roots (copy-tree resolved-tree))))
 
+(defun get-lines-to-move-above-delimiter (resolved-tree)
+  "Unparse each checked-off child into a list of lines, and then concatenate
+  all the lists to get one big list of lines."
+  ; list[string]
+  (reduce (lambda (a b) (concatenate 'list a b)) (mapcar #'unparse-tree (get-checked-children resolved-tree)) :initial-value '()))
+
+(defun get-lines-to-keep-below-delimiter (resolved-tree)
+  "Unparse each non-checked-off child into a list of lines, and then
+  concatenate all the lists to get one big list of lines."
+  ; list[string]
+  (reduce (lambda (a b) (concatenate 'list a b)) (mapcar #'unparse-tree (get-unchecked-children resolved-tree)) :initial-value '()))
 
 (defun parse-todo-tree (lst)
-  " Parse a todolist into a tree, preserving hierarchy. "
+  "Parse a todolist into a tree, preserving hierarchy."
   (let*
     (
       ; Initialize TREE with a dummy root.
@@ -371,151 +384,108 @@
           (assert (looks-like-node tree)))))
     tree))
 
-(defun is-checked-off (tree)
-  "Check if the data of TREE has a dash prefix, i.e. is checked off."
-  (str:starts-with? "- " (data tree)))
-
-(defun and-fn (a b)
-  "Boolean binary AND function."
-  (if (and a b)
-    t
-    nil))
-
-(defun get-first-child-from-wrapped-children (wrapped-children)
-  "Wrapped children are trees themselves, so we must unwrap them (CAR) and
-  then wrap the list of the unwrapped children (CONS <...> NIL)."
-  (car (cons (mapcar #'car wrapped-children) nil)))
-
-
-(defun resolve-todo-tree (tree)
-  "Check off nodes if all their children are checked off.  This is a recursive
-  function that will return a tree with the root node checked off if and only
-  if all its children are 'resolved', which it determines by making recursive
-  calls on all the children."
-
-  ; If TREE is a leaf node:
-  (if (equal (first-child tree) nil)
-
-    ; Return T if the leaf node is checked off, and NIL otherwise.
-    tree
-
-    ; Reduce the children with AND to determine if all of them are checked off or not.
-    (let*
-      ((copy (copy-tree tree))
-       (wrapped-children (get-children-as-roots copy))
-       (resolved-children (mapcar #'resolve-todo-tree wrapped-children))
-       (resolved-first-child (get-first-child-from-wrapped-children resolved-children))
-       (copy-with-resolved-children (add-child (make-tree (data tree)) resolved-first-child))
-       (is-checked (reduce #'and-fn resolved-children :key #'is-checked-off :initial-value t))
-       (checked-resolved-copy (tree-replace-data copy-with-resolved-children (str:concat "- " (data copy)))))
-      (if (and is-checked (not (is-checked-off copy-with-resolved-children)))
-        checked-resolved-copy
-        copy-with-resolved-children))))
-
-
-(defun check-no-undashed-lines-above-delimiter (lines position-of-empty-line)
-    "Check that there are no undashed lines above delimiter."
-    (let*
-      ((i 0))
-      (for:for ((line over lines))
-        (if (not (str:starts-with? "- " line))
-          (progn
-            (if (< i position-of-empty-line)
-              (error "Unchecked item: '~A' is above delimiter on line: ~A~%" line position-of-empty-line))
-            (if (equal i position-of-empty-line)
-              (assert (equal line "")))))
-        (setq i (1+ i)))
-      t))
-
-
 (defun reflow-nontrivial-lines (lines)
-  " Return the reflowed list of lines, with dashed lines moved above the delimiter, order-preserved. "
+  "Return the reflowed list of lines, with dashed lines moved above the delimiter, order-preserved."
   (let*
     (
       (position-of-empty-line nil)
-      (undashed-lines nil)
       (lines-above-delimiter nil)
       (lines-below-delimiter nil)
       (num-lines-below-delimiter nil)
-      (dashed-lines-below-delimiter nil)
-      (resolved-tree nil)
-      (resolved-lines nil)
-      (tree nil))
+      (resolved-tree nil))
 
     ; Find the empty line (delimiter).
     (setq position-of-empty-line (position "" lines :test #'string=))
     (check-no-undashed-lines-above-delimiter lines position-of-empty-line)
 
-    ; Get the undashed lines (excluding the delimiter line).
-    (setq undashed-lines (rest (get-undashed-lines lines)))
-
-    ; Get lines above delimiter.
     (setq lines-above-delimiter (slice lines 0 position-of-empty-line))
-
-    ; Get number of lines below delimiter.
     (setq num-lines-below-delimiter (- (- (length lines) position-of-empty-line) 1))
-
-    ; Get a list of the lines below the delimiter.
     (setq lines-below-delimiter (slice lines (+ position-of-empty-line 1) num-lines-below-delimiter))
 
-    ; Get only the dashed lines below the delimiter.
-    (setq dashed-lines-below-delimiter (get-dashed-lines lines-below-delimiter))
-
-    ; Get a tree representation of the lines below delimiter.
-    (setq tree (parse-todo-tree lines-below-delimiter))
-
-    (print-elements-of-list "Original" lines)
-
-    ; Draw TREE on each iteration.
-    (terpri)
-    (draw-cons-tree:draw-tree tree)
-    (terpri)
-
-    ; Print cons form of TREE.
-    (format t "Tree: ~A~%" tree)
-
-    ; Print result of RESOLVE-TODO-TREE.
-    (format t "All checked off: ~A~%" (resolve-todo-tree tree))
-
-    (setq resolved-tree (resolve-todo-tree tree))
-
-    (format t "Resolved tree:~%~%")
-    (terpri)
-    (draw-cons-tree:draw-tree resolved-tree)
-    (terpri)
-    (format t "Resolved tree: ~A~%" resolved-tree)
-
-    (print-elements-of-list "Original" lines)
-
-    (setq resolved-lines (unparse-tree resolved-tree))
-    (print-elements-of-list "Resolved" resolved-lines)
+    ; Get a tree representation of the lines below delimiter, and then resolve
+    ; tree, i.e. propagate checks up towards the root.
+    (setq resolved-tree (resolve-todo-tree (parse-todo-tree lines-below-delimiter)))
 
     ; Concatenate everything, adding delimiter back in.
-    (concatenate 'list lines-above-delimiter dashed-lines-below-delimiter '("") undashed-lines)))
-
-
+    (concatenate 'list lines-above-delimiter (get-lines-to-move-above-delimiter resolved-tree) '("") (get-lines-to-keep-below-delimiter resolved-tree))))
 
 (defun reflow-dashed-lines (lines)
-  " Checks for zero-length files and files with no delimiter. "
+  "Checks for zero-length files and files with no delimiter."
   (if (equal (length lines) 0)
     '()
     (if (equal (position "" lines :test #'string=) nil)
       lines
       (reflow-nontrivial-lines lines))))
 
+;;; OK, since command line options can be malformed we should use a handy
+;;; Common Lisp feature: restarts. Unix-opts gives us all we need to do so.
+;;; Here we define a function that will print a warning and ignore
+;;; unknown-option. Several restarts (behaviors) are available for every
+;;; exception that Unix-opts can throw. See documentation for `get-opts'
+;;; function for more information.
+
+(defun unknown-option (condition)
+  (format t "warning: ~s option is unknown!~%" (opts:option condition))
+  (invoke-restart 'opts:skip-option))
+
+(defmacro when-option ((options opt) &body body)
+  `(let ((it (getf ,options ,opt)))
+     (when it
+       ,@body)))
+
+(opts:define-opts
+  (:name :help
+   :description "print this help text"
+   :short #\h
+   :long "help")
+  (:name :start
+   :description "process todos starting from line NUM (1-indexed)"
+   :short #\s
+   :long "start-line"
+   :arg-parser #'parse-integer
+   :meta-var "NUM"))
 
 (defun main (argv)
-  " Main function. "
-  (let*
-    ((lines (get-file (nth 1 argv)))
-     (reflowed-lines (reflow-dashed-lines lines)))
-   (print-elements-of-list "Single-level implementation result" reflowed-lines)))
+  "Main function."
+  (multiple-value-bind (options free-args)
+      (handler-case
+          (handler-bind ((opts:unknown-option #'unknown-option))
+            (opts:get-opts))
+        (opts:missing-arg (condition)
+          (format t "fatal: option ~s needs an argument!~%"
+                  (opts:option condition)))
+        (opts:arg-parser-failed (condition)
+          (format t "fatal: cannot parse ~s as argument of ~s~%"
+                  (opts:raw-arg condition)
+                  (opts:option condition)))
+        (opts:missing-required-option (con)
+          (format t "fatal: ~a~%" con)
+          (opts:exit 1)))
+    ;; Here all options are checked independently, it's trivial to code any
+    ;; logic to process them.
+    (when-option (options :help)
+      (opts:describe
+       :prefix "program for keeping track of things to do"
+       :suffix "so that's how it works…"
+       :usage-of "nflow"
+       :args     "[FILE]")
+      (quit))
+    (format nil "argv: ~A~%" argv)
 
+    (if (< (length free-args) 1)
+      (progn
+        (format t "Missing [FILE] argument~%")
+        (quit)))
+    (if (> (length free-args) 1)
+      (progn
+        (format t "Too many arguments. Pass exactly one [FILE]~%")
+        (quit)))
 
-; OUTLINE
-; -------
-; Read the whole file in. (DONE)
-; Get all elements after the empty line that start with "- ". (DONE)
-; Get all elements after the empty line that do not start with "- ". (DONE)
-; Move the dashed lines to just before the empty line in the sequence. (DONE)
-; Put the new list back in the file.
+    ;; Nflow-specific stuff.
+    (let*
+        ((lines (get-file (nth 0 free-args)))
+         (start-0-indexed (- (getf options :start) 1))
+         (head (slice lines 0 start-0-indexed))
+         (tail (slice lines start-0-indexed (length lines))))
+      (format t "~A~%" head)
+      (print-elements-of-list (reflow-dashed-lines tail)))))
