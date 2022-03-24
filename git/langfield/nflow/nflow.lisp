@@ -46,7 +46,7 @@
 
 (defun print-elements-of-list (name lst)
   " Print each element of LST on a line of its own. "
-  (format t "~A:~%" name)
+  (format t "~A (length ~A):~%" name (length lst))
   (loop while lst do
     (format t "~A~%" (car lst))
     (setq lst (cdr lst)))
@@ -136,6 +136,14 @@
   (assert (not (equal (type-of (car (car node))) 'cons)))
   t)
 
+(defun assert-is-cons (obj)
+  (assert (equal (type-of obj) 'cons)))
+
+
+(defun assert-is-string (obj)
+  (format t "Checking if '~A' is a string~%" obj)
+  (assert (stringp obj)))
+
 
 (defun print-parent-stack (parent-stack)
   (format t "Parent stack (bottom-to-top): ")
@@ -153,18 +161,14 @@
 
 (defun pop-from-parent-stack (parent-stack num-indents)
   " Go up NUM-INDENTS levels, returning the parent and the parent-stack. "
-  (format t "Popping '~A' indents from PARENT-STACK~%" num-indents)
-  (print-parent-stack parent-stack)
   (assert (> num-indents 0))
   (let*
     ((parent nil))
     (dotimes (i num-indents)
 
       ; Get PARENT from PARENT-STACK.
-      (format t "Raw PARENT-STACK: '~A'~%" parent-stack)
       (setq parent (first (last parent-stack)))
       (assert (looks-like-node parent))
-      (format t "Got PARENT '~A' from top of PARENT-STACK~%" (data parent))
 
       ; Remove PARENT from PARENT-STACK.
       (setq parent-stack (butlast parent-stack)))
@@ -208,6 +212,18 @@
   (mapcar #'wrap-in-list (first-child tree)))
 
 
+
+(defun assert-is-cons-of-cons-of-strings (obj)
+  (assert (consp obj))
+  (assert (mapcar (lambda (elem) (assert (consp elem))) obj))
+  (assert (mapcar (lambda (elem) (mapcar (lambda (inner) (assert (stringp inner))) elem)) obj)))
+
+
+(defun assert-is-cons-of-strings (obj)
+  (assert (consp obj))
+  (assert (mapcar (lambda (elem) (assert (stringp elem))) obj)))
+
+
 (defun unparse-tree (tree)
   ; If tree is LEAF, return line with data.
   ; If tree is not LEAF, map UNPARSE-TREE over children, and get list of
@@ -215,25 +231,46 @@
   ; Then concatenate results with newlines between, adding an indent.
   ; Then optionally prepend data of the tree (if data is not "- root"), with no
   ; indentation.
-  (if (equal (first-child tree) nil)
-    (data tree)
-    (let*
-       ((result nil)
-        (wrapped-children nil)
-        (unparsed-children-data nil)
-        (indented-unparsed-children-data nil)
-        (indented-unparsed-children-block nil)
-        (unindented-unparsed-children-block nil))
-      (setq wrapped-children (get-children-as-roots tree))
-      (setq unparsed-children-data (mapcar (lambda (child) (unparse-tree child)) wrapped-children))
-      (setq indented-unparsed-children-data (str:add-prefix unparsed-children-data "  "))
-      (setq indented-unparsed-children-block (str:join (format nil "~%") indented-unparsed-children-data))
-      (setq unindented-unparsed-children-block (str:join (format nil "~%") unparsed-children-data))
-      (if (equal "- root" (data tree))
-        unindented-unparsed-children-block
-        (progn
-          (setq result (str:concat (data tree) (format nil "~%") indented-unparsed-children-block))
-          result)))))
+
+  ; Return value is always list[string].
+  (let*
+      ((result nil))
+    (if (equal (first-child tree) nil)
+      ; list[str]
+      (progn
+        (setq result (cons (data tree) nil))
+        (assert-is-cons-of-strings result)
+        result)
+      (let*
+        ((wrapped-children nil)
+         (unparsed-children-data nil)
+         (indented-unparsed-children-data nil))
+
+        ; list[tree]
+        (setq wrapped-children (get-children-as-roots tree))
+
+        ; list[list[str]]
+        (setq unparsed-children-data (mapcar #'unparse-tree wrapped-children))
+
+        ; list[list[str]]
+        (setq indented-unparsed-children-data (mapcar (lambda (unparsed-child) (str:add-prefix unparsed-child "  ")) unparsed-children-data))
+        (assert-is-cons-of-cons-of-strings indented-unparsed-children-data)
+        (if (equal "- root" (data tree))
+
+          ; list[str]
+          (progn
+            (setq result (reduce (lambda (a b) (concatenate 'list a b)) unparsed-children-data :initial-value '()))
+            (assert-is-cons-of-strings result)
+            result)
+
+          ; list[str]
+          (progn
+            (setq result (reduce (lambda (a b) (concatenate 'list a b)) indented-unparsed-children-data :initial-value '()))
+            (setq result (concatenate 'list (cons (data tree) nil) result))
+            (assert-is-cons-of-strings result)
+            result))))))
+
+
 
 
 (defun parse-todo-tree (lst)
@@ -255,10 +292,6 @@
 
     ; Loop over LST
     (for:for ((line over lst))
-
-      (format t "===================================~%")
-      (format t "Tree at BEGINNING of iteration: '~A'~%" tree)
-      (format t "Processing line: '~A'~%" line)
 
         ; If LINE is nonempty:
       (if (not (str:empty? line))
@@ -291,15 +324,12 @@
               ; the ancestors of the current node. So the top element of the
               ; stack is the direct parent of the current node, and the bottom
               ; element should always be the root.
-              (format t "Appending NODE '~A' to PARENT-STACK~%" (data node))
               (assert (looks-like-node node))
 
               ; NODE must be wrapped in a CONS because of the way APPEND works.
               (setq parent-stack (append parent-stack (cons node nil)))
-              (print-parent-stack parent-stack)
 
               ; Set NODE to LAST-CREATED-CHILD.
-              (format t "Setting NODE equal to LAST-CREATED-CHILD: '~A'~%" (data last-created-child))
               (setq node last-created-child)
               (assert (looks-like-node node)))
 
@@ -316,20 +346,13 @@
                 ; Get updated PARENT-STACK and PARENT.
                 ; The PARENT-STACK-PAIR is the return value of UNROLL-PARENT-STACK.
                 ; It is of the form (PARENT-STACK, PARENT).
-                (format t "Popping from PARENT-STACK.~%")
                 (setq parent-stack-pair (pop-from-parent-stack parent-stack (- num-indents)))
                 (setq parent-stack (first parent-stack-pair))
-                (print-parent-stack parent-stack)
                 (setq parent (second parent-stack-pair))
-                (format t "Popped parent: '~A'~%" (data parent))
                 (assert (looks-like-node parent))
 
                 ; Set NODE to PARENT.
-                (format t "Setting NODE equal to popped PARENT '~A'~%" (data parent))
-                (setq node parent))
-              (progn
-               (format t "Indent level did not change from previous iteration!~%")
-               (print-parent-stack parent-stack))))
+                (setq node parent))))
 
           ; Add LINE as another child.
           (setq last-created-child (make-tree (str:trim-left line)))
@@ -342,11 +365,9 @@
       (if (> (length parent-stack) 0)
         (progn
           (setq tree (car parent-stack))
-          (format t "Set TREE equal to bottom of PARENT-STACK: '~A'~%" (data (car parent-stack)))
           (assert (looks-like-node tree)))
         (progn
           (setq tree node)
-          (format t "Set TREE equal to NODE: '~A'~%" (data node))
           (assert (looks-like-node tree)))))
     tree))
 
@@ -467,7 +488,7 @@
     (print-elements-of-list "Original" lines)
 
     (setq resolved-lines (unparse-tree resolved-tree))
-    (format t "Resolved lines:~%~A~%" resolved-lines)
+    (print-elements-of-list "Resolved" resolved-lines)
 
     ; Concatenate everything, adding delimiter back in.
     (concatenate 'list lines-above-delimiter dashed-lines-below-delimiter '("") undashed-lines)))
