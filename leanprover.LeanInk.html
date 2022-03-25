@@ -1,0 +1,96 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>leanprover/LeanInk</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>leanprover/LeanInk</h1>
+<p>LeanInk is a command line helper tool for Alectryon which aims to ease the integration of Lean 4.</p>
+<a href="https://github.com/leanprover/LeanInk">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div id="readme" class="md" data-path="README.md"><article class="markdown-body entry-content container-lg" itemprop="text"><p dir="auto"><a target="_blank" rel="noopener noreferrer" href="https://user-images.githubusercontent.com/24965150/145307859-30350f23-4f7f-4aab-a1ab-34889ad44d9a.png"><img src="https://user-images.githubusercontent.com/24965150/145307859-30350f23-4f7f-4aab-a1ab-34889ad44d9a.png" alt="LeanInkLogo" style="max-width: 100%;"></a></p>
+<p dir="auto"><a href="https://github.com/insightmind/LeanInk/actions/workflows/build.yml"><img src="https://github.com/insightmind/LeanInk/actions/workflows/build.yml/badge.svg" alt="CI" style="max-width: 100%;"></a>
+<a href="https://github.com/leanprover/lean4"><img src="https://camo.githubusercontent.com/d282b78ad8034dda18909b21a043b9e2830bb79711dbce17e40f2cf38fbcb9c4/68747470733a2f2f696d672e736869656c64732e696f2f7374617469632f76313f6c6162656c3d4c2543362538452545322542312541464e266d6573736167653d3426636f6c6f723d626c61636b" alt="LƎⱯN - 4" data-canonical-src="https://img.shields.io/static/v1?label=L%C6%8E%E2%B1%AFN&amp;message=4&amp;color=black" style="max-width: 100%;"></a></p>
+<p dir="auto">LeanInk is a command line helper tool for <a href="https://github.com/cpitclaudel/alectryon">Alectryon</a> which aims to ease the integration and support of <a href="https://github.com/leanprover/lean4">Lean 4</a>.
+Alectryon uses the information provided by LeanInk to create a static code visualization for Lean 4 code.
+For more information about Alectryon make sure to take a look at their repository.</p>
+<blockquote>
+<p dir="auto">The official version of Alectryon does not yet support LeanInk, as LeanInk is still in active development. Please use our <a href="https://github.com/insightmind/alectryon/tree/lean4">Alectryon Fork</a> to test LeanInk.</p>
+</blockquote>
+<h1 dir="auto"><a id="user-content-installation" class="anchor" aria-hidden="true" href="#installation"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Installation</h1>
+<p dir="auto">You can either build LeanInk and install it yourself or use the build script to install a LeanInk release version:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="sh -c &quot;$(curl https://raw.githubusercontent.com/insightmind/LeanInk/main/init.sh -sSf)&quot;"><pre>sh -c <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>curl https://raw.githubusercontent.com/insightmind/LeanInk/main/init.sh -sSf<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span></pre></div>
+<h2 dir="auto"><a id="user-content-building-from-source" class="anchor" aria-hidden="true" href="#building-from-source"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Building from source</h2>
+<p dir="auto">Before you can build LeanInk from source make sure to install the latest version of <a href="https://github.com/leanprover/lean4">Lean 4</a> using <code>elan</code>.
+This will also automatically install the <a href="https://github.com/leanprover/lake">Lake</a> package manager.</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="git clone https://github.com/insightmind/LeanInk
+cd LeanInk
+lake build"><pre>git clone https://github.com/insightmind/LeanInk
+<span class="pl-c1">cd</span> LeanInk
+lake build</pre></div>
+<h1 dir="auto"><a id="user-content-usage" class="anchor" aria-hidden="true" href="#usage"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Usage</h1>
+<p dir="auto">Analyzing a simple lean program <code>Input.lean</code> is very straightforward. To do so you simply use the <code>analyze</code> command (shorthand <code>a</code>) and provide LeanInk the input file.</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="leanInk analyze Input.lean
+# OR
+leanInk a Input.lean"><pre>leanInk analyze Input.lean
+<span class="pl-c"><span class="pl-c">#</span> OR</span>
+leanInk a Input.lean</pre></div>
+<p dir="auto">The <code>analyze</code> command will generate an output file <code>Input.lean.leanInk</code> with the annotate lean program, encoded using Alectryons fragment json format. (For more information about the json format take a look at <a href="https://github.com/insightmind/LeanInk/blob/main/LeanInk/Annotation/Alectryon.lean">Alectryon.lean</a>)</p>
+<hr>
+<p dir="auto">If your lean program has external dependencies and uses Lake as its package manager you can use the <code>--lake</code> argument to provide the lakefile.</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="leanInk analyze Input.lean --lake lakefile.lean"><pre>leanInk analyze Input.lean --lake lakefile.lean</pre></div>
+<p dir="auto">LeanInk will then fetch any dependencies if necessary.</p>
+<hr>
+<p dir="auto">You can also analyze multiple files sequentially (concurrent analysis should be possible but is currently out of scope, feel free to contribute!):</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="leanInk analyze Input1.lean Input2.lean"><pre>leanInk analyze Input1.lean Input2.lean</pre></div>
+<p dir="auto">This will create <code>Input1.leanink</code> and <code>Input2.leanink</code> respectively. However if you want to provide a lake should be valid for both input files, as you can only provide a single lake file.</p>
+<hr>
+<p dir="auto">To get the supported Lean 4 version of your instance of LeanInk you can do the following:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="leanInk leanVersion
+# OR
+leanInk lV"><pre>leanInk leanVersion
+<span class="pl-c"><span class="pl-c">#</span> OR</span>
+leanInk lV</pre></div>
+<h2 dir="auto"><a id="user-content-usage-in-alectryon" class="anchor" aria-hidden="true" href="#usage-in-alectryon"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Usage in Alectryon</h2>
+<p dir="auto">Alectryon automatically integrates LeanInk internally to analyze a Lean 4 code file or a documentation file with Lean 4 code blocks.
+To embed Lean 4 in code blocks you have to use the <code>lean4::</code> directive for reStructuredText and <code>{lean4}</code> directive for myST markdown files. This is to distinguish the support of Lean 3 and Lean 4 in Alectryon.</p>
+<p dir="auto">For more information about Alectryon make sure to take a look at their repository.</p>
+<h1 dir="auto"><a id="user-content-development" class="anchor" aria-hidden="true" href="#development"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Development</h1>
+<h2 dir="auto"><a id="user-content-experimental-features" class="anchor" aria-hidden="true" href="#experimental-features"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Experimental Features</h2>
+<h3 dir="auto"><a id="user-content-additional-type-hover-metadata" class="anchor" aria-hidden="true" href="#additional-type-hover-metadata"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Additional Type Hover Metadata</h3>
+<p dir="auto">The following flags are experimental and used to display additional information about a source text token in Alectryon. However this feature in Alectryon is still in active development and available here: <a href="https://github.com/insightmind/alectryon/tree/typeid">AlectryonFork:typeid</a>:</p>
+<ul dir="auto">
+<li><code>--x-enable-type-info</code> flag enables extraction of type information</li>
+<li><code>--x-enable-docStrings</code> flag enables extraction of doc strings</li>
+<li><code>--x-enable-semantic-token</code> flag enables extraction of semantic toke types for semantic syntax highlighting support</li>
+</ul>
+<h2 dir="auto"><a id="user-content-running-tests" class="anchor" aria-hidden="true" href="#running-tests"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Running Tests</h2>
+<p dir="auto">There are some aspects you might want to take note of when attempting to develop a feature or fix a bug in LeanInk.</p>
+<p dir="auto">LeanInk uses simple diffing tests to make sure the core functionality works as expected. These tests are located in the <code>./test</code> folder.</p>
+<p dir="auto">You can run these tests using <code>make -C test run_tests</code>. This will run LeanInk for every <code>.lean</code>, that's not a <code>lakefile</code> or part of an <code>lean_package</code>. It will compare the output of LeanInk to the expected output within the <code>.lean.leanInk.expected</code> file.</p>
+<p dir="auto">To capture a new expected output file you can either run <code>make -C test capture</code> to capture the output for all files or use leanInk itself to generate an output for a single file and rename it afterwards.</p>
+<h1 dir="auto"><a id="user-content-contributing" class="anchor" aria-hidden="true" href="#contributing"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Contributing</h1>
+<p dir="auto">LeanInk enforces the same <a href="https://github.com/leanprover/lean4/blob/master/CONTRIBUTING.md">Contribution Guidelines</a> as Lean 4. Before contributing, make sure to read it.</p>
+<p dir="auto">We also highly encourage you to sign your commits.</p>
+</article></div></main>
+</body>
+</html>
