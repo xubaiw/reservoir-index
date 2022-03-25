@@ -50,6 +50,7 @@
  "leanprover-community/mathlib4",
  "leanprover-community/mathport",
  "leanprover-community/test-mathport",
+ "leanprover/LeanInk",
  "leanprover/doc-gen4",
  "leanprover/lake",
  "leanprover/lean4",
