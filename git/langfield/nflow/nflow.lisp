@@ -53,8 +53,7 @@
   "Print each element of LST on a line of its own."
   (loop while lst do
     (format t "~A~%" (car lst))
-    (setq lst (cdr lst)))
-  (terpri))
+    (setq lst (cdr lst))))
 
 (defun make-tree (item)
    "Create a new node with item."
@@ -137,10 +136,12 @@
     (let*
       ((i 0))
       (for:for ((line over lines))
-        (if (not (str:starts-with? "- " line))
+        (if (not (str:starts-with? "- " (str:trim line)))
           (progn
             (if (< i position-of-empty-line)
-              (error "Unchecked item: '~A' is above delimiter on line: ~A~%" line position-of-empty-line))
+              (progn
+                (format t "error: Unchecked item: '~A' is above delimiter on line: ~A~%" line position-of-empty-line)
+                (quit)))
             (if (equal i position-of-empty-line)
               (assert (equal line "")))))
         (setq i (1+ i)))
@@ -177,7 +178,9 @@
     ; If INDENT-DELTA is not a multiple of INDENT-SIZE, we have inconsistent
     ; indentation.
     (if (not (equal (mod indent-delta indent-size) 0))
-      (error "Inconsistent indentation on line with contents: ~A~%" line))
+      (progn
+        (format t "error: Inconsistent indentation on line with contents: ~A~%" line)
+        (quit)))
 
     ; Return (NUM-INDENTS, INDENT-SIZE).
     (list (floor indent-delta indent-size) indent-size)))
@@ -484,8 +487,13 @@
     ;; Nflow-specific stuff.
     (let*
         ((lines (get-file (nth 0 free-args)))
-         (start-0-indexed (- (getf options :start) 1))
-         (head (slice lines 0 start-0-indexed))
-         (tail (slice lines start-0-indexed (length lines))))
-      (format t "~A~%" head)
-      (print-elements-of-list (reflow-dashed-lines tail)))))
+         (start-0-indexed 0)
+         (head '()))
+      (when-option (options :start)
+                   (setq start-0-indexed (- (getf options :start) 1)))
+      (if (> start-0-indexed 0)
+          (setq head (slice lines 0 start-0-indexed)))
+      (let*
+           ((tail (slice lines start-0-indexed (length lines))))
+        (print-elements-of-list head)
+        (print-elements-of-list (reflow-dashed-lines tail))))))
