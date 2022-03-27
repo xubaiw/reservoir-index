@@ -80,7 +80,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   The _less than or equal to_ relation is preserved when the same value is
   removed from an addition on both sides.
   -/
-  le_cancellative_add : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+  le_cancellative_add : AA.Cancellative (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
 
   /-- Weakens equality to _less than or equal to_. -/
   le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m

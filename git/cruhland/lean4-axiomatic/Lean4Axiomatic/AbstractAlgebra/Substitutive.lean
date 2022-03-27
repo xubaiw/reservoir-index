@@ -197,6 +197,26 @@ instance
     have : rel (f x y) (f x y) := Eqv.refl
     exact substR (rβ := (· → ·)) comm ‹rel (f x y) (f x y)›
 
+/--
+Derives the right-handed binary generalized substitution property from its
+left-handed counterpart, provided that the relation `rβ` satisfies a few
+properties.
+
+**Intuition**: if `rβ` permits exchanging the arguments to `f`, then we can
+switch them, apply left-handed substitution, and switch back.
+
+**Named parameters**
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized substitution property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+
+**Class parameters**
+- `Trans rβ`: needed to join the steps of the proof together.
+- `Swap f rβ`: needed to temporarily move the right argument of `f` to the left
+  position, so that left-handed substitution can be applied to it.
+-/
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
@@ -211,7 +231,19 @@ def substR_from_substL_swap
     rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
     rβ (f x₂ y) (f y x₂) := Swap.swap
 
-instance eqv_substL
+/--
+The left-hand side of an equivalence can be replaced by an equivalent value.
+
+**Intuition**: this is a somewhat trivial case of binary substitution,
+essentially just transivity expressed in a slightly different way.
+
+**Named parameters**
+- `α`: the type of values involved in the equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
+-/
+def eqv_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
   constructor
@@ -219,17 +251,39 @@ instance eqv_substL
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
-instance eqv_substR
-    {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.R (α := α) (· ≃ ·) (· ≃ ·) (· → ·) :=
-  substR_from_substL_swap eqv_substL
+/--
+Equivalence respects the binary generalized substitution property.
 
+**Intuition**: see `eqv_substL` for the left-handed property. The right-handed
+property follows from the symmetry of equivalence.
+
+**Named parameters**
+- `α`: the type of values involved in the equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
+-/
 instance eqv_substitutive {α : Sort u} [EqvOp α]
     : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) where
   substitutiveL := eqv_substL
-  substitutiveR := eqv_substR
+  substitutiveR := substR_from_substL_swap eqv_substL
 
-instance neq_substL
+/--
+The left-hand side of a negated equivalence can be replaced by an equivalent
+value.
+
+**Intuition**: if we know two terms are unequal, and replace the left-hand one
+with an equivalent term, the right-hand term should still be unequal to the new
+term.
+
+**Named parameters**
+- `α`: the type of values involved in the (negated) equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
+  `α`.
+-/
+def neq_substL
     {α : Sort u} [EqvOp α]
     : SubstitutiveOn Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
   constructor
@@ -239,34 +293,129 @@ instance neq_substL
   show x₁ ≃ y
   exact Eqv.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
 
+/--
+Negated equivalence respects the binary generalized substitution property.
+
+**Intuition**: see `neq_substL` for the left-handed property. The right-handed
+property follows from the symmetry of negated equivalence.
+
+**Named parameters**
+- `α`: the type of values involved in the (negated) equivalence.
+
+**Class parameters**
+- `EqvOp α`: needed for (in)equivalence to be expressed between terms of type
+  `α`.
+-/
 instance neq_substitutive
     {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) (· ≃ ·) (· → ·)
     where
   substitutiveL := neq_substL
   substitutiveR := substR_from_substL_swap neq_substL
 
-class Cancellative
+/--
+Class for types and operations that satisfy either the left- or right-handed
+generalized cancellation property.
+
+For more information see `CancellativeOn.cancel`.
+
+**Named parameters**
+- `hand`: indicates whether the property is left- or right-handed.
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized cancellation property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+-/
+class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+  /--
+  The left- or right-handed generalized cancellation property of a binary
+  operation `f`.
+
+  This property is in some sense the converse of the generalized substitution
+  property; see `SubstitutiveOn.subst₂`. It says: knowing that the results of
+  two invocations of `f` satisfy the relation `rβ` tells us that the two left-
+  or right-handed arguments to `f` satisfy the relation `rα`.
+
+  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
+  relation. A simple example is of addition on natural numbers: if we know that
+  `n₁ + m ≃ n₂ + m`, or that `m + n₁ ≃ m + n₂`, then we can conclude that
+  `n₁ ≃ n₂`.
+
+  **Named parameters**
+  - see `CancellativeOn` for the class parameters.
+  - `x`: the "cancelled" argument to `f`; the `hand` parameter
+    indicates which side of `f` it appears on.
+  - `y₁` and `y₂`: the other arguments to `f`; appearing on the side opposite
+    `hand`. They are related by `rα` in the result.
+  -/
   cancel
     {x y₁ y₂ : α} : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
 
-export Cancellative (cancel)
+export CancellativeOn (cancel)
 
+/--
+Convenience function for the left-handed generalized cancellation property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
 abbrev cancelL := @cancel Hand.L
+
+/--
+Convenience function for the right-handed generalized cancellation property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
 abbrev cancelR := @cancel Hand.R
 
-class Cancellative₂
+/--
+Convenience class for types and operations that satisfy the full (left- **and**
+right-handed) generalized cancellation property.
+
+See `CancellativeOn` for detailed documentation.
+-/
+class Cancellative
     {α : Sort u} {β : Sort v}
     (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
-  cancellativeL : Cancellative Hand.L f rα rβ
-  cancellativeR : Cancellative Hand.R f rα rβ
+  cancellativeL : CancellativeOn Hand.L f rα rβ
+  cancellativeR : CancellativeOn Hand.R f rα rβ
 
+attribute [instance] Cancellative.cancellativeL
+attribute [instance] Cancellative.cancellativeR
+
+/--
+Derives the right-handed generalized cancellation property from its left-handed
+counterpart, provided that the types and operations involved obey some
+restrictions.
+
+**Intuition**: if `f` is commutative and `rβ` supports substitution, then the
+arguments to `f` can be swapped so that left-handed cancellation can be used.
+
+**Named parameters**
+- `α`: the argument type of the binary operation `f`.
+- `β`: the result type of the binary operation `f`.
+- `f`: the binary operation that obeys the generalized cancellation property.
+- `rα`: a binary relation over `f`'s argument type `α`.
+- `rβ`: a binary relation over `f`'s result type `β`.
+
+**Class parameters**
+- `EqvOp β`: needed for both the `Commutative` and `Substitutive₂` parameters
+- `Commutative f`: needed for swapping the arguments to `f`.
+- `Substitutive₂ rβ (· ≃ ·) (· → ·)`: needed to update the right-handed
+  hypothesis involving `rβ` to a left-handed hypothesis.
+-/
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
     [EqvOp β] [Commutative f] [Substitutive₂ rβ (· ≃ ·) (· → ·)]
-    : Cancellative Hand.L f rα rβ → Cancellative Hand.R f rα rβ := by
+    : CancellativeOn Hand.L f rα rβ → CancellativeOn Hand.R f rα rβ := by
   intro
   constructor
   intro x y₁ y₂ (hyp : rβ (f y₁ x) (f y₂ x))

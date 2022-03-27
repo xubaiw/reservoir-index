@@ -199,18 +199,14 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
     _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
   exact Addition.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
 
-instance le_cancelL_add
-    : AA.Cancellative AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+def le_cancelL_add
+    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
   cancel := le_cancel_add
 
-instance le_cancelR_add
-    : AA.Cancellative AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.cancelR_from_cancelL le_cancelL_add
-
 instance le_cancellative_add
-    : AA.Cancellative₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+    : AA.Cancellative (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
   cancellativeL := le_cancelL_add
-  cancellativeR := le_cancelR_add
+  cancellativeR := AA.cancelR_from_cancelL le_cancelL_add
 
 theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   intro (_ : n ≤ m) (_ : m ≤ n)
