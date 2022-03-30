@@ -1,6 +1,25 @@
 Unreleased
 ---------
 
+* "Cleanup" local context before elaborating a `match` alternative right-hand-side. Examples:
+```lean
+example (x : Nat) : Nat :=
+  match g x with
+  | (a, b) => _ -- Local context does not contain the auxiliary `_discr := g x` anymore
+
+example (x : Nat × Nat) (h : x.1 > 0) : f x > 0 := by
+  match x with
+  | (a, b) => _ -- Local context does not contain the `h✝ : x.fst > 0` anymore
+```
+
+* Improve `let`-pattern (and `have`-pattern) macro expansion. In the following example,
+```lean
+example (x : Nat × Nat) : f x > 0 := by
+  let (a, b) := x
+  done
+```
+The resulting goal is now `... |- f (a, b) > 0` instead of `... |- f x > 0`.
+
 * Add cross-compiled [aarch64 Linux](https://github.com/leanprover/lean4/pull/1066) and [aarch64 macOS](https://github.com/leanprover/lean4/pull/1076) releases.
 
 * [Add tutorial-like examples to our documentation](https://github.com/leanprover/lean4/tree/master/doc/examples), rendered using LeanInk+Alectryon.

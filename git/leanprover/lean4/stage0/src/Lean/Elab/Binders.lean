@@ -3,10 +3,11 @@ Copyright (c) 2019 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
+import Lean.Parser.Term
 import Lean.Elab.Quotation.Precheck
 import Lean.Elab.Term
 import Lean.Elab.BindersUtil
-import Lean.Parser.Term
+import Lean.Elab.AuxDiscr
 
 namespace Lean.Elab.Term
 open Meta
@@ -410,7 +411,7 @@ private def expandMatchAltsIntoMatchAux (matchAlts : Syntax) (matchTactic : Bool
     else
       `(match $[$discrs:term],* with $matchAlts:matchAlts)
   | n+1, discrs => withFreshMacroScope do
-    let x ← `(x)
+    let x ← mkAuxFunDiscr -- Recall that identifiers created with `mkAuxFunDiscr` are cleared by the `match` elaborator
     let d ← `(@$x:ident) -- See comment below
     let body ← expandMatchAltsIntoMatchAux matchAlts matchTactic n (discrs.push d)
     if matchTactic then
@@ -500,9 +501,10 @@ def expandMatchAltsWhereDecls (matchAltsWhereDecls : Syntax) : MacroM Syntax :=
       else
         expandWhereDeclsOpt whereDeclsOpt matchStx
     | n+1 => withFreshMacroScope do
-      let d ← `(@x) -- See comment at `expandMatchAltsIntoMatch`
-      let body ← loop n (discrs.push d)
-      `(@fun x => $body)
+      -- See comment at `expandMatchAltsIntoMatch`,
+      let d ← mkAuxFunDiscr
+      let body ← loop n (discrs.push (← `(@$d:ident)))
+      `(@fun $d:ident => $body)
   loop (getMatchAltsNumPatterns matchAlts) #[]
 
 @[builtinMacro Lean.Parser.Term.fun] partial def expandFun : Macro
@@ -623,16 +625,18 @@ def elabLetDeclCore (stx : Syntax) (expectedType? : Option Expr) (useLetExpr : B
     elabLetDeclAux id binders type val body expectedType? useLetExpr elabBodyFirst usedLetOnly
   else if letDecl.getKind == `Lean.Parser.Term.letPatDecl then
     -- node `Lean.Parser.Term.letPatDecl  $ try (termParser >> pushNone >> optType >> " := ") >> termParser
+    if elabBodyFirst then
+      throwError "'let_delayed' with patterns is not allowed"
     let pat     := letDecl[0]
     let optType := letDecl[2]
-    let type    := expandOptType pat optType
     let val     := letDecl[4]
-    let stxNew ← `(let x : $type := $val; match x with | $pat => $body)
-    let stxNew := match useLetExpr, elabBodyFirst with
-      | true,  false => stxNew
-      | true,  true  => stxNew.setKind `Lean.Parser.Term.«let_delayed»
-      | false, false => stxNew.setKind `Lean.Parser.Term.«let_fun»
-      | false, true  => unreachable!
+    -- We are currently treating `let_fun` and `let` the same way when patterns are used.
+    let stxNew ←
+      if optType.isNone then
+        `(match $val:term with | $pat => $body)
+      else
+        let type := optType[0][1]
+        `(match ($val:term : $type) with | $pat => $body)
     withMacroExpansion stx stxNew <| elabTerm stxNew expectedType?
   else if letDecl.getKind == `Lean.Parser.Term.letEqnsDecl then
     let letDeclIdNew ← liftMacroM <| expandLetEqnsDecl letDecl

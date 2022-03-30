@@ -342,18 +342,11 @@ an Aesop rule. Currently available builders are:</p>
 hypothesis <code>x</code> to the target. The rule acts like the tactic <code>apply x</code>.</p>
 </li>
 <li>
-<p dir="auto"><strong><code>forward</code></strong>: when applied to a declaration or hypothesis with type <code>A₁ → ... Aₙ → B</code>, generates a rule which adds a hypothesis <code>h : B</code> to the goal's
-context and produces subgoals with targets <code>A₁</code>, ..., <code>Aₙ</code> (unless some of the
-<code>Aᵢ</code> were already determined by unification, in which case no subgoal is
-generated for them). A subset of the <code>Aᵢ</code> can also be marked as <strong>immediate</strong>
-when the builder is used. Then the rule will only be applied to goals which,
-for each immediate <code>Aᵢ</code>, contain a hypothesis <code>h : Aᵢ</code>. Example: consider
-the lemma <code>even_or_odd</code>.</p>
+<p dir="auto"><strong><code>forward</code></strong>: when applied to a declaration or hypothesis of type <code>A₁ → ... Aₙ → B</code>, generates a rule which looks for hypotheses <code>h₁ : A₁</code>, ..., <code>hₙ : Aₙ</code>
+in the goal and, if they are found, adds a new hypothesis <code>h : B</code>. As an
+example, consider the lemma <code>even_or_odd</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="even_or_odd : ∀ (n : Nat), Even n ∨ Odd n"><pre>even_or_odd : ∀ (n : Nat), Even n ∨ Odd n</pre></div>
-<p dir="auto">Registering this as a forward rule with <code>n</code> immediate, i.e.</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(forward (immediate := n)) even_or_odd"><pre lang="text"><code>(forward (immediate := n)) even_or_odd
-</code></pre></div>
-<p dir="auto">will cause the goal</p>
+<p dir="auto">Registering this as a forward rule will cause the goal</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
 m : Nat
 ⊢ T"><pre>n : Nat
@@ -369,6 +362,16 @@ hn : Even n ∨ Odd n
 m : Nat
 hm : Even m ∨ Odd m
 ⊢ T</pre></div>
+<p dir="auto">The forward builder may also be given a list of <em>immediate names</em>:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(forward (immediate := [n])) even_or_odd "><pre><code>(forward (immediate := [n])) even_or_odd 
+</code></pre></div>
+<p dir="auto">The immediate names, here <code>n</code>, refer to the arguments of <code>even_or_odd</code>. When
+Aesop applies a forward rule with explicit immediate names, it only matches
+the corresponding arguments to hypotheses. (Here, <code>even_or_odd</code> has only one
+argument, so there is no difference.)</p>
+<p dir="auto">When no immediate names are given, Aesop considers every argument immediate,
+except for instance arguments and dependent arguments (i.e. those that can be
+inferred from the types of later arguments).</p>
 </li>
 <li>
 <p dir="auto"><strong><code>constructors</code></strong>: when applied to an inductive type or structure <code>T</code>,

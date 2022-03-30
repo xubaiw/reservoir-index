@@ -25,12 +25,9 @@ where
     match (← reduceRecMatcher? e) with
     | some e' => return Simp.Step.done { expr := e' }
     | none    =>
-      for matchEq in (← Match.getEquationsFor app.matcherName).eqnNames do
-        -- Try lemma
-        match (← withReducible <| Simp.tryTheorem? e { proof := mkConst matchEq, name? := some matchEq } SplitIf.discharge?) with
-        | none   => pure ()
-        | some r => return Simp.Step.done r
-      return Simp.Step.visit { expr := e }
+      match (← Simp.simpMatchCore? app e SplitIf.discharge?) with
+      | some r => return r
+      | none => return Simp.Step.visit { expr := e }
 
 def simpMatchTarget (mvarId : MVarId) : MetaM MVarId := withMVarContext mvarId do
   let target ← instantiateMVars (← getMVarType mvarId)
@@ -61,9 +58,15 @@ private def simpMatchTargetCore (mvarId : MVarId) (matchDeclName : Name) (matchE
     | some proof => replaceTargetEq mvarId r.expr proof
     | none => replaceTargetDefEq mvarId r.expr
 
-private def generalizeMatchDiscrs (mvarId : MVarId) (discrs : Array Expr) : MetaM (Array FVarId × MVarId) := do
+/--
+  Use `generalize` to make sure each discriminant is a free variable.
+  Return the tuple `(discrsNew, discrEqs, mvarId)`. `discrsNew` in an array representing the new discriminants, `discrEqs` is an array of auxiliary equality hypotheses
+  that connect the new discriminants to the original terms they represent.
+  Remark: `discrEqs.size ≤ discrsNew.size`
+-/
+private def generalizeMatchDiscrs (mvarId : MVarId) (discrs : Array Expr) : MetaM (Array FVarId × Array FVarId × MVarId) := do
   if discrs.all (·.isFVar) then
-    return (discrs.map (·.fvarId!), mvarId)
+    return (discrs.map (·.fvarId!), #[], mvarId)
   else
     let discrsToGeneralize := discrs.filter fun d => !d.isFVar
     let args ← discrsToGeneralize.mapM fun d => return { expr := d, hName? := (← mkFreshUserName `h) : GeneralizeArg }
@@ -76,7 +79,14 @@ private def generalizeMatchDiscrs (mvarId : MVarId) (discrs : Array Expr) : Meta
       else
         result := result.push fvarIdsNew[j]
         j := j + 1
-    return (result, mvarId)
+    return (result, fvarIdsNew[j:], mvarId)
+
+private def substDiscrEqs (mvarId : MVarId) (discrEqs : Array FVarId) : MetaM MVarId := do
+  let mut mvarId := mvarId
+  for fvarId in discrEqs.reverse do
+    trace[Meta.Tactic.split] "subst auxiliary eq {mkFVar fvarId} : {← inferType (mkFVar fvarId)}"
+    mvarId ← trySubst mvarId fvarId
+  return mvarId
 
 def applyMatchSplitter (mvarId : MVarId) (matcherDeclName : Name) (us : Array Level) (params : Array Expr) (discrs : Array Expr) : MetaM (List MVarId) := do
   let some info ← getMatcherInfo? matcherDeclName | throwError "'applyMatchSplitter' failed, '{matcherDeclName}' is not a 'match' auxiliary declaration."
@@ -87,10 +97,14 @@ def applyMatchSplitter (mvarId : MVarId) (matcherDeclName : Name) (us : Array Le
     us := us.set! uElimPos levelZero
   let splitter := mkAppN (mkConst matchEqns.splitterName us.toList) params
   let motiveType := (← whnfForall (← inferType splitter)).bindingDomain!
-  let (discrFVarIds, mvarId) ← generalizeMatchDiscrs mvarId discrs
+  trace[Meta.Tactic.split] "applyMatchSplitter\n{mvarId}"
+  let (discrFVarIds, discrEqs, mvarId) ← generalizeMatchDiscrs mvarId discrs
+  trace[Meta.Tactic.split] "after generalizeMatchDiscrs\n{mvarId}"
   let mvarId ← generalizeTargetsEq mvarId motiveType (discrFVarIds.map mkFVar)
+  trace[Meta.Tactic.split] "after generalize\n{mvarId}"
   let numEqs := discrs.size
   let (discrFVarIdsNew, mvarId) ← introN mvarId discrs.size
+  trace[Meta.Tactic.split] "after introN\n{mvarId}"
   let discrsNew := discrFVarIdsNew.map mkFVar
   withMVarContext mvarId do
     let motive ← mkLambdaFVars discrsNew (← getMVarType mvarId)
@@ -102,9 +116,11 @@ def applyMatchSplitter (mvarId : MVarId) (matcherDeclName : Name) (us : Array Le
     let (_, mvarIds) ← mvarIds.foldlM (init := (0, [])) fun (i, mvarIds) mvarId => do
       let numParams := matchEqns.splitterAltNumParams[i]
       let (_, mvarId) ← introN mvarId numParams
+      trace[Meta.Tactic.split] "before unifyEqs\n{mvarId}"
       match (← Cases.unifyEqs numEqs mvarId {}) with
       | none   => return (i+1, mvarIds) -- case was solved
       | some (mvarId, _) =>
+        let mvarId ← substDiscrEqs mvarId discrEqs
         return (i+1, mvarId::mvarIds)
     return mvarIds.reverse
 
