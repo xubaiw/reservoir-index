@@ -1,6 +1,7 @@
 Examples
 ========
 
+- [Palindromes](examples/palindromes.lean.html)
 - [A Certified Type Checker](examples/tc.lean.html)
 - [The Well-Typed Interpreter](examples/interp.lean.html)
 - [Dependent de Bruijn Indices](examples/deBruijn.lean.html)

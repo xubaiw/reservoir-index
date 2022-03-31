@@ -372,6 +372,36 @@ argument, so there is no difference.)</p>
 <p dir="auto">When no immediate names are given, Aesop considers every argument immediate,
 except for instance arguments and dependent arguments (i.e. those that can be
 inferred from the types of later arguments).</p>
+<p dir="auto">When a forward rule has been successfully applied, it will not be tried again
+when processing its subgoals (and their subgoals, etc.). Without this limit,
+many forward rules would be applied infinitely often.</p>
+</li>
+<li>
+<p dir="auto"><strong><code>elim</code></strong>: works like <code>forward</code>, but after the rule has been applied,
+hypotheses that were used as immediate arguments are cleared. As the name
+suggests, this is useful when you want to eliminate a hypothesis. E.g. the
+rule</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm elim]
+theorem and_elim_right : α ∧ β → α := ..."><pre><code>@[aesop norm elim]
+theorem and_elim_right : α ∧ β → α := ...
+</code></pre></div>
+<p dir="auto">will cause the goal</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : (α ∧ β) ∧ γ
+h₂ : δ ∧ ε"><pre><code>h₁ : (α ∧ β) ∧ γ
+h₂ : δ ∧ ε
+</code></pre></div>
+<p dir="auto">to be transformed into</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : α
+h₂ : δ"><pre><code>h₁ : α
+h₂ : δ
+</code></pre></div>
+<p dir="auto">Unlike with <code>forward</code> rules, when an <code>elim</code> rule is successfully applied, it
+may be applied again to the resulting subgoals (and their subgoals, etc.).
+There is less danger of infinite cycles because the original hypothesis is
+cleared.</p>
+<p dir="auto">However, if the hypothesis or hypotheses to which the <code>elim</code> rule is applied
+have dependencies, they are not cleared. In this case, you'll probably get
+an infinite cycle. (TODO fix this.)</p>
 </li>
 <li>
 <p dir="auto"><strong><code>constructors</code></strong>: when applied to an inductive type or structure <code>T</code>,
