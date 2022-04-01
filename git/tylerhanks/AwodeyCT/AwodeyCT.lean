@@ -16,6 +16,9 @@ export Category (hom id comp)
 structure functor (C : Type u₁) (D : Type u₂) [Category C] [Category D] where
   ob_map : C → D
   hom_map : ∀ {A B : C}, (hom A B) → (hom (ob_map A) (ob_map B))
+  preserve_units : ∀ {A : C}, hom_map (Category.id A) = Category.id (ob_map A)
+  preserve_comp : ∀ {X Y Z : C} (f : hom X Y) (g : hom Y Z),
+    hom_map (comp f g) = comp (hom_map f) (hom_map g)
 
 #check functor
 
@@ -45,10 +48,33 @@ instance : Category One where
 
 #eval Category.id one
 #eval comp (Category.id one) (Category.id one)
-#check { ob_map := fun x => one, hom_map := fun x => OneId.mk one one : functor One One }
 
-def functor_to_one (C : Type u) [Category C] : (functor C One) :=
-    { ob_map := fun _ => one, hom_map := fun _ => OneId.mk one one : functor C One }
+def endo_one : functor One One := {
+  ob_map := fun _ => one,
+  hom_map := fun _ => OneId.mk one one,
+  preserve_units := by
+    simp
+    rfl
+  preserve_comp := by
+    simp
+    intros
+    rfl
+}
+
+#check endo_one
+#eval endo_one.ob_map one
+
+def functor_to_one (C : Type u) [Category C] : (functor C One) := { 
+  ob_map := fun _ => one, 
+  hom_map := fun _ => OneId.mk one one
+  preserve_units := by
+    simp
+    rfl
+  preserve_comp := by
+    simp
+    intros
+    rfl  
+}
 
 end CategoryOne
 
@@ -124,3 +150,41 @@ instance : Monoid Nat where
     rw [Nat.add_assoc]
 
 end CatMonoid
+
+section PreorderCats
+
+class Preorder (Ob : Type u) where
+  leq : Ob → Ob → Bool
+  leq_ref : ∀ a : Ob, leq a a
+  leq_trans : ∀ a b c : Ob, (leq a b) → (leq b c) → (leq a c)
+  leq_decidable : ∀ a b : Ob, Decidable (leq a b)
+
+instance NatPreorder : Preorder Nat where
+  leq := fun (x y : Nat) => x ≤ y
+  leq_ref := by simp 
+  leq_trans := by 
+    simp
+    apply Nat.le_trans
+  leq_decidable a b := by
+    simp
+    apply Nat.decLe
+
+instance NatMod4Preorder : Preorder Nat where
+  leq a b := a / 4 ≤ b / 4
+  leq_ref := by simp
+  leq_trans a b c := by
+    simp
+    apply Nat.le_trans
+  leq_decidable a b := by
+    simp
+    apply Nat.decLe
+
+#eval NatPreorder.leq 3 0 -- false
+#eval NatMod4Preorder.leq 3 0 -- true
+
+structure monotone_map (C : Type u₁) (D : Type u₂) [Preorder C] [Preorder D] where
+
+
+
+
+end PreorderCats
