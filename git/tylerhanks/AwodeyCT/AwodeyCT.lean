@@ -154,20 +154,20 @@ end CatMonoid
 section PreorderCats
 
 class Preorder (Ob : Type u) where
-  leq : Ob → Ob → Bool
+  leq : Ob → Ob → Prop
   leq_ref : ∀ a : Ob, leq a a
   leq_trans : ∀ a b c : Ob, (leq a b) → (leq b c) → (leq a c)
   leq_decidable : ∀ a b : Ob, Decidable (leq a b)
 
-instance NatPreorder : Preorder Nat where
-  leq := fun (x y : Nat) => x ≤ y
+/-instance NatPreorder : Preorder Nat where
+  leq := Nat.le
   leq_ref := by simp 
   leq_trans := by 
     simp
     apply Nat.le_trans
   leq_decidable a b := by
     simp
-    apply Nat.decLe
+    apply Nat.decLe-/
 
 instance NatMod4Preorder : Preorder Nat where
   leq a b := a / 4 ≤ b / 4
@@ -179,12 +179,42 @@ instance NatMod4Preorder : Preorder Nat where
     simp
     apply Nat.decLe
 
-#eval NatPreorder.leq 3 0 -- false
-#eval NatMod4Preorder.leq 3 0 -- true
+#check Nat.le
 
-structure monotone_map (C : Type u₁) (D : Type u₂) [Preorder C] [Preorder D] where
+--def eval_leq (a b : α) (leq : α → α → Prop) : Bool :=
+  --let p := leq a b
 
+--#check NatPreorder.leq
 
+--#eval NatPreorder.leq 5 7 -- false
+--#eval Nat.ble_eq_true_of_le (NatMod4Preorder.leq 3 0) -- true
+
+--structure monotone_map (C : Type u₁) (D : Type u₂) [Preorder C] [Preorder D] where
+
+structure bottom (C : Type u) [Preorder C] where
+  bot : C
+  is_bottom : ∀ x : C, Preorder.leq bot x
+
+-- Something is wrong because I can "prove" that 0 is the bottom of this cyclic preorder with no bottoms :(
+def nat_bottom : bottom Nat := {
+  bot := 0
+  is_bottom := by
+    intro x
+    apply Nat.zero_le
+}
+
+#check nat_bottom
+
+structure join (C : Type u) (a b : C) (P : Preorder C) where
+  j : C
+  upper_bound : (P.leq a j) ∧ (P.leq b j)
+  least: ∀ x : C, (P.leq a x) → (P.leq b x) → (P.leq j x)
+
+structure has_all_joins (C : Type u) (P : Preorder C) where
+  pf : ∀ (a b : C), ∃ (j : C),
+    (P.leq a j) ∧ (P.leq b j) ∧ (∀ x : C, (P.leq a x) → (P.leq b x) → (P.leq j x))
+
+--theorem bottom_implies_all_joins : ∀ (C : Type u) [Preorder C]
 
 
 end PreorderCats

@@ -176,8 +176,34 @@ structure FrequencyData where
   typeTermFreqs: HashMap (Name × Name) Nat
   typeTermMap : HashMap Name (HashMap Name Nat)
   allObjects : HashSet Name
+  triples: Array (Name × (Array Name) × (Array Name))
 
 namespace FrequencyData
+
+def asJson(fd: FrequencyData) : Json := 
+  let namesJs := toJson fd.allObjects.toArray
+  let termsJs := toJson <| 
+      fd.termFreqs.toArray.map (fun (n, c) => 
+        Json.mkObj [("name", toJson n),("count", toJson c)])
+  let typesJs := toJson <|
+    fd.typeFreqs.toArray.map (fun (n, c) => 
+        Json.mkObj [("name", toJson n),("count", toJson c)])
+  let typeTermJs := toJson <| 
+        fd.typeTermFreqs.toArray.map (
+          fun ((term, type), count) =>
+            Json.mkObj [("term", toJson term), ("type", toJson type), ("count", toJson count)])
+        
+  let typeTermMapJs := 
+    toJson <| (fd.typeTermMap.toArray).map (fun (n, m) => 
+        (n, m.toArray))
+  let sizeJs := toJson fd.size
+  let triplesJs := fd.triples.map (fun (n, l, t) => 
+      Json.mkObj [("name", toJson n), ("terms", toJson l), ("types", toJson t)])
+  Json.mkObj [
+    ("names", namesJs), ("terms", termsJs), ("types", typesJs),
+    ("type-terms", typeTermJs), ("type-term-map", typeTermMapJs),
+    ("size", sizeJs), ("triples", toJson triplesJs)]
+
 /-- from off-spring triple obtain frequency data; not counting multiple occurences -/
 def get (triples: Array (Name × (Array Name) × (Array Name))) : IO FrequencyData := do
   let size := triples.size
@@ -200,7 +226,7 @@ def get (triples: Array (Name × (Array Name) × (Array Name))) : IO FrequencyDa
         let trms := (typeTermMap.findD y HashMap.empty)
         let trms := trms.insert x (trms.findD x 0 + 1)
         typeTermMap := typeTermMap.insert y trms 
-  pure ⟨size, termFreqs, typeFreqs, typeTermFreqs, typeTermMap, allObjects⟩
+  pure ⟨size, termFreqs, typeFreqs, typeTermFreqs, typeTermMap, allObjects, triples⟩
 
 /-- from off-spring triple obtain frequency data; counting multiple occurences -/
 def withMultiplicity(triples: Array (Name × (Array Name) × (Array Name))) : IO FrequencyData := do
@@ -224,7 +250,7 @@ def withMultiplicity(triples: Array (Name × (Array Name) × (Array Name))) : IO
         let trms := (typeTermMap.findD y HashMap.empty)
         let trms := trms.insert x (trms.findD x 0 + 1)
         typeTermMap := typeTermMap.insert y trms 
-  pure ⟨size, termFreqs, typeFreqs, typeTermFreqs, typeTermMap, allObjects⟩
+  pure ⟨size, termFreqs, typeFreqs, typeTermFreqs, typeTermMap, allObjects, triples⟩
 
 /-- frequency of occurence of names in definitions -/
 def termFreqData (data: FrequencyData) : IO (Array (Name × Nat)) := do
@@ -300,12 +326,14 @@ def matrixData(triples: Array (Name × (Array Name) × (Array Name))) :
 
 /-- Json data: array names of definitions; frequency matrices of occurence of names in definitions and in types of definitions -/
 def matrixJson(triples: Array (Name × (Array Name) × (Array Name))) : Json :=
-  let (objects, termsArray, typesArr) := matrixData triples
+  let (objects, termsArray, typeTermsMatrix) := matrixData triples
   let namesJs := toJson objects
   let termsJs := toJson termsArray
-  let typesJs := toJson typesArr
+  let typesJs := toJson typeTermsMatrix
   Json.mkObj [("names", namesJs), ("terms", termsJs), ("types", typesJs)]
 
 /-- String of Json data: array names of definitions; frequency matrices of occurence of names in definitions and in types of definitions -/
 def matrixView(triples: Array (Name × (Array Name) × (Array Name))) : String :=
   (matrixJson triples).pretty
+
+instance [ToJson FrequencyData] : ToJson FrequencyData := ⟨FrequencyData.asJson⟩
