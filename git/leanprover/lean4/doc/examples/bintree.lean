@@ -105,10 +105,11 @@ The proof of the auxiliary theorem is by induction on `t`\ .
 The `generalizing acc` modifier instructs Lean to revert `acc`\ , apply the
 induction theorem for `Tree`\ s, and then reintroduce `acc` in each case.
 By using `generalizing`\ , we obtain the more general induction hypotheses
-```lean
-left_ih : ∀ acc, toListTR.go left acc = toList left ++ acc
-right_ih : ∀ acc, toListTR.go right acc = toList right ++ acc
-```
+
+- `left_ih : ∀ acc, toListTR.go left acc = toList left ++ acc`
+
+- `right_ih : ∀ acc, toListTR.go right acc = toList right ++ acc`
+
 Recall that the combinator `tac <;> tac'` runs `tac` on the main goal and `tac'` on each produced goal,
 concatenating all goals produced by `tac'`\ . In this theorem, we use it to apply
 `simp` and close each subgoal produced by the `induction` tactic.
@@ -120,7 +121,8 @@ In this particular case, `simp` uses the induction hypotheses as rewriting rules
 Finally, the parameter `List.append_assoc` intructs the simplifier to use the
 `List.append_assoc` theorem as a rewriting rule.
 -/
-theorem Tree.toList_eq_toListTR (t : Tree β) : t.toList = t.toListTR := by
+theorem Tree.toList_eq_toListTR (t : Tree β)
+        : t.toList = t.toListTR := by
   simp [toListTR, go t []]
 where
   go (t : Tree β) (acc : List (Nat × β))
@@ -132,7 +134,8 @@ where
 The `[csimp]` annotation instructs the Lean code generator to replace
 any `Tree.toList` with `Tree.toListTR` when generating code.
 -/
-@[csimp] theorem Tree.toList_eq_toListTR_csimp : @Tree.toList = @Tree.toListTR := by
+@[csimp] theorem Tree.toList_eq_toListTR_csimp
+                 : @Tree.toList = @Tree.toListTR := by
   funext β t
   apply toList_eq_toListTR
 
