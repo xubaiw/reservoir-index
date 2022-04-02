@@ -70,7 +70,7 @@ syntax "`[Expr|" term "]" : term
 macro_rules
   | `(`[Expr|true])      => `((true : Expr))
   | `(`[Expr|false])     => `((false : Expr))
-  | `(`[Expr|$n:numLit]) => `(($n : Expr))
+  | `(`[Expr|$n:num])    => `(($n : Expr))
   | `(`[Expr|$x:ident])  => `(($(Lean.quote x.getId.toString) : Expr))
   | `(`[Expr|$x = $y])   => `(Expr.bin `[Expr|$x] BinOp.eq `[Expr|$y])
   | `(`[Expr|$x && $y])  => `(Expr.bin `[Expr|$x] BinOp.and `[Expr|$y])
@@ -310,10 +310,10 @@ instance : Repr State where
   induction e with simp
   | bin lhs op rhs ih_lhs ih_rhs =>
     simp [← ih_lhs, ← ih_rhs]
-    split <;> simp
+    split <;> simp [*]
   | una op arg ih_arg =>
     simp [← ih_arg]
-    split <;> simp
+    split <;> simp [*]
 
 @[simp] def Stmt.simplify : Stmt → Stmt
   | skip => skip

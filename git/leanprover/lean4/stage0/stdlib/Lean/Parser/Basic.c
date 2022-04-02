@@ -12389,7 +12389,7 @@ static lean_object* _init_l_Lean_Parser_numLitNoAntiquot___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("numLit");
+x_1 = lean_mk_string("num");
 return x_1;
 }
 }
@@ -12505,7 +12505,7 @@ static lean_object* _init_l_Lean_Parser_scientificLitNoAntiquot___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("scientificLit");
+x_1 = lean_mk_string("scientific");
 return x_1;
 }
 }
@@ -12621,7 +12621,7 @@ static lean_object* _init_l_Lean_Parser_strLitNoAntiquot___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("strLit");
+x_1 = lean_mk_string("str");
 return x_1;
 }
 }
@@ -12745,7 +12745,7 @@ static lean_object* _init_l_Lean_Parser_charLitNoAntiquot___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("charLit");
+x_1 = lean_mk_string("char");
 return x_1;
 }
 }
@@ -12861,7 +12861,7 @@ static lean_object* _init_l_Lean_Parser_nameLitNoAntiquot___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("nameLit");
+x_1 = lean_mk_string("name");
 return x_1;
 }
 }

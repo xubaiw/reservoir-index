@@ -162,7 +162,7 @@ private def mkTacticMVar (type : Expr) (tacticCode : Syntax) : TermElabM Expr :=
 @[builtinTermElab cdot] def elabBadCDot : TermElab := fun stx _ =>
   throwError "invalid occurrence of `·` notation, it must be surrounded by parentheses (e.g. `(· + 1)`)"
 
-@[builtinTermElab strLit] def elabStrLit : TermElab := fun stx _ => do
+@[builtinTermElab str] def elabStrLit : TermElab := fun stx _ => do
   match stx.isStrLit? with
   | some val => pure $ mkStrLit val
   | none     => throwIllFormedSyntax
@@ -174,7 +174,7 @@ private def mkFreshTypeMVarFor (expectedType? : Option Expr) : TermElabM Expr :=
   | _                 => pure ()
   return typeMVar
 
-@[builtinTermElab numLit] def elabNumLit : TermElab := fun stx expectedType? => do
+@[builtinTermElab num] def elabNumLit : TermElab := fun stx expectedType? => do
   let val ← match stx.isNatLit? with
     | some val => pure val
     | none     => throwIllFormedSyntax
@@ -190,7 +190,7 @@ private def mkFreshTypeMVarFor (expectedType? : Option Expr) : TermElabM Expr :=
   | some val => return mkRawNatLit val
   | none     => throwIllFormedSyntax
 
-@[builtinTermElab scientificLit]
+@[builtinTermElab scientific]
 def elabScientificLit : TermElab := fun stx expectedType? => do
   match stx.isScientificLit? with
   | none        => throwIllFormedSyntax
@@ -202,7 +202,7 @@ def elabScientificLit : TermElab := fun stx expectedType? => do
     registerMVarErrorImplicitArgInfo mvar.mvarId! stx r
     return r
 
-@[builtinTermElab charLit] def elabCharLit : TermElab := fun stx _ => do
+@[builtinTermElab char] def elabCharLit : TermElab := fun stx _ => do
   match stx.isCharLit? with
   | some val => return mkApp (Lean.mkConst ``Char.ofNat) (mkRawNatLit val.toNat)
   | none     => throwIllFormedSyntax
