@@ -1,6 +1,75 @@
 Unreleased
 ---------
 
+* Add support for `for h : i in [start:stop] do .. ` where `h : i ∈ [start:stop]`. This feature is useful for proving
+  termination of functions such as:
+```lean
+inductive Expr where
+  | app (f : String) (args : Array Expr)
+
+def Expr.size (e : Expr) : Nat := Id.run do
+  match e with
+  | app f args =>
+    let mut sz := 1
+    for h : i in [: args.size] do
+      -- h.upper : i < args.size
+      sz := sz + size (args.get ⟨i, h.upper⟩)
+    return sz
+```
+
+* Add tactic `case'`. It is similar to `case`, but does not admit the goal on failure.
+  For example, the new tactic is useful when writing tactic scripts where we need to use `case'`
+  at `first | ... | ...`, and we want to take the next alternative when `case'` fails.
+
+* Add tactic macro
+```lean
+macro "stop" s:tacticSeq : tactic => `(repeat sorry)
+```
+See discussion on [Zulip](https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Partial.20evaluation.20of.20a.20file).
+
+* When displaying goals, we do not display inaccessible proposition names
+if they do not have forward dependencies. We still display their types.
+For example, the goal
+```lean
+case node.inl.node
+β : Type u_1
+b : BinTree β
+k : Nat
+v : β
+left : Tree β
+key : Nat
+value : β
+right : Tree β
+ihl : BST left → Tree.find? (Tree.insert left k v) k = some v
+ihr : BST right → Tree.find? (Tree.insert right k v) k = some v
+h✝ : k < key
+a✝³ : BST left
+a✝² : ForallTree (fun k v => k < key) left
+a✝¹ : BST right
+a✝ : ForallTree (fun k v => key < k) right
+⊢ BST left
+```
+is now displayed as
+```lean
+case node.inl.node
+β : Type u_1
+b : BinTree β
+k : Nat
+v : β
+left : Tree β
+key : Nat
+value : β
+right : Tree β
+ihl : BST left → Tree.find? (Tree.insert left k v) k = some v
+ihr : BST right → Tree.find? (Tree.insert right k v) k = some v
+ : k < key
+ : BST left
+ : ForallTree (fun k v => k < key) left
+ : BST right
+ : ForallTree (fun k v => key < k) right
+⊢ BST left
+```
+
 * The hypothesis name is now optional in the `by_cases` tactic.
 
 * [Fix inconsistency between `syntax` and kind names](https://github.com/leanprover/lean4/issues/1090).

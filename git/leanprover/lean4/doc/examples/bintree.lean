@@ -163,7 +163,6 @@ A non-empty tree is a BST if all its left nodes have a lesser key, its right nod
 inductive BST : Tree β → Prop
   | leaf : BST .leaf
   | node :
-     {value : β} →
      ForallTree (fun k v => k < key) left →
      ForallTree (fun k v => key < k) right →
      BST left → BST right →
@@ -286,8 +285,8 @@ theorem BinTree.find_insert_of_ne (b : BinTree β) (h : k ≠ k') (v : β)
     contradiction
   | node left key value right ihl ihr =>
     let .node hl hr bl br := h
-    have ihl := ihl bl
-    have ihr := ihr br
+    specialize ihl bl
+    specialize ihr br
     by_cases' k < key; by_cases' key < k
     have_eq key k
     by_cases' k' < k; by_cases' k  < k'
