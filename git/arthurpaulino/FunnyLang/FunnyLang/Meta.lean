@@ -25,9 +25,10 @@ partial def elabExpression : Syntax → TermElabM Expr
   | `(expression| $v:value) => do mkAppM ``Expression.atom #[← elabValue v]
   | `(expression| ! $e:expression) => do
     mkAppM ``Expression.not #[← elabExpression e]
+  | `(expression| $n:ident) => mkAppM ``Expression.var #[elabStringOfIdent n]
   | `(expression| $n:ident $[$es:expression]*) => do
     match ← es.data.mapM elabExpression with
-    | []      => mkAppM ``Expression.var #[elabStringOfIdent n]
+    | []      => unreachable!
     | e :: es =>
       let l  ← mkListLit (Lean.mkConst ``Expression) es
       let nl ← mkAppM ``List.toNEList #[e, l]
@@ -93,6 +94,13 @@ elab "#assert " x:term:60 " = " y:term:60 : command =>
     synthesizeSyntheticMVarsNoPostponing
     unless (← isDefEq x y) do
       throwError "{← reduce x}\n------------------------\n{← reduce y}"
+
+#eval >>
+succ x := x + 1
+app1 f x := f x
+a := 7
+app1 succ a
+<<.run
 
 def px := >>
 ((x := 1)
