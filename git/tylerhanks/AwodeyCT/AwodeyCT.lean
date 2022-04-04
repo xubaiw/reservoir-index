@@ -192,16 +192,19 @@ instance NatMod4Preorder : Preorder Nat where
 --structure monotone_map (C : Type u₁) (D : Type u₂) [Preorder C] [Preorder D] where
 
 structure bottom (C : Type u) (P : Preorder C) where
-  bot : C
-  is_bottom : ∀ x : C, P.leq bot x
+  el : C
+  is_bottom : ∀ x : C, P.leq el x
+
+structure top (C : Type u) (P : Preorder C) where
+  el : C
+  is_top : ∀ x : C, P.leq x el
 
 def nat_bottom : bottom Nat NatMod4Preorder := {
-  bot := 0
+  el := 0
   is_bottom := by
     intro x
     --show 0 / 4 ≤ x / 4
     apply Nat.zero_le
-    
 }
 
 #check nat_bottom
@@ -215,23 +218,107 @@ structure has_all_joins (C : Type u) (P : Preorder C) where
   pf : ∀ (a b : C), ∃ (j : C),
     (P.leq a j) ∧ (P.leq b j) ∧ (∀ x : C, (P.leq a x) → (P.leq b x) → (P.leq j x))
 
-structure meet (C : Type u) (a b : C) (P : Preorder C) where
+structure meet (C : Type u) (P : Preorder C) (a b : C) where
   m : C
   lower_bound : (P.leq m a) ∧ (P.leq m b)
   greatest: ∀ x : C, (P.leq x a) → (P.leq x b) → (P.leq x m)
 
 structure has_all_meets (C : Type u) (P : Preorder C) where
   pf : ∀ (a b : C), ∃ (m : C),
-    (P.leq m a) ∧ (P.leq m b) ∧ (∀ x : C, (P.leq x a) → (P.leq x b) → (P.leq x m))
+    (P.leq m a ∧ P.leq m b) ∧ (∀ x : C, (P.leq x a) → (P.leq x b) → (P.leq x m))
 
-open Classical
-theorem bottom_implies_all_meets : ∀ (C : Type u) [P : Preorder C],
+def nat_meet (a b : Nat) : meet Nat NatPreorder a b := {
+  m := if a ≤ b then a else b
+  lower_bound := by
+    apply And.intro
+    case left =>
+      split
+      case inl h =>
+        apply Nat.le_refl
+      case inr h =>
+        rw [Nat.not_le_eq] at h
+        revert h
+        apply Nat.le_of_succ_le
+    case right =>
+      split
+      case inl h =>
+        exact h
+      case inr h =>
+        apply Nat.le_refl
+  greatest := by
+    intros x xle_a xle_b
+    split
+    case inl h =>
+      exact xle_a
+    case inr h =>
+      exact xle_b
+}
+
+#eval (nat_meet 5 6).m
+
+--open meet
+
+theorem nat_all_meets : has_all_meets Nat NatPreorder := {
+  pf := by
+    intros a b
+    let m := nat_meet a b
+    exists m.m
+    apply And.intro
+    case left =>
+      exact m.lower_bound
+    case right =>
+      exact m.greatest
+}
+
+def natmod4_meet (a b : Nat) : meet Nat NatMod4Preorder a b := {
+  m := if a ≤ b then a else b
+  lower_bound := by
+    apply And.intro
+    case left =>
+      split
+      case inl h =>
+        apply Nat.le_refl
+      case inr h =>
+        show b / 4 ≤ a / 4
+        rw [Nat.not_le_eq] at h
+        apply Nat.le_of_succ_le
+        rw [← Nat.succ_eq_add_one] at h
+        sorry
+    case right =>
+      split
+      case inl h =>
+        show a / 4 ≤ b / 4
+        sorry
+      case inr h =>
+        sorry
+  greatest := by
+    intros x xle_a xle_b
+    split
+    case inl h =>
+      exact xle_a
+    case inr h =>
+      exact xle_b
+}
+
+theorem natmod4_all_meets : has_all_meets Nat NatMod4Preorder := {
+  pf := by
+    intros a b
+    let m := natmod4_meet a b
+    exists m.m
+    apply And.intro
+    case left =>
+      exact m.lower_bound
+    case right =>
+      exact m.greatest
+}
+
+/-theorem bottom_implies_all_meets : ∀ (C : Type u) [P : Preorder C],
   (bottom C P) → (has_all_meets C P) := by
     intros C P bot
     induction bot
 
     constructor
-    intros a b
+    intros a b-/
     
     
     
