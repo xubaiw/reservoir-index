@@ -1,9 +1,9 @@
 def hello := "world"
 
 universe v u u₁ u₂
-
+#check Sort 0
 class Category (Ob : Type u) where
-  hom : Ob → Ob → Type v
+  hom : Ob → Ob → Sort v
   id : ∀ A : Ob, hom A A
   comp : ∀ {A B C : Ob}, (hom A B) → (hom B C) → (hom A C)
   comp_assoc : ∀ {A B C D : Ob} (f : hom A B) (g : hom B C) (h : hom C D),
@@ -116,31 +116,24 @@ def F := functor_to_one Type
 
 end LeanCat
 
-/-section CategoryTwo
-
-inductive Two where
-  | one : Two
-  | two : Two
-
-open Two
-#check Two
-instance : Category Two where
-  hom := fun (X Y : Two) => Two → Two
-  id := fun (A : Two) => id
-  comp := fun (A B C: Two) (f : hom A B) (g : hom B C) => fun (x : Two) => g B C (f A B x)
-
-end CategoryTwo-/
-
 section CatMonoid
 
 class Monoid (α : Type u) where
   unit : α
   op : α → α → α
-  op_assoc: ∀ a b c : α, op (op a b) c = op a (op b c)
+  op_assoc: ∀ a b c : α, op a (op b c) = op (op a b) c
   l_unit : ∀ a : α, op unit a = a
   r_unit : ∀ a : α, op a unit = a
 
-instance : Monoid Nat where
+instance cat_of_monoid (α : Type u) (M : Monoid α) : Category Unit where
+  hom := fun (_ _ : Unit) => α
+  id := fun (x : Unit) => M.unit
+  comp := fun (f g : α) => M.op f g
+  comp_assoc := by simp; intros; apply M.op_assoc
+  l_unit := by simp; intros; apply M.l_unit
+  r_unit := by simp; intros; apply M.r_unit
+     
+instance NatsUnderPlus : Monoid Nat where
   unit := 0
   op x y := x + y
   l_unit x := by simp
@@ -148,6 +141,10 @@ instance : Monoid Nat where
   op_assoc a b c := by
     simp
     rw [Nat.add_assoc]
+
+def NatsUnderPlusCat := cat_of_monoid Nat NatsUnderPlus
+
+-- TODO: Figure out how to evaluate homs in these categories
 
 end CatMonoid
 
@@ -157,7 +154,17 @@ class Preorder (Ob : Type u) where
   leq : Ob → Ob → Prop
   leq_ref : ∀ a : Ob, leq a a
   leq_trans : ∀ a b c : Ob, (leq a b) → (leq b c) → (leq a c)
-  --leq_decidable : ∀ a b : Ob, Decidable (leq a b)
+
+-- Construct a thin category from a preorder
+instance cat_of_preorder (α : Type u) (P : Preorder α) : Category.{0} α where
+  hom := P.leq
+  id a := by apply P.leq_ref
+  comp := by apply P.leq_trans 
+  comp_assoc := by intros; rfl
+  l_unit := by intros; rfl
+  r_unit := by intros; rfl
+
+-- Examples
 
 instance NatPreorder : Preorder Nat where
   leq := Nat.le
@@ -165,9 +172,6 @@ instance NatPreorder : Preorder Nat where
   leq_trans := by 
     simp
     apply Nat.le_trans
-  /-leq_decidable a b := by
-    simp
-    apply Nat.decLe-/
 
 instance NatMod4Preorder : Preorder Nat where
   leq a b := a / 4 ≤ b / 4
@@ -175,21 +179,8 @@ instance NatMod4Preorder : Preorder Nat where
   leq_trans a b c := by
     simp
     apply Nat.le_trans
-  /-leq_decidable a b := by
-    simp
-    apply Nat.decLe-/
 
-#check Nat.le
-
---def eval_leq (a b : α) (leq : α → α → Prop) : Bool :=
-  --let p := leq a b
-
---#check NatPreorder.leq
-
---#eval NatPreorder.leq 3 0 -- false
---#eval NatMod4Preorder.leq 3 0 -- true
-
---structure monotone_map (C : Type u₁) (D : Type u₂) [Preorder C] [Preorder D] where
+-- Top and Bottom
 
 structure bottom (C : Type u) (P : Preorder C) where
   el : C
@@ -199,15 +190,17 @@ structure top (C : Type u) (P : Preorder C) where
   el : C
   is_top : ∀ x : C, P.leq x el
 
+-- Can set el to 0-3 and this will hold because 0-3 are isomorphic in this preorder
 def nat_bottom : bottom Nat NatMod4Preorder := {
   el := 0
   is_bottom := by
     intro x
-    --show 0 / 4 ≤ x / 4
     apply Nat.zero_le
 }
 
 #check nat_bottom
+
+-- Meets and joins. TODO: restate these as degenerate cases of products/co-products in thin cats
 
 structure join (C : Type u) (a b : C) (P : Preorder C) where
   j : C
@@ -226,7 +219,9 @@ structure meet (C : Type u) (P : Preorder C) (a b : C) where
 structure has_all_meets (C : Type u) (P : Preorder C) where
   pf : ∀ (a b : C), ∃ (m : C),
     (P.leq m a ∧ P.leq m b) ∧ (∀ x : C, (P.leq x a) → (P.leq x b) → (P.leq x m))
-#check Nat.not_le_eq
+
+-- examples
+
 def nat_meet (a b : Nat) : meet Nat NatPreorder a b := {
   m := if a ≤ b then a else b
   lower_bound := by
@@ -268,6 +263,7 @@ theorem nat_all_meets : has_all_meets Nat NatPreorder := {
       exact m.greatest
 }
 
+-- TODO: get rid of sorrys :(
 def natmod4_meet (a b : Nat) : meet Nat NatMod4Preorder a b := {
   m := if a ≤ b then a else b
   lower_bound := by
@@ -310,27 +306,38 @@ theorem natmod4_all_meets : has_all_meets Nat NatMod4Preorder := {
       exact m.greatest
 }
 
-/-theorem bottom_implies_all_meets : ∀ (C : Type u) [P : Preorder C],
-  (bottom C P) → (has_all_meets C P) := by
-    intros C P bot
-    induction bot
-
-    constructor
-    intros a b-/
-
 end PreorderCats
+
+-- Category of Binary relations between types
+section CatRel
+
+def rel := Type u
+--instance : inhabited rel := by unfold rel;
+
+instance Rel : Category (Type u) where
+  hom A B := A → B → Prop
+  id A := fun (a b : A) => a = b
+  comp := fun R S a c => ∃ b, R a b ∧ S b c
+  comp_assoc := by
+    simp
+    intro A B C D f g h
+    --have a : A. TODO: I think this proof requires that types are inhabited
+    sorry
+  l_unit := by
+    simp
+    intro A B f
+    sorry
+  r_unit := by
+    sorry 
+
+end CatRel
 
 -- Heyting algebra of propositional provability 
 section IPL
 
-/-inductive typ where
-  | ttrue
-  | tfalse-/
-
 inductive prop where
   | T : prop
   | F : prop
-  --| var : String → prop
   | p_or : prop → prop → prop
   | p_and : prop → prop → prop
   | p_impl : prop → prop → prop
@@ -363,12 +370,18 @@ inductive judgement : Γ_t → prop → Bool → Prop where
 
   -- structural rules
   | entailment_refl : ∀ (Γ : Γ_t) (A : prop), (A, true)::Γ ⊢ A : true
+  --TODO: Use this more proper definition of transitivity (needs weakening to apply)
+  --| entailment_trans : ∀ (Γ₁ Γ₂ : Γ_t) (A B : prop),
+      --(Γ₁ ⊢ A : true) → ((A, true)::Γ₂ ⊢ B : true) → ((List.append Γ₁ Γ₂) ⊢ B : true)
+  | entailment_trans : ∀ (Γ : Γ_t) (A B C : prop),
+      ((A, true)::Γ ⊢ B : true) → ((B, true)::Γ ⊢ C : true) → ((A, true)::Γ ⊢ C : true)
 
 end
 
 notation:10 Γ " ⊢ " p " : " b => judgement Γ p b
 
-
+axiom impl_inversion : ∀ (Γ : Γ_t) (A B : prop), 
+  (Γ ⊢ (p_impl A B) : true) → ((A, true)::Γ ⊢ B : true)
 
 instance : Preorder prop where
   leq A B := ∀ Γ : Γ_t, Γ ⊢ (p_impl A B) : true
@@ -379,23 +392,14 @@ instance : Preorder prop where
   leq_trans := by
     intro A B C h1 h2 Γ
     apply judgement.impl_i
-    let h1 := h1 Γ
-    --let h2 := h2 Γ
-    apply judgement.impl_i h1
-
-
-
-
-
-
-
-
+    let h1 := impl_inversion Γ A B (h1 Γ)
+    let h2 := impl_inversion Γ B C (h2 Γ)
+    apply judgement.entailment_trans Γ A B C h1 h2
 
 end IPL
 
 section AlgCorrectness
 
-#check Applicative
 def list_max (l : List Nat) : Nat := 
   List.foldl (fun (max el : Nat) => if max ≤ el then el else max) 0 l
 
