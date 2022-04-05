@@ -11,6 +11,7 @@
  "Julian/lean.nvim",
  "Kha/lean4-nightly",
  "NicolasRouquette/dimensional-calculus.lean4",
+ "PolyB/LeanPythonRaw",
  "SReichelt/universe-abstractions",
  "abentkamp/duper",
  "adamtopaz/lean4_advent_2021",
