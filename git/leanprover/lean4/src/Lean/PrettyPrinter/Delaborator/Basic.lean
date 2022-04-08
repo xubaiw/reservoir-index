@@ -263,9 +263,9 @@ end Delaborator
 
 open Delaborator (OptionsPerPos topDownAnalyze Pos)
 
-def delabCore (currNamespace : Name) (openDecls : List OpenDecl) (e : Expr) (optionsPerPos : OptionsPerPos := {}) : MetaM (Syntax × Std.RBMap Pos Elab.Info compare) := do
+def delabCore (e : Expr) (optionsPerPos : OptionsPerPos := {}) (delab := Delaborator.delab) : MetaM (Syntax × Std.RBMap Pos Elab.Info compare) := do
   trace[PrettyPrinter.delab.input] "{Std.format e}"
-  let mut opts ← MonadOptions.getOptions
+  let mut opts ← getOptions
   -- default `pp.proofs` to `true` if `e` is a proof
   if pp.proofs.get? opts == none then
     try if ← Meta.isProof e then opts := pp.proofs.set opts true
@@ -276,11 +276,11 @@ def delabCore (currNamespace : Name) (openDecls : List OpenDecl) (e : Expr) (opt
       withTheReader Core.Context (fun ctx => { ctx with options := opts }) do topDownAnalyze e
     else pure optionsPerPos
   let (stx, {infos := infos, ..}) ← catchInternalId Delaborator.delabFailureId
-    (Delaborator.delab
+    (delab
       { defaultOptions := opts
         optionsPerPos := optionsPerPos
-        currNamespace := currNamespace
-        openDecls := openDecls
+        currNamespace := (← getCurrNamespace)
+        openDecls := (← getOpenDecls)
         subExpr := Delaborator.SubExpr.mkRoot e
         inPattern := opts.getInPattern }
       |>.run { : Delaborator.State })
@@ -288,8 +288,8 @@ def delabCore (currNamespace : Name) (openDecls : List OpenDecl) (e : Expr) (opt
   return (stx, infos)
 
 /-- "Delaborate" the given term into surface-level syntax using the default and given subterm-specific options. -/
-def delab (currNamespace : Name) (openDecls : List OpenDecl) (e : Expr) (optionsPerPos : OptionsPerPos := {}) : MetaM Syntax := do
-  let (stx, _) ← delabCore currNamespace openDecls e optionsPerPos
+def delab (e : Expr) (optionsPerPos : OptionsPerPos := {}) : MetaM Syntax := do
+  let (stx, _) ← delabCore e optionsPerPos
   return stx
 
 builtin_initialize registerTraceClass `PrettyPrinter.delab
