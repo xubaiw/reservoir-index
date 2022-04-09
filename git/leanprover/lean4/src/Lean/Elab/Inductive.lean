@@ -88,6 +88,7 @@ private partial def elabHeaderAux (views : Array InductiveView) (i : Nat) (acc :
           let indices ← Term.addAutoBoundImplicits #[]
           return (← mkForallFVars indices type, indices.size)
         Term.addAutoBoundImplicits' params type fun params type => do
+          trace[Elab.inductive] "header params: {params}, type: {type}"
           pure <| acc.push { lctx := (← getLCtx), localInsts := (← getLocalInstances), params, type, view }
     elabHeaderAux views (i+1) acc
   else
@@ -289,6 +290,7 @@ private def elabCtors (indFVars : Array Expr) (indFVar : Expr) (params : Array E
             k <| mkAppN indFVar params
           | some ctorType =>
             let type ← Term.elabType ctorType
+            trace[Elab.inductive] "elabType {ctorView.declName} : {type} "
             Term.synthesizeSyntheticMVars (mayPostpone := true)
             let type ← instantiateMVars type
             let type ← checkParamOccs type
@@ -301,11 +303,18 @@ private def elabCtors (indFVars : Array Expr) (indFVar : Expr) (params : Array E
         elabCtorType fun type => do
           Term.synthesizeSyntheticMVarsNoPostponing
           let ctorParams ← Term.addAutoBoundImplicits ctorParams
-          let type  ← mkForallFVars ctorParams type
-          let extraCtorParams ← Term.collectUnassignedMVars type
-          let type ← mkForallFVars extraCtorParams type
+          let except (mvarId : MVarId) := ctorParams.any fun ctorParam => ctorParam.isMVar && ctorParam.mvarId! == mvarId
+          let mut extraCtorParams := #[]
+          for ctorParam in ctorParams do
+            extraCtorParams ← Term.collectUnassignedMVars (← instantiateMVars (← inferType ctorParam)) extraCtorParams except
+          extraCtorParams ← Term.collectUnassignedMVars (← instantiateMVars type) extraCtorParams except
+          trace[Elab.inductive] "extraCtorParams: {extraCtorParams}"
+          /- We must abstract `extraCtorParams` and `ctorParams` simultaneously to make
+             sure we do not create auxiliary metavariables. -/
+          let type  ← mkForallFVars (extraCtorParams ++ ctorParams) type
           let type ← reorderCtorArgs type
           let type ← mkForallFVars params type
+          trace[Elab.inductive] "{ctorView.declName} : {type} "
           return { name := ctorView.declName, type }
 where
   checkParamOccs (ctorType : Expr) : MetaM Expr :=
@@ -677,7 +686,7 @@ private def mkInductiveDecl (vars : Array Expr) (views : Array InductiveView) : 
       let mut indTypesArray := #[]
       for i in [:views.size] do
         let indFVar := indFVars[i]
-        Term.addTermInfo (isBinder := true) views[i].declId indFVar
+        Term.addLocalVarInfo views[i].declId indFVar
         let r       := rs[i]
         let type  ← mkForallFVars params r.type
         let ctors ← elabCtors indFVars indFVar params r
@@ -708,9 +717,9 @@ private def mkInductiveDecl (vars : Array Expr) (views : Array InductiveView) : 
           mkAuxConstructions views
     withSaveInfoContext do  -- save new env
       for view in views do
-        Term.addTermInfo view.ref[1] (← mkConstWithLevelParams view.declName) (isBinder := true)
+        Term.addTermInfo' view.ref[1] (← mkConstWithLevelParams view.declName) (isBinder := true)
         for ctor in view.ctors do
-          Term.addTermInfo ctor.ref[2] (← mkConstWithLevelParams ctor.declName) (isBinder := true)
+          Term.addTermInfo' ctor.ref[2] (← mkConstWithLevelParams ctor.declName) (isBinder := true)
         -- We need to invoke `applyAttributes` because `class` is implemented as an attribute.
         Term.applyAttributesAt view.declName view.modifiers.attrs AttributeApplicationTime.afterTypeChecking
 
