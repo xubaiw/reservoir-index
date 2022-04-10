@@ -96,12 +96,14 @@ For more information see `SubstitutiveOn.subst₂`.
 - `α`: the argument type of the binary operation `f`.
 - `β`: the result type of the binary operation `f`.
 - `f`: the binary operation that obeys the generalized substitution property.
+- `C`: a constraint that the non-`hand` argument to `f` must meet.
 - `rα`: a binary relation over `f`'s argument type `α`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class SubstitutiveOn
     (hand : Hand) {α : Sort u} {β : Sort v}
-    (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    (f : α → α → β) (C : outParam (α → Prop))
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
     where
   /--
   The left- or right-handed generalized substitution property of a binary
@@ -116,38 +118,73 @@ class SubstitutiveOn
   `n₁ ≃ n₂`, then we can conclude that `n₁ + m ≃ n₂ + m`, or that
   `m + n₁ ≃ m + n₂`.
 
+  More advanced applications may require a nontrivial constraint `C` on `y`; an
+  example is that `x₁ < x₂` implies `x₁ * y < x₂ * y` only for positive `y`.
+
   **Named parameters**
   - see `SubstitutiveOn` for the class parameters.
   - `x₁` and `x₂`: the arguments to `f`, related by `rα`; the `hand` parameter
     indicates which side of `f` they are given on.
   - `y`: the other argument to `f`; goes on the side opposite `hand`.
+  - `cy`: evidence that the constraint on `y` is satisfied.
   -/
   subst₂
-    {x₁ x₂ y : α} : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
+    {x₁ x₂ y : α} (cy : C y)
+    : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
 
 export SubstitutiveOn (subst₂)
 
 /--
 Convenience function for the left-handed binary generalized substitution
-property.
+property, without a constraint on `y`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `subst₂` function.
 
 See `SubstitutiveOn.subst₂` for detailed documentation.
 -/
-abbrev substL := @subst₂ Hand.L
+abbrev substL
+    {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
+    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.L f tc rα rβ]
+    {x₁ x₂ y : α} :=
+  @subst₂ Hand.L α β f tc rα rβ self x₁ x₂ y True.intro
 
 /--
 Convenience function for the right-handed binary generalized substitution
-property.
+property, without a constraint on `y`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `subst₂` function.
 
 See `SubstitutiveOn.subst₂` for detailed documentation.
 -/
-abbrev substR := @subst₂ Hand.R
+abbrev substR
+    {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
+    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.R f tc rα rβ]
+    {x₁ x₂ y : α} :=
+  @subst₂ Hand.R α β f tc rα rβ self x₁ x₂ y True.intro
+
+/--
+Convenience function for the left-handed binary generalized substitution
+property, with an explicit argument for the constraint on `y`.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `subst₂` function.
+
+See `SubstitutiveOn.subst₂` for detailed documentation.
+-/
+abbrev substLC := @subst₂ Hand.L
+
+/--
+Convenience function for the right-handed binary generalized substitution
+property, with an explicit argument for the constraint on `y`.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `subst₂` function.
+
+See `SubstitutiveOn.subst₂` for detailed documentation.
+-/
+abbrev substRC := @subst₂ Hand.R
 
 /--
 Convenience class for types and operations that satisfy the full (left- **and**
@@ -157,13 +194,59 @@ See `SubstitutiveOn` for detailed documentation.
 -/
 class Substitutive₂
     {α : Sort u} {β : Sort v}
-    (f : α → α → β) (rα : α → α → Prop) (rβ : β → β → Prop)
+    (f : α → α → β) (C : α → Prop) (rα : α → α → Prop) (rβ : β → β → Prop)
     where
-  substitutiveL : SubstitutiveOn Hand.L f rα rβ
-  substitutiveR : SubstitutiveOn Hand.R f rα rβ
+  substitutiveL : SubstitutiveOn Hand.L f C rα rβ
+  substitutiveR : SubstitutiveOn Hand.R f C rα rβ
 
 attribute [instance] Substitutive₂.substitutiveL
 attribute [instance] Substitutive₂.substitutiveR
+
+/--
+If two properties are logically equivalent, one can be substituted for the
+other as the assumption (i.e. antecedent) of an implication.
+
+**Proof intuition**: assume one of the properties, then convert it to the other
+using the equivalence, and obtain the implication's conclusion.
+
+**Named parameters**:
+- `p₁`: one of the two equivalent properties.
+- `p₂`: the other equivalent property.
+- `q`: the conclusion of the implication.
+-/
+def iff_substL {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (p₁ → q) → (p₂ → q) := by
+  intro ⟨(_ : p₁ → p₂), (_ : p₂ → p₁)⟩ (_ : p₁ → q) (_ : p₂)
+  show q
+  have : p₁ := ‹p₂ → p₁› ‹p₂›
+  have : q := ‹p₁ → q› ‹p₁›
+  exact ‹q›
+
+/--
+If two properties are logically equivalent, one can be substituted for the
+other as the conclusion (i.e. consequent) of an implication.
+
+**Proof intuition**: obtain one of the properties from the given implication
+and common assumption, then convert it to the other using the equivalence.
+
+**Named parameters**:
+- `p₁`: one of the two equivalent properties.
+- `p₂`: the other equivalent property.
+- `q`: the assumption of the implication.
+-/
+def iff_substR {p₁ p₂ q : Prop} : (p₁ ↔ p₂) → (q → p₁) → (q → p₂) := by
+  intro ⟨(_ : p₁ → p₂), (_ : p₂ → p₁)⟩ (_ : q → p₁) (_ : q)
+  show p₂
+  have : p₁ := ‹q → p₁› ‹q›
+  have : p₂ := ‹p₁ → p₂› ‹p₁›
+  exact ‹p₂›
+
+/--
+Logically equivalent properties can be substituted on both sides of an
+implication.
+-/
+instance iff_substitutive : Substitutive₂ (· → ·) tc (· ↔ ·) (· → ·) where
+  substitutiveL := SubstitutiveOn.mk λ (_ : True) => iff_substL
+  substitutiveR := SubstitutiveOn.mk λ (_ : True) => iff_substR
 
 /--
 Convenience definition that converts instances of `Commutative` into instances
@@ -183,53 +266,66 @@ makes it easy for those definitions to apply to commutative functions.
 - `EqvOp β`: required by `Commutative f`.
 - `Commutative f`: the property to translate into a `Swap` instance.
 - `Relation.Refl rel`: necessary to provide a starting point for substitution.
-- `SubstitutitveOn Hand.R rel (· ≃ ·) (· → ·)`: necessary for transfering
+- `SubstitutitveOn Hand.R rel tc (· ≃ ·) (· → ·)`: necessary for transfering
   commutativity from `EqvOp β` to `rel`.
 -/
 instance
     {α : Type u} {β : Type v} {f : α → α → β} {rel : β → β → Prop}
     [EqvOp β] [Commutative f] [Relation.Refl rel]
-    [SubstitutiveOn Hand.R rel (· ≃ ·) (· → ·)]
+    [inst : SubstitutiveOn Hand.R rel tc (· ≃ ·) (· → ·)]
     : Swap f rel where
   swap := by
     intro x y
     show rel (f x y) (f y x)
     have : rel (f x y) (f x y) := Eqv.refl
-    exact substR (rβ := (· → ·)) comm ‹rel (f x y) (f x y)›
+    exact substR (self := inst) comm ‹rel (f x y) (f x y)›
 
 /--
 Derives the right-handed binary generalized substitution property from its
-left-handed counterpart, provided that the relation `rβ` satisfies a few
-properties.
+left-handed counterpart, provided that the arguments to the operation `f` can
+be swapped in an appropriate way.
 
-**Intuition**: if `rβ` permits exchanging the arguments to `f`, then we can
-switch them, apply left-handed substitution, and switch back.
+There are many binary operations that have a symmetry between their left- and
+right-handed arguments. This convenience function is a general-purpose way to
+leverage that symmetry to avoid having to write a redundant proof of
+right-handed substitution.
+
+**Proof intuition**: apply left-handed substitution, then swap the arguments to
+both invocations of `f`.
 
 **Named parameters**
 - `α`: the argument type of the binary operation `f`.
 - `β`: the result type of the binary operation `f`.
 - `f`: the binary operation that obeys the generalized substitution property.
-- `rα`: a binary relation over `f`'s argument type `α`.
-- `rβ`: a binary relation over `f`'s result type `β`.
+- `C`: a constraint that the opposite-handed argument to `f` must meet.
+- `rα`: how the substitutable arguments to `f` are related.
+- `rβ`: how the invocations of `f` pre- and post-substitution are related.
+- `rS`: how an invocation of `f` is related to its swapped-argument version.
 
 **Class parameters**
-- `Trans rβ`: needed to join the steps of the proof together.
-- `Swap f rβ`: needed to temporarily move the right argument of `f` to the left
-  position, so that left-handed substitution can be applied to it.
+- `Swap f rS`:
+    The arguments of `f` need to be swappable to go from left-handed to right-
+    handed substitution.
+- `Substitutive₂ rβ tc rS (· → ·)`:
+    Allows the result of left-handed substitution, which is an instance of the
+    relation `rβ`, to be converted into the right-handed result. Both the left
+    and right sides of `rβ` are invocations of `f`, and can be replaced by
+    their swapped-argument versions due to how `rS` is used here and in
+    `Swap f rS`.
 -/
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v}
-    {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
-    [Trans rβ] [Swap f rβ]
-    : SubstitutiveOn Hand.L f rα rβ → SubstitutiveOn Hand.R f rα rβ := by
-  intro
-  constructor
-  intro x₁ x₂ y (_ : rα x₁ x₂)
+    {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ rS : β → β → Prop}
+    [Swap f rS] [Substitutive₂ rβ tc rS (· → ·)]
+    : SubstitutiveOn Hand.L f C rα rβ → SubstitutiveOn Hand.R f C rα rβ := by
+  intro _ -- Make left-substitution available for instance search
+  apply SubstitutiveOn.mk
+  intro x₁ x₂ y (_ : C y) (_ : rα x₁ x₂)
   show rβ (f y x₁) (f y x₂)
-  calc
-    rβ (f y x₁) (f x₁ y) := Swap.swap
-    rβ (f x₁ y) (f x₂ y) := AA.substL ‹rα x₁ x₂›
-    rβ (f x₂ y) (f y x₂) := Swap.swap
+  have : rβ (f x₁ y) (f x₂ y) := AA.substLC ‹C y› ‹rα x₁ x₂›
+  have : rβ (f y x₁) (f x₂ y) := AA.substL (rβ := (· → ·)) Swap.swap this
+  have : rβ (f y x₁) (f y x₂) := AA.substR (rβ := (· → ·)) Swap.swap this
+  exact this
 
 /--
 The left-hand side of an equivalence can be replaced by an equivalent value.
@@ -245,9 +341,9 @@ essentially just transivity expressed in a slightly different way.
 -/
 def eqv_substL
     {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.L (α := α) (· ≃ ·) (· ≃ ·) (· → ·) := by
+    : SubstitutiveOn Hand.L (α := α) (· ≃ ·) tc (· ≃ ·) (· → ·) := by
   constructor
-  intro x₁ x₂ y (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
+  intro x₁ x₂ y _ (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
   show x₂ ≃ y
   exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
@@ -264,9 +360,9 @@ property follows from the symmetry of equivalence.
 - `EqvOp α`: needed for equivalence to be expressed between terms of type `α`.
 -/
 instance eqv_substitutive {α : Sort u} [EqvOp α]
-    : Substitutive₂ (α := α) (· ≃ ·) (· ≃ ·) (· → ·) where
+    : Substitutive₂ (α := α) (· ≃ ·) tc (· ≃ ·) (· → ·) where
   substitutiveL := eqv_substL
-  substitutiveR := substR_from_substL_swap eqv_substL
+  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) eqv_substL
 
 /--
 The left-hand side of a negated equivalence can be replaced by an equivalent
@@ -285,9 +381,9 @@ term.
 -/
 def neq_substL
     {α : Sort u} [EqvOp α]
-    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) (· ≃ ·) (· → ·) := by
+    : SubstitutiveOn Hand.L (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·) := by
   constructor
-  intro x₁ x₂ y (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
+  intro x₁ x₂ y _ (_ : x₁ ≃ x₂) (_ : x₁ ≄ y) (_ : x₂ ≃ y)
   show False
   apply ‹x₁ ≄ y›
   show x₁ ≃ y
@@ -307,10 +403,10 @@ property follows from the symmetry of negated equivalence.
   `α`.
 -/
 instance neq_substitutive
-    {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) (· ≃ ·) (· → ·)
+    {α : Sort u} [EqvOp α] : Substitutive₂ (α := α) (· ≄ ·) tc (· ≃ ·) (· → ·)
     where
   substitutiveL := neq_substL
-  substitutiveR := substR_from_substL_swap neq_substL
+  substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) neq_substL
 
 /--
 Class for types and operations that satisfy either the left- or right-handed
@@ -414,14 +510,16 @@ arguments to `f` can be swapped so that left-handed cancellation can be used.
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
-    [EqvOp β] [Commutative f] [Substitutive₂ rβ (· ≃ ·) (· → ·)]
+    [EqvOp β] [Commutative f] [Substitutive₂ rβ tc (· ≃ ·) (· → ·)]
     : CancellativeOn Hand.L f rα rβ → CancellativeOn Hand.R f rα rβ := by
   intro
   constructor
-  intro x y₁ y₂ (hyp : rβ (f y₁ x) (f y₂ x))
+  intro x y₁ y₂ (_ : rβ (f y₁ x) (f y₂ x))
   show rα y₁ y₂
-  have : rβ (f x y₁) (f y₂ x) := AA.substL (rβ := (· → ·)) AA.comm hyp
-  have : rβ (f x y₁) (f x y₂) := AA.substR (rβ := (· → ·)) AA.comm this
-  exact AA.cancelL this
+  have : rβ (f x y₁) (f y₂ x) :=
+    AA.substL (rβ := (· → ·)) AA.comm ‹rβ (f y₁ x) (f y₂ x)›
+  have : rβ (f x y₁) (f x y₂) :=
+    AA.substR (rβ := (· → ·)) AA.comm ‹rβ (f x y₁) (f y₂ x)›
+  exact AA.cancelL ‹rβ (f x y₁) (f x y₂)›
 
 end AA

@@ -35,7 +35,7 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   Addition preserves equality of natural numbers; two equal natural numbers are
   still equal after the same quantity is added to both (on the left or right).
   -/
-  add_substitutive : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·)
+  add_substitutive : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
 
   /-- Adding one is the same as incrementing. -/
   add_one_step {n : ℕ} : n + 1 ≃ step n

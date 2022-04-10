@@ -34,4 +34,14 @@ def forHand {α : Sort u} {β : Sort v} : Hand → (α → α → β) → (α �
 | Hand.L => id
 | Hand.R => flip
 
+/--
+The predicate that is always true.
+
+The name `tc` is short for "trivial constraint", because the intended use of
+this definition is to fill in constraint arguments of abstract algebra
+typeclasses when they're not needed. It's important that the name is as short
+as possible, to reduce clutter. See usages of `Substitutive₂` for examples.
+-/
+abbrev tc {α : Sort u} : α → Prop := λ _ => True
+
 end AA

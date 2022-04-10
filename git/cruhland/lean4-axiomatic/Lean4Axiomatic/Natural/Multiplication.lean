@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Addition
+import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
@@ -31,14 +32,14 @@ attribute [instance] Multiplication.Base.mulOp
 
 /-- Properties that follow from those provided in `Multiplication.Base`. -/
 class Multiplication.Derived
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
+    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ] [Order.Base ℕ]
     extends Multiplication.Base ℕ where
   /--
   Multiplication preserves equality of natural numbers; two equal natural
   numbers are still equal after the same quantity is multiplied with both (on
   the left or right).
   -/
-  mul_substitutive : AA.Substitutive₂ (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·)
+  mul_substitutive_eq : AA.Substitutive₂ (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
 
   /-- Multiplying by zero on the right always gives zero. -/
   mul_zero {n : ℕ} : n * 0 ≃ 0
@@ -64,11 +65,15 @@ class Multiplication.Derived
   /-- The grouping of the factors in a product doesn't matter. -/
   mul_associative : AA.Associative (α := ℕ) (· * ·)
 
+  /-- Multiplication preserves strict order. -/
+  mul_substitutive_lt
+    : AA.Substitutive₂ (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
+
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
   mul_associative mul_commutative mul_distributive mul_positive
-  mul_substitutive mul_zero zero_product_split
+  mul_substitutive_eq mul_substitutive_lt mul_zero zero_product_split
 )
 end Multiplication
 

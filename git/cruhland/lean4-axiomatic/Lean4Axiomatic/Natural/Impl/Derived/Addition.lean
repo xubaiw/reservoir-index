@@ -98,18 +98,14 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
         _ ≃ step (n₂ + m) := AA.subst₁ (ih _ ‹n₁ ≃ n₂›)
         _ ≃ step n₂ + m   := Eqv.symm Addition.step_add
 
-instance add_substL
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
-  subst₂ := subst_add
-
-instance add_substR
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) :=
-  AA.substR_from_substL_swap add_substL
+def add_substL
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
+  subst₂ := λ (_ : True) => subst_add
 
 instance add_substitutive
-    : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≃ ·) (· ≃ ·) where
+    : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
   substitutiveL := add_substL
-  substitutiveR := add_substR
+  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substL
 
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
   calc

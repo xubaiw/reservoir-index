@@ -1,5 +1,6 @@
 import Lean4Axiomatic.Natural.Addition
 import Lean4Axiomatic.Natural.Multiplication
+import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural.Derived
@@ -14,6 +15,8 @@ variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
 variable [Addition.Derived ℕ]
+variable [Sign.Base ℕ]
+variable [Order.Derived ℕ]
 variable [Multiplication.Base ℕ]
 
 namespace Base
@@ -117,7 +120,7 @@ Multiplication by a fixed value as the right-hand operand preserves equality.
 
 Intuition: addition preserves equality; multiplication is repeated addition.
 -/
-theorem subst_mul {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
+theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
   apply Axioms.ind_on (motive := λ x => ∀ y, x ≃ y → x * m ≃ y * m) n₁
   case zero =>
     intro n₂
@@ -152,18 +155,14 @@ theorem subst_mul {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m 
         (n₂ * m) + m ≃ _ := Eqv.symm Base.step_mul
         step n₂ * m  ≃ _ := Eqv.refl
 
-instance mul_substL
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) where
-  subst₂ := subst_mul
+def mul_substL_eq
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·) where
+  subst₂ := λ (_ : True) => subst_mul_eq
 
-instance mul_substR
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) :=
-  AA.substR_from_substL_swap mul_substL
-
-instance mul_substitutive
-    : AA.Substitutive₂ (α := ℕ) (· * ·) (· ≃ ·) (· ≃ ·) where
-  substitutiveL := mul_substL
-  substitutiveR := mul_substR
+instance mul_substitutive_eq
+    : AA.Substitutive₂ (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·) where
+  substitutiveL := mul_substL_eq
+  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substL_eq
 
 /--
 A product is zero iff at least one of its factors is zero.
@@ -215,7 +214,7 @@ The product of positive natural numbers is positive.
 Intuition: reframe positive as nonzero, then contradict with
 `Derived.zero_product_split`.
 -/
-theorem mul_positive [Sign.Base ℕ] {n m : ℕ}
+theorem mul_positive {n m : ℕ}
     : Positive n → Positive m → Positive (n * m) := by
   intro (_ : Positive n) (_ : Positive m)
   show Positive (n * m)
@@ -304,8 +303,40 @@ def mul_associative : AA.Associative (α := ℕ) (· * ·) := by
       n * (m * k) + m * k ≃ _ := Eqv.symm Base.step_mul
       step n * (m * k)    ≃ _ := Eqv.refl
 
-instance multiplication_derived [Sign.Base ℕ] : Multiplication.Derived ℕ where
-  mul_substitutive := mul_substitutive
+/--
+Multiplication on the right by a positive natural number preserves the strict
+ordering of any two natural numbers.
+
+**Proof intuition**: two strictly ordered natural numbers have a positive
+difference between them. Multiplying them by another positive natural number
+also multiplies their difference, which remains positive.
+-/
+theorem subst_mul_lt
+    {n₁ n₂ m : ℕ} : Positive m → n₁ < n₂ → n₁ * m < n₂ * m := by
+  intro (_ : Positive m) (_ : n₁ < n₂)
+  show n₁ * m < n₂ * m
+  have ⟨(d : ℕ), (_ : Positive d), (_ : n₂ ≃ n₁ + d)⟩ :=
+    Order.lt_defn_add.mp ‹n₁ < n₂›
+  have : n₂ * m ≃ n₁ * m + d * m := calc
+    n₂ * m         ≃ _ := AA.substL ‹n₂ ≃ n₁ + d›
+    (n₁ + d) * m   ≃ _ := AA.distribR
+    n₁ * m + d * m ≃ _ := Eqv.refl
+  have : Positive (d * m) := Derived.mul_positive ‹Positive d› ‹Positive m›
+  exact Order.lt_defn_add.mpr
+    ⟨d * m, ‹Positive (d * m)›, ‹n₂ * m ≃ n₁ * m + d * m›⟩
+
+def mul_substL_lt
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
+    where
+  subst₂ := subst_mul_lt
+
+instance mul_substitutive_lt
+    : AA.Substitutive₂ (α := ℕ) (· * ·) Positive (· < ·) (· < ·) where
+  substitutiveL := mul_substL_lt
+  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substL_lt
+
+instance multiplication_derived : Multiplication.Derived ℕ where
+  mul_substitutive_eq := mul_substitutive_eq
   mul_zero := mul_zero
   mul_step := mul_step
   mul_commutative := mul_commutative
@@ -313,5 +344,6 @@ instance multiplication_derived [Sign.Base ℕ] : Multiplication.Derived ℕ whe
   mul_positive := mul_positive
   mul_distributive := mul_distributive
   mul_associative := mul_associative
+  mul_substitutive_lt := mul_substitutive_lt
 
 end Lean4Axiomatic.Natural.Derived

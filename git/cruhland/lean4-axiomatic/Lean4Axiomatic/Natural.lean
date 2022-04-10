@@ -26,7 +26,8 @@ export Equality (eqvOp?)
 export Literals (literal literal_step literal_zero)
 export Multiplication (
   mul_associative mul_commutative mul_distributive mulOp mul_positive
-  mul_substitutive mul_zero step_mul zero_mul zero_product_split
+  mul_substitutive_eq mul_substitutive_lt mul_zero step_mul zero_mul
+  zero_product_split
 )
 export Order (
   le_antisymm le_defn le_reflexive le_split le_transitive leOp

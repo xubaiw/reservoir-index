@@ -115,7 +115,7 @@ meeting certain conditions.
 -/
 def distributiveR_from_distributiveL
     {α : Sort u} {f g : α → α → α}
-    [EqvOp α] [Commutative f] [Substitutive₂ g (· ≃ ·) (· ≃ ·)]
+    [EqvOp α] [Commutative f] [Substitutive₂ g AA.tc (· ≃ ·) (· ≃ ·)]
     : DistributiveOn Hand.L f g → DistributiveOn Hand.R f g := by
   intro
   constructor

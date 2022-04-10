@@ -56,7 +56,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   Equal natural numbers can be substituted on either side of
   _less than or equal to_.
   -/
-  le_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·)
+  le_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
 
   /-- All natural numbers are _less than or equal to_ themselves. -/
   le_reflexive : Relation.Refl (α := ℕ) (· ≤ ·)
@@ -74,7 +74,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   The _less than or equal to_ relation is preserved when the same value is
   added to both sides.
   -/
-  le_substitutive_add : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+  le_substitutive_add : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
 
   /--
   The _less than or equal to_ relation is preserved when the same value is
@@ -98,7 +98,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   /--
   Equal natural numbers can be substituted on either side of _less than_.
   -/
-  lt_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·)
+  lt_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
 
   /-- The _less than_ relation can be extended through intermediate values. -/
   lt_transitive : Relation.Trans (α := ℕ) (· < ·)
@@ -135,12 +135,14 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   trichotomy {n m : ℕ} : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m)
 
 attribute [instance] Order.Derived.le_substitutive_eqv
+attribute [instance] Order.Derived.lt_substitutive_eqv
+attribute [instance] Order.Derived.lt_transitive
 
 namespace Order
 export Order.Base (le_defn leOp lt_defn ltOp)
 export Order.Derived (
   le_antisymm le_reflexive le_split le_transitive
-  lt_defn_add lt_split lt_step lt_step_le lt_zero trichotomy
+  lt_defn_add lt_split lt_step lt_step_le lt_transitive lt_zero trichotomy
 )
 end Order
 

@@ -60,8 +60,8 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
     _ ≃ m      := ‹n₁ + d ≃ m›
 
 instance le_substL_eqv
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
-  subst₂ := le_subst_eqv
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
+  subst₂ := λ (_ : True) => le_subst_eqv
 
 theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
   intro (_ : m₁ ≃ m₂) (_ : n ≤ m₁)
@@ -73,11 +73,11 @@ theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n �
   exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
 
 instance le_substR_eqv
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
-  subst₂ := le_eqv_subst
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
+  subst₂ := λ (_ : True) => le_eqv_subst
 
 instance le_substitutive_eqv
-    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) (· ≃ ·) (· → ·) where
+    : AA.Substitutive₂ (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
   substitutiveL := le_substL_eqv
   substitutiveR := le_substR_eqv
 
@@ -173,15 +173,15 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
     _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
 
 instance le_substL_add
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
-  subst₂ := le_subst_add
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
+  subst₂ := λ (_ : True) => le_subst_add
 
 instance le_substR_add
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) :=
-  AA.substR_from_substL_swap le_substL_add
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) :=
+  AA.substR_from_substL_swap (rS := (· ≃ ·)) le_substL_add
 
 instance le_substitutive_add
-    : AA.Substitutive₂ (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+    : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
   substitutiveL := le_substL_add
   substitutiveR := le_substR_add
 
@@ -237,8 +237,8 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
 instance lt_substL_eqv
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
-  subst₂ := lt_subst_eqv
+    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
+  subst₂ := λ (_ : True) => lt_subst_eqv
 
 theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
   intro (_ : n₁ ≃ n₂) (_ : m < n₁)
@@ -250,11 +250,11 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
 instance lt_substR_eqv
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
-  subst₂ := lt_eqv_subst
+    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
+  subst₂ := λ (_ : True) => lt_eqv_subst
 
 instance lt_substitutive_eqv
-    : AA.Substitutive₂ (α := ℕ) (· < ·) (· ≃ ·) (· → ·) where
+    : AA.Substitutive₂ (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
   substitutiveL := lt_substL_eqv
   substitutiveR := lt_substR_eqv
 
