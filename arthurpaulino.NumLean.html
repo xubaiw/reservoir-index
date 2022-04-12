@@ -1,0 +1,88 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>arthurpaulino/NumLean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>arthurpaulino/NumLean</h1>
+<p>A Lean 4 package for heavy numerical computations</p>
+<a href="https://github.com/arthurpaulino/NumLean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">NumLean</h3>
+<p dir="auto">An early WIP of a numerical lib for Lean 4.</p>
+<p dir="auto">This package provides an interface to low level matricial operations.</p>
+<h4 dir="auto">Matrix instantiation</h4>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="let ones ← NLMatrix.new 5 5 1                 -- creates a 5×5 matrix filled with ones
+let id ← NLMatrix.id 5                        -- creates a 5×5 identity matrix
+let m' ← NLMatrix.fromValues 2 2 [1, 2, 3, 4] -- creates a 2×2 matrix with those values
+let m'' ← NLMatrix.fromRows [[1, 2], [3, 4]]  -- creates a 2×2 matrix similar to m'"><pre><span class="pl-k">let</span> ones ← NLMatrix.new <span class="pl-c1">5</span> <span class="pl-c1">5</span> <span class="pl-c1">1</span>                 <span class="pl-c"><span class="pl-c">--</span> creates a 5×5 matrix filled with ones</span>
+<span class="pl-k">let</span> id ← NLMatrix.id <span class="pl-c1">5</span>                        <span class="pl-c"><span class="pl-c">--</span> creates a 5×5 identity matrix</span>
+<span class="pl-k">let</span> m' ← NLMatrix.fromValues <span class="pl-c1">2</span> <span class="pl-c1">2</span> [<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>] <span class="pl-c"><span class="pl-c">--</span> creates a 2×2 matrix with those values</span>
+<span class="pl-k">let</span> m'' ← NLMatrix.fromRows [[<span class="pl-c1">1</span>, <span class="pl-c1">2</span>], [<span class="pl-c1">3</span>, <span class="pl-c1">4</span>]]  <span class="pl-c"><span class="pl-c">--</span> creates a 2×2 matrix similar to m'</span></pre></div>
+<h4 dir="auto">Tensors</h4>
+<p dir="auto">It's also possible to stack matrix operations with <code>NLTensor</code>. A tensor always starts
+with a matrix in the head.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="let t : NLTensor ← NLTensor.new id ↠ plusF 3
+  ↠ plusT (NLTensor.new ones ↠ plusF 3)
+-- `t` represents the process of adding 3.0 to `id` and then
+-- summing the result with `ones`
+
+let tResult : NLMatrix ← t.compute
+-- checks for dimensionality consistency and then performs the computations
+
+IO.println $ ← m'.toString
+-- 6.0 5.0 5.0 5.0 5.0 
+-- 5.0 6.0 5.0 5.0 5.0 
+-- 5.0 5.0 6.0 5.0 5.0 
+-- 5.0 5.0 5.0 6.0 5.0 
+-- 5.0 5.0 5.0 5.0 6.0"><pre><span class="pl-k">let</span> t : NLTensor ← NLTensor.new id ↠ plusF <span class="pl-c1">3</span>
+  ↠ plusT (NLTensor.new ones ↠ plusF <span class="pl-c1">3</span>)
+<span class="pl-c"><span class="pl-c">--</span> `t` represents the process of adding 3.0 to `id` and then</span>
+<span class="pl-c"><span class="pl-c">--</span> summing the result with `ones`</span>
+
+<span class="pl-k">let</span> tResult : NLMatrix ← t.compute
+<span class="pl-c"><span class="pl-c">--</span> checks for dimensionality consistency and then performs the computations</span>
+
+IO.println $ ← m'.toString
+<span class="pl-c"><span class="pl-c">--</span> 6.0 5.0 5.0 5.0 5.0 </span>
+<span class="pl-c"><span class="pl-c">--</span> 5.0 6.0 5.0 5.0 5.0 </span>
+<span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 6.0 5.0 5.0 </span>
+<span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 5.0 6.0 5.0 </span>
+<span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 5.0 5.0 6.0</span></pre></div>
+<p dir="auto">This abstraction allows you to create functions that chains transformations without
+duplicating code.</p>
+<h4 dir="auto">Next steps</h4>
+<ul dir="auto">
+<li>Optimize representation for some special kinds of matrices</li>
+<li>Optimize operations for such special matrices</li>
+<li>Provide more operations like determinant, inverse etc</li>
+<li>Masking/broadcasting</li>
+<li>Documentation</li>
+<li>Dream: plug in more powerful backend like CUDA</li>
+</ul>
+<h4 dir="auto">Contributing</h4>
+<p dir="auto">Feel free to create issues, but please be responsive after doing so. You can also reach
+me on <a href="https://leanprover.zulipchat.com/" rel="nofollow">Zulip</a>.</p>
+<p dir="auto">Fork and open PRs as you wish. But again, be responsive after doing so :)</p>
+</article></div></main>
+</body>
+</html>
