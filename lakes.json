@@ -43,6 +43,7 @@
  "hargoniX/lean4-fixed",
  "hargoniX/lean4-statvfs",
  "insightmind/LeanInk",
+ "intsuc/unified-bidirectional-elaboration",
  "javra/iit",
  "joehendrix/lean-arith-solver",
  "joehendrix/lean-crypto",
