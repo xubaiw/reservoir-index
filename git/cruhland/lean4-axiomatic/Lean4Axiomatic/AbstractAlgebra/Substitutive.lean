@@ -419,12 +419,15 @@ For more information see `CancellativeOn.cancel`.
 - `α`: the argument type of the binary operation `f`.
 - `β`: the result type of the binary operation `f`.
 - `f`: the binary operation that obeys the generalized cancellation property.
+- `C`: a constraint that the argument on the `hand` side of `f` must meet.
 - `rα`: a binary relation over `f`'s argument type `α`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
-    (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+    (f : α → α → β) (C : outParam (α → Prop))
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    where
   /--
   The left- or right-handed generalized cancellation property of a binary
   operation `f`.
@@ -439,37 +442,74 @@ class CancellativeOn
   `n₁ + m ≃ n₂ + m`, or that `m + n₁ ≃ m + n₂`, then we can conclude that
   `n₁ ≃ n₂`.
 
+  More advanced applications may require a nontrivial constraint `C` on `x`; an
+  example is that `x * y₁ ≃ x * y₂` implies `y₁ ≃ y₂` only for nonzero `x`.
+
   **Named parameters**
   - see `CancellativeOn` for the class parameters.
   - `x`: the "cancelled" argument to `f`; the `hand` parameter
     indicates which side of `f` it appears on.
   - `y₁` and `y₂`: the other arguments to `f`; appearing on the side opposite
     `hand`. They are related by `rα` in the result.
+  - `cx`: evidence that the constraint on `x` is satisfied.
   -/
   cancel
-    {x y₁ y₂ : α} : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
+    {x y₁ y₂ : α} (cx : C x)
+    : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
 
 export CancellativeOn (cancel)
 
 /--
-Convenience function for the left-handed generalized cancellation property.
+Convenience function for the left-handed generalized cancellation property,
+without a constraint on `x`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `cancel` function.
 
 See `CancellativeOn.cancel` for detailed documentation.
 -/
-abbrev cancelL := @cancel Hand.L
+abbrev cancelL
+    {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
+    {rβ : β → β → Prop} [self : CancellativeOn Hand.L f tc rα rβ]
+    {x y₁ y₂ : α} :=
+  @cancel Hand.L α β f tc rα rβ self x y₁ y₂ True.intro
 
 /--
-Convenience function for the right-handed generalized cancellation property.
+Convenience function for the right-handed generalized cancellation property,
+without a constraint on `x`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `cancel` function.
 
 See `CancellativeOn.cancel` for detailed documentation.
 -/
-abbrev cancelR := @cancel Hand.R
+abbrev cancelR
+    {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
+    {rβ : β → β → Prop} [self : CancellativeOn Hand.R f tc rα rβ]
+    {x y₁ y₂ : α} :=
+  @cancel Hand.R α β f tc rα rβ self x y₁ y₂ True.intro
+
+/--
+Convenience function for the left-handed generalized cancellation property,
+with an explicit argument for the constraint on `x`.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
+abbrev cancelLC := @cancel Hand.L
+
+/--
+Convenience function for the right-handed generalized cancellation property,
+with an explicit argument for the constraint on `x`.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `cancel` function.
+
+See `CancellativeOn.cancel` for detailed documentation.
+-/
+abbrev cancelRC := @cancel Hand.R
 
 /--
 Convenience class for types and operations that satisfy the full (left- **and**
@@ -479,9 +519,11 @@ See `CancellativeOn` for detailed documentation.
 -/
 class Cancellative
     {α : Sort u} {β : Sort v}
-    (f : α → α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
-  cancellativeL : CancellativeOn Hand.L f rα rβ
-  cancellativeR : CancellativeOn Hand.R f rα rβ
+    (f : α → α → β) (C : outParam (α → Prop))
+    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    where
+  cancellativeL : CancellativeOn Hand.L f C rα rβ
+  cancellativeR : CancellativeOn Hand.R f C rα rβ
 
 attribute [instance] Cancellative.cancellativeL
 attribute [instance] Cancellative.cancellativeR
@@ -498,6 +540,8 @@ arguments to `f` can be swapped so that left-handed cancellation can be used.
 - `α`: the argument type of the binary operation `f`.
 - `β`: the result type of the binary operation `f`.
 - `f`: the binary operation that obeys the generalized cancellation property.
+- `C`: a constraint that the argument on the cancellation-hand side of `f` must
+  meet.
 - `rα`: a binary relation over `f`'s argument type `α`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 
@@ -509,17 +553,17 @@ arguments to `f` can be swapped so that left-handed cancellation can be used.
 -/
 def cancelR_from_cancelL
     {α : Sort u} {β : Sort v}
-    {f : α → α → β} {rα : α → α → Prop} {rβ : β → β → Prop}
+    {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ : β → β → Prop}
     [EqvOp β] [Commutative f] [Substitutive₂ rβ tc (· ≃ ·) (· → ·)]
-    : CancellativeOn Hand.L f rα rβ → CancellativeOn Hand.R f rα rβ := by
+    : CancellativeOn Hand.L f C rα rβ → CancellativeOn Hand.R f C rα rβ := by
   intro
   constructor
-  intro x y₁ y₂ (_ : rβ (f y₁ x) (f y₂ x))
+  intro x y₁ y₂ (_ : C x) (_ : rβ (f y₁ x) (f y₂ x))
   show rα y₁ y₂
   have : rβ (f x y₁) (f y₂ x) :=
     AA.substL (rβ := (· → ·)) AA.comm ‹rβ (f y₁ x) (f y₂ x)›
   have : rβ (f x y₁) (f x y₂) :=
     AA.substR (rβ := (· → ·)) AA.comm ‹rβ (f x y₁) (f y₂ x)›
-  exact AA.cancelL ‹rβ (f x y₁) (f x y₂)›
+  exact AA.cancelLC ‹C x› ‹rβ (f x y₁) (f x y₂)›
 
 end AA

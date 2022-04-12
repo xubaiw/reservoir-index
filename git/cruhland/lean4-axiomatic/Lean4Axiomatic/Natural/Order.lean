@@ -80,7 +80,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   The _less than or equal to_ relation is preserved when the same value is
   removed from an addition on both sides.
   -/
-  le_cancellative_add : AA.Cancellative (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·)
+  le_cancellative_add : AA.Cancellative (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·)
 
   /-- Weakens equality to _less than or equal to_. -/
   le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m
@@ -132,7 +132,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   Very general property about ordering which often simplifies proofs that would
   otherwise have had to use induction.
   -/
-  trichotomy {n m : ℕ} : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m)
+  trichotomy (n m : ℕ) : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m)
 
 attribute [instance] Order.Derived.le_substitutive_eqv
 attribute [instance] Order.Derived.lt_substitutive_eqv

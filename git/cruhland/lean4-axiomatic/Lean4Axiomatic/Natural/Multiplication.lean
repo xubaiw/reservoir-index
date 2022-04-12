@@ -69,11 +69,17 @@ class Multiplication.Derived
   mul_substitutive_lt
     : AA.Substitutive₂ (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
 
+  /--
+  A non-zero factor can be removed from products on both sides of an equality.
+  -/
+  mul_cancellative : AA.Cancellative (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
+
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
-  mul_associative mul_commutative mul_distributive mul_positive
-  mul_substitutive_eq mul_substitutive_lt mul_zero zero_product_split
+  mul_associative mul_cancellative mul_commutative mul_distributive
+  mul_positive mul_substitutive_eq mul_substitutive_lt mul_zero
+  zero_product_split
 )
 end Multiplication
 

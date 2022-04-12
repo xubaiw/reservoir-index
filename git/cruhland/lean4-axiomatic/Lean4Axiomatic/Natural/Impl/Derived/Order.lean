@@ -200,11 +200,11 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
   exact Addition.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
 
 def le_cancelL_add
-    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
-  cancel := le_cancel_add
+    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
+  cancel := λ (_ : True) => le_cancel_add
 
 instance le_cancellative_add
-    : AA.Cancellative (α := ℕ) (· + ·) (· ≤ ·) (· ≤ ·) where
+    : AA.Cancellative (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
   cancellativeL := le_cancelL_add
   cancellativeR := AA.cancelR_from_cancelL le_cancelL_add
 
@@ -437,7 +437,7 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
 instance lt_transitive : Relation.Trans (α := ℕ) (· < ·) where
   trans := lt_trans
 
-theorem trichotomy {n m : ℕ}
+theorem trichotomy (n m : ℕ)
     : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m) := by
   constructor
   case atLeastOne =>

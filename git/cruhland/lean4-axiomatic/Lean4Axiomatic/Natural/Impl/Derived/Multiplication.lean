@@ -335,6 +335,43 @@ instance mul_substitutive_lt
   substitutiveL := mul_substL_lt
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substL_lt
 
+/--
+Multiplication on the left by a nonzero natural number is an injection.
+
+**Proof intuition**: If one of the right-hand factors is greater than the other,
+then multiplying them both by a nonzero (i.e., positive) natural number will
+preserve their ordering (by `mul_substitutive_lt`), contradicting the hypothesis
+that the products are equal. Thus the right-hand factors must be equal.
+-/
+def mul_cancelL
+    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·) := by
+  apply AA.CancellativeOn.mk
+  intro x y₁ y₂ (_ : x ≄ 0) (_ : x * y₁ ≃ x * y₂)
+  show y₁ ≃ y₂
+  have : Positive x := Sign.positive_defn.mpr ‹x ≄ 0›
+  have notTwoOfThree := (Order.trichotomy (x * y₁) (x * y₂)).atMostOne
+  match (Order.trichotomy y₁ y₂).atLeastOne with
+  | AA.OneOfThree.first (_ : y₁ < y₂) =>
+    have : x * y₁ < x * y₂ := AA.substRC ‹Positive x› ‹y₁ < y₂›
+    have twoOfThree :=
+      AA.TwoOfThree.oneAndTwo
+        (γ := x * y₁ > x * y₂) ‹x * y₁ < x * y₂› ‹x * y₁ ≃ x * y₂›
+    exact absurd twoOfThree notTwoOfThree
+  | AA.OneOfThree.second (_ : y₁ ≃ y₂) =>
+    exact ‹y₁ ≃ y₂›
+  | AA.OneOfThree.third (_ : y₁ > y₂) =>
+    have : y₂ < y₁ := ‹y₁ > y₂›
+    have : x * y₂ < x * y₁ := AA.substRC ‹Positive x› ‹y₂ < y₁›
+    have twoOfThree :=
+      AA.TwoOfThree.twoAndThree
+        (α := x * y₁ < x * y₂) ‹x * y₁ ≃ x * y₂› ‹x * y₂ < x * y₁›
+    exact absurd twoOfThree notTwoOfThree
+
+instance mul_cancellative
+    : AA.Cancellative (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·) where
+  cancellativeL := mul_cancelL
+  cancellativeR := AA.cancelR_from_cancelL mul_cancelL
+
 instance multiplication_derived : Multiplication.Derived ℕ where
   mul_substitutive_eq := mul_substitutive_eq
   mul_zero := mul_zero
@@ -345,5 +382,6 @@ instance multiplication_derived : Multiplication.Derived ℕ where
   mul_distributive := mul_distributive
   mul_associative := mul_associative
   mul_substitutive_lt := mul_substitutive_lt
+  mul_cancellative := mul_cancellative
 
 end Lean4Axiomatic.Natural.Derived
