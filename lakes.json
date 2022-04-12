@@ -23,6 +23,7 @@
  "arthurpaulino/LeanMusic",
  "arthurpaulino/LeanMySQL",
  "arthurpaulino/LeanREPL",
+ "arthurpaulino/NumLean",
  "arthurpaulino/TestPrettyPrinter",
  "arthurpaulino/lean4-metaprogramming-book",
  "avigad/lamr",
