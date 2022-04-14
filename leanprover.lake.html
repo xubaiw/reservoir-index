@@ -37,13 +37,13 @@ With Lake, package configuration is written in Lean inside a dedicated <code>lak
 <p dir="auto">To create a new package, either run <code>lake init <package-name></code> to setup the package in the current directory or <code>lake new <package-name></code> to create it in a new directory. For example, we could create the package <code>hello</code> like so:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ mkdir hello
 $ cd hello
-$ lake init hello"><pre><code>$ mkdir hello
+$ lake init hello"><pre class="notranslate"><code class="notranslate">$ mkdir hello
 $ cd hello
 $ lake init hello
 </code></pre></div>
 <p dir="auto">or like so:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake new hello
-$ cd hello"><pre><code>$ lake new hello
+$ cd hello"><pre class="notranslate"><code class="notranslate">$ lake new hello
 $ cd hello
 </code></pre></div>
 <p dir="auto">Either way, Lake will initialize a git repository in the package directory with a basic <code>.gitignore</code> that ignores the build directory (i.e., <code>build</code>) where Lake outputs build files.</p>
@@ -71,7 +71,7 @@ package hello {
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
 ...
 $ ./build/bin/hello
-Hello, world!"><pre><code>$ lake build
+Hello, world!"><pre class="notranslate"><code class="notranslate">$ lake build
 ...
 $ ./build/bin/hello
 Hello, world!
@@ -168,7 +168,7 @@ script greet (args) <span class="pl-k">do</span>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake script run greet
 Hello, world!
 $ lake script run greet me
-Hello, me!"><pre><code>$ lake script run greet
+Hello, me!"><pre class="notranslate"><code class="notranslate">$ lake script run greet
 Hello, world!
 $ lake script run greet me
 Hello, me!
@@ -180,7 +180,7 @@ Display a greeting
 USAGE:
   lake run greet [name]
 
-Greet the entity with the given name. Otherwise, greet the whole world."><pre><code>$ lake script doc greet
+Greet the entity with the given name. Otherwise, greet the whole world."><pre class="notranslate"><code class="notranslate">$ lake script doc greet
 Display a greeting
 
 USAGE:

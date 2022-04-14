@@ -151,13 +151,3 @@ mkpyobjs!
   PyExc_PermissionError
   PyExc_ProcessLookupError
   PyExc_TimeoutError
-
-#check List
-
-def f : Bool → Type
-| true => Nat
-| false => String
-
-def mafonctionStylee : (kind : Bool) → f kind → String
-| true, (i:Nat) => s!"i + 1 = {i + 1}"
-| false, (s:String) => s!"La chaine de caractère est"

@@ -72,14 +72,14 @@ primitives to enable reasoning and efficient rewriting.</li>
 </ul>
 <h3 dir="auto">Build instructions</h3>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
-$ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>"><pre><code>$ lake build
+$ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>"><pre class="notranslate"><code class="notranslate">$ lake build
 $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
 </code></pre></div>
 <h4 dir="auto">Nix</h4>
 <p dir="auto">Start a "lean shell" per the <a href="https://leanprover.github.io/lean4/doc/setup.html#nix-setup" rel="nofollow">Nix Setup documentation</a> for lean:</p>
 <blockquote>
 <p dir="auto">After installing (any version of) Nix (<a href="https://nixos.org/download.html" rel="nofollow">https://nixos.org/download.html</a>), you can easily open a shell with the particular pre-release version of Nix needed by and tested with our setup (called the "Lean shell" from here on):</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix"><pre><code>$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix"><pre class="notranslate"><code class="notranslate">$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix
 </code></pre></div>
 </blockquote>
 <p dir="auto">Ensure that these extra options are active in the nix you are running. Under NixOS, this means putting this in top-level config. Under a non OS level isntall, this means putting this in the <code>.nix-profile</code> and restarting the nix daemon.</p>
@@ -94,7 +94,7 @@ $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
         trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= lean4.cachix.org-1:mawtxSxcaiWE24xCXXgh3qnvlTkyU7evRRnGeAhD4Wk=
         allow-import-from-derivation = true
       '';
-  };"><pre lang="nix="><code>  nix = {
+  };"><pre class="notranslate" lang="nix="><code class="notranslate">  nix = {
       package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
       extraOptions = ''
         experimental-features = nix-command flakes
@@ -108,7 +108,7 @@ $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
   };
 </code></pre></div>
 <h3 dir="auto">Test instructions</h3>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd examples; lit -v . # run all examples, report failures."><pre><code>$ cd examples; lit -v . # run all examples, report failures.
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd examples; lit -v . # run all examples, report failures."><pre class="notranslate"><code class="notranslate">$ cd examples; lit -v . # run all examples, report failures.
 </code></pre></div>
 <h3 dir="auto">Documentation</h3>
 <ul dir="auto">

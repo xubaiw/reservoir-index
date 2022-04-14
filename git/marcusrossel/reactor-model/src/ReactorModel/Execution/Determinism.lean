@@ -2,6 +2,9 @@ import ReactorModel.Execution.Basic
 
 open Classical
 
+def List.lastSome? (l : List α) (p : α → Option β) : Option β :=
+  l.reverse.findSome? p
+
 -- This file defines (and proves) determinism for the reactor model.
 -- Determinism can be understood in multiple ways.
 -- Primarily, we say the execution is deterministic if there is always at most one timed
@@ -153,6 +156,42 @@ theorem ChangeListStep.indep_comm {s s₁ s₂ s₁₂ s₂₁ : State} {rcn₁ 
     apply ChangeListStep.value_identical h₁ h₁₂ h₂ h₂₁ ht cmp i v h₁₂v
   case ctx =>
     sorry -- follows from ChangeListStep.preserves_ctx
+
+
+
+------------------------------------------------------------------------------------------------------
+
+
+
+
+-- NOTE: This only holds without mutations.
+theorem ChangeStep.rcn_agnostic :
+  (s -[rcn₁:c]→ s₁) → (s -[rcn₂:c]→ s₂) → s₁ = s₂ := by
+  intro h₁ h₂
+  cases h₁ <;> cases h₂ <;> simp
+  case' port.port h₁ _ h₂, state.state h₁ _ h₂, action.action h₁ _ h₂ => exact Reactor.Update.unique' h₁ h₂
+
+-- NOTE: This only holds without mutations.
+theorem ChangeListStep.rcn_agnostic :
+  (s -[rcn₁:cs]→* s₁) → (s -[rcn₂:cs]→* s₂) → s₁ = s₂ := by
+  intro h₁ h₂
+  induction h₁ <;> cases h₂
+  case nil.nil => rfl
+  case cons.cons h₁ _ hi _ h₁' h₂'  => rw [h₁.rcn_agnostic h₁'] at hi; exact hi h₂'
+
+structure ChangeListEquiv (cs₁ cs₂ : List Change) : Prop where
+  ports   : ∀ i,   cs₁.lastSome? (·.portValue? i)     = cs₂.lastSome? (·.portValue? i)
+  state   : ∀ i,   cs₁.lastSome? (·.stateValue? i)    = cs₂.lastSome? (·.stateValue? i)
+  actions : ∀ i t, cs₁.filterMap (·.actionValue? i t) = cs₂.filterMap (·.actionValue? i t)
+  -- NOTE: Mutations are currently noops, and can therefore be ignored.
+
+notation cs₁:max " ⋈ " cs₂:max => ChangeListEquiv cs₁ cs₂
+
+theorem ChangeListStep.equiv_changes_eq_result {cs₁ cs₂ : List Change} :
+  (s -[rcn₁:cs₁]→* s₁) → (s -[rcn₂:cs₂]→* s₂) → (cs₁ ⋈ cs₂) → s₁ = s₂ := by
+  intro h₁ h₂ he
+  -- *[] extensionality should work here.
+  sorry
 
 theorem InstStep.preserves_freshID {s₁ s₂ : State} {rcn : ID} :
   (s₁ ⇓ᵢ[rcn] s₂) → s₁.ctx.freshID = s₂.ctx.freshID := by
@@ -331,12 +370,10 @@ theorem InstExecution.eq_ctx_processed_rcns_perm :
       exact ((h₁.mem_currentProcessedRcns _).mp h).resolve_right hc
 
 theorem InstExecution.rcns_respect_dependencies : 
-  (s₁ ⇓ᵢ+[rcns] s₂) → 
-    ∀ i₁ i₂ rcn₁ rcn₂, 
-      rcns.get? i₁ = some rcn₁ → rcns.get? i₂ = some rcn₂ → 
-      rcn₁ >[s₁.rtr] rcn₂ → i₁ < i₂ 
-  := by
-  intro h i₁ i₂ rcn₁ rcn₂ h₁ h₂ hd
+  (s₁ ⇓ᵢ+[rcns] s₂) →
+  rcns.get? i₁ = some rcn₁ → rcns.get? i₂ = some rcn₂ → 
+  rcn₁ >[s₁.rtr] rcn₂ → i₁ < i₂ := by
+  intro h h₁ h₂ hd
   sorry
 
 -- This theorem is the main theorem about determinism in an instantaneous setting.
@@ -344,13 +381,40 @@ theorem InstExecution.rcns_respect_dependencies :
 -- reactor.
 protected theorem InstExecution.deterministic {s s₁ s₂ rcns₁ rcns₂} : 
   (s ⇓ᵢ+[rcns₁] s₁) → (s ⇓ᵢ+[rcns₂] s₂) → (s₁.ctx = s₂.ctx) → s₁ = s₂ := by
-  intro he₁ he₂ hc
+  intro h₁ h₂ hc
   refine State.ext _ _ ?_ hc
-  -- Main Lemma:
-  -- If we have two InstExecutions that contain the same reaction executions/skips, 
-  -- if we reorder the execution of reactions s.t. the dependencies are respected,
-  -- then we preserve the result.
-  -- The proof should be akin to run_topo_comm/run_topo_swap in Marcus' thesis.
+  have hp := h₁.eq_ctx_processed_rcns_perm h₂ hc
+  -- PLAN:
+  --
+  -- two change lists are equivalent if they produce the same effects
+  -- e.g. [.prt A 3, .prt A 5] ~ [.prt A 5]
+  -- importantly: you have to define this not in terms of the execution relations,
+  -- but rather by the order of changes in the lists (otherwise the following theorem
+  -- would hold by definition) - that is, the relation itself should be structural,
+  -- the following lemma then ties that into behaviour:
+  --
+  -- 1. equivalent change lists produce equal reactors
+  -- (s -[cs₁]→ s₁) → (s -[cs₂]→ s₂) → cs₁ ~ cs₂ → s₁ = s₂
+  -- ... to prove this we will need to solve the theorems relating to `Change(List)Step`.
+  --
+  -- 2. swapping independent reactions produces equivalent change lists:
+  -- (s ⇓ᵢ[r₁]→ s₁) → (s -[r₂]→ s₂) → /r₁ indep r₂/ → /r₁ and r₂ correspond to rcn₁ and rcn₂/ →
+  -- (rcn₁ $ s.rcnInput rcn₁) ++ (rcn₂ $ s₁.rcnInput rcn₂) ~ (rcn₂ $ s.rcnInput rcn₂) ++ (rcn₁ $ s₂.rcnInput rcn₁)
+  --
+  -- 3. dependency respecting reaction lists that are permutations of eachother are
+  -- equal up to swapping of independent reactions
+  --
+  -- 4. by 2. and 3. and induction: dependency respecting reaction lists that are permutations
+  -- of eachother produce equivalent change lists
+  --
+  -- 5. by 1. and 4. and hp and `InstExecution.rcns_respect_dependencies`: 
+  --    `InstExecution.deterministic` holds
+  --
+  -- I think this approach should solve the "intermediate reactor" problem, as we reason at the 
+  -- level of change lists. Changes are "fully realized", i.e. their behaviour does not depend
+  -- on the state of a reactor - thus we don't need to consider any intermediate reactors.
+  -- In constrast, reasoning at the level of reactions always reaquires an associated reactor,
+  -- as the behaviour of a reaction depends on its parent reactor.
   sorry
 
 theorem State.instComplete_to_inst_stuck :

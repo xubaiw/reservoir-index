@@ -61,7 +61,7 @@ containing the following:</p>
 and you should see something like this in the <code>Lean: Editor</code> output panel:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="info: downloading component 'lean'
 info: installing component 'lean'
-Lean (version 4.0.0-nightly-2021-10-18, commit e843fb7ca5b5, Release)"><pre><code>info: downloading component 'lean'
+Lean (version 4.0.0-nightly-2021-10-18, commit e843fb7ca5b5, Release)"><pre class="notranslate"><code class="notranslate">info: downloading component 'lean'
 info: installing component 'lean'
 Lean (version 4.0.0-nightly-2021-10-18, commit e843fb7ca5b5, Release)
 </code></pre></div>
@@ -76,12 +76,12 @@ Lean 3.  There is a separate VS Code extension for Lean 3.  You can have both ex
 for Lean projects.  The VS code extension will honor the Lean version specified in your <code>lean-toolchain</code> file.</p>
 <p dir="auto">Open a VS Code Terminal window in your <code>foo</code> folder and type the following:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="lake init foo
-lake build"><pre><code>lake init foo
+lake build"><pre class="notranslate"><code class="notranslate">lake init foo
 lake build
 </code></pre></div>
 <p dir="auto">This will add some package definition files to your project along with a <code>Main.lean</code> entry point and build an executable
 program.  You can run the program <code>./build/bin/foo</code> and you will see the expected output:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="Hello, world!"><pre><code>Hello, world!
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="Hello, world!"><pre class="notranslate"><code class="notranslate">Hello, world!
 </code></pre></div>
 <h2 dir="auto"><a id="user-content-features" class="anchor" aria-hidden="true" href="#features"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Features</h2>
 <p dir="auto">The extension supports the following features.
@@ -306,7 +306,7 @@ imports. This command has a default keyboard binding of <kbd>Ctrl</kbd>+<kbd>Shi
 <p dir="auto"><a target="_blank" rel="noopener noreferrer" href="vscode-lean4/media/select-toolchain.png"><img src="vscode-lean4/media/select-toolchain.png" alt="select-toolchain" style="max-width: 100%;"></a></p>
 <p dir="auto">You can test the latest <a href="https://github.com/leanprover/lean4">Lean 4 master branch</a> with this VS Code extension.  First you build Lean, then run the following commands:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="cd &lt;lean4-repo&gt;
-elan toolchain link master ./build/release/stage1"><pre><code>cd &lt;lean4-repo&gt;
+elan toolchain link master ./build/release/stage1"><pre class="notranslate"><code class="notranslate">cd &lt;lean4-repo&gt;
 elan toolchain link master ./build/release/stage1
 </code></pre></div>
 <p dir="auto">Now the <code>Lean4: Select Toolchain</code> will show <code>master</code> as one of the toolchains you can select.
@@ -401,7 +401,7 @@ adding a newline seems to work, then press F5.</p>
 should follow <a href="https://code.visualstudio.com/api/working-with-extensions/publishing-extension" rel="nofollow">these instructions</a>.
 But for a quick summary, run this command:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="cd &lt;vscode-lean4-repo&gt;/vscode-lean4
-npx vsce package"><pre><code>cd &lt;vscode-lean4-repo&gt;/vscode-lean4
+npx vsce package"><pre class="notranslate"><code class="notranslate">cd &lt;vscode-lean4-repo&gt;/vscode-lean4
 npx vsce package
 </code></pre></div>
 <p dir="auto">This gives you a .vsix which you can install using the VS Code

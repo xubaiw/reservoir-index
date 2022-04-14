@@ -55,7 +55,7 @@ mutual
     | lit  l    => l.toString
     | list l    => toString $ l.map Literal.toString
     | lam  l    => l.toString
-    | app  n es => s!"({n} {unfoldExpressions es})"
+    | app  e es => s!"({Expression.toString e} {unfoldExpressions es})"
     | .unOp  .not p   =>s!"(! {Expression.toString p})"
     | .binOp .add l r =>s!"({Expression.toString l} + {Expression.toString r})"
     | .binOp .mul l r =>s!"({Expression.toString l} * {Expression.toString r})"
@@ -86,15 +86,15 @@ def listLiteralEq : List Literal → List Literal → Bool
     a.eq b && listLiteralEq (a' :: as) (b' :: bs)
   | _, _   => false
 
-def appError (app l r : String) : String :=
-  s!"invalid application of '{app}' between '{l}' and '{r}'"
+def opError (app l r : String) : String :=
+  s!"I can't perform a '{app}' operation between '{l}' and '{r}'"
 
-def appError' (app v : String) : String :=
-  s!"invalid application of '{app}' on '{v}'"
+def opError1 (app v : String) : String :=
+  s!"I can't perform a '{app}' operation on '{v}'"
 
 def Value.not : Value → Except String Value
-  | lit $ .bool b => pure $ lit $ .bool !b
-  | v             => throw $ appError' "!" v.typeStr
+  | lit $ .bool b => return lit $ .bool !b
+  | v             => throw $ opError1 "!" v.typeStr
 
 def Value.add : Value → Value → Except String Value
   | lit $ .bool  bₗ, lit $ .bool  bᵣ => return lit $ .bool $ bₗ || bᵣ
@@ -105,7 +105,7 @@ def Value.add : Value → Value → Except String Value
   | lit $ .str   sₗ, lit $ .str   sᵣ => return lit $ .str   $ sₗ ++ sᵣ
   | list         lₗ, list         lᵣ => return list  $ lₗ ++ lᵣ
   | list         l,  lit          r  => return list  $ l.concat r
-  | l,               r               => throw $ appError "+" l.typeStr r.typeStr
+  | l,               r               => throw $ opError "+" l.typeStr r.typeStr
 
 def Value.mul : Value → Value → Except String Value
   | lit $ .bool  bₗ, lit $ .bool  bᵣ => return .lit $ .bool  $ bₗ && bᵣ
@@ -113,7 +113,7 @@ def Value.mul : Value → Value → Except String Value
   | lit $ .float fₗ, lit $ .float fᵣ => return .lit $ .float $ fₗ *  fᵣ
   | lit $ .int   iₗ, lit $ .float fᵣ => return .lit $ .float $ (.ofInt iₗ) *  fᵣ
   | lit $ .float fₗ, lit $ .int   iᵣ => return .lit $ .float $ fₗ *  (.ofInt iᵣ)
-  | l,               r               => throw $ appError "*" l.typeStr r.typeStr
+  | l,               r               => throw $ opError "*" l.typeStr r.typeStr
 
 def Bool.toNat : Bool → Nat
   | false => 0
@@ -127,7 +127,7 @@ def Value.lt : Value → Value → Except String Value
   | lit $ .float fₗ, lit $ .int   iᵣ => return lit $ .bool $ fₗ < (.ofInt iᵣ)
   | lit $ .str   sₗ, lit $ .str   sᵣ => return lit $ .bool $ sₗ < sᵣ
   | list lₗ, list lᵣ => return lit $ .bool $ lₗ.length < lᵣ.length
-  | l,               r               => throw $ appError "<" l.typeStr r.typeStr
+  | l,               r               => throw $ opError "<" l.typeStr r.typeStr
 
 def Value.le : Value → Value → Except String Value
   | lit $ .bool  bₗ, lit $ .bool  bᵣ => return lit $ .bool $ bₗ.toNat ≤ bᵣ.toNat
@@ -137,7 +137,7 @@ def Value.le : Value → Value → Except String Value
   | lit $ .float fₗ, lit $ .int   iᵣ => return lit $ .bool $ fₗ ≤ (.ofInt iᵣ)
   | lit $ .str   sₗ, lit $ .str   sᵣ => return lit $ .bool $ sₗ < sᵣ || sₗ == sᵣ
   | list lₗ, list  lᵣ => return lit $ .bool $ lₗ.length ≤ lᵣ.length
-  | l,         r      => throw $ appError "<=" l.typeStr r.typeStr
+  | l,         r      => throw $ opError "<=" l.typeStr r.typeStr
 
 def Value.gt : Value → Value → Except String Value
   | lit $ .bool  bₗ, lit $ .bool  bᵣ => return lit $ .bool $ bₗ.toNat > bᵣ.toNat
@@ -147,7 +147,7 @@ def Value.gt : Value → Value → Except String Value
   | lit $ .float fₗ, lit $ .int   iᵣ => return lit $ .bool $ fₗ > (.ofInt iᵣ)
   | lit $ .str   sₗ, lit $ .str   sᵣ => return lit $ .bool $ sₗ > sᵣ
   | list lₗ, list lᵣ => return lit $ .bool $ lₗ.length > lᵣ.length
-  | l,       r       => throw $ appError ">" l.typeStr r.typeStr
+  | l,       r       => throw $ opError ">" l.typeStr r.typeStr
 
 def Value.ge : Value → Value → Except String Value
   | lit $ .bool  bₗ, lit $ .bool  bᵣ => return lit $ .bool $ bₗ.toNat ≥ bᵣ.toNat
@@ -157,20 +157,20 @@ def Value.ge : Value → Value → Except String Value
   | lit $ .float fₗ, lit $ .int   iᵣ => return lit $ .bool $ fₗ ≥ (.ofInt iᵣ)
   | lit $ .str   sₗ, lit $ .str   sᵣ => return lit $ .bool $ sₗ > sᵣ || sₗ == sᵣ
   | list lₗ, list  lᵣ => return lit $ .bool $ lₗ.length ≥ lᵣ.length
-  | l,       r        => throw $ appError ">=" l.typeStr r.typeStr
+  | l,       r        => throw $ opError ">=" l.typeStr r.typeStr
 
 def Value.eq : Value → Value → Except String Value
   | nil,     nil      => return lit $ .bool true
   | lit  lₗ, lit lᵣ   => return lit $ .bool $ lₗ.eq lᵣ
   | list lₗ, list  lᵣ => return lit $ .bool (listLiteralEq lₗ lᵣ)
-  | lam .. , lam ..   => throw "can't compare functions" --todo
+  | lam .. , lam ..   => throw "I can't compare functions"
   | _,       _        => return lit $ .bool false
 
 def Value.ne : Value → Value → Except String Value
   | nil,     nil      => return lit $ .bool false
   | lit  lₗ, lit lᵣ   => return lit $ .bool $ !(lₗ.eq lᵣ)
   | list lₗ, list  lᵣ => return lit $ .bool !(listLiteralEq lₗ lᵣ)
-  | lam ..,  lam ..   => throw "can't compare functions" -- todo
+  | lam ..,  lam ..   => throw "I can't compare functions"
   | _,       _        => return lit $ .bool true
 
 def Value.unOp : Value → UnOp → Except String Value
