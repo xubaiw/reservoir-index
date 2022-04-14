@@ -11,24 +11,36 @@ import FxyLang.Syntax
 open Lean
 
 def mkLiteral : Syntax → Except String _root_.Literal
-  | `(literal| $n:num) => return .int n.toNat
+  | `(literal| $[-%$neg]?$n:num) =>
+    if neg.isNone
+      then return .int $ Int.ofNat n.toNat
+      else return .int $ Int.negOfNat n.toNat
   | `(literal| true)   => return .bool Bool.true
   | `(literal| false)  => return .bool Bool.false
+  | `(literal| $s:str) => match s.isStrLit? with
+    | some s => return .str s
+    | none   => unreachable!
+  | `(literal| $[-%$neg]?$f:scientific) => match f.isScientificLit? with
+    | some (m, s, e) =>
+      if neg.isNone
+        then return .float $ OfScientific.ofScientific m s e
+        else return .float $ - OfScientific.ofScientific m s e
+    | none           => unreachable!
   | _ => throw "error: can't parse value"
 
 def mkBinOp : Syntax → Except String BinOp
-  | `(binop| +) =>  return BinOp.add
-  | `(binop| *) =>  return BinOp.mul
-  | `(binop| <) =>  return BinOp.lt
+  | `(binop| +)  => return BinOp.add
+  | `(binop| *)  => return BinOp.mul
+  | `(binop| <)  => return BinOp.lt
   | `(binop| <=) => return BinOp.le
-  | `(binop| >) =>  return BinOp.gt
+  | `(binop| >)  => return BinOp.gt
   | `(binop| >=) => return BinOp.ge
-  | `(binop| =) =>  return BinOp.eq
+  | `(binop| =)  => return BinOp.eq
   | `(binop| !=) => return BinOp.ne
-  | _ => throw "error: can't binary operator"
+  | _ => throw "error: can't parse binary operator"
 
 partial def mkExpression : Syntax → Except String Expression
-  | `(expression| $v:literal)       => return .lit (← mkLiteral v)
+  | `(expression| $v:literal)     => return .lit (← mkLiteral v)
   | `(expression| !$e:expression) => return .unOp .not (← mkExpression e)
   | `(expression| $n:ident)       => return .var n.getId.toString
   | `(expression| $n:ident $[$es:expression]*) => do
@@ -37,13 +49,17 @@ partial def mkExpression : Syntax → Except String Expression
     | e :: es => return .app n.getId.toString (es.toNEList e)
   | `(expression| $l:expression $o:binop $r:expression) =>
     return .binOp (← mkBinOp o) (← mkExpression l) (← mkExpression r)
+  | `(expression| [$ls:literal,*]) =>
+    return .list $ ← ls.getElems.data.mapM mkLiteral
   | `(expression| ($e:expression)) => mkExpression e
   | _ => throw "error: can't parse expression"
 
 partial def mkProgram : Syntax → Except String Program
   | `(program| skip)  => return Program.skip
+  | `(program| $e:expression) =>
+    return .eval (← mkExpression e)
   | `(programSeq| $p:program $[$ps:program]*) => do
-    ps.foldlM (init := ← mkProgram p) fun a b => do
+    ps.foldlM (init := ← mkProgram p) fun a b =>
       return .seq a (← mkProgram b)
   | `(program| $n:ident $ns:ident* := $p:programSeq) =>
     let ns := ns.data.map $ fun i => i.getId.toString
@@ -54,7 +70,8 @@ partial def mkProgram : Syntax → Except String Program
       let nl := ns.toNEList n'
       if h : nl.noDup then
         return .decl n $ .eval $ .lam $ .mk nl h (← mkProgram p)
-      else throw s!"definition of curried function {n} has duplicated variables"
+      else throw $ s!"error: definition of curried function {n} has " ++
+        "duplicated variables"
   | `(program| if $e:expression then $p:programSeq $[else $q:programSeq]?) => do
     let q ← match q with
     | none   => pure $ Program.skip
@@ -62,8 +79,7 @@ partial def mkProgram : Syntax → Except String Program
     return .fork (← mkExpression e) (← mkProgram p) q
   | `(program| while $e:expression do $p:programSeq) =>
     return .loop (← mkExpression e) (← mkProgram p)
-  | `(program| $e:expression) =>
-    return .eval (← mkExpression e)
+  | `(program| !print $e:expression) => return .print (← mkExpression e)
   | _ => throw "error: can't parse program"
 
 partial def parseProgram : Environment → String → Except String Program
@@ -124,6 +140,7 @@ def parse : String → Environment → IO (Option String × Program)
 def code := "
 x x := x + 5
 x 4
+[1, \"oi\", 1.5]
 "
 
 def cCode := cleanseCode code
@@ -132,7 +149,7 @@ def cCode := cleanseCode code
   let p := parseProgram (← getEnv) cCode
   match p with
     | Except.ok p =>
-      let (c, r) := p.runP
+      let (c, r) := p.run
       IO.println r
       IO.println "------context-------"
       IO.println c

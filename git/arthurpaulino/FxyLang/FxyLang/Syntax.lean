@@ -4,12 +4,12 @@
   Authors: Arthur Paulino
 -/
 
-declare_syntax_cat                               literal
-syntax ("-" noWs)? num                         : literal
-syntax str                                     : literal
-syntax "true"                                  : literal
-syntax "false"                                 : literal
-syntax ("-" noWs)? num noWs "." (noWs num)?    : literal
+declare_syntax_cat              literal
+syntax ("-" noWs)? num        : literal
+syntax str                    : literal
+syntax "true"                 : literal
+syntax "false"                : literal
+syntax ("-" noWs)? scientific : literal
 
 declare_syntax_cat binop
 syntax " + "     : binop
@@ -45,3 +45,4 @@ syntax withPosition(
     colGt programSeq)?)                             : program
 syntax withPosition("while " programSeq " do "
   colGt programSeq)                                 : program
+syntax withPosition("!print " colGt expression)     : program
