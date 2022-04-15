@@ -1,4 +1,5 @@
 ["Anderssorby/LeanPlay",
+ "Augustindou/natural2lean",
  "FWuermse/lean-postgres",
  "FWuermse/lean4-sql-utils",
  "Ferinko/LeanAStar",
@@ -14,6 +15,7 @@
  "NicolasRouquette/dimensional-calculus.lean4",
  "PolyB/LeanPythonRaw",
  "SReichelt/universe-abstractions",
+ "SnO2WMaN/lean-first-practice",
  "abentkamp/duper",
  "adamtopaz/lean4_advent_2021",
  "agentultra/LeanParsec",
