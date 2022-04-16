@@ -32,10 +32,10 @@ partial def renderLoop : Int → Window → IO Unit :=
 def vertexData := FloatArray.mk $ Array.mk [-0.5,-0.7,0.0, 0.5,-0.7,0.0, 0.0,0.68,0.0, 1,0,0]
 
 def vertexShader := [
-"#version 440 core
+"#version 330
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-layout (location=0) in vec3 position;
+in vec3 position;
 "
 ,
 "const vec4 positions[] = vec4[]( vec4(-0.5f, -0.7f,    0.0, 1.0), 
@@ -43,15 +43,12 @@ layout (location=0) in vec3 position;
                                  vec4( 0.0f,  0.6888f, 0.0, 1.0));"
 ,
 "void main() {
-  gl_Position = vec4(position, 1);
-  //gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
-  //gl_Position = positions[gl_VertexID];
-  //texCoordFrag = texCoord;
+  gl_Position = positions[gl_VertexID];
 }"
 ]
 
 def fragmentShader := [
-"#version 440
+"#version 330
 
 //uniform sampler2D tex;
 //in vec2 texCoordFrag;
@@ -59,33 +56,30 @@ out vec4 fragColor;
 ",
 "
 void main() {
-  fragColor = //texture (tex, texCoordFrag);// + vec4(0.1,0.1,0.1,0);
-              vec4(0,1,1,0);
+  fragColor = vec4(0,1,1,0);
 }"
 ]
 
 def buildShader : ShaderType → List String → IO GLShaderObject := fun sType source => do
     let vshaderID <- glCreateShader sType
-    IO.println ("shader ID: " ++ toString vshaderID)
+    IO.println ("vertex shader ID: " ++ toString vshaderID)
     glShaderSource vshaderID source
     glCompileShader vshaderID
     return vshaderID
 
 def startRender : Window → IO Unit :=
   fun w => do
-    enableGLDebugOutput
     glfwSwapInterval 1
     let ⟨width,height⟩ <- glfwGetFramebufferSize w
     glViewport 0 0 width height
     glClearColor 1.0 0.0 0.0 0.0
-    let buffers <- OpenGL.glGenBuffers 1
+    let buffers <- OpenGL.glGenBuffers 2
     IO.println ("buffers: " ++ toString buffers)
     match (buffers.get? 0) with
     | Option.none => return ()
-    | Option.some vBuf => do
-        glBindBuffer BufferTarget.ArrayBuffer vBuf
+    | Option.some b => do
+        glBindBuffer BufferTarget.ArrayBuffer b
         glBufferDataFloats BufferTarget.ArrayBuffer vertexData BufferFrequency.StaticBuffer BufferAccessPattern.DrawBufferAccess
-        glBindBuffer BufferTarget.ArrayBuffer (0 : UInt32)
 
         let fshaderID <- buildShader ShaderType.VertexShader vertexShader
         let vshaderID <- buildShader ShaderType.FragmentShader fragmentShader
@@ -100,12 +94,11 @@ def startRender : Window → IO Unit :=
         | Option.none => return ()
         | Option.some vao => do
             glBindVertexArray vao
-            glBindBuffer BufferTarget.ArrayBuffer vBuf
             
             glEnableVertexAttribArray 0
             glVertexAttribFormat 0 3 GLDataType.GLFloat false 0
             glVertexAttribBinding 0 0
-            glBindVertexBuffer 0 vBuf 0 12
+            glBindVertexBuffer 0 b 0 12
 
             --let matLocation <- glGetUniformLocation programID "modelViewMatrix"
             --IO.println ("modelView location: " ++ toString matLocation)
