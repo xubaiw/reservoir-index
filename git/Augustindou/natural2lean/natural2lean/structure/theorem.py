@@ -53,3 +53,8 @@ class Theorem(Matching):
 
         # content
         self.statement = Implication.match(match.group(3))
+        if self.statement is None:
+            raise ValueError(f"Could not match an Implication in {match.group(3)}.")
+
+    # TODO : translate to lean
+    #       Use is_identifier_definition to put the identifiers before the ':' ?
