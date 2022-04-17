@@ -106,6 +106,9 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   /-- No natural number is less than zero. -/
   lt_zero {n : ℕ} : n ≮ 0
 
+  /-- A natural number is positive iff it's greater than zero. -/
+  lt_zero_pos {n : ℕ} : Sign.Positive n ↔ 0 < n
+
   /-- A natural number is always less than its successor. -/
   lt_step {n : ℕ} : n < step n
 
@@ -142,7 +145,8 @@ namespace Order
 export Order.Base (le_defn leOp lt_defn ltOp)
 export Order.Derived (
   le_antisymm le_reflexive le_split le_transitive
-  lt_defn_add lt_split lt_step lt_step_le lt_transitive lt_zero trichotomy
+  lt_defn_add lt_split lt_step lt_step_le lt_transitive lt_zero lt_zero_pos
+  trichotomy
 )
 end Order
 

@@ -375,6 +375,33 @@ theorem lt_zero {n : ℕ} : n ≮ 0 := by
     _ ≃ 0            := ‹step n + d ≃ 0›
   exact absurd ‹step (n + d) ≃ 0› Axioms.step_neq_zero
 
+/--
+A natural number is positive iff it's greater than zero.
+
+**Proof intuition**: The _less than_ relation can be defined in terms of a
+positive difference between its two arguments. If the left argument is zero,
+then the right argument must be positive.
+-/
+theorem lt_zero_pos {n : ℕ} : Sign.Positive n ↔ 0 < n := by
+  apply Iff.intro
+  · intro (_ : Sign.Positive n)
+    show 0 < n
+    apply Derived.lt_defn_add.mpr
+    show ∃ k, Sign.Positive k ∧ n ≃ 0 + k
+    exists n
+    apply And.intro
+    · show Sign.Positive n
+      exact ‹Sign.Positive n›
+    · show n ≃ 0 + n
+      exact Eqv.symm Addition.zero_add
+  · intro (_ : 0 < n)
+    show Sign.Positive n
+    have ⟨k, ⟨(_ : Sign.Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
+      Derived.lt_defn_add.mp ‹0 < n›
+    have : k ≃ n := Eqv.symm (Eqv.trans ‹n ≃ 0 + k› Addition.zero_add)
+    have pos_k := ‹Sign.Positive k›
+    exact AA.subst₁ (f := Sign.Positive) (rβ := (· → ·)) ‹k ≃ n› pos_k
+
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)
   show n ≤ m
@@ -517,6 +544,7 @@ instance order_derived : Order.Derived ℕ where
   lt_substitutive_eqv := lt_substitutive_eqv
   lt_transitive := lt_transitive
   lt_zero := lt_zero
+  lt_zero_pos := lt_zero_pos
   lt_step := lt_step
   lt_step_le := lt_step_le
   lt_defn_add := lt_defn_add

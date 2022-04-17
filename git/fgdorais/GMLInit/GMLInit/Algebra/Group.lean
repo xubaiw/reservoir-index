@@ -13,7 +13,7 @@ class Group extends Semigroup (no_index s.toSemigroupSig) : Prop where
   protected op_right_id (x) : x ⋆ e = x
   protected op_right_inv (x) : x ⋆ x⁻¹ = e
 
-def Group.infer [OpAssoc s.op] [OpRightInv s.op s.inv s.id] [OpRightId s.op s.id] : Group s where
+protected def Group.infer [OpAssoc s.op] [OpRightInv s.op s.inv s.id] [OpRightId s.op s.id] : Group s where
   op_assoc := op_assoc _
   op_right_id := op_right_id _
   op_right_inv := op_right_inv _
@@ -74,7 +74,7 @@ protected theorem inv_inv (x) : x⁻¹⁻¹ = x :=
   op_right_cancel (.⋆.) x⁻¹ $ calc
   _ = e := by rw [←op_left_inv (.⋆.) x⁻¹]
   _ = x ⋆ x⁻¹ := by rw [op_right_inv (.⋆.) x]
-instance : InvInv (no_index s.inv) := ⟨Group.inv_inv⟩
+instance : FnInvol (no_index s.inv) := ⟨Group.inv_inv⟩
 
 protected theorem inv_id : e⁻¹ = e :=
   op_right_cancel (.⋆.) e $ show e⁻¹ ⋆ e = e ⋆ e from calc
@@ -88,7 +88,7 @@ end Group
 
 class CommGroup extends Group s, CommMonoid (no_index s.toMonoidSig) : Prop where
 
-def CommGroup.infer [OpAssoc s.op] [OpComm s.op] [OpRightId s.op s.id] [OpRightInv s.op s.inv s.id] : CommGroup s where
+protected def CommGroup.infer [OpAssoc s.op] [OpComm s.op] [OpRightId s.op s.id] [OpRightInv s.op s.inv s.id] : CommGroup s where
   op_assoc := op_assoc _
   op_comm := op_comm _
   op_right_id := op_right_id _

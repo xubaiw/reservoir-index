@@ -41,6 +41,8 @@ class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   -/
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
+attribute [instance] Sign.Derived.positive_substitutive
+
 namespace Sign
 export Sign.Base (Positive positive_defn)
 export Sign.Derived (positive_add positive_step)

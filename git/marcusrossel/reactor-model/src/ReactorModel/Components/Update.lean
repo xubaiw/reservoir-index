@@ -142,17 +142,18 @@ theorem Update.unique' {σ σ₁ σ₂ : Reactor} {cmp : Cmp} {i : ID} {f : cmp.
   λ h₁ h₂ => Update.unique h₁ h₂ λ _ _ _ hv₁ hv₂ => hv₁.trans hv₂.symm
 
 theorem Update.change {σ₁ σ₂ : Reactor} {cmp : Cmp} {i : ID} {u : cmp.type → cmp.type → Prop} :
-  (σ₁ -[cmp;i u]→ σ₂) → ∃ v v', (σ₁ *[cmp:i]= v) ∧ (σ₂ *[cmp:i]= v') ∧ (u v v') := by
+  (σ₁ -[cmp;i u]→ σ₂) → ∃ v v', (σ₁.obj? cmp i = some v) ∧ (σ₂.obj? cmp i = some v') ∧ (u v v') := by
   intro h
+  simp only [←Object.iff_obj?_some]
   induction h
   case top σ₁ σ₂ v v' he hv hv' hu =>
     refine ⟨v, v', ?top.object₁, ?top.object₂, hu⟩
     case top.object₁ =>
       apply Object.nest $ Lineage.cmp cmp $ Finmap.ids_def'.mpr ⟨v, hv.symm⟩
-      simp [Lineage.cmp_parent, hv]
+      simp [Lineage.cmp_container, hv]
     case top.object₂ =>
       apply Object.nest $ Lineage.cmp cmp $ Finmap.ids_def'.mpr ⟨v', hv'.symm⟩
-      simp [Lineage.cmp_parent, hv']
+      simp [Lineage.cmp_container, hv']
   case nest _ σ₂ j rtr₁ rtr₂ _ hr₁ hr₂ _ hi =>
     have ⟨v, v', ho₁, ho₂, hu⟩ := hi
     refine ⟨v, v', ?nest.object₁, ?nest.object₂, hu⟩ 
@@ -160,12 +161,12 @@ theorem Update.change {σ₁ σ₂ : Reactor} {cmp : Cmp} {i : ID} {u : cmp.type
       cases ho₁
       case nest l hl => 
         apply Object.nest $ Lineage.nest l hr₁
-        simp [Lineage.nest_parent, hl]
+        simp [Lineage.nest_container, hl]
     case nest.object₂ =>
       cases ho₂
       case nest l hl =>
         apply Object.nest $ Lineage.nest l hr₂
-        simp [Lineage.nest_parent, hl]
+        simp [Lineage.nest_container, hl]
 
 notation u₂ " ● " u₁ => λ v₁ v₂ => ∃ v, (u₁ v₁ v) ∧ (u₂ v v₂)
 
@@ -213,8 +214,8 @@ theorem Update.funcs_comm {σ σ₁ σ₂ σ₁₂ σ₂₁ : Reactor} {cmp : Cm
   exact Update.unique' hc₁ hc₂
 
 theorem Update.preserves_ne_cmp_or_id {cmp} {f : cmp.type → cmp.type} :
-  (σ₁ -[cmp:i f]→ σ₂) → (cmp' ≠ cmp ∨ i' ≠ i) → (cmp ≠ .rtr) → (cmp' ≠ .rtr) → (σ₁ *[cmp':i']= v) → (σ₂ *[cmp':i']= v) := by
-  intro h ho hr hr' hv
+  (σ₁ -[cmp:i f]→ σ₂) → (cmp' ≠ cmp ∨ i' ≠ i) → (cmp ≠ .rtr) → (cmp' ≠ .rtr) → (σ₁.obj? cmp' i' = σ₂.obj? cmp' i') := by
+  intro h ho hr hr'
   induction h
   case top he _ _ _ =>
     have H := he _ _ ho

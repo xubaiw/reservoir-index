@@ -31,7 +31,8 @@ export Multiplication (
 )
 export Order (
   le_antisymm le_defn le_reflexive le_split le_transitive leOp
-  lt_defn lt_defn_add ltOp lt_split lt_step lt_step_le lt_zero trichotomy
+  lt_defn lt_defn_add ltOp lt_split lt_step lt_step_le lt_zero lt_zero_pos
+  trichotomy
 )
 export Sign (Positive positive_add positive_defn positive_step)
 

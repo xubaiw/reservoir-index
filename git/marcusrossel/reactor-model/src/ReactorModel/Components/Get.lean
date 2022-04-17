@@ -10,75 +10,74 @@ inductive Cmp
   | act -- Actions
   | stv -- State variables
 
-namespace Cmp 
-
 -- The *type* corresponding to the component labeled by a given `Cmp`.
 -- 
 -- Note that the types for `prt` and `stv` are just `υ`, because IDs don't refer to
 -- the entire entire mappinngs, but rather the single values within them.
-abbrev type : Cmp → Type _
-  | rtr => Reactor
-  | rcn => Reaction
-  | prt => Port
-  | act => Time.Tag ▸ Value
-  | stv => Value
-
--- Associates each type of component with the finmap in which it can be found inside
--- of a reactor. We use this in `objFor` to generically resolve the lookup for *some*
--- component and *some* ID.
-private abbrev accessor : (cmp : Cmp) → Reactor → ID ▸ cmp.type
-  | rtr => Reactor.nest
-  | rcn => Reactor.rcns
-  | prt => Reactor.ports
-  | act => Reactor.acts
-  | stv => Reactor.state
-
-end Cmp
+abbrev Cmp.type : Cmp → Type _
+  | .rtr => Reactor
+  | .rcn => Reaction
+  | .prt => Port
+  | .act => Time.Tag ▸ Value
+  | .stv => Value
 
 namespace Reactor
 
-abbrev cmp (σ : Reactor) (cmp : Cmp) : ID ▸ cmp.type := 
-  cmp.accessor σ
+-- Associates each type of component with the finmap in which it can be found inside
+-- of a reactor. We use this in `Object` to generically resolve the lookup for *some*
+-- component and *some* ID.
+abbrev cmp : (cmp : Cmp) → Reactor → ID ▸ cmp.type
+  | .rtr => Reactor.nest
+  | .rcn => Reactor.rcns
+  | .prt => Reactor.ports
+  | .act => Reactor.acts
+  | .stv => Reactor.state
 
 namespace Lineage
 
 def target {σ i} : Lineage σ i → Cmp 
-  | rtr _ => Cmp.rtr
-  | rcn _ => Cmp.rcn
-  | prt _ => Cmp.prt
-  | act _ => Cmp.act
-  | stv _ => Cmp.stv
-  | nest l _ => target l
+  | .rtr _ => .rtr
+  | .rcn _ => .rcn
+  | .prt _ => .prt
+  | .act _ => .act
+  | .stv _ => .stv
+  | .nest l _ => target l
 
 def cmp {σ i} : (cmp : Cmp) → (h : i ∈ (σ.cmp cmp).ids) → Lineage σ i
-  | Cmp.rtr, h => Lineage.rtr h
-  | Cmp.rcn, h => Lineage.rcn h
-  | Cmp.prt, h => Lineage.prt h
-  | Cmp.act, h => Lineage.act h
-  | Cmp.stv, h => Lineage.stv h
+  | .rtr, h => .rtr h
+  | .rcn, h => .rcn h
+  | .prt, h => .prt h
+  | .act, h => .act h
+  | .stv, h => .stv h
 
 -- The "parent" in a lineage is the reactor which contains the target of the lineage.
 -- This function returns that reactor along with its ID.
 -- If the direct parent is the top-level reactor `σ`, then the ID is `⊤`.
-def parent {σ i} : Lineage σ i → (Rooted ID × Reactor)
-  | @nest _ _ r j l _ => 
-    match l with 
-    | nest .. => parent l
-    | _ => (j, r)
-  | _ => (⊤, σ)
+def containerID : Lineage σ i → Rooted ID 
+  | .nest l@(.nest ..) _ => containerID l
+  | @nest _ j .. => j
+  | _ => ⊤
+decreasing_by sorry 
 
-@[simp] theorem cmp_parent {σ i cmp} (h : i ∈ (σ.cmp cmp).ids) : (Lineage.cmp cmp h).parent.snd = σ := by
-  cases Reactor.Lineage.cmp cmp h <;> sorry -- simp [parent]: failed to generate equality theorems for `match` expression
+def container : Lineage σ i → Reactor
+  | .nest l@(.nest ..) _ => container l
+  | @nest r .. => r
+  | _ => σ
+decreasing_by sorry 
 
-@[simp] theorem nest_parent {σ : Reactor} {rtr i j} (l : Lineage rtr i) (h : σ.nest j = some rtr) : (Lineage.nest l h).parent.snd = l.parent.snd := by
-  cases l <;> sorry -- simp [parent]: failed to generate equality theorems for `match` expression
+theorem cmp_container {cmp} : (h : i ∈ (σ.cmp cmp).ids) → (Lineage.cmp cmp h).container = σ := by
+  sorry
 
-private def retarget {σ i} : (l : Lineage σ i) → (cmp : Cmp) → i ∈ (l.parent.snd.cmp cmp).ids → Lineage σ i
+theorem nest_container {σ rtr : Reactor} (l : Lineage rtr i) (h : σ.nest j = rtr) : (Lineage.nest l h).container = l.container := by
+  sorry
+
+private def retarget : (l : Lineage σ i) → (cmp : Cmp) → i ∈ (l.container.cmp cmp).ids → Lineage σ i
   | nest l' h', cmp, h => Lineage.nest (retarget l' cmp h) h'
   | _, cmp, h => Lineage.cmp cmp h
 
-private theorem retarget_target {σ i} (l : Lineage σ i) (cmp h) :
-  (l.retarget cmp h).target = cmp := sorry
+private theorem retarget_target (l : Lineage σ i) (cmp h) :
+  (l.retarget cmp h).target = cmp :=
+  sorry
 
 private theorem retarget_ne {σ i cmp} (l : Lineage σ i) (h) :
   cmp ≠ l.target → l ≠ l.retarget cmp h := by 
@@ -107,23 +106,32 @@ end Lineage
 -- and yield `False` in that case (as the top-level reactor will never have a
 -- parent container).
 inductive Container (σ : Reactor) (cmp : Cmp) (i : ID) (c : Rooted ID) : Prop
-  | intro (l : Lineage σ i) : (l.parent.fst = c) → (l.target = cmp) → Container σ cmp i c
-
--- This notation is chosen to be akin to the address notation in C.
-notation σ:max " &[" cmp ":" i "]= " c:max => Reactor.Container σ cmp i c
+  | intro (l : Lineage σ i) : (l.containerID = c) → (l.target = cmp) → Container σ cmp i c
 
 -- In the `Container` relation, any given ID can have at most one parent.
 theorem Container.unique {σ : Reactor} {cmp : Cmp} {i : ID} {c₁ c₂ : Rooted ID} :
-  (σ &[cmp:i]= c₁) → (σ &[cmp:i]= c₂) → c₁ = c₂ := by
+  (Container σ cmp i c₁) → (Container σ cmp i c₂) → c₁ = c₂ := by
   intro ⟨l₁, h₁, _⟩ ⟨l₂, h₂, _⟩
   simp [←h₁, ←h₂, σ.uniqueIDs l₁ l₂]
 
-def contains (σ : Reactor) (cmp : Cmp) (i : ID) : Prop :=
-  ∃ c, σ &[cmp:i]= c
-
 -- NOTE: As we have `Container.unique`, the choice of object is always unique.
-noncomputable def container? (σ : Reactor) (cmp : Cmp) (i : ID) : Option (Rooted ID) := 
-  if h : ∃ c, σ &[cmp:i]= c then h.choose else none
+noncomputable def con? (σ : Reactor) (cmp : Cmp) (i : ID) : Option (Rooted ID) := 
+  if h : ∃ c, Container σ cmp i c then h.choose else none
+
+theorem Container.iff_con?_some {σ : Reactor} {cmp : Cmp} : 
+  (Container σ cmp i c) ↔ (σ.con? cmp i = some c) := by
+  constructor <;> (intro h; simp [con?] at *) 
+  case mp =>
+    split
+    case inl hc => simp [h.unique hc.choose_spec]
+    case inr hc => exact absurd h (not_exists.mp hc $ c)
+  case mpr => 
+    split at h
+    case inl hc => simp at h; rw [←h]; exact hc.choose_spec
+    case inr => contradiction
+
+def contains (σ : Reactor) (cmp : Cmp) (i : ID) : Prop :=
+  σ.con? cmp i ≠ none
 
 -- The `Object` relation is used to determine whether a given ID `i` identifies
 -- an object `o` of component type `cmp`.
@@ -153,16 +161,13 @@ noncomputable def container? (σ : Reactor) (cmp : Cmp) (i : ID) : Option (Roote
 -- https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/.E2.9C.94.20Exfalso.20HEq
 inductive Object (σ : Reactor) : Rooted ID → (cmp : Cmp) → cmp.type → Prop
   | root {o} : (o = σ) → Object σ ⊤ Cmp.rtr o
-  | nest {i cmp o} (l : Lineage σ i) : (l.parent.snd.cmp cmp i = some o) → Object σ (Rooted.nest i) cmp o 
-  
--- This notation is chosen to be akin to the dereference notation in C.
-notation σ:max " *[" cmp ":" i "]= " o:max => Reactor.Object σ i cmp o
+  | nest {i cmp o} (l : Lineage σ i) : (l.container.cmp cmp i = some o) → Object σ (Rooted.nest i) cmp o 
 
 -- In the `Object` relation, any given ID can have associated objects of at most one component type.
 -- E.g. an ID cannot have associated objects of type `Cmp.rcn` *and* `Cmp.prt`.
 -- Cf. `objFor_unique_obj` for further information.
 theorem Object.unique_cmp {σ : Reactor} {i : Rooted ID} {cmp₁ cmp₂ : Cmp} {o₁ : cmp₁.type} {o₂ : cmp₂.type} :
-  (σ *[cmp₁:i]= o₁) → (σ *[cmp₂:i]= o₂) → cmp₁ = cmp₂ := by
+  (Object σ i cmp₁ o₁) → (Object σ i cmp₂ o₂) → cmp₁ = cmp₂ := by
   intro h₁ h₂
   cases h₁ <;> cases h₂ <;> simp only
   case nest.nest l₁ h₁ l₂ h₂ =>
@@ -196,7 +201,7 @@ theorem Object.unique_cmp {σ : Reactor} {i : Rooted ID} {cmp₁ cmp₂ : Cmp} {
 -- After appropriate type casting (using the previous result), `objFor_unique_obj` can be used to show
 -- object equality. X
 theorem Object.unique_obj {σ : Reactor} {i : Rooted ID} {cmp : Cmp} {o₁ o₂ : cmp.type} : 
-  (σ *[cmp:i]= o₁) → (σ *[cmp:i]= o₂) → o₁ = o₂ := by
+  (Object σ i cmp o₁) → (Object σ i cmp o₂) → o₁ = o₂ := by
   intro h₁ h₂
   cases h₁ <;> cases h₂
   case root.root h₁ h₂ => exact h₁.trans h₂.symm
@@ -206,12 +211,24 @@ theorem Object.unique_obj {σ : Reactor} {i : Rooted ID} {cmp : Cmp} {o₁ o₂ 
 
 -- NOTE: As we have `Object.unique_obj`, the choice of object is always unique.
 noncomputable def obj? (σ : Reactor) (cmp : Cmp) : (Rooted ID) ▸ cmp.type := {
-  lookup := λ i => if h : ∃ o, σ *[cmp:i]= o then h.choose else none,
+  lookup := λ i => if h : ∃ o, Object σ i cmp o then h.choose else none,
   finite := sorry
 }
 
+theorem Object.iff_obj?_some {σ : Reactor} {cmp : Cmp} {o : cmp.type} : 
+  (Object σ i cmp o) ↔ (σ.obj? cmp i = some o) := by
+  constructor <;> (intro h; simp [obj?] at *) 
+  case mp =>
+    split
+    case inl hc => simp [h.unique_obj hc.choose_spec]
+    case inr hc => exact absurd h (not_exists.mp hc $ o)
+  case mpr => 
+    split at h
+    case inl hc => simp at h; rw [←h]; exact hc.choose_spec
+    case inr => contradiction
+
 noncomputable def containerObj? (σ : Reactor) (cmp : Cmp) (i : ID) : Option Reactor :=
-  σ.container? cmp i >>= (σ.obj? .rtr ·)
+  σ.con? cmp i >>= (σ.obj? .rtr ·)
 
 noncomputable def ids (σ : Reactor) (cmp : Cmp) : Finset ID :=
   let description := { i : ID | σ.contains cmp i }
@@ -231,7 +248,7 @@ noncomputable def allIDs (σ : Reactor) : Finset ID :=
   let finite : description.finite := sorry
   finite.toFinset
 
-theorem Object.ext {σ₁ σ₂ : Reactor} (hi : σ₁.allIDs = σ₂.allIDs) (hv : ∀ cmp i v, σ₁ *[cmp:i]= v → σ₂ *[cmp:i]= v) : 
+theorem Object.ext {σ₁ σ₂ : Reactor} (hi : σ₁.allIDs = σ₂.allIDs) (hv : ∀ cmp i, σ₁.obj? cmp i = σ₂.obj? cmp i) : 
   σ₁ = σ₂ := by
     sorry
 
