@@ -65,11 +65,17 @@ instance multiplication_base : Multiplication.Base Nat where
   zero_mul := @Nat.zero_mul
   step_mul := @Nat.succ_mul
 
+instance exponentiation_base : Exponentiation.Base Nat where
+  powOp := _root_.instPowNatNat
+  pow_zero {n : Nat} : n ^ 0 ≃ 1 := rfl
+  pow_step {n m : Nat} : n ^ step m ≃ n ^ m * n := rfl
+
 instance : Decl Nat where
   toCore := core
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Derived.sign_derived
   toOrder := Natural.Derived.order_derived
   toMultiplication := Natural.Derived.multiplication_derived
+  toExponentiation := exponentiation_base
 
 end Lean4Axiomatic.Natural.Impl.Nat

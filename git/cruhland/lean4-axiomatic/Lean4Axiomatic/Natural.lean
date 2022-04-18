@@ -1,7 +1,7 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Operators
 
-import Lean4Axiomatic.Natural.Multiplication
+import Lean4Axiomatic.Natural.Exponentiation
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
@@ -15,6 +15,7 @@ class Decl (ℕ : Type) where
   toSign : Sign.Derived ℕ
   toOrder : Order.Derived ℕ
   toMultiplication : Multiplication.Derived ℕ
+  toExponentiation : Exponentiation.Base ℕ
 
 export Addition (
   add_associative add_commutative add_one_step addOp add_step add_substitutive
@@ -23,6 +24,7 @@ export Addition (
 export Axioms (cases_on ind ind_on step_injective step_neq_zero)
 export Core (step_substitutive)
 export Equality (eqvOp?)
+export Exponentiation (powOp pow_step pow_zero)
 export Literals (literal literal_step literal_zero)
 export Multiplication (
   mul_associative mul_cancellative mul_commutative mul_distributive mulOp
