@@ -28,9 +28,17 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean-glfw</h3>
-<p dir="auto">C bindings to use <a href="https://glfw.org" rel="nofollow">GLFW</a> and OpenGL from the <a href="https://github.com/leanprover/lean4">lean4</a> theorem prover.</p>
+<p dir="auto">Declarations and C thunks to allow access to <a href="https://glfw.org" rel="nofollow">GLFW</a> and <a href="https://www.khronos.org/opengl/" rel="nofollow">OpenGL</a>
+from the <a href="https://github.com/leanprover/lean4">lean4</a> theorem prover.</p>
+<p dir="auto">Emphasis is on using the bindless or <a href="https://www.khronos.org/opengl/wiki/Direct_State_Access" rel="nofollow">Direct State Access</a> method introduced in OpenGL 4.5.  This means that binding
+objects and modifying "the current bound xxx" is discouraged and you should instead use functions that explicitly specify the
+buffer/VAO/program you are modifying.</p>
 <h3 dir="auto">building</h3>
-<p dir="auto">To build and run this package you need access to both GLFW and it's dependencies.</p>
+<p dir="auto">To build and run this package you need access to both GLFW and it's dependencies. On windows this includes GDI32 which is
+provided by the Windows SDK.</p>
+<p dir="auto">Once you have these items installed you need to edit the <a href="./lakefile.lean">lakefile</a> to point to both GLFW and the
+Windows SDK.</p>
+<p dir="auto">At this point "lake build" should (hopefully) work.</p>
 </article></div></main>
 </body>
 </html>

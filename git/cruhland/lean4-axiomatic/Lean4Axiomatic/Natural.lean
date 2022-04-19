@@ -17,6 +17,8 @@ class Decl (ℕ : Type) where
   toMultiplication : Multiplication.Derived ℕ
   toExponentiation : Exponentiation.Base ℕ
 
+attribute [instance] Decl.toMultiplication
+
 export Addition (
   add_associative add_commutative add_one_step addOp add_step add_substitutive
   add_zero cancel_add step_add zero_add zero_sum_split
