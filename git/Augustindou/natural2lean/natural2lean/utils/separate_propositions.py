@@ -1,24 +1,30 @@
 import re
 from typing import Callable, Iterable
 
+
+from ..utils.translate_math import translate_latex_math
 from ..structure.matching import Translatable
 from ..math_mode.math import Math
 from ..math_mode.multiple_identifiers import MultipleIdentifiers
 from ..math_mode.identifier import Identifier
+from ..math_mode.expression import Expression
 from ..propositions.function import Function
 
 
 # ---------------------- PARAMETERS ----------------------
 
+get_lean_math = lambda s: translate_latex_math(apply_replacements(s).strip("$ "))
 VALIDITY_CHECKS: list[Callable] = [
     # even number of $ signs (avoid splitting inside a math mode)
     lambda s: s.count("$") % 2 == 0,
     # even number of $$ (avoid splitting inside a math mode)
     lambda s: s.count("$$") % 2 == 0,
     # no single identifier (avoid separating $a$ and $b$ are integers)
-    lambda s: Identifier.match(apply_replacements(s).strip("$ ")) == None,
-    # no multiple identifiers
-    lambda s: MultipleIdentifiers.match(apply_replacements(s).strip("$ ")) == None,
+    lambda s: Identifier.match(get_lean_math(s)) == None,
+    # no multiple identifiers alone
+    lambda s: MultipleIdentifiers.match(get_lean_math(s)) == None,
+    # no expression alone
+    lambda s: Expression.match(get_lean_math(s)) == None,
 ]
 SEPARATORS: list[str] = [",", "and"]
 NEGATIONS: list[str] = ["not"]
@@ -36,8 +42,12 @@ SETS: dict[str, str] = {
 # tuple of function name, function pattern, and callable to rearrange function arguments
 # pattern must contain one group for each argument
 FUNCTIONS: list[tuple[str, str, Callable]] = {
-    ("even", r"(\$.*?\$).*?even", lambda *args: args[0]),
-    ("divisible", r"(\$.*?\$).*?divisible\s*by.*?(\$.*?\$)", lambda *args: [args[1], args[0]]),
+    ("even", r"(\$.*?\$).*?even", lambda *args: [args[0]]),
+    (
+        "divisible",
+        r"(\$.*?\$).*?divisible\s*by.*?(\$.*?\$)",
+        lambda *args: [args[1], args[0]],
+    ),
 }
 
 # ----------------- SEPARATE PROPOSITIONS -----------------
@@ -45,7 +55,8 @@ FUNCTIONS: list[tuple[str, str, Callable]] = {
 
 def get_propositions(string: str) -> list[Translatable]:
     return [prop for prop in separate_propositions(string)]
-    
+
+
 def separate_propositions(string: str) -> Iterable[Translatable]:
     """Separates multiple propositions (PropA, PropB and PropC).
 
@@ -86,14 +97,24 @@ def split_proposition(string: str):
     if math.is_multiple_identifiers():
         identifiers_set = get_set(string)
         if identifiers_set != None:
-            yield Math.match("$" + ", ".join(math.content.identifiers) + " \\in " + identifiers_set + "$").content
+            yield Math.match(
+                "$"
+                + ", ".join([ident.string for ident in math.content.identifiers])
+                + " \\in "
+                + identifiers_set
+                + "$"
+            ).content
 
     # multiple identifiers in set directly in the proposition
     if math.is_identifiers_in_set():
         yield math.content
 
     # functions on identifiers
-    if math.is_multiple_identifiers() or math.is_identifiers_in_set() or math.is_expression():
+    if (
+        math.is_multiple_identifiers()
+        or math.is_identifiers_in_set()
+        or math.is_expression()
+    ):
         for function in get_functions(string):
             yield function
 
@@ -170,20 +191,20 @@ def get_functions(string: str) -> Iterable[Function]:
     for name, pattern, order_arguments in FUNCTIONS:
         name = f"¬ {name}" if contains_negation(string) else name
         match = re.search(pattern, string)
-        
+
         # skip if no match
         if match == None:
             continue
-        
+
         # match arguments
         args: list[Math] = [Math.match(group) for group in match.groups()]
-        
+
         # first group can be multiple identifiers
         if args[0].is_multiple_identifiers() or args[0].is_identifiers_in_set():
             for identifier in args[0].content.identifiers:
-                yield Function(name, order_arguments([identifier, *args[1:]]), string)
+                yield Function(name, order_arguments(*[identifier, *args[1:]]), string)
             continue
-        
+
         if args[0].is_expression():
             yield Function(name, order_arguments(*args), string)
             continue
