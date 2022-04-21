@@ -67,31 +67,32 @@ structure ElabHeaderResult where
   type       : Expr
   deriving Inhabited
 
-private partial def elabHeaderAux (views : Array InductiveView) (i : Nat) (acc : Array ElabHeaderResult) : TermElabM (Array ElabHeaderResult) := do
-  if h : i < views.size then
-    let view := views.get ⟨i, h⟩
-    let acc ← Term.withAutoBoundImplicit <| Term.elabBinders view.binders.getArgs fun params => do
-      match view.type? with
-      | none         =>
-        let u ← mkFreshLevelMVar
-        let type := mkSort u
-        Term.synthesizeSyntheticMVarsNoPostponing
-        Term.addAutoBoundImplicits' params type fun params type => do
-          pure <| acc.push { lctx := (← getLCtx), localInsts := (← getLocalInstances), params, type, view }
-      | some typeStx =>
-        let (type, numImplicitIndices) ← Term.withAutoBoundImplicit do
-          let type ← Term.elabType typeStx
-          unless (← isTypeFormerType type) do
-            throwErrorAt typeStx "invalid inductive type, resultant type is not a sort"
+private partial def elabHeaderAux (views : Array InductiveView) (i : Nat) (acc : Array ElabHeaderResult) : TermElabM (Array ElabHeaderResult) :=
+  Term.withAutoBoundImplicitForbiddenPred (fun n => views.any (·.shortDeclName == n)) do
+    if h : i < views.size then
+      let view := views.get ⟨i, h⟩
+      let acc ← Term.withAutoBoundImplicit <| Term.elabBinders view.binders.getArgs fun params => do
+        match view.type? with
+        | none         =>
+          let u ← mkFreshLevelMVar
+          let type := mkSort u
           Term.synthesizeSyntheticMVarsNoPostponing
-          let indices ← Term.addAutoBoundImplicits #[]
-          return (← mkForallFVars indices type, indices.size)
-        Term.addAutoBoundImplicits' params type fun params type => do
-          trace[Elab.inductive] "header params: {params}, type: {type}"
-          pure <| acc.push { lctx := (← getLCtx), localInsts := (← getLocalInstances), params, type, view }
-    elabHeaderAux views (i+1) acc
-  else
-    pure acc
+          Term.addAutoBoundImplicits' params type fun params type => do
+            pure <| acc.push { lctx := (← getLCtx), localInsts := (← getLocalInstances), params, type, view }
+        | some typeStx =>
+          let (type, numImplicitIndices) ← Term.withAutoBoundImplicit do
+            let type ← Term.elabType typeStx
+            unless (← isTypeFormerType type) do
+              throwErrorAt typeStx "invalid inductive type, resultant type is not a sort"
+            Term.synthesizeSyntheticMVarsNoPostponing
+            let indices ← Term.addAutoBoundImplicits #[]
+            return (← mkForallFVars indices type, indices.size)
+          Term.addAutoBoundImplicits' params type fun params type => do
+            trace[Elab.inductive] "header params: {params}, type: {type}"
+            pure <| acc.push { lctx := (← getLCtx), localInsts := (← getLocalInstances), params, type, view }
+      elabHeaderAux views (i+1) acc
+    else
+      pure acc
 
 private def checkNumParams (rs : Array ElabHeaderResult) : TermElabM Nat := do
   let numParams := rs[0].params.size
@@ -178,7 +179,7 @@ private partial def withInductiveLocalDecls {α} (rs : Array ElabHeaderResult) (
     let rec loop (i : Nat) (indFVars : Array Expr) := do
       if h : i < namesAndTypes.size then
         let (id, type) := namesAndTypes.get ⟨i, h⟩
-        withLocalDeclD id type fun indFVar => loop (i+1) (indFVars.push indFVar)
+        withLocalDecl id BinderInfo.auxDecl type fun indFVar => loop (i+1) (indFVars.push indFVar)
       else
         x params indFVars
     loop 0 #[]
@@ -682,7 +683,7 @@ private partial def fixedIndicesToParams (numParams : Nat) (indTypes : Array Ind
         return i
     go numParams type typesToCheck
 
-private def mkInductiveDecl (vars : Array Expr) (views : Array InductiveView) : TermElabM Unit := do
+private def mkInductiveDecl (vars : Array Expr) (views : Array InductiveView) : TermElabM Unit := Term.withoutSavingRecAppSyntax do
   let view0 := views[0]
   let scopeLevelNames ← Term.getLevelNames
   checkLevelNames views
@@ -691,6 +692,7 @@ private def mkInductiveDecl (vars : Array Expr) (views : Array InductiveView) : 
   withRef view0.ref <| Term.withLevelNames allUserLevelNames do
     let rs ← elabHeader views
     withInductiveLocalDecls rs fun params indFVars => do
+      trace[Elab.inductive] "indFVars: {indFVars}"
       let mut indTypesArray := #[]
       for i in [:views.size] do
         let indFVar := indFVars[i]

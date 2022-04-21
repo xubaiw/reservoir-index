@@ -1,6 +1,31 @@
 Unreleased
 ---------
 
+* Refine auto bound implicit feature. It does not consider anymore unbound variables that have the same
+  name of a declaration being defined. Example:
+  ```lean
+  def f : f → Bool := -- Error at second `f`
+    fun _ => true
+
+  inductive Foo : List Foo → Type -- Error at second `Foo`
+    | x : Foo []
+  ```
+  Before this refinement, the declarations above would be accepted and the
+  second `f` and `Foo` would be treated as auto implicit variables. That is,
+  `f : {f : Sort u} → f → Bool`, and
+  `Foo : {Foo : Type u} → List Foo → Type`.
+
+
+* Fix syntax hightlighting for recursive declarations. Example
+  ```lean
+  inductive List (α : Type u) where
+    | nil : List α  -- `List` is not highlighted as a variable anymore
+    | cons (head : α) (tail : List α) : List α
+
+  def List.map (f : α → β) : List α → List β
+    | []    => []
+    | a::as => f a :: map f as -- `map` is not highlighted as a variable anymore
+  ```
 * Add `autoUnfold` option to `Lean.Meta.Simp.Config`, and the following macros
   - `simp!` for `simp (config := { autoUnfold := true })`
   - `simp_arith!` for `simp (config := { autoUnfold := true, arith := true })`
