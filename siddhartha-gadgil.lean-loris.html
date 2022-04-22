@@ -27,50 +27,50 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean Loris</h3>
-<p dir="auto">This is a repository for experiments with some ways of automating reasoning in lean 4, especially <em>forward reasoning</em> and <em>mixed reasoning</em>, to complement the existing <em>backward reasoning</em> used in tactics.</p>
-<h3 dir="auto">Illustrations: in compiled code and interactive mode.</h3>
-<p dir="auto">Our two main illustrations, one for forward reasoning and one for mixed reasoning, are too resource intensive to run in the interpreter. They are included as two of the three options in the compiled code (the third is generation of data for machine learning).</p>
-<h4 dir="auto">Forward reasoning examples</h4>
-<p dir="auto">We illustrate <em>purely forward</em> reasoning, i.e., reasoning where no goal or intermediate claims are used in the evolution. These can (and are) specified only to be used for logging.</p>
-<h5 dir="auto">Main example: A Czech-Slovak olympiad problem</h5>
-<p dir="auto">Our main model problem for forward reasoning is the following from a Czech-Slovak Olympiad:</p>
-<p dir="auto">Let <code>M</code> be a set with a product. Given the axioms:</p>
-<ul dir="auto">
-<li><code>∀ a b : M, (a * b) * b = a</code>,</li>
-<li><code>∀ a b : M, a * (a * b) = b</code>,</li>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:12" dir="auto">Lean Loris</h3>
+<p data-sourcepos="3:1-3:205" dir="auto">This is a repository for experiments with some ways of automating reasoning in lean 4, especially <em>forward reasoning</em> and <em>mixed reasoning</em>, to complement the existing <em>backward reasoning</em> used in tactics.</p>
+<h3 data-sourcepos="5:1-5:55" dir="auto">Illustrations: in compiled code and interactive mode.</h3>
+<p data-sourcepos="7:1-7:260" dir="auto">Our two main illustrations, one for forward reasoning and one for mixed reasoning, are too resource intensive to run in the interpreter. They are included as two of the three options in the compiled code (the third is generation of data for machine learning).</p>
+<h4 data-sourcepos="8:1-8:29" dir="auto">Forward reasoning examples</h4>
+<p data-sourcepos="10:1-10:180" dir="auto">We illustrate <em>purely forward</em> reasoning, i.e., reasoning where no goal or intermediate claims are used in the evolution. These can (and are) specified only to be used for logging.</p>
+<h5 data-sourcepos="11:1-11:49" dir="auto">Main example: A Czech-Slovak olympiad problem</h5>
+<p data-sourcepos="13:1-13:91" dir="auto">Our main model problem for forward reasoning is the following from a Czech-Slovak Olympiad:</p>
+<p data-sourcepos="15:1-15:50" dir="auto">Let <code>M</code> be a set with a product. Given the axioms:</p>
+<ul data-sourcepos="16:1-18:0" dir="auto">
+<li data-sourcepos="16:1-16:33"><code>∀ a b : M, (a * b) * b = a</code>,</li>
+<li data-sourcepos="17:1-18:0"><code>∀ a b : M, a * (a * b) = b</code>,</li>
 </ul>
-<p dir="auto">for arbitrary elements <code>m</code> and <code>n</code> in <code>M</code>, we have <code>m * n = n * m</code>.</p>
-<p dir="auto">We fix <code>m</code> and <code>n</code> and reason forward starting with <code>m</code>, <code>n</code>, the axioms, and multiplication. Our forward reasoning is tuned for this problem, and also mildly help by including <code>m * n</code> in the initial state. However, the evolution does not use the statement of the problem, any of the lemmas or the proof.</p>
-<p dir="auto">To understand the (automated) reasoning steps (and for use during tuning and debugging), some lemmas and the theorem were defined. While running progress in proving these is logged.</p>
-<ul dir="auto">
-<li><code>def lem1! := (m * n) * n = m</code></li>
-<li><code>def lem2! := (m * n) * ((m * n) * n) = n</code></li>
-<li><code>def lem3! := ((m * n) * m) * m = m * n</code></li>
-<li><code>def lem4! := (m * n) * ((m * n) * n) = (m * n) * m</code></li>
-<li><code>def lem5! := (m * n) * m = n</code></li>
-<li><code>def lem6! := ((m * n) * m) * m = n * m</code></li>
-<li><code>def thm! := m * n = n * m</code></li>
+<p data-sourcepos="19:1-19:67" dir="auto">for arbitrary elements <code>m</code> and <code>n</code> in <code>M</code>, we have <code>m * n = n * m</code>.</p>
+<p data-sourcepos="21:1-21:304" dir="auto">We fix <code>m</code> and <code>n</code> and reason forward starting with <code>m</code>, <code>n</code>, the axioms, and multiplication. Our forward reasoning is tuned for this problem, and also mildly help by including <code>m * n</code> in the initial state. However, the evolution does not use the statement of the problem, any of the lemmas or the proof.</p>
+<p data-sourcepos="23:1-23:181" dir="auto">To understand the (automated) reasoning steps (and for use during tuning and debugging), some lemmas and the theorem were defined. While running progress in proving these is logged.</p>
+<ul data-sourcepos="25:1-32:0" dir="auto">
+<li data-sourcepos="25:1-25:33"><code>def lem1! := (m * n) * n = m</code></li>
+<li data-sourcepos="26:1-26:44"><code>def lem2! := (m * n) * ((m * n) * n) = n</code></li>
+<li data-sourcepos="27:1-27:42"><code>def lem3! := ((m * n) * m) * m = m * n</code></li>
+<li data-sourcepos="28:1-28:54"><code>def lem4! := (m * n) * ((m * n) * n) = (m * n) * m</code></li>
+<li data-sourcepos="29:1-29:32"><code>def lem5! := (m * n) * m = n</code></li>
+<li data-sourcepos="30:1-30:42"><code>def lem6! := ((m * n) * m) * m = n * m</code></li>
+<li data-sourcepos="31:1-32:0"><code>def thm! := m * n = n * m</code></li>
 </ul>
-<p dir="auto">The forward reasoning we use is mainly function application and closure of equality under symmetry and transitivity. In the latter we implicitly use our key "lemma recognition" principle: proofs of simple statements are treated like simple terms while generating.</p>
-<h5 dir="auto">A basic example: left and right identities are equal</h5>
-<p dir="auto">Another example of forward reasoning, in <code>ProofExamples.lean</code>, is one of the first abstract results one sees in algebra: given a multiplication on a set <code>α</code> with a left-identity <code>eₗ</code> and a right identity <code>eᵣ</code>, we have <code>eₗ = eᵣ</code>.</p>
-<p dir="auto">Our first proof is by forward reasoning using function application and equality closure under symmetry and transitivity. This is fully automatic forward reasoning in a single step.</p>
-<p dir="auto">We give a second proof of the result: given a multiplication on a set <code>α</code> with a left-identity <code>eₗ</code> and a right identity <code>eᵣ</code>, we have <code>eₗ = eᵣ</code> to illustrate implicit "lemma choosing". Notice that the cut-off is just <code>1</code> for both steps. However the proof is obtained as during equality generation, we look-ahead and generate proofs of statements that are simple.</p>
-<h4 dir="auto">Mixed reasoning examples</h4>
-<p dir="auto">We illustrate <em>mixed reasoning</em>, where a goal is specified and used in evolution, but generation is not limited to seeking the goal.</p>
-<h5 dir="auto">Main example: Locally constant functions are constant</h5>
-<p dir="auto">Our main example of mixed reasoning is the result that if <code>f: Nat → α</code> is a function from natural numbers to a type <code>α</code> such that <code>∀ n : Nat, f (n + 1) = f n</code>, then <code>∀n : Nat, f n = f 0</code>, i.e. <code>f</code> is a constant function if it is locally constant.</p>
-<p dir="auto">We use two forms of backward reasoning: induction and introduction of variables based on goals (the latter can be replaced by forward reasoning). The forward reasoning we use is mainly function application and closure of equality under symmetry and transitivity. In the latter we implicitly use our key "lemma recognition" principle: proofs of simple statements are treated like simple terms while generating.</p>
-<h5 dir="auto">Other examples</h5>
-<p dir="auto">We have a few other examples of mixed reasoning, including deriving <em>Modus Ponens</em> starting with just its statement, in <code>ProofExamples.lean</code>.</p>
-<h3 dir="auto">Running the code.</h3>
-<p dir="auto">Many examples can be viewed by opening the file <code>ProofExamples.lean</code> in a Lean 4 editor, such as <code>vs-code</code> with the <code>lean 4</code> plugin.</p>
-<p dir="auto">The following instructions are for linux, and should be appropriately modified for any other OS. Assuming a recent installation of lean 4 (including lake), the following will build the code and show what can be run.</p>
+<p data-sourcepos="33:1-33:263" dir="auto">The forward reasoning we use is mainly function application and closure of equality under symmetry and transitivity. In the latter we implicitly use our key "lemma recognition" principle: proofs of simple statements are treated like simple terms while generating.</p>
+<h5 data-sourcepos="35:1-35:56" dir="auto">A basic example: left and right identities are equal</h5>
+<p data-sourcepos="37:1-37:237" dir="auto">Another example of forward reasoning, in <code>ProofExamples.lean</code>, is one of the first abstract results one sees in algebra: given a multiplication on a set <code>α</code> with a left-identity <code>eₗ</code> and a right identity <code>eᵣ</code>, we have <code>eₗ = eᵣ</code>.</p>
+<p data-sourcepos="39:1-39:180" dir="auto">Our first proof is by forward reasoning using function application and equality closure under symmetry and transitivity. This is fully automatic forward reasoning in a single step.</p>
+<p data-sourcepos="41:1-41:372" dir="auto">We give a second proof of the result: given a multiplication on a set <code>α</code> with a left-identity <code>eₗ</code> and a right identity <code>eᵣ</code>, we have <code>eₗ = eᵣ</code> to illustrate implicit "lemma choosing". Notice that the cut-off is just <code>1</code> for both steps. However the proof is obtained as during equality generation, we look-ahead and generate proofs of statements that are simple.</p>
+<h4 data-sourcepos="42:1-42:27" dir="auto">Mixed reasoning examples</h4>
+<p data-sourcepos="44:1-44:134" dir="auto">We illustrate <em>mixed reasoning</em>, where a goal is specified and used in evolution, but generation is not limited to seeking the goal.</p>
+<h5 data-sourcepos="45:1-45:57" dir="auto">Main example: Locally constant functions are constant</h5>
+<p data-sourcepos="47:1-47:254" dir="auto">Our main example of mixed reasoning is the result that if <code>f: Nat → α</code> is a function from natural numbers to a type <code>α</code> such that <code>∀ n : Nat, f (n + 1) = f n</code>, then <code>∀n : Nat, f n = f 0</code>, i.e. <code>f</code> is a constant function if it is locally constant.</p>
+<p data-sourcepos="49:1-49:409" dir="auto">We use two forms of backward reasoning: induction and introduction of variables based on goals (the latter can be replaced by forward reasoning). The forward reasoning we use is mainly function application and closure of equality under symmetry and transitivity. In the latter we implicitly use our key "lemma recognition" principle: proofs of simple statements are treated like simple terms while generating.</p>
+<h5 data-sourcepos="51:1-51:18" dir="auto">Other examples</h5>
+<p data-sourcepos="53:1-53:141" dir="auto">We have a few other examples of mixed reasoning, including deriving <em>Modus Ponens</em> starting with just its statement, in <code>ProofExamples.lean</code>.</p>
+<h3 data-sourcepos="55:1-55:19" dir="auto">Running the code.</h3>
+<p data-sourcepos="57:1-57:132" dir="auto">Many examples can be viewed by opening the file <code>ProofExamples.lean</code> in a Lean 4 editor, such as <code>vs-code</code> with the <code>lean 4</code> plugin.</p>
+<p data-sourcepos="59:1-59:215" dir="auto">The following instructions are for linux, and should be appropriately modified for any other OS. Assuming a recent installation of lean 4 (including lake), the following will build the code and show what can be run.</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="lake build
 build/bin/lean-loris"><pre>lake build
 build/bin/lean-loris</pre></div>
-<p dir="auto">You will see the following output:</p>
+<p data-sourcepos="65:1-65:34" dir="auto">You will see the following output:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="Choose one or more of the following:
 1. Czech-Slovak Olympiad example
 2. Induction: locally constant functions
@@ -78,11 +78,11 @@ build/bin/lean-loris</pre></div>
 1. Czech-Slovak Olympiad example
 2. Induction: locally constant functions
 3. Dependency data generation</pre></div>
-<p dir="auto">To run the Czech-Slovak Olympiad example, which uses purely forward reasoning, use the command:</p>
+<p data-sourcepos="74:1-74:96" dir="auto">To run the Czech-Slovak Olympiad example, which uses purely forward reasoning, use the command:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="build/bin/lean-loris 1"><pre>build/bin/lean-loris 1</pre></div>
-<p dir="auto">Using argument <code>2</code> runs the mixed reasoning example. The argument <code>3</code> generates data for machine learning.</p>
-<h3 dir="auto">Internals and using the code</h3>
-<p dir="auto">Documentation will be posted soon, along with a blog post explaining some of the principles behind the code.</p>
+<p data-sourcepos="78:1-78:106" dir="auto">Using argument <code>2</code> runs the mixed reasoning example. The argument <code>3</code> generates data for machine learning.</p>
+<h3 data-sourcepos="80:1-80:30" dir="auto">Internals and using the code</h3>
+<p data-sourcepos="82:1-82:108" dir="auto">Documentation will be posted soon, along with a blog post explaining some of the principles behind the code.</p>
 </article></div></main>
 </body>
 </html>

@@ -27,13 +27,13 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean4 Postgresql</h3>
-<p dir="auto">This is mainly a project to learn about practical lean, networking and databases.</p>
-<p dir="auto">The Protocol documentation: <a href="https://www.postgresql.org/docs/9.3/protocol.html" rel="nofollow">Frontend/Backend Protocol</a></p>
-<p dir="auto">Heavily relies on <a href="https://github.com/xubaiw/Socket.lean">Socket.lean</a> for the TCP Socket.</p>
-<h4 dir="auto">Installation</h4>
-<h5 dir="auto">Lake</h5>
-<p dir="auto">Add the following dependency to your <code>lakefile.lean</code> :</p>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:18" dir="auto">Lean4 Postgresql</h3>
+<p data-sourcepos="3:1-3:81" dir="auto">This is mainly a project to learn about practical lean, networking and databases.</p>
+<p data-sourcepos="5:1-5:106" dir="auto">The Protocol documentation: <a href="https://www.postgresql.org/docs/9.3/protocol.html" rel="nofollow">Frontend/Backend Protocol</a></p>
+<p data-sourcepos="7:1-7:90" dir="auto">Heavily relies on <a href="https://github.com/xubaiw/Socket.lean">Socket.lean</a> for the TCP Socket.</p>
+<h4 data-sourcepos="9:1-9:15" dir="auto">Installation</h4>
+<h5 data-sourcepos="11:1-11:8" dir="auto">Lake</h5>
+<p data-sourcepos="13:1-13:54" dir="auto">Add the following dependency to your <code>lakefile.lean</code> :</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
   dependencies := #[{
     name := `postgres
@@ -43,17 +43,17 @@
     name := <span class="pl-en">`postgres</span>
     src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/FWuermse/lean-postgres.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
   }]</pre></div>
-<h4 dir="auto">Usage</h4>
-<h5 dir="auto">Requirements</h5>
-<p dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
+<h4 data-sourcepos="23:1-23:8" dir="auto">Usage</h4>
+<h5 data-sourcepos="25:1-25:16" dir="auto">Requirements</h5>
+<p data-sourcepos="27:1-27:53" dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
-<p dir="auto">and currently only supports free text password auth, enabled by changing the following line in your <code>~/my-volume/pg_hba.conf</code></p>
-<p dir="auto">from</p>
+<p data-sourcepos="33:1-33:125" dir="auto">and currently only supports free text password auth, enabled by changing the following line in your <code>~/my-volume/pg_hba.conf</code></p>
+<p data-sourcepos="35:1-35:4" dir="auto">from</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre>host all all all scram-sha-256</pre></div>
-<p dir="auto">to</p>
+<p data-sourcepos="41:1-41:2" dir="auto">to</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre>host all all all password</pre></div>
-<h5 dir="auto">Code</h5>
-<p dir="auto">Currently only simple queries and inserts are supported:</p>
+<h5 data-sourcepos="47:1-47:8" dir="auto">Code</h5>
+<p data-sourcepos="49:1-49:56" dir="auto">Currently only simple queries and inserts are supported:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
 
 open Insert
@@ -97,18 +97,18 @@ def main : IO Unit := do
     WHERE employee.employment_date <= <span class="pl-s"><span class="pl-pds">"</span>1800-12-31<span class="pl-pds">"</span></span>
   IO.println $ ← sendQuery conn query
   conn.close</pre></div>
-<p dir="auto">Output:</p>
+<p data-sourcepos="76:1-76:7" dir="auto">Output:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="INSERT 0 2
 surname × nr × employment_date
 (Jaeger, 999, 0850-03-30)"><pre>INSERT 0 2
 surname × nr × employment_date
 (Jaeger, 999, 0850-03-30)</pre></div>
-<p dir="auto">Please find more examples in the <a href="https://github.com/FWuermse/lean-postgres/tree/master/examples/open-connection">example folder</a>.</p>
-<h4 dir="auto">TODOs</h4>
-<ul dir="auto">
-<li>Include connection to <a href="https://github.com/hargoniX/lean-hm/blob/master/Hm/Relation.lean">mathematical relations</a></li>
-<li>Better error response parsing</li>
-<li>Support create table and delete statements</li>
+<p data-sourcepos="84:1-84:130" dir="auto">Please find more examples in the <a href="https://github.com/FWuermse/lean-postgres/tree/master/examples/open-connection">example folder</a>.</p>
+<h4 data-sourcepos="86:1-86:8" dir="auto">TODOs</h4>
+<ul data-sourcepos="88:1-90:44" dir="auto">
+<li data-sourcepos="88:1-88:114">Include connection to <a href="https://github.com/hargoniX/lean-hm/blob/master/Hm/Relation.lean">mathematical relations</a></li>
+<li data-sourcepos="89:1-89:31">Better error response parsing</li>
+<li data-sourcepos="90:1-90:44">Support create table and delete statements</li>
 </ul>
 </article></div></main>
 </body>

@@ -27,29 +27,29 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">LeanREPL</h3>
-<p dir="auto">A simple REPL environment for Lean 4 that also supports meta-commands
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:10" dir="auto">LeanREPL</h3>
+<p data-sourcepos="3:1-4:29" dir="auto">A simple REPL environment for Lean 4 that also supports meta-commands
 (commands starting with "!").</p>
-<p dir="auto">The code in this repository was adapted from:</p>
-<ul dir="auto">
-<li><a href="https://github.com/dselsam/lean-gym"><code>dselsam/lean-gym</code></a></li>
-<li><a href="https://github.com/abentkamp/hoare-logic"><code>abentkamp/hoare-logic</code></a></li>
+<p data-sourcepos="6:1-6:45" dir="auto">The code in this repository was adapted from:</p>
+<ul data-sourcepos="8:1-10:0" dir="auto">
+<li data-sourcepos="8:1-8:59"><a href="https://github.com/dselsam/lean-gym"><code>dselsam/lean-gym</code></a></li>
+<li data-sourcepos="9:1-10:0"><a href="https://github.com/abentkamp/hoare-logic"><code>abentkamp/hoare-logic</code></a></li>
 </ul>
-<h4 dir="auto">Usage</h4>
-<p dir="auto">Run <code>.../LeanREPL$ lake build</code> and an executable file will be created under
+<h4 data-sourcepos="11:1-11:8" dir="auto">Usage</h4>
+<p data-sourcepos="13:1-14:12" dir="auto">Run <code>.../LeanREPL$ lake build</code> and an executable file will be created under
 <code>build/bin</code>.</p>
-<p dir="auto">Then you can run it and pass the initial imported modules. <code>Init</code> is already
+<p data-sourcepos="16:1-17:26" dir="auto">Then you can run it and pass the initial imported modules. <code>Init</code> is already
 added by default. Example:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content=".../LeanREPL$ ./build/bin/LeanREPL Std"><pre>.../LeanREPL$ ./build/bin/LeanREPL Std</pre></div>
-<h4 dir="auto">Meta-commands</h4>
-<p dir="auto">Meta-commands are just commands that start with "!" and allow extra control
+<h4 data-sourcepos="23:1-23:16" dir="auto">Meta-commands</h4>
+<p data-sourcepos="25:1-26:36" dir="auto">Meta-commands are just commands that start with "!" and allow extra control
 of the REPL. The ones available are:</p>
-<ul dir="auto">
-<li><code>!rb <n></code> rolls the REPL back to the state it was <code>n</code> commands ago</li>
-<li><code>!reset</code> resets the REPL to the initial state</li>
-<li><code>!quit</code> exits the REPL</li>
+<ul data-sourcepos="28:1-31:0" dir="auto">
+<li data-sourcepos="28:1-28:68"><code>!rb <n></code> rolls the REPL back to the state it was <code>n</code> commands ago</li>
+<li data-sourcepos="29:1-29:47"><code>!reset</code> resets the REPL to the initial state</li>
+<li data-sourcepos="30:1-31:0"><code>!quit</code> exits the REPL</li>
 </ul>
-<p dir="auto">Example:</p>
+<p data-sourcepos="32:1-32:8" dir="auto">Example:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="> def a := 1
 > def a := 2 -- causes an error and doesn't stack a new state
 repl:1:4: error: 'a' has already been declared

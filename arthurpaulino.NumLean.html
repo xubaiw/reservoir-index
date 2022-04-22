@@ -27,10 +27,10 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">NumLean</h3>
-<p dir="auto">An early WIP of a numerical lib for Lean 4.</p>
-<p dir="auto">This package provides an interface to low level matricial operations.</p>
-<h4 dir="auto">Matrix instantiation</h4>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:9" dir="auto">NumLean</h3>
+<p data-sourcepos="3:1-3:43" dir="auto">An early WIP of a numerical lib for Lean 4.</p>
+<p data-sourcepos="5:1-5:69" dir="auto">This package provides an interface to low level matricial operations.</p>
+<h4 data-sourcepos="7:1-7:23" dir="auto">Matrix instantiation</h4>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="let ones ← NLMatrix.new 5 5 1                 -- creates a 5×5 matrix filled with ones
 let id ← NLMatrix.id 5                        -- creates a 5×5 identity matrix
 let m' ← NLMatrix.fromValues 2 2 [1, 2, 3, 4] -- creates a 2×2 matrix with those values
@@ -38,8 +38,8 @@ let m'' ← NLMatrix.fromRows [[1, 2], [3, 4]]  -- creates a 2×2 matrix similar
 <span class="pl-k">let</span> id ← NLMatrix.id <span class="pl-c1">5</span>                        <span class="pl-c"><span class="pl-c">--</span> creates a 5×5 identity matrix</span>
 <span class="pl-k">let</span> m' ← NLMatrix.fromValues <span class="pl-c1">2</span> <span class="pl-c1">2</span> [<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>, <span class="pl-c1">4</span>] <span class="pl-c"><span class="pl-c">--</span> creates a 2×2 matrix with those values</span>
 <span class="pl-k">let</span> m'' ← NLMatrix.fromRows [[<span class="pl-c1">1</span>, <span class="pl-c1">2</span>], [<span class="pl-c1">3</span>, <span class="pl-c1">4</span>]]  <span class="pl-c"><span class="pl-c">--</span> creates a 2×2 matrix similar to m'</span></pre></div>
-<h4 dir="auto">Tensors</h4>
-<p dir="auto">It's also possible to stack matrix operations with <code>NLTensor</code>. A tensor always starts
+<h4 data-sourcepos="16:1-16:10" dir="auto">Tensors</h4>
+<p data-sourcepos="18:1-19:26" dir="auto">It's also possible to stack matrix operations with <code>NLTensor</code>. A tensor always starts
 with a matrix in the head.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="let t : NLTensor ← NLTensor.new id ↠ plusF 3
   ↠ plusT (NLTensor.new ones ↠ plusF 3)
@@ -68,21 +68,21 @@ IO.println $ ← m'.toString
 <span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 6.0 5.0 5.0 </span>
 <span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 5.0 6.0 5.0 </span>
 <span class="pl-c"><span class="pl-c">--</span> 5.0 5.0 5.0 5.0 6.0</span></pre></div>
-<p dir="auto">This abstraction allows you to create functions that chains transformations without
+<p data-sourcepos="38:1-39:17" dir="auto">This abstraction allows you to create functions that chains transformations without
 duplicating code.</p>
-<h4 dir="auto">Next steps</h4>
-<ul dir="auto">
-<li>Optimize representation for some special kinds of matrices</li>
-<li>Optimize operations for such special matrices</li>
-<li>Provide more operations like determinant, inverse etc</li>
-<li>Masking/broadcasting</li>
-<li>Documentation</li>
-<li>Dream: plug in more powerful backend like CUDA</li>
+<h4 data-sourcepos="41:1-41:13" dir="auto">Next steps</h4>
+<ul data-sourcepos="43:1-49:0" dir="auto">
+<li data-sourcepos="43:1-43:60">Optimize representation for some special kinds of matrices</li>
+<li data-sourcepos="44:1-44:47">Optimize operations for such special matrices</li>
+<li data-sourcepos="45:1-45:55">Provide more operations like determinant, inverse etc</li>
+<li data-sourcepos="46:1-46:22">Masking/broadcasting</li>
+<li data-sourcepos="47:1-47:15">Documentation</li>
+<li data-sourcepos="48:1-49:0">Dream: plug in more powerful backend like CUDA</li>
 </ul>
-<h4 dir="auto">Contributing</h4>
-<p dir="auto">Feel free to create issues, but please be responsive after doing so. You can also reach
+<h4 data-sourcepos="50:1-50:15" dir="auto">Contributing</h4>
+<p data-sourcepos="52:1-53:49" dir="auto">Feel free to create issues, but please be responsive after doing so. You can also reach
 me on <a href="https://leanprover.zulipchat.com/" rel="nofollow">Zulip</a>.</p>
-<p dir="auto">Fork and open PRs as you wish. But again, be responsive after doing so :)</p>
+<p data-sourcepos="55:1-55:73" dir="auto">Fork and open PRs as you wish. But again, be responsive after doing so :)</p>
 </article></div></main>
 </body>
 </html>

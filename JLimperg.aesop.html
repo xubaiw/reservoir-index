@@ -27,13 +27,13 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Aesop</h3>
-<p dir="auto">This is a work-in-progress proof search tactic for Lean 4.</p>
-<h4 dir="auto">Building</h4>
-<p dir="auto">With <a href="https://github.com/leanprover/elan">elan</a> installed, <code>lake build</code>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:7" dir="auto">Aesop</h3>
+<p data-sourcepos="3:1-3:58" dir="auto">This is a work-in-progress proof search tactic for Lean 4.</p>
+<h4 data-sourcepos="5:1-5:11" dir="auto">Building</h4>
+<p data-sourcepos="7:1-8:15" dir="auto">With <a href="https://github.com/leanprover/elan">elan</a> installed, <code>lake build</code>
 should suffice.</p>
-<h4 dir="auto">Adding Aesop to Your Project</h4>
-<p dir="auto">To use Aesop in a Lean 4 project, first add this package as a dependency. In
+<h4 data-sourcepos="10:1-10:31" dir="auto">Adding Aesop to Your Project</h4>
+<p data-sourcepos="12:1-13:25" dir="auto">To use Aesop in a Lean 4 project, first add this package as a dependency. In
 your <code>lakefile.lean</code>, add</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="dependencies := #[
   { name := `aesop
@@ -42,11 +42,11 @@ your <code>lakefile.lean</code>, add</p>
   { name := <span class="pl-en">`aesop</span>
     src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/JLimperg/aesop<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span><current HEAD commit of this repo><span class="pl-pds">"</span></span> }
 ]</pre></div>
-<p dir="auto">Now run <code>lake configure</code>. Unless you use the exact same Lean 4 nightly as this
+<p data-sourcepos="22:1-25:42" dir="auto">Now run <code>lake configure</code>. Unless you use the exact same Lean 4 nightly as this
 project (see our <code>lean-toolchain</code>), you'll get a warning. If you use a later
 nightly, you'll probably be fine and Aesop will compile anyway. If not, please
 open an issue and we'll update the tactic.</p>
-<p dir="auto">You should now be able to use the <code>aesop</code> tactic:</p>
+<p data-sourcepos="27:1-27:49" dir="auto">You should now be able to use the <code>aesop</code> tactic:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Aesop
 
 example : α → α :=
@@ -54,16 +54,16 @@ example : α → α :=
 
 <span class="pl-k">example</span> : α → α :=
   <span class="pl-k">by</span> aesop</pre></div>
-<p dir="auto">TODO Document (and, indeed, find out) how to use Aesop as a plugin.</p>
-<h4 dir="auto">Usage</h4>
-<p dir="auto">This section is intended for prospective Aesop users. Aesop is very work
+<p data-sourcepos="36:1-36:67" dir="auto">TODO Document (and, indeed, find out) how to use Aesop as a plugin.</p>
+<h4 data-sourcepos="38:1-38:8" dir="auto">Usage</h4>
+<p data-sourcepos="40:1-42:79" dir="auto">This section is intended for prospective Aesop users. Aesop is very work
 in progress and this text may be out of date, so if you have questions, please
 ping me (Jannis Limperg) on the <a href="https://leanprover.zulipchat.com" rel="nofollow">Lean Zulip</a>.</p>
-<h5 dir="auto">Quickstart</h5>
-<p dir="auto">To get you started, I'll explain Aesop's major concepts with a series of
+<h5 data-sourcepos="44:1-44:14" dir="auto">Quickstart</h5>
+<p data-sourcepos="46:1-48:8" dir="auto">To get you started, I'll explain Aesop's major concepts with a series of
 examples. A more thorough, reference-style discussion of follows in the next
 section.</p>
-<p dir="auto">We first define our own version of lists (so as not to clash with the standard
+<p data-sourcepos="50:1-51:34" dir="auto">We first define our own version of lists (so as not to clash with the standard
 library) and an <code>append</code> function:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="inductive MyList (α : Type _)
   | nil
@@ -88,7 +88,7 @@ instance : Append (MyList α) :=
 
 <span class="pl-k">instance</span> : Append (MyList α) :=
   ⟨MyList.append⟩</pre></div>
-<p dir="auto">Now we define the <code>NonEmpty</code> predicate on <code>MyList</code>:</p>
+<p data-sourcepos="68:1-68:51" dir="auto">Now we define the <code>NonEmpty</code> predicate on <code>MyList</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [MyList.NonEmpty]
 
 @[aesop safe (rule_sets [MyList.NonEmpty]) [constructors, cases]]
@@ -98,26 +98,26 @@ inductive NonEmpty : MyList α → Prop
 <span class="pl-k">@[aesop safe (rule_sets [MyList.NonEmpty]) [constructors, cases]</span>]
 <span class="pl-k">inductive</span> <span class="pl-en">NonEmpty</span> : MyList α → <span class="pl-k">Prop</span>
   | cons : NonEmpty (cons x xs)</pre></div>
-<p dir="auto">Here we see the first Aesop features. The <code>declare_aesop_rule_sets</code> command is
+<p data-sourcepos="78:1-83:42" dir="auto">Here we see the first Aesop features. The <code>declare_aesop_rule_sets</code> command is
 used to, well, declare Aesop <strong>rule sets</strong>. These are collections of <strong>rules</strong>,
 which roughly correspond to tactics. When Aesop searches for a proof, it
 systematically applies each available rule, then recursively searches for proofs
 of the subgoals generated by the rule, and so on. A goal is proved when Aesop
 applies a rule that generates no subgoals.</p>
-<p dir="auto">The <strong><code>@[aesop]</code></strong> attribute adds two rules for <code>NonEmpty</code> to our new rule set:</p>
-<ul dir="auto">
-<li>A <strong><code>constructors</code></strong> rule. This rule tries to apply each constructor of
+<p data-sourcepos="85:1-85:79" dir="auto">The <strong><code>@[aesop]</code></strong> attribute adds two rules for <code>NonEmpty</code> to our new rule set:</p>
+<ul data-sourcepos="87:1-91:0" dir="auto">
+<li data-sourcepos="87:1-88:53">A <strong><code>constructors</code></strong> rule. This rule tries to apply each constructor of
 <code>NonEmpty</code> whenever a goal has target <code>NonEmpty _</code>.</li>
-<li>A <strong><code>cases</code></strong> rule. This rule searches for hypotheses <code>h : NonEmpty _</code> and
+<li data-sourcepos="89:1-91:0">A <strong><code>cases</code></strong> rule. This rule searches for hypotheses <code>h : NonEmpty _</code> and
 performs case analysis on them (like the <code>cases</code> tactic).</li>
 </ul>
-<p dir="auto"><code>constructors</code> and <code>cases</code> are examples of <strong>rule builders</strong>, which are
+<p data-sourcepos="92:1-93:46" dir="auto"><code>constructors</code> and <code>cases</code> are examples of <strong>rule builders</strong>, which are
 functions that turn a declaration into a rule.</p>
-<p dir="auto">Both rules above are added as <strong>safe</strong> rules. When a safe rule succeeds on a
+<p data-sourcepos="95:1-98:56" dir="auto">Both rules above are added as <strong>safe</strong> rules. When a safe rule succeeds on a
 goal encountered during the proof search, it is applied and the goal is never
 revisited thereafter. In other words, the search does not backtrack safe rules.
 We will later see <strong>unsafe</strong> rules, which can backtrack.</p>
-<p dir="auto">With these rules, we can prove a theorem about <code>NonEmpty</code> and <code>append</code>:</p>
+<p data-sourcepos="100:1-100:71" dir="auto">With these rules, we can prove a theorem about <code>NonEmpty</code> and <code>append</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop safe apply]
 theorem nonEmpty_append {xs : MyList α} ys :
     NonEmpty xs → NonEmpty (xs ++ ys) := by
@@ -125,45 +125,45 @@ theorem nonEmpty_append {xs : MyList α} ys :
 <span class="pl-k">theorem</span> <span class="pl-en">nonEmpty_append</span> {xs : MyList α} ys :
     NonEmpty xs → NonEmpty (xs ++ ys) := <span class="pl-k">by</span>
   aesop (rule_sets [MyList.NonEmpty])</pre></div>
-<p dir="auto">Here we call Aesop with the <code>MyList.NonEmpty</code> rule set, plus some default rule
+<p data-sourcepos="109:1-112:45" dir="auto">Here we call Aesop with the <code>MyList.NonEmpty</code> rule set, plus some default rule
 sets which are implicitly enabled (but can be disabled). Aesop finds a proof by
 introducing the hypothesis <code>h : NonEmpty xs</code>, performing case analysis on <code>h</code>
 and applying the <code>NonEmpty.cons</code> constructor.</p>
-<p dir="auto">If you want to see how Aesop proves your goal (or more likely, why it doesn't
+<p data-sourcepos="114:1-115:75" dir="auto">If you want to see how Aesop proves your goal (or more likely, why it doesn't
 prove your goal or why it takes too long to do so), you can enable tracing:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
-<p dir="auto">This makes Aesop print out the steps it takes while searching for a proof. There
+<p data-sourcepos="121:1-123:25" dir="auto">This makes Aesop print out the steps it takes while searching for a proof. There
 are also other tracing options which autocompletion should show you if you type
 <code>set_option trace.aesop</code>.</p>
-<p dir="auto">The <code>@[aesop]</code> attribute on <code>nonEmpty_append</code> adds this lemma as a safe rule to
+<p data-sourcepos="125:1-128:29" dir="auto">The <code>@[aesop]</code> attribute on <code>nonEmpty_append</code> adds this lemma as a safe rule to
 the default rule set. For this rule we use the <strong><code>apply</code></strong> rule builder, which
 generates a rule that tries to apply <code>nonEmpty_append</code> whenever the target is of
 the form <code>NonEmpty (_ ++ _)</code>.</p>
-<p dir="auto">After adding <code>nonEmpty_append</code>, Aesop can now prove consequences of this lemma:</p>
+<p data-sourcepos="130:1-130:79" dir="auto">After adding <code>nonEmpty_append</code>, Aesop can now prove consequences of this lemma:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="example {α : Type u} {xs : MyList α} ys zs :
     NonEmpty xs → NonEmpty (xs ++ ys ++ zs) := by
   aesop"><pre><span class="pl-k">example</span> {α : <span class="pl-k">Type</span> u} {xs : MyList α} ys zs :
     NonEmpty xs → NonEmpty (xs ++ ys ++ zs) := <span class="pl-k">by</span>
   aesop</pre></div>
-<p dir="auto">Next, we prove another simple theorem about <code>NonEmpty</code>:</p>
+<p data-sourcepos="138:1-138:55" dir="auto">Next, we prove another simple theorem about <code>NonEmpty</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="theorem nil_not_NonEmpty (xs : MyList α) : xs = nil → ¬ NonEmpty xs := by
   aesop (add unsafe 10% cases MyList, norm unfold Not)
     (rule_sets [MyList.NonEmpty])"><pre><span class="pl-k">theorem</span> <span class="pl-en">nil_not_NonEmpty</span> (xs : MyList α) : xs = nil → ¬ NonEmpty xs := <span class="pl-k">by</span>
   aesop (add unsafe <span class="pl-c1">10</span>% cases MyList, norm unfold Not)
     (rule_sets [MyList.NonEmpty])</pre></div>
-<p dir="auto">Here, we add two rules in an <strong><code>add</code></strong> clause. These rules are not part of a
+<p data-sourcepos="146:1-148:9" dir="auto">Here, we add two rules in an <strong><code>add</code></strong> clause. These rules are not part of a
 rule set but are added for this Aesop call only. They demonstrate two new
 features:</p>
-<ul dir="auto">
-<li>
-<p dir="auto"><strong>Unsafe</strong> rules are rules which can backtrack. Here we add <code>cases MyList</code> as
+<ul data-sourcepos="150:1-176:0" dir="auto">
+<li data-sourcepos="150:1-168:0">
+<p data-sourcepos="150:3-157:16" dir="auto"><strong>Unsafe</strong> rules are rules which can backtrack. Here we add <code>cases MyList</code> as
 an unsafe rule because when we perform <code>cases</code> on a hypothesis <code>xs : MyList α</code>, we get <code>hd : α</code> and <code>tl : MyList α</code>. If the rule was safe, we could easily
 get into an infinite loop where we call <code>cases</code> on <code>tl</code> again, and so on.
 Unsafe rules, by contrast, are applied 'in parallel', so while we might still
 end up exploring a proof attempt that performs <code>cases</code> 20 times, other
 possible rules will also be considered and will hopefully lead us down a more
 fruitful path.</p>
-<p dir="auto">To prioritise these different proof attempts, every unsafe rules is annotated
+<p data-sourcepos="159:3-167:72" dir="auto">To prioritise these different proof attempts, every unsafe rules is annotated
 with a <strong>success probability</strong>, here 10%. This should be an estimate of how
 likely it is that the rule will to lead to a successful proof. This estimate
 is used to prioritise goals: the initial goal starts with a priority of 100%
@@ -173,8 +173,8 @@ So applying our <code>cases MyList</code> rule repeatedly would give us goals wi
 priority 10%, 1%, 0.1% etc. Of course, the success probability of a rule is
 only a ballpark figure; it is not supposed to be precise in any sense.</p>
 </li>
-<li>
-<p dir="auto"><strong>Norm</strong> rules are yet another class of rules. They are used to normalise the
+<li data-sourcepos="169:1-176:0">
+<p data-sourcepos="169:3-175:8" dir="auto"><strong>Norm</strong> rules are yet another class of rules. They are used to normalise the
 goal before any other rules are applied. As part of this normalisation
 process, we run a variant of <code>simp_all</code> with the global <code>simp</code> set plus
 Aesop-specific simp lemmas. The <strong><code>unfold</code></strong> builder adds such an
@@ -183,7 +183,7 @@ necessary because the builtin rules currently do not handle negation very
 well.)</p>
 </li>
 </ul>
-<p dir="auto">Here are some other examples where normalisation comes in handy:</p>
+<p data-sourcepos="177:1-177:64" dir="auto">Here are some other examples where normalisation comes in handy:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm]
 theorem nil_append (xs : MyList α) : nil ++ xs = xs := rfl
 
@@ -211,148 +211,148 @@ theorem append_assoc {xs ys zs : MyList α} :
 <span class="pl-k">theorem</span> <span class="pl-en">append_assoc</span> {xs ys zs : MyList α} :
     (xs ++ ys) ++ zs = xs ++ (ys ++ zs) := <span class="pl-k">by</span>
   induction xs <;> aesop</pre></div>
-<p dir="auto">After we've added unfolding lemmas for <code>append</code>, Aesop can prove theorems about
+<p data-sourcepos="196:1-202:11" dir="auto">After we've added unfolding lemmas for <code>append</code>, Aesop can prove theorems about
 this function more or less by itself. (For these examples, <code>simp</code> would already
 suffice.) However, we still need to perform induction explicitly. This is a
 deliberate design choice: while there are some techniques for automating
 induction, they are complex and not entirely reliable, so I don't think it makes
 sense to implement them in a system where users can easily perform induction
 themselves.</p>
-<p dir="auto">More examples may be found in the <code>tests</code> folder of this repository.</p>
-<h5 dir="auto">Reference</h5>
-<p dir="auto">This section contains a systematic and fairly comprehensive account of how Aesop
+<p data-sourcepos="204:1-204:68" dir="auto">More examples may be found in the <code>tests</code> folder of this repository.</p>
+<h5 data-sourcepos="206:1-206:13" dir="auto">Reference</h5>
+<p data-sourcepos="208:1-209:9" dir="auto">This section contains a systematic and fairly comprehensive account of how Aesop
 operates.</p>
-<h6 dir="auto">Rules</h6>
-<p dir="auto">A rule is a tactic plus some associated metadata. Rules come in three flavours:</p>
-<ul dir="auto">
-<li>
-<p dir="auto"><strong>Normalisation rules</strong> (keyword <code>norm</code>) must generate zero or one subgoal.
+<h6 data-sourcepos="211:1-211:10" dir="auto">Rules</h6>
+<p data-sourcepos="213:1-213:79" dir="auto">A rule is a tactic plus some associated metadata. Rules come in three flavours:</p>
+<ul data-sourcepos="215:1-248:0" dir="auto">
+<li data-sourcepos="215:1-224:0">
+<p data-sourcepos="215:3-219:49" dir="auto"><strong>Normalisation rules</strong> (keyword <code>norm</code>) must generate zero or one subgoal.
 (Zero means that the rule closed the goal). They must not fail. Each
 normalisation rule is associated with an integer <strong>penalty</strong> (default 1).
 Normalisation rules are applied in order of penalty, lowest first. For rules
 with equal penalties, the order is unspecified.</p>
-<p dir="auto">Normalisation rules can also be simp lemmas. These are constructed with the
+<p data-sourcepos="221:3-223:39" dir="auto">Normalisation rules can also be simp lemmas. These are constructed with the
 <code>unfold</code> or <code>simp</code> builder. They are used by a special <code>simp</code> call during
 the normalisation process; see below.</p>
 </li>
-<li>
-<p dir="auto"><strong>Safe rules</strong> (keyword <code>safe</code>) are applied after normalisation but before any
+<li data-sourcepos="225:1-235:0">
+<p data-sourcepos="225:3-229:58" dir="auto"><strong>Safe rules</strong> (keyword <code>safe</code>) are applied after normalisation but before any
 unsafe rules. When a safe rule is successfully applied to a goal, the goal
 becomes <em>inactive</em>, meaning no other rules are considered for it. Like
 normalisation rules, safe rules are associated with a penalty (default 1)
 which determines the order in which the rules are tried.</p>
-<p dir="auto">Safe rules should be provability-preserving, meaning that if a goal is
+<p data-sourcepos="231:3-234:56" dir="auto">Safe rules should be provability-preserving, meaning that if a goal is
 provable and we apply a safe rule to it, the generated subgoals should still
 be provable. This is a less precise notion than it may appear since
 what is provable depends on the entire Aesop rule set.</p>
 </li>
-<li>
-<p dir="auto"><strong>Unsafe rules</strong> (keyword <code>unsafe</code>) are tried only if all available safe rules
+<li data-sourcepos="236:1-248:0">
+<p data-sourcepos="236:3-241:45" dir="auto"><strong>Unsafe rules</strong> (keyword <code>unsafe</code>) are tried only if all available safe rules
 have failed on a goal. When an unsafe rule is applied to a goal, the goal is
 not marked as inactive, so other (unsafe) rules may be applied to it. These
 rule applications are considered independently until one of them proves the
 goal (or until we've exhausted all available rules and determine that the goal
 is not provable with the current rule set).</p>
-<p dir="auto">Each unsafe rule has a <strong>success probability</strong> between 0% and 100%. These
+<p data-sourcepos="243:3-247:73" dir="auto">Each unsafe rule has a <strong>success probability</strong> between 0% and 100%. These
 probabilities are used to determine the priority of a goal. The initial goal
 has priority 100% and whenever we apply an unsafe rule, the priorities of its
 subgoals are the priority of the rule's parent goal times the rule's success
 probability. Safe rules are treated as having 100% success probability.</p>
 </li>
 </ul>
-<p dir="auto">Rules can also be <strong>multi-rules</strong>. These are rules which 'nondeterministically'
+<p data-sourcepos="249:1-253:67" dir="auto">Rules can also be <strong>multi-rules</strong>. These are rules which 'nondeterministically'
 apply multiple tactics to the goal. Each of these tactics is then considered as
 one possible way to solve the goal. For example, registering the constructors of
 the <code>Or</code> type will generate a multi-rule that, given a goal with target <code>A ∨ B</code>,
 generates one rule application with goal <code>A</code> and one with goal <code>B</code>.</p>
-<h6 dir="auto">Search Tree</h6>
-<p dir="auto">Aesop's central data structure is a search tree. This tree alternates between
+<h6 data-sourcepos="255:1-255:16" dir="auto">Search Tree</h6>
+<p data-sourcepos="257:1-258:19" dir="auto">Aesop's central data structure is a search tree. This tree alternates between
 two kinds of nodes:</p>
-<ul dir="auto">
-<li><strong>Goal nodes</strong>: these nodes store a goal, plus metadata relevant to the
+<ul data-sourcepos="260:1-268:0" dir="auto">
+<li data-sourcepos="260:1-262:68"><strong>Goal nodes</strong>: these nodes store a goal, plus metadata relevant to the
 search. The parent and children of a goal node are rule application nodes. In
 particular, each goal node has a <strong>priority</strong> between 0% and 100%.</li>
-<li><strong>Rule application ('rapp') nodes</strong>: these goals store a rule (plus metadata).
+<li data-sourcepos="263:1-268:0"><strong>Rule application ('rapp') nodes</strong>: these goals store a rule (plus metadata).
 The parent and children of a rapp node are goal nodes. When the search tree
 contains a rapp node with rule <code>r</code>, parent <code>p</code> and children <code>c₁, ..., cₙ</code>,
 this means that the tactic of rule <code>r</code> was applied to the goal of <code>p</code>,
 generating the subgoals of the <code>cᵢ</code>.</li>
 </ul>
-<p dir="auto">When a goal node has multiple child rapp nodes, we have a choice of how to solve
+<p data-sourcepos="269:1-271:79" dir="auto">When a goal node has multiple child rapp nodes, we have a choice of how to solve
 the goals. This makes the tree an AND-OR tree: to prove a rapp, <em>all</em> its child
 goals must be proved; to prove a goal, <em>any</em> of its child rapps must be proved.</p>
-<h6 dir="auto">Search</h6>
-<p dir="auto">We start with a search tree containing a single goal node. This node's goal is
+<h6 data-sourcepos="273:1-273:11" dir="auto">Search</h6>
+<p data-sourcepos="275:1-280:14" dir="auto">We start with a search tree containing a single goal node. This node's goal is
 the goal which Aesop is supposed to solve. Then we perform the following steps
 in a loop, stopping if (a) the root goal has been proved; (b) the root goal
 becomes unprovable; or (c) one of Aesop's rule limits has been reached. (There
 are configurable limits on, e.g., the total number of rules applied or the
 search depth.)</p>
-<ul dir="auto">
-<li>
-<p dir="auto">Pick the highest-priority active goal node <code>G</code>. Roughly speaking, a goal node
+<ul data-sourcepos="282:1-303:0" dir="auto">
+<li data-sourcepos="282:1-284:5">
+<p data-sourcepos="282:3-284:5" dir="auto">Pick the highest-priority active goal node <code>G</code>. Roughly speaking, a goal node
 is active if it is not proved and we haven't yet applied all possible rules to
 it.</p>
 </li>
-<li>
-<p dir="auto">If the goal of <code>G</code> has not been normalised yet, normalise it. That means:</p>
-<ul dir="auto">
-<li>Run all normalisation rules with negative penalty (lowest penalty first).</li>
-<li>Run <code>simp</code> with the global simp set plus Aesop's normalisation simp rules.</li>
-<li>Run all normalisation rules with non-negative penalty (lowest penalty
+<li data-sourcepos="285:1-293:12">
+<p data-sourcepos="285:3-285:75" dir="auto">If the goal of <code>G</code> has not been normalised yet, normalise it. That means:</p>
+<ul data-sourcepos="287:3-291:0" dir="auto">
+<li data-sourcepos="287:3-287:77">Run all normalisation rules with negative penalty (lowest penalty first).</li>
+<li data-sourcepos="288:3-288:78">Run <code>simp</code> with the global simp set plus Aesop's normalisation simp rules.</li>
+<li data-sourcepos="289:3-291:0">Run all normalisation rules with non-negative penalty (lowest penalty
 first).</li>
 </ul>
-<p dir="auto">This process destructively updates the goal of <code>G</code>. (It may also prove it
+<p data-sourcepos="292:3-293:12" dir="auto">This process destructively updates the goal of <code>G</code>. (It may also prove it
 outright.)</p>
 </li>
-<li>
-<p dir="auto">If we haven't tried to apply the safe rules to the goal of <code>G</code> yet, try to
+<li data-sourcepos="294:1-297:51">
+<p data-sourcepos="294:3-297:51" dir="auto">If we haven't tried to apply the safe rules to the goal of <code>G</code> yet, try to
 apply each safe rule (lowest penalty first). As soon as a rule succeeds, add
 the corresponding rapp and child goals to the tree and mark <code>G</code> as inactive.
 The child goals receive the same priority as <code>G</code>.</p>
 </li>
-<li>
-<p dir="auto">Otherwise there is at least one unsafe rule that hasn't been tried on <code>G</code> yet
+<li data-sourcepos="298:1-303:0">
+<p data-sourcepos="298:3-302:42" dir="auto">Otherwise there is at least one unsafe rule that hasn't been tried on <code>G</code> yet
 (or else <code>G</code> would have been inactive). Try the unsafe rule with the highest
 success probability and if it succeeds, add the corresponding rapp and child
 goals to the tree. The child goals receive the priority of <code>G</code> times the
 success probability of the applied rule.</p>
 </li>
 </ul>
-<p dir="auto">A goal is unprovable if we have applied all possible rules to it and all
+<p data-sourcepos="304:1-306:23" dir="auto">A goal is unprovable if we have applied all possible rules to it and all
 resulting child rapps are unprovable. A rapp is unprovable if any of its
 subgoals is unprovable.</p>
-<p dir="auto">During the search, a goal or rapp can also become irrelevant, meaning its
+<p data-sourcepos="308:1-310:72" dir="auto">During the search, a goal or rapp can also become irrelevant, meaning its
 provability has no impact on the success of the overall proof search.
 More formally, irrelevance is characterised by the following conditions:</p>
-<ul dir="auto">
-<li>A goal is irrelevant if its parent rapp is unprovable. (This means that a
+<ul data-sourcepos="312:1-318:0" dir="auto">
+<li data-sourcepos="312:1-314:40">A goal is irrelevant if its parent rapp is unprovable. (This means that a
 sibling of the goal is already unprovable, in which case we already know that
 the parent rapp will never be proved.)</li>
-<li>A rapp is irrelevant if its parent goal is proved. (This means that a sibling
+<li data-sourcepos="315:1-316:61">A rapp is irrelevant if its parent goal is proved. (This means that a sibling
 of the rapp is already proved, and we only need one proof.)</li>
-<li>A goal or rapp is irrelevant if any of its ancestors is irrelevant.</li>
+<li data-sourcepos="317:1-318:0">A goal or rapp is irrelevant if any of its ancestors is irrelevant.</li>
 </ul>
-<h6 dir="auto">Rule Builders</h6>
-<p dir="auto">A <strong>rule builder</strong> is a metaprogram that turns a declaration or hypothesis into
+<h6 data-sourcepos="319:1-319:18" dir="auto">Rule Builders</h6>
+<p data-sourcepos="321:1-322:48" dir="auto">A <strong>rule builder</strong> is a metaprogram that turns a declaration or hypothesis into
 an Aesop rule. Currently available builders are:</p>
-<ul dir="auto">
-<li>
-<p dir="auto"><strong><code>apply</code></strong>: generates a rule which tries to apply the given declaration or
+<ul data-sourcepos="324:1-435:0" dir="auto">
+<li data-sourcepos="324:1-325:72">
+<p data-sourcepos="324:3-325:72" dir="auto"><strong><code>apply</code></strong>: generates a rule which tries to apply the given declaration or
 hypothesis <code>x</code> to the target. The rule acts like the tactic <code>apply x</code>.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>forward</code></strong>: when applied to a declaration or hypothesis of type <code>A₁ → ... Aₙ → B</code>, generates a rule which looks for hypotheses <code>h₁ : A₁</code>, ..., <code>hₙ : Aₙ</code>
+<li data-sourcepos="326:1-370:55">
+<p data-sourcepos="326:3-329:44" dir="auto"><strong><code>forward</code></strong>: when applied to a declaration or hypothesis of type <code>A₁ → ... Aₙ → B</code>, generates a rule which looks for hypotheses <code>h₁ : A₁</code>, ..., <code>hₙ : Aₙ</code>
 in the goal and, if they are found, adds a new hypothesis <code>h : B</code>. As an
 example, consider the lemma <code>even_or_odd</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="even_or_odd : ∀ (n : Nat), Even n ∨ Odd n"><pre>even_or_odd : ∀ (n : Nat), Even n ∨ Odd n</pre></div>
-<p dir="auto">Registering this as a forward rule will cause the goal</p>
+<p data-sourcepos="335:3-335:56" dir="auto">Registering this as a forward rule will cause the goal</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
 m : Nat
 ⊢ T"><pre>n : Nat
 m : Nat
 ⊢ T</pre></div>
-<p dir="auto">to be transformed into this:</p>
+<p data-sourcepos="343:3-343:30" dir="auto">to be transformed into this:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
 hn : Even n ∨ Odd n
 m : Nat
@@ -362,22 +362,22 @@ hn : Even n ∨ Odd n
 m : Nat
 hm : Even m ∨ Odd m
 ⊢ T</pre></div>
-<p dir="auto">The forward builder may also be given a list of <em>immediate names</em>:</p>
+<p data-sourcepos="353:3-353:68" dir="auto">The forward builder may also be given a list of <em>immediate names</em>:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(forward (immediate := [n])) even_or_odd "><pre class="notranslate"><code class="notranslate">(forward (immediate := [n])) even_or_odd 
 </code></pre></div>
-<p dir="auto">The immediate names, here <code>n</code>, refer to the arguments of <code>even_or_odd</code>. When
+<p data-sourcepos="359:3-362:39" dir="auto">The immediate names, here <code>n</code>, refer to the arguments of <code>even_or_odd</code>. When
 Aesop applies a forward rule with explicit immediate names, it only matches
 the corresponding arguments to hypotheses. (Here, <code>even_or_odd</code> has only one
 argument, so there is no difference.)</p>
-<p dir="auto">When no immediate names are given, Aesop considers every argument immediate,
+<p data-sourcepos="364:3-366:46" dir="auto">When no immediate names are given, Aesop considers every argument immediate,
 except for instance arguments and dependent arguments (i.e. those that can be
 inferred from the types of later arguments).</p>
-<p dir="auto">When a forward rule has been successfully applied, it will not be tried again
+<p data-sourcepos="368:3-370:55" dir="auto">When a forward rule has been successfully applied, it will not be tried again
 when processing its subgoals (and their subgoals, etc.). Without this limit,
 many forward rules would be applied infinitely often.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>elim</code></strong>: works like <code>forward</code>, but after the rule has been applied,
+<li data-sourcepos="371:1-397:37">
+<p data-sourcepos="371:3-374:6" dir="auto"><strong><code>elim</code></strong>: works like <code>forward</code>, but after the rule has been applied,
 hypotheses that were used as immediate arguments are cleared. As the name
 suggests, this is useful when you want to eliminate a hypothesis. E.g. the
 rule</p>
@@ -385,128 +385,128 @@ rule</p>
 theorem and_elim_right : α ∧ β → α := ..."><pre class="notranslate"><code class="notranslate">@[aesop norm elim]
 theorem and_elim_right : α ∧ β → α := ...
 </code></pre></div>
-<p dir="auto">will cause the goal</p>
+<p data-sourcepos="379:3-379:21" dir="auto">will cause the goal</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : (α ∧ β) ∧ γ
 h₂ : δ ∧ ε"><pre class="notranslate"><code class="notranslate">h₁ : (α ∧ β) ∧ γ
 h₂ : δ ∧ ε
 </code></pre></div>
-<p dir="auto">to be transformed into</p>
+<p data-sourcepos="384:3-384:24" dir="auto">to be transformed into</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : α
 h₂ : δ"><pre class="notranslate"><code class="notranslate">h₁ : α
 h₂ : δ
 </code></pre></div>
-<p dir="auto">Unlike with <code>forward</code> rules, when an <code>elim</code> rule is successfully applied, it
+<p data-sourcepos="390:3-393:10" dir="auto">Unlike with <code>forward</code> rules, when an <code>elim</code> rule is successfully applied, it
 may be applied again to the resulting subgoals (and their subgoals, etc.).
 There is less danger of infinite cycles because the original hypothesis is
 cleared.</p>
-<p dir="auto">However, if the hypothesis or hypotheses to which the <code>elim</code> rule is applied
+<p data-sourcepos="395:3-397:37" dir="auto">However, if the hypothesis or hypotheses to which the <code>elim</code> rule is applied
 have dependencies, they are not cleared. In this case, you'll probably get
 an infinite cycle. (TODO fix this.)</p>
 </li>
-<li>
-<p dir="auto"><strong><code>constructors</code></strong>: when applied to an inductive type or structure <code>T</code>,
+<li data-sourcepos="398:1-403:65">
+<p data-sourcepos="398:3-403:65" dir="auto"><strong><code>constructors</code></strong>: when applied to an inductive type or structure <code>T</code>,
 generates a rule which tries to apply each constructor of <code>T</code> to the target.
 This is a multi-rule, so if multiple constructors apply, they are considered
 in parallel. If you use this constructor to build an unsafe rule, each
 constructor application receives the same success probability; if this is not
 what you want, add separate <code>apply</code> rules for the constructors.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>cases</code></strong>: when applied to an inductive type or structure <code>T</code>, generates a
+<li data-sourcepos="404:1-409:57">
+<p data-sourcepos="404:3-409:57" dir="auto"><strong><code>cases</code></strong>: when applied to an inductive type or structure <code>T</code>, generates a
 rule that performs case analysis on every hypothesis <code>h : T</code> in the context.
 The rule recurses into subgoals, so <code>cases Or</code> will generate 6 goals when
 applied to a goal with hypotheses <code>h₁ : A ∨ B ∨ C</code> and <code>h₂ : D ∨ E</code>. However,
 if <code>T</code> is a recursive type (e.g. <code>List</code>), we only perform case analysis once
 on each hypothesis. Otherwise we would loop infinitely.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>simp</code></strong>: when applied to an equation <code>eq : A₁ → ... Aₙ → x = y</code>, registers
+<li data-sourcepos="410:1-412:50">
+<p data-sourcepos="410:3-412:50" dir="auto"><strong><code>simp</code></strong>: when applied to an equation <code>eq : A₁ → ... Aₙ → x = y</code>, registers
 <code>eq</code> as a simp lemma for the builtin simp pass during normalisation. As such,
 this builder can only build normalisation rules.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>unfold</code></strong>: when applied to a definition or <code>let</code> hypothesis <code>f</code>, registers
+<li data-sourcepos="413:1-416:8">
+<p data-sourcepos="413:3-416:8" dir="auto"><strong><code>unfold</code></strong>: when applied to a definition or <code>let</code> hypothesis <code>f</code>, registers
 <code>f</code> to be unfolded (i.e. replaced with its definition) by the builtin simp
 pass during normalisation. As such, this builder can only build normalisation
 rules.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>tactic</code></strong>: takes a tactic and directly turns it into a rule. The given
+<li data-sourcepos="417:1-425:8">
+<p data-sourcepos="417:3-421:48" dir="auto"><strong><code>tactic</code></strong>: takes a tactic and directly turns it into a rule. The given
 declaration (the builder does not work for hypotheses) must have type <code>TacticM Unit</code>, <code>Aesop.SimpleRuleTac</code> or <code>Aesop.RuleTac</code>. The latter are Aesop data
 types which associate a tactic with additional metadata; using them may allow
 the rule to operate somewhat more efficiently.</p>
-<p dir="auto">The builder may be given an option <code>uses_branch_state := <boolean></code> (default
+<p data-sourcepos="423:3-425:8" dir="auto">The builder may be given an option <code>uses_branch_state := <boolean></code> (default
 true). This indicates whether the given tactic uses the branch state; see
 below.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>safe_default</code></strong>: default builder for safe rules. This is the builder used
+<li data-sourcepos="426:1-430:10">
+<p data-sourcepos="426:3-430:10" dir="auto"><strong><code>safe_default</code></strong>: default builder for safe rules. This is the builder used
 when you register a safe rule without specifying a builder, but you can also
 request it explicitly. It tries the following builders, using the first one
 that works for the given declaration or hypothesis: <code>constructors</code>, <code>tactic</code>,
 <code>apply</code>.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>unsafe_default</code></strong>: default builder for unsafe rules. Uses the same builders
+<li data-sourcepos="431:1-432:20">
+<p data-sourcepos="431:3-432:20" dir="auto"><strong><code>unsafe_default</code></strong>: default builder for unsafe rules. Uses the same builders
 as <code>safe_default</code>.</p>
 </li>
-<li>
-<p dir="auto"><strong><code>norm_default</code></strong>: default builder for normalisation rules. Uses the builders
+<li data-sourcepos="433:1-435:0">
+<p data-sourcepos="433:3-434:28" dir="auto"><strong><code>norm_default</code></strong>: default builder for normalisation rules. Uses the builders
 <code>tactic</code>, <code>simp</code>, <code>apply</code>.</p>
 </li>
 </ul>
-<h6 dir="auto">Rule Sets</h6>
-<p dir="auto">Rule sets are declared with the command</p>
+<h6 data-sourcepos="436:1-436:14" dir="auto">Rule Sets</h6>
+<p data-sourcepos="438:1-438:39" dir="auto">Rule sets are declared with the command</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [r₁, ..., rₙ]"><pre>declare_aesop_rule_sets [r₁, ..., rₙ]</pre></div>
-<p dir="auto">where the <code>rᵢ</code> are arbitrary names. To avoid clashes, pick names in the
+<p data-sourcepos="444:1-445:26" dir="auto">where the <code>rᵢ</code> are arbitrary names. To avoid clashes, pick names in the
 namespace of your package.</p>
-<p dir="auto">Within a rule set, rules are identified by their name, builder and phase
+<p data-sourcepos="447:1-450:80" dir="auto">Within a rule set, rules are identified by their name, builder and phase
 (safe/unsafe/norm). This means you can add the same declaration as multiple
 rules with different builders or in different phases, but not with different
 priorities or different builder options (if the rule's builder has any options).</p>
-<p dir="auto">Rules can appear in multiple rule sets, but in this case you should make sure
+<p data-sourcepos="452:1-454:66" dir="auto">Rules can appear in multiple rule sets, but in this case you should make sure
 that they have the same priority and use the same builder options. Otherwise,
 Aesop will consider these rules the same and arbitrarily pick one.</p>
-<h6 dir="auto">The <code>@[aesop]</code> Attribute</h6>
-<p dir="auto">Declarations can be added to rule sets by annotating them with the <code>@[aesop]</code>
+<h6 data-sourcepos="456:1-456:29" dir="auto">The <code>@[aesop]</code> Attribute</h6>
+<p data-sourcepos="458:1-459:10" dir="auto">Declarations can be added to rule sets by annotating them with the <code>@[aesop]</code>
 attribute.</p>
-<b dir="auto">Single Rule</b>
-<p dir="auto">In most cases, you'll want to add one rule for the declaration. The syntax for
+<b data-sourcepos="461:1-461:17" dir="auto">Single Rule</b>
+<p data-sourcepos="463:1-464:7" dir="auto">In most cases, you'll want to add one rule for the declaration. The syntax for
 this is</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop <phase>? <priority>? <builder>? <rule_sets>?]"><pre><span class="pl-k">@[aesop <phase>? <priority>? <builder>? <rule_sets>?]</span></pre></div>
-<p dir="auto">where</p>
-<ul dir="auto">
-<li>
-<p dir="auto"><code><phase></code> is <code>safe</code>, <code>norm</code> or <code>unsafe</code>. Cannot be omitted except under the
+<p data-sourcepos="470:1-470:5" dir="auto">where</p>
+<ul data-sourcepos="472:1-499:0" dir="auto">
+<li data-sourcepos="472:1-474:0">
+<p data-sourcepos="472:3-473:32" dir="auto"><code><phase></code> is <code>safe</code>, <code>norm</code> or <code>unsafe</code>. Cannot be omitted except under the
 conditions in the next bullet.</p>
 </li>
-<li>
-<p dir="auto"><code><priority></code> is:</p>
-<ul dir="auto">
-<li>For <code>safe</code> and <code>norm</code> rules, an integer penalty. Can be omitted, in which
+<li data-sourcepos="475:1-480:0">
+<p data-sourcepos="475:3-475:18" dir="auto"><code><priority></code> is:</p>
+<ul data-sourcepos="476:3-480:0" dir="auto">
+<li data-sourcepos="476:3-477:35">For <code>safe</code> and <code>norm</code> rules, an integer penalty. Can be omitted, in which
 case the penalty defaults to 1.</li>
-<li>For <code>unsafe</code> rules, a percentage between 0% and 100%. Cannot be omitted.
+<li data-sourcepos="478:3-480:0">For <code>unsafe</code> rules, a percentage between 0% and 100%. Cannot be omitted.
 You may omit the <code>unsafe</code> phase specification when giving a percentage.</li>
 </ul>
 </li>
-<li>
-<p dir="auto"><code><builder></code> is one of the builders given above. If you want to pass options to
+<li data-sourcepos="481:1-489:0">
+<p data-sourcepos="481:3-482:61" dir="auto"><code><builder></code> is one of the builders given above. If you want to pass options to
 a builder, write it like this (with mandatory parentheses):</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(tactic (uses_branch_state := true))"><pre class="notranslate" lang="text"><code class="notranslate">(tactic (uses_branch_state := true))
 </code></pre></div>
-<p dir="auto">If no builder is specified, the default builder for the given phase is used.</p>
+<p data-sourcepos="488:3-488:78" dir="auto">If no builder is specified, the default builder for the given phase is used.</p>
 </li>
-<li>
-<p dir="auto"><code><rule_sets></code> is a clause of the form</p>
+<li data-sourcepos="490:1-499:0">
+<p data-sourcepos="490:3-490:39" dir="auto"><code><rule_sets></code> is a clause of the form</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [r₁, ..., rₙ])"><pre class="notranslate" lang="text"><code class="notranslate">(rule_sets [r₁, ..., rₙ])
 </code></pre></div>
-<p dir="auto">where the <code>rᵢ</code> are declared rule sets. (Parentheses are mandatory.) The rule
+<p data-sourcepos="496:3-498:38" dir="auto">where the <code>rᵢ</code> are declared rule sets. (Parentheses are mandatory.) The rule
 is added exactly to the specified rule sets. If this clause is omitted, it
 defaults to <code>(rule_sets [default])</code>.</p>
 </li>
 </ul>
-<b dir="auto">Multiple Rules</b>
-<p dir="auto">It is occasionally useful to add multiple rules for a single declaration, e.g.
+<b data-sourcepos="500:1-500:20" dir="auto">Multiple Rules</b>
+<p data-sourcepos="502:1-504:25" dir="auto">It is occasionally useful to add multiple rules for a single declaration, e.g.
 a <code>cases</code> and a <code>constructors</code> rule for the same inductive type. In this case,
 you can write for example</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop unsafe [constructors 75%, cases 90%]]
@@ -524,16 +524,16 @@ def bar (x : T) ..."><pre><span class="pl-k">@[aesop unsafe [constructors <span 
 
 <span class="pl-k">@[aesop [<span class="pl-c1">80</span>% apply, safe <span class="pl-c1">5</span> (forward (immediate := x))]</span>]
 <span class="pl-k">def</span> <span class="pl-en">bar</span> (x : T) ...</pre></div>
-<p dir="auto">In the first example, two unsafe rules for <code>T</code> are registered, one with success
+<p data-sourcepos="517:1-518:33" dir="auto">In the first example, two unsafe rules for <code>T</code> are registered, one with success
 probability 75% and one with 90%.</p>
-<p dir="auto">In the second example, two rules are registered for <code>foo</code>. Both use the <code>apply</code>
+<p data-sourcepos="520:1-523:13" dir="auto">In the second example, two rules are registered for <code>foo</code>. Both use the <code>apply</code>
 builder. The first, a <code>safe</code> rule with default penalty, is added to rule set
 <code>A</code>. The second, an <code>unsafe</code> rule with 70% success probability, is added to
 rule set <code>B</code>.</p>
-<p dir="auto">In the third example, two rules are registered for <code>bar</code>: an <code>unsafe</code> rule with
+<p data-sourcepos="525:1-527:30" dir="auto">In the third example, two rules are registered for <code>bar</code>: an <code>unsafe</code> rule with
 80% success probability using the <code>apply</code> builder and a <code>safe</code> rule with penalty
 5 using the <code>forward</code> builder.</p>
-<p dir="auto">In general, the grammar for the <code>@[aesop]</code> attribute is</p>
+<p data-sourcepos="529:1-529:55" dir="auto">In general, the grammar for the <code>@[aesop]</code> attribute is</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="attr      ::= @[aesop <rule_expr>]
             | @[aesop [<rule_expr,+>]]
 
@@ -545,43 +545,43 @@ rule_expr ::= feature
 rule_expr ::= feature
             | feature <rule_expr>
             | feature [<rule_expr,+>]</pre></div>
-<p dir="auto">where <code>feature</code> is a phase, priority, builder or <code>rule_sets</code> clause. This
+<p data-sourcepos="540:1-542:53" dir="auto">where <code>feature</code> is a phase, priority, builder or <code>rule_sets</code> clause. This
 grammar yields one or more trees of features and each branch of these trees
 specifies one rule. (A branch is a list of features.)</p>
-<h6 dir="auto">Erasing Rules</h6>
-<p dir="auto">There are two ways to erase rules. Usually it suffices to remove the <code>@[aesop]</code>
+<h6 data-sourcepos="544:1-544:18" dir="auto">Erasing Rules</h6>
+<p data-sourcepos="546:1-547:10" dir="auto">There are two ways to erase rules. Usually it suffices to remove the <code>@[aesop]</code>
 attribute:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="attribute [-aesop] foo"><pre><span class="pl-k">attribute [-aesop]</span> foo</pre></div>
-<p dir="auto">This will remove all rules associated with the declaration <code>foo</code> from all rule
+<p data-sourcepos="553:1-554:5" dir="auto">This will remove all rules associated with the declaration <code>foo</code> from all rule
 sets.</p>
-<p dir="auto">When you want to remove only certain rules, you can use a command:</p>
+<p data-sourcepos="556:1-556:66" dir="auto">When you want to remove only certain rules, you can use a command:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [safe apply foo, bar (rule_sets [A])]"><pre>erase_aesop_rules [safe apply foo, bar (rule_sets [A])]</pre></div>
-<p dir="auto">This will remove:</p>
-<ul dir="auto">
-<li>all safe rules for <code>foo</code> with the <code>apply</code> builder from all rule sets (but not
+<p data-sourcepos="562:1-562:17" dir="auto">This will remove:</p>
+<ul data-sourcepos="564:1-567:0" dir="auto">
+<li data-sourcepos="564:1-565:53">all safe rules for <code>foo</code> with the <code>apply</code> builder from all rule sets (but not
 other, for example, unsafe rules or <code>forward</code> rules);</li>
-<li>all rules for <code>bar</code> from rule set <code>A</code>.</li>
+<li data-sourcepos="566:1-567:0">all rules for <code>bar</code> from rule set <code>A</code>.</li>
 </ul>
-<p dir="auto">In general, the syntax is</p>
+<p data-sourcepos="568:1-568:25" dir="auto">In general, the syntax is</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [<rule_expr,+>]"><pre>erase_aesop_rules [<rule_expr,+>]</pre></div>
-<p dir="auto">i.e. rules are specified in the same way as for the <code>@[aesop]</code> attribute.
+<p data-sourcepos="574:1-577:48" dir="auto">i.e. rules are specified in the same way as for the <code>@[aesop]</code> attribute.
 However, each rule must also specify the name of the declaration whose rules
 should be erased. The <code>rule_expr</code> grammar is therefore extended such that a
 <code>feature</code> can also be the name of a declaration.</p>
-<p dir="auto">Note that a rule added with one of the default builders (<code>safe_default</code>,
+<p data-sourcepos="579:1-583:8" dir="auto">Note that a rule added with one of the default builders (<code>safe_default</code>,
 <code>norm_default</code>, <code>unsafe_default</code>) will be registered under the name of the
 builder that is ultimately used, e.g. <code>apply</code> or <code>simp</code>. So if you want to erase
 such a rule, you may have to specify that builder instead of the default
 builder.</p>
-<h6 dir="auto">The <code>aesop</code> Tactic</h6>
-<p dir="auto">In its most basic form, you can call the Aesop tactic just by writing</p>
+<h6 data-sourcepos="585:1-585:23" dir="auto">The <code>aesop</code> Tactic</h6>
+<p data-sourcepos="587:1-587:69" dir="auto">In its most basic form, you can call the Aesop tactic just by writing</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="example : α → α := by
   aesop"><pre><span class="pl-k">example</span> : α → α := <span class="pl-k">by</span>
   aesop</pre></div>
-<p dir="auto">This will use the rules in the <code>default</code> rule set (i.e. those added via the
+<p data-sourcepos="594:1-596:47" dir="auto">This will use the rules in the <code>default</code> rule set (i.e. those added via the
 attribute with no explicit rule set specified) and the rules in the <code>builtin</code>
 rule set (i.e. those provided by Aesop itself).</p>
-<p dir="auto">The tactic's behaviour can also be customised with various options. A more
+<p data-sourcepos="598:1-599:41" dir="auto">The tactic's behaviour can also be customised with various options. A more
 involved Aesop call might look like this:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="aesop
   (add safe foo, 10% cases Or, safe cases Empty)
@@ -593,75 +593,75 @@ involved Aesop call might look like this:</p>
   (rule_sets [A, B])
   (options { maxRuleApplicationDepth := 10 })
 </code></pre></div>
-<p dir="auto">Here we add some rules with an <code>add</code> clause, erase other rules with an <code>erase</code>
+<p data-sourcepos="609:1-611:34" dir="auto">Here we add some rules with an <code>add</code> clause, erase other rules with an <code>erase</code>
 clause, limit the used rule sets and set some options. Each of these clauses
 is discussed in more detail below.</p>
-<b dir="auto">Adding Rules</b>
-<p dir="auto">Rules can be added to an Aesop call with an <code>add</code> clause. This won't affect any
+<b data-sourcepos="613:1-613:18" dir="auto">Adding Rules</b>
+<p data-sourcepos="615:1-616:53" dir="auto">Rules can be added to an Aesop call with an <code>add</code> clause. This won't affect any
 declared rule sets. The syntax of the <code>add</code> clause is</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(add <rule_expr,+>)"><pre class="notranslate" lang="text"><code class="notranslate">(add <rule_expr,+>)
 </code></pre></div>
-<p dir="auto">i.e. rules can be specified in the same way as for the <code>@[aesop]</code> attribute.
+<p data-sourcepos="622:1-624:60" dir="auto">i.e. rules can be specified in the same way as for the <code>@[aesop]</code> attribute.
 As with the <code>erase_aesop_rules</code> command, each rule must specify the name of
 declaration from which the rule should be built; for example</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(add safe [foo 1, bar 5])"><pre class="notranslate" lang="text"><code class="notranslate">(add safe [foo 1, bar 5])
 </code></pre></div>
-<p dir="auto">will add the declaration <code>foo</code> as a safe rule with penalty 1 and <code>bar</code> as a safe
+<p data-sourcepos="630:1-631:20" dir="auto">will add the declaration <code>foo</code> as a safe rule with penalty 1 and <code>bar</code> as a safe
 rule with penalty 5.</p>
-<p dir="auto">The rule names can also refer to hypotheses in the goal context, but not all
+<p data-sourcepos="633:1-634:22" dir="auto">The rule names can also refer to hypotheses in the goal context, but not all
 builders support this.</p>
-<b dir="auto">Erasing Rules</b>
-<p dir="auto">Rules can be removed from an Aesop call with an <code>erase</code> clause. Again, this
+<b data-sourcepos="636:1-636:19" dir="auto">Erasing Rules</b>
+<p data-sourcepos="638:1-640:24" dir="auto">Rules can be removed from an Aesop call with an <code>erase</code> clause. Again, this
 affects only the current Aesop call and not the declared rule sets. The syntax
 of the <code>erase</code> clause is</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(erase <rule_expr,+>)"><pre class="notranslate" lang="text"><code class="notranslate">(erase <rule_expr,+>)
 </code></pre></div>
-<p dir="auto">and it works exactly like the <code>erase_aesop_rules</code> command.</p>
-<b dir="auto">Selecting Rule Sets</b>
-<p dir="auto">By default, Aesop uses the <code>default</code> and <code>builtin</code> rule sets. A <code>rule_sets</code>
+<p data-sourcepos="646:1-646:58" dir="auto">and it works exactly like the <code>erase_aesop_rules</code> command.</p>
+<b data-sourcepos="648:1-648:25" dir="auto">Selecting Rule Sets</b>
+<p data-sourcepos="650:1-651:57" dir="auto">By default, Aesop uses the <code>default</code> and <code>builtin</code> rule sets. A <code>rule_sets</code>
 clause can be given to include additional rule sets, e.g.</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [A, B])"><pre class="notranslate" lang="text"><code class="notranslate">(rule_sets [A, B])
 </code></pre></div>
-<p dir="auto">This will use rule sets <code>A</code>, <code>B</code>, <code>default</code> and <code>builtin</code>. Rule sets can also
+<p data-sourcepos="657:1-658:50" dir="auto">This will use rule sets <code>A</code>, <code>B</code>, <code>default</code> and <code>builtin</code>. Rule sets can also
 be disabled with <code>rule_sets [-default, -builtin]</code>.</p>
-<b dir="auto">Setting Options</b>
-<p dir="auto">Various options can be set with an <code>options</code> clause, whose syntax is:</p>
+<b data-sourcepos="660:1-660:21" dir="auto">Setting Options</b>
+<p data-sourcepos="662:1-662:69" dir="auto">Various options can be set with an <code>options</code> clause, whose syntax is:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(options <term>)"><pre class="notranslate" lang="text"><code class="notranslate">(options <term>)
 </code></pre></div>
-<p dir="auto">The term is an arbitrary Lean expression of type <code>Aesop.Options</code>; see there for
+<p data-sourcepos="668:1-669:8" dir="auto">The term is an arbitrary Lean expression of type <code>Aesop.Options</code>; see there for
 details.</p>
-<h6 dir="auto">Builtin Rules</h6>
-<p dir="auto">The set of builtin rules (those in the <code>builtin</code> rule set) is currently quite
+<h6 data-sourcepos="671:1-671:18" dir="auto">Builtin Rules</h6>
+<p data-sourcepos="673:1-675:57" dir="auto">The set of builtin rules (those in the <code>builtin</code> rule set) is currently quite
 unstable, so for now I won't document them in detail. See
 <code>Aesop/BuiltinRules.lean</code> and <code>Aesop/BuiltinRules/*.lean</code></p>
-<h6 dir="auto">Tracing</h6>
-<p dir="auto">To see how Aesop proves a goal -- or why it doesn't prove a goal, or why it's
+<h6 data-sourcepos="677:1-677:12" dir="auto">Tracing</h6>
+<p data-sourcepos="679:1-681:68" dir="auto">To see how Aesop proves a goal -- or why it doesn't prove a goal, or why it's
 slow to prove a goal -- it is useful to see what it's doing. To that end, you
 can enable various tracing options. These use the usual syntax, e.g.</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
-<p dir="auto">The main options are:</p>
-<ul dir="auto">
-<li><code>trace.aesop.steps</code>: print a step-by-step log of which goals Aesop tried to
+<p data-sourcepos="687:1-687:21" dir="auto">The main options are:</p>
+<ul data-sourcepos="689:1-700:0" dir="auto">
+<li data-sourcepos="689:1-694:43"><code>trace.aesop.steps</code>: print a step-by-step log of which goals Aesop tried to
 solve, which rules it tried to apply (successfully or unsuccessfully), etc.
 You can customise the output by setting various sub-options, e.g.
 <code>trace.aesop.steps.normalization</code> will show which normalisation rules were
 applied. When you autocomplete <code>set_option trace.aesop.steps.</code>, you should
 get a full list of available sub-options.</li>
-<li><code>trace.aesop.ruleSet</code>: print the rule set used for an Aesop call.</li>
-<li><code>trace.aesop.profile</code>: print some information about where Aesop spent its
+<li data-sourcepos="695:1-695:67"><code>trace.aesop.ruleSet</code>: print the rule set used for an Aesop call.</li>
+<li data-sourcepos="696:1-697:7"><code>trace.aesop.profile</code>: print some information about where Aesop spent its
 time.</li>
-<li><code>trace.aesop.proof</code>: if Aesop is successful, print the proof that was
+<li data-sourcepos="698:1-700:0"><code>trace.aesop.proof</code>: if Aesop is successful, print the proof that was
 generated (as a Lean term).</li>
 </ul>
-<h6 dir="auto">Checking Internal Invariants</h6>
-<p dir="auto">If you encounter behaviour that looks like an internal error in Aesop, it may
+<h6 data-sourcepos="701:1-701:33" dir="auto">Checking Internal Invariants</h6>
+<p data-sourcepos="703:1-707:37" dir="auto">If you encounter behaviour that looks like an internal error in Aesop, it may
 help to set the option <code>aesop.check.all</code> (or the more fine-grained
 <code>aesop.check.*</code> options). This makes Aesop check various invariants while the
 tactic is running. These checks are somewhat expensive, so remember to unset the
 option after you've reported the bug.</p>
-<h6 dir="auto">Advanced Features of the Search Algorithm</h6>
-<b dir="auto">Duplication of Local Hypotheses</b>
-<p dir="auto">When you use an <code>add</code> clause to register a local hypothesis as a rule, the
+<h6 data-sourcepos="709:1-709:46" dir="auto">Advanced Features of the Search Algorithm</h6>
+<b data-sourcepos="711:1-711:37" dir="auto">Duplication of Local Hypotheses</b>
+<p data-sourcepos="713:1-721:13" dir="auto">When you use an <code>add</code> clause to register a local hypothesis as a rule, the
 hypothesis is duplicated to ensure that it will remain available regardless of
 which other rules are applied to the goal. E.g. when you have a hypothesis <code>h : A ∧ B</code> which you register as an <code>apply</code> rule, and you also have a <code>cases</code> rule
 for <code>And</code>, we want to make sure that <code>h</code> is not destroyed by the <code>cases</code> rule.
@@ -669,10 +669,10 @@ To do this, we create a new hypothesis <code>_local.h : A ∧ B</code> and regis
 hypothesis as an <code>apply</code> rule. We also mark <code>_local.h</code> as an <code>auxDecl</code> to make
 sure that most tactics will ignore it; e.g. it will not be found by
 <code>assumption</code>.</p>
-<b dir="auto">Branch State</b>
-<p dir="auto">TODO</p>
-<b dir="auto">Metavariables</b>
-<p dir="auto">TODO</p>
+<b data-sourcepos="723:1-723:18" dir="auto">Branch State</b>
+<p data-sourcepos="725:1-725:4" dir="auto">TODO</p>
+<b data-sourcepos="727:1-727:19" dir="auto">Metavariables</b>
+<p data-sourcepos="729:1-729:4" dir="auto">TODO</p>
 </article></div></main>
 </body>
 </html>

@@ -27,11 +27,11 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean4 SQL Utils</h3>
-<p dir="auto">This repository is a collection of utilities that were split off from lean4 sql initiatives such as (<a href="https://github.com/arthurpaulino/LeanMySQL">LeanMySQL</a>, <a href="https://github.com/FWuermse/lean-postgres">lean-postgres</a>) as they could be shared across different dialects.</p>
-<h4 dir="auto">Installation</h4>
-<h5 dir="auto">Lake</h5>
-<p dir="auto">Add the following dependency to your <code>lakefile.lean</code>:</p>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:17" dir="auto">Lean4 SQL Utils</h3>
+<p data-sourcepos="3:1-3:268" dir="auto">This repository is a collection of utilities that were split off from lean4 sql initiatives such as (<a href="https://github.com/arthurpaulino/LeanMySQL">LeanMySQL</a>, <a href="https://github.com/FWuermse/lean-postgres">lean-postgres</a>) as they could be shared across different dialects.</p>
+<h4 data-sourcepos="5:1-5:15" dir="auto">Installation</h4>
+<h5 data-sourcepos="7:1-7:8" dir="auto">Lake</h5>
+<p data-sourcepos="9:1-9:53" dir="auto">Add the following dependency to your <code>lakefile.lean</code>:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
   dependencies := #[{
     name := `«sql-utils»
@@ -42,8 +42,8 @@
     src := Source.git "https://github.com/FWuermse/lean4-sql-utils" "main"
   }]
 </code></pre></div>
-<h4 dir="auto">Usage</h4>
-<p dir="auto">Currently the main feature includes built in query syntax that can be used the following way:</p>
+<h4 data-sourcepos="19:1-19:8" dir="auto">Usage</h4>
+<p data-sourcepos="21:1-21:93" dir="auto">Currently the main feature includes built in query syntax that can be used the following way:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import SqlUtils.SQLSyntax
 
 def main : IO Unit := do
@@ -59,8 +59,8 @@ def main : IO Unit := do
     FROM person LEFT JOIN job ON person.job_id = job.id
     WHERE person.age > <span class="pl-c1">20</span>
   IO.println query</pre></div>
-<h4 dir="auto">Contributing</h4>
-<p dir="auto">Contributions are always welcome. Please refer to the <a href="https://github.com/leanprover/lean4/blob/master/CONTRIBUTING.md">Lean4 Contributing Guidelines</a> and their <a href="https://leanprover.github.io/lean4/doc/dev/commit_convention.html" rel="nofollow">commit convention</a>.</p>
+<h4 data-sourcepos="34:1-34:15" dir="auto">Contributing</h4>
+<p data-sourcepos="36:1-36:248" dir="auto">Contributions are always welcome. Please refer to the <a href="https://github.com/leanprover/lean4/blob/master/CONTRIBUTING.md">Lean4 Contributing Guidelines</a> and their <a href="https://leanprover.github.io/lean4/doc/dev/commit_convention.html" rel="nofollow">commit convention</a>.</p>
 </article></div></main>
 </body>
 </html>

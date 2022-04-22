@@ -317,6 +317,9 @@ theorem InstStep.preserves_nondep_ports :
   case skipReaction => rfl
   case execReaction hr' _ ho hs => exact hs.preserves_unchanged_ports (s₁.rcnOutput_dep_only · ho hr hd)
 
+theorem InstStep.acyclic_deps : (s₁ ⇓ᵢ[rcn] s₂) → (rcn >[s₁.rtr]< rcn) :=
+  λ h => by cases h <;> exact State.allows_requires_acyclic_deps $ by assumption
+
 theorem InstStep.indep_rcns_indep_input :
   (s ⇓ᵢ[rcn'] s') → (rcn >[s.rtr]< rcn') → s.rcnInput rcn = s'.rcnInput rcn := by
   intro h hi
@@ -337,7 +340,7 @@ theorem InstStep.indep_rcns_indep_input :
         apply Finmap.restrict_ext
         intro p hp
         have ⟨x, H⟩ := Reactor.obj?_some_iff_con?_some.mpr h.rtr_contains_rcn
-        have := hi.symm.no_chain H (Reactor.objs?_to_obj? hc)
+        have := hi.symm.ports H (Reactor.objs?_to_obj? hc)
         rw [←H0] at hp
         have HH : p ∉ x.deps .out := sorry -- by hp and `this`
         have := h.preserves_nondep_ports H HH

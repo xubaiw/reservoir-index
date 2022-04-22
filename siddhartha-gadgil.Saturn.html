@@ -27,24 +27,24 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">SATurn : SAT Solver-prover in lean 4</h3>
-<p dir="auto"><strong>SATurn</strong> is a SAT solver-prover in lean 4 based on the DPLL algorithm. Given a SAT problem, we get either a solution or a resolution tree showing why there is no solution. Being written in Lean 4 gives the following attractive features:</p>
-<ul dir="auto">
-<li>The program generates proofs in the foundations of the lean prover, so these are independently checked (both for existence and non-existence of solutions).</li>
-<li>The program itself is checked by lean, so guaranteed to terminate and give a correct answer.</li>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:38" dir="auto">SATurn : SAT Solver-prover in lean 4</h3>
+<p data-sourcepos="3:1-3:238" dir="auto"><strong>SATurn</strong> is a SAT solver-prover in lean 4 based on the DPLL algorithm. Given a SAT problem, we get either a solution or a resolution tree showing why there is no solution. Being written in Lean 4 gives the following attractive features:</p>
+<ul data-sourcepos="5:1-7:0" dir="auto">
+<li data-sourcepos="5:1-5:157">The program generates proofs in the foundations of the lean prover, so these are independently checked (both for existence and non-existence of solutions).</li>
+<li data-sourcepos="6:1-7:0">The program itself is checked by lean, so guaranteed to terminate and give a correct answer.</li>
 </ul>
-<p dir="auto">Proofs can be obtained by using the methods <code>solveSAT</code> and <code>proveOrDisprove</code> in the file <code>DPLL.lean</code>. The former gives an object in a type representing either verified solutions or resolution trees. The latter gives a proof of existence or non-existence verified by the <em>lean prover</em>.</p>
-<p dir="auto">Alternatively, for a SAT problem, functions <code>isSat</code> and <code>isUnsat</code> give propositions corresponding to whether the problem is satisfiable or unsatisfiable. There are instances of <code>Decidable</code> for these functions (in <code>DPLL</code>), so one can simply <code>decide</code> where these hold, as for example</p>
+<p data-sourcepos="8:1-8:285" dir="auto">Proofs can be obtained by using the methods <code>solveSAT</code> and <code>proveOrDisprove</code> in the file <code>DPLL.lean</code>. The former gives an object in a type representing either verified solutions or resolution trees. The latter gives a proof of existence or non-existence verified by the <em>lean prover</em>.</p>
+<p data-sourcepos="10:1-10:282" dir="auto">Alternatively, for a SAT problem, functions <code>isSat</code> and <code>isUnsat</code> give propositions corresponding to whether the problem is satisfiable or unsatisfiable. There are instances of <code>Decidable</code> for these functions (in <code>DPLL</code>), so one can simply <code>decide</code> where these hold, as for example</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="#eval decide (isSat eg1Statement)"><pre><span class="pl-k">#eval</span> decide (isSat eg1Statement)</pre></div>
-<p dir="auto">More details can be found in the related <a href="https://siddhartha-gadgil.github.io/automating-mathematics/posts/sat-prover-lean/" rel="nofollow">blog post</a>.</p>
-<h4 dir="auto">Exploring and running</h4>
-<p dir="auto">The file <a href="https://github.com/siddhartha-gadgil/Saturn/blob/main/Saturn/Examples.lean">Examples.lean</a> illustrates, for some basic examples, both obtaining structured proofs and proofs or disproofs of propositions. However as this runs in interpreted mode, the examples are very simple.</p>
-<p dir="auto">One can run a compiled version in a command line. This solves the basic examples in the file <a href="https://github.com/siddhartha-gadgil/Saturn/blob/main/Saturn/Examples.lean">Examples.lean</a> and also the <a href="https://en.wikipedia.org/wiki/Eight_queens_puzzle" rel="nofollow">N-Queens problem</a> (if one chooses) for specified <code>N</code>. To run this assuming a recent version of the <code>lean</code> toolchain is installed using <code>elan</code>, one can do the following (in linux) for example:</p>
+<p data-sourcepos="16:1-16:136" dir="auto">More details can be found in the related <a href="https://siddhartha-gadgil.github.io/automating-mathematics/posts/sat-prover-lean/" rel="nofollow">blog post</a>.</p>
+<h4 data-sourcepos="18:1-18:24" dir="auto">Exploring and running</h4>
+<p data-sourcepos="20:1-20:284" dir="auto">The file <a href="https://github.com/siddhartha-gadgil/Saturn/blob/main/Saturn/Examples.lean">Examples.lean</a> illustrates, for some basic examples, both obtaining structured proofs and proofs or disproofs of propositions. However as this runs in interpreted mode, the examples are very simple.</p>
+<p data-sourcepos="22:1-22:441" dir="auto">One can run a compiled version in a command line. This solves the basic examples in the file <a href="https://github.com/siddhartha-gadgil/Saturn/blob/main/Saturn/Examples.lean">Examples.lean</a> and also the <a href="https://en.wikipedia.org/wiki/Eight_queens_puzzle" rel="nofollow">N-Queens problem</a> (if one chooses) for specified <code>N</code>. To run this assuming a recent version of the <code>lean</code> toolchain is installed using <code>elan</code>, one can do the following (in linux) for example:</p>
 <div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build bin
 $ build/bin/saturn 7"><pre>$ lake build bin
 $ build/bin/saturn 7</pre></div>
-<p dir="auto">The above commands run the basic examples and the 7-queens problem. Without an argument (such as <code>7</code> in the above example) just the basic examples are run.</p>
-<p dir="auto">Note that the performance is slow, to a large extent because the underlying collections used are not optimized for performance.</p>
+<p data-sourcepos="29:1-29:156" dir="auto">The above commands run the basic examples and the 7-queens problem. Without an argument (such as <code>7</code> in the above example) just the basic examples are run.</p>
+<p data-sourcepos="31:1-31:127" dir="auto">Note that the performance is slow, to a large extent because the underlying collections used are not optimized for performance.</p>
 </article></div></main>
 </body>
 </html>
