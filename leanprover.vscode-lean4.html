@@ -39,9 +39,10 @@ implemented in Lean.</p>
 <li>
 <p dir="auto">Create a new folder called <code>foo</code> and add a file named <code>hello.lean</code>
 containing the following:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
-#eval Lake.leanVersionString"><pre><span class="pl-k">import</span> Lake
-<span class="pl-k">#eval</span> Lake.leanVersionString</pre></div>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
+#eval Lake.leanVersionString"><pre lang="lean" class="notranslate"><code class="notranslate">import Lake
+#eval Lake.leanVersionString
+</code></pre></div>
 </li>
 <li>
 <p dir="auto">Open this folder in VS Code using <code>File/Open Folder</code>.</p>
@@ -158,17 +159,18 @@ You can disable this feature using the <code>lean4.input.enabled</code> setting,
 <li><strong>All Messages</strong> widget, which shows all info, warning, and error messages from the Lean server for the current file.</li>
 </ul>
 <p dir="auto">Suppose you have the following theorem:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p :=
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p :=
   by apply And.intro
      exact hp
      apply And.intro
      exact hq
-     exact hp"><pre><span class="pl-k">theorem</span> <span class="pl-en">test</span> (p q : <span class="pl-k">Prop</span>) (hp : p) (hq : q) : p ∧ q ∧ p :=
-  <span class="pl-k">by</span> apply And.intro
+     exact hp"><pre lang="lean" class="notranslate"><code class="notranslate">theorem test (p q : Prop) (hp : p) (hq : q) : p ∧ q ∧ p :=
+  by apply And.intro
      exact hp
      apply And.intro
      exact hq
-     exact hp</pre></div>
+     exact hp
+</code></pre></div>
 <p dir="auto">and you place the cursor at the end of the line <code>by apply And.intro</code> the Infoview will display the following information:</p>
 <p dir="auto"><a target="_blank" rel="noopener noreferrer" href="vscode-lean4/media/infoview-overview.png"><img src="vscode-lean4/media/infoview-overview.png" alt="completion-example" style="max-width: 100%;"></a></p>
 <p dir="auto">(1). The Infoview will activate automatically when a Lean file is opened, but you can also reopen it any time using the icon in the top right of the text editor window or the <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> <code>Lean 4: Infoview: Display Goal</code> command or the key that is bound to the command, which is <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> by default.

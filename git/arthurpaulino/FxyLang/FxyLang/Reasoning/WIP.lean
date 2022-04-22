@@ -5,6 +5,7 @@
 -/
 
 import FxyLang.Implementation.Execution
+import Lean
 
 def State.isProg : State → Bool
   | prog .. => true
@@ -28,37 +29,48 @@ notation s₁ " ↠ " s₂ => State.reaches s₁ s₂
 def bigStep (c : Context) (p : Program) (c' : Context) (v : Value) : Prop :=
   ∀ k, .prog p c k ↠ .ret v c' k
 
-notation "(" c ", " p ")" " » " "(" c' ", " v ")" => bigStep c p c' v
+notation "⟦" c ", " p "⟧" " » " "⟦" c' ", " v "⟧" => bigStep c p c' v
 
-theorem State.skip : (c, .skip) » (c, .nil) :=
+theorem State.doneLoop : done v c^[n] = done v c := by
+  induction n with
+  | zero      => rw [stepN]
+  | succ _ hi => rw [stepN, step]; exact hi
+
+macro "big_step " k:ident " with " n:ident " at " h:ident : tactic => do
+  `(tactic| have $k:ident : Continuation := default;
+            specialize $h:ident $k:ident;
+            cases $h:ident with | intro $n:ident $h:ident => ?_)
+
+open Lean.Elab.Tactic in
+set_option hygiene false in
+elab "step_next " n:ident " at " h:ident : tactic => do
+  evalTactic $ ←`(tactic| cases $n:ident with
+                          | zero => simp [step, stepN] at $h:ident
+                          | succ $n:ident => ?_)
+  evalTactic $ ← `(tactic| simp [step, stepN] at $h:ident)
+
+theorem State.skip : ⟦c, .skip⟧ » ⟦c, .nil⟧ :=
   fun _ => ⟨1 , by simp only [stepN, step]⟩
 
-macro "inhabit " hyp:ident " with " n:ident " : " ty:ident : tactic =>
-  `(tactic| have $n : $ty := default; specialize $hyp $n)
-
-theorem State.decl : (c, .decl nm p) » (c', v) → c = c.insert nm v := by
+theorem State.decl (h : ⟦c, .decl nm p⟧ » ⟦c', v⟧) : c = c.insert nm v := by
   sorry
 
-theorem State.qqq (h : ret v c k^[n] = ret v' c' k) : c = c' := sorry
+theorem State.eval (h : ⟦c, .eval e⟧ » ⟦c', v⟧) : c = c' := by
+  big_step k with n at h
+  step_next n at h
+  cases e with
+  | lit l =>
+    step_next n at h
+    cases n with
+    | zero =>
+      simp [stepN, step] at h
+      exact h.2
+    | succ n =>
+      simp [stepN] at h
+      sorry
+  | _ => sorry
 
-theorem State.eval : (c, .eval e) » (c', v) → c = c' := by
-  intro h
-  inhabit h with k : Continuation
-  cases h with | intro n h =>
-  cases n with
-  | zero => simp only [step, stepN] at h
-  | succ n =>
-    cases e with
-    | lit l =>
-      cases n with
-      | zero => simp only [step, stepN] at h
-      | succ n =>
-        exact qqq h
-    | _ => sorry
-
-theorem State.print : (c, .print e) » (c', v) → c = c' := by
-  intro h
-  rw [bigStep] at h
+theorem State.print (h : ⟦c, .print e⟧ » ⟦c', v⟧) : c = c' := by
   sorry
 
 theorem State.stepNComp : (s^[n₁])^[n₂] = s^[n₁ + n₂] := by
@@ -79,10 +91,26 @@ theorem State.reachTransitive (h₁₂ : s₁ ↠ s₂) (h₂₃ : s₂ ↠ s₃
   rw [← h₁₂, stepNComp] at h₂₃
   exact ⟨n₁₂ + n₂₃, h₂₃⟩
 
+theorem State.retProgression :
+    ∃ n, (ret v c k^[n]).isEnd ∨ (ret v c k^[n]).isProg := by
+  sorry
+
+theorem State.exprProgression :
+    ∃ n, (expr e c k^[n]).isEnd ∨ (expr e c k^[n]).isProg := by
+  cases e with
+  | lit l =>
+    induction k with
+    | exit  => exact ⟨2, by simp [stepN, step, isEnd]⟩
+    | seq   => exact ⟨2, by simp [stepN, step, isProg]⟩
+    | decl  => sorry
+    | print => sorry
+    | _ => sorry
+  | _ => sorry
+
 theorem State.progression : ∃ n, (s^[n]).isEnd ∨ (s^[n]).isProg := by
   cases s with
   | prog  => exact ⟨0, by simp [stepN, isProg]⟩
   | done  => exact ⟨0, by simp [stepN,  isEnd]⟩
   | error => exact ⟨0, by simp [stepN,  isEnd]⟩
-  | ret  v c k => sorry
-  | expr e c k => sorry
+  | ret  v c k => exact retProgression
+  | expr e c k => exact exprProgression

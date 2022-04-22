@@ -1,6 +1,19 @@
 Unreleased
 ---------
 
+* (Fix) the default value for structure fields may now depend on the structure parameters. Example:
+  ```lean
+  structure Something (i: Nat) where
+  n1: Nat := 1
+  n2: Nat := 1 + i
+
+  def s : Something 10 := {}
+  example : s.n2 = 11 := rfl
+  ```
+
+* Apply `rfl` theorems at the `dsimp` auxiliary method used by `simp`. `dsimp` can be used anywhere in an expression
+  because it preserves definitional equality.
+
 * Refine auto bound implicit feature. It does not consider anymore unbound variables that have the same
   name of a declaration being defined. Example:
   ```lean
