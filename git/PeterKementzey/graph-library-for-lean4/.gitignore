@@ -1,0 +1,6 @@
+/build
+/Graph/_*.lean
+/Notes
+/leanpkg.path
+/run
+

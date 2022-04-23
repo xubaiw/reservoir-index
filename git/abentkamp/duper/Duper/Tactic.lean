@@ -33,18 +33,18 @@ def getClauseInfo! (state : ProverM.State) (c : Clause) : TacticM ClauseInfo := 
     | throwError "clause info not found: {c}"
   return ci
 
-partial def mkList (state : ProverM.State) (c : Clause) (acc : List Clause := []) : TacticM (List Clause) := do
-  Core.checkMaxHeartbeats "mkList"
+partial def collectClauses (state : ProverM.State) (c : Clause) (acc : ClauseHeap) : TacticM ClauseHeap := do
+  Core.checkMaxHeartbeats "collectClauses"
   let info ← getClauseInfo! state c
   let mut acc := acc
   -- recursive calls
-  acc := c :: acc
+  acc := acc.insert (info.number, c)
   for proofParent in info.proof.parents do
-    acc ← mkList state proofParent.clause acc
+    acc ← collectClauses state proofParent.clause acc
   return acc
 
-partial def mkProof (state : ProverM.State) : List Clause → TacticM (List Expr)
-| [] => return []
+partial def mkProof (state : ProverM.State) : List Clause → TacticM Expr
+| [] => panic! "empty clause list"
 | c :: cs => do
   Core.checkMaxHeartbeats "mkProof"
   let info ← getClauseInfo! state c
@@ -52,7 +52,7 @@ partial def mkProof (state : ProverM.State) : List Clause → TacticM (List Expr
   let mut parents := #[]
   for parent in info.proof.parents do
     let number := (← getClauseInfo! state parent.clause).number
-    parents := parents.push ((← getLCtx).findFromUserName? (Name.mkNum `goal number)).get!.toExpr
+    parents := parents.push ((← getLCtx).findFromUserName? (Name.mkNum `clause number)).get!.toExpr
   let mut lctx ← getLCtx
   let mut skdefs : List Expr := []
   for (fvarId, mkSkProof) in info.proof.introducedSkolems do
@@ -60,31 +60,28 @@ partial def mkProof (state : ProverM.State) : List Clause → TacticM (List Expr
     let ty := (state.lctx.get! fvarId).type
     trace[Meta.debug] "Reconstructing skolems {toString ty}"
     let userName := (state.lctx.get! fvarId).userName
-    -- let skdef ← mkSorry ty (synthetic := true)
     let skdef ← mkSkProof parents
     skdefs := skdef :: skdefs
     lctx := lctx.mkLetDecl fvarId userName ty skdef
-  let (newProof, otherProofs) ← withLCtx lctx (← getLocalInstances) do
+  let proof ← withLCtx lctx (← getLocalInstances) do
     trace[Meta.debug] "Reconstructing proof for #{info.number}: {c}"
     let newProof ← info.proof.mkProof parents info.proof.parents c
-    let otherProofs ←
-      withLetDecl (Name.mkNum `goal info.number) newTarget newProof fun g => do
-        let otherProofs ← mkProof state cs
-        let otherProofs ← otherProofs.mapM fun otherProof => do
-          let mut otherProof ← mkLambdaFVars (usedLetOnly := false) #[g] otherProof
-          for (fvarId, _) in info.proof.introducedSkolems do
-            otherProof ← mkLambdaFVars (usedLetOnly := false) #[mkFVar fvarId] otherProof
-          return otherProof
-        return otherProofs
-    return (newProof, otherProofs)
-  -- trace[Meta.debug] "{newProof :: otherProofs}"
-  return newProof :: otherProofs
+    if cs == [] then return newProof
+    let proof ←
+      withLetDecl (Name.mkNum `clause info.number) newTarget newProof fun g => do
+        let remainingProof ← mkProof state cs
+        let mut remainingProof ← mkLambdaFVars (usedLetOnly := false) #[g] remainingProof
+        for (fvarId, _) in info.proof.introducedSkolems do
+          remainingProof ← mkLambdaFVars (usedLetOnly := false) #[mkFVar fvarId] remainingProof
+        return remainingProof
+    return proof
+  return proof
 
 def applyProof (state : ProverM.State) : TacticM Unit := do
-  let l ← mkList state Clause.empty
+  let l := (← collectClauses state Clause.empty Std.BinomialHeap.empty).toList.map Prod.snd
   trace[Meta.debug] "{l}"
-  let proofs ← mkProof state l
-  assignExprMVar (← getMainGoal) proofs.reverse.head! -- TODO: List.last?
+  let proof ← mkProof state l
+  assignExprMVar (← getMainGoal) proof -- TODO: List.last?
 
 def collectAssumptions : TacticM (Array (Expr × Expr)) := do
   let mut formulas := #[]
