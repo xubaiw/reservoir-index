@@ -1,0 +1,45 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>lecopivo/HouLean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>lecopivo/HouLean</h1>
+<p>Lean 4 as a scripting language in Houdini</p>
+<a href="https://github.com/lecopivo/HouLean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div id="readme" class="org" data-path="readme.org"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto"><a id="user-content-houlean" class="anchor" aria-hidden="true" href="#houlean"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>HouLean</h1>
+<p dir="auto">This Houdini plugin allows you to use Lean 4 as a scripting language/replacement of VEX. This plugin is highly experimental!</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="preview.png"><img src="preview.png" alt="preview.png" style="max-width: 100%;"></a></p>
+<h1 dir="auto"><a id="user-content-installation-instructions" class="anchor" aria-hidden="true" href="#installation-instructions"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Installation instructions</h1>
+<p dir="auto">To build <code>HouLean</code> run this command these commands. Replace <code>/opt/hfs19.0</code> with your Houdini install path and <code>~/houdini19.0</code> with Houdini preference directory.</p>
+<pre>export HFS=/opt/hfs19.0
+lake script run build ~/houdini19.0
+</pre>
+<p dir="auto">Before running Houdini you need to make sure <code>libHouLean.so</code> is found, do this by setting up <code>LD_LIBRARY_PATH</code> as follows. (Let me know if you have an idea how get rid of this step)</p>
+<pre>export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/houdini19.0/dso
+houdini
+</pre>
+<p dir="auto">If you open up scene from <code>houdini/hip/dev.hip</code> you should see the above picture.</p>
+</article></div></main>
+</body>
+</html>
