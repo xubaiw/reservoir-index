@@ -349,8 +349,17 @@ infoview window</td>
     priority = 10,
   },
 
-  -- Print Lean's stderr messages to a vim buffer
-  stderr = { enable = true },
+  -- Redirect Lean's stderr messages somehwere (to a buffer by default)
+  stderr = {
+    enable = true,
+    -- a callback which will be called with (multi-line) stderr output
+    -- e.g., use:
+    --   on_lines = function(lines) vim.notify(lines) end
+    -- if you want to redirect stderr to `vim.notify`.
+    -- The default implementation will redirect to a dedicated stderr
+    -- window.
+    on_lines = nil,
+  },
 }"><pre><span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>lean<span class="pl-pds">'</span></span>).<span class="pl-c1">setup</span>{
   <span class="pl-c"><span class="pl-c">--</span> Enable the Lean language server(s)?</span>
   <span class="pl-c"><span class="pl-c">--</span></span>
@@ -438,8 +447,17 @@ infoview window</td>
     priority <span class="pl-k">=</span> <span class="pl-c1">10</span>,
   },
 
-  <span class="pl-c"><span class="pl-c">--</span> Print Lean's stderr messages to a vim buffer</span>
-  stderr <span class="pl-k">=</span> { enable <span class="pl-k">=</span> <span class="pl-c1">true</span> },
+  <span class="pl-c"><span class="pl-c">--</span> Redirect Lean's stderr messages somehwere (to a buffer by default)</span>
+  stderr <span class="pl-k">=</span> {
+    enable <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+    <span class="pl-c"><span class="pl-c">--</span> a callback which will be called with (multi-line) stderr output</span>
+    <span class="pl-c"><span class="pl-c">--</span> e.g., use:</span>
+    <span class="pl-c"><span class="pl-c">--</span>   on_lines = function(lines) vim.notify(lines) end</span>
+    <span class="pl-c"><span class="pl-c">--</span> if you want to redirect stderr to `vim.notify`.</span>
+    <span class="pl-c"><span class="pl-c">--</span> The default implementation will redirect to a dedicated stderr</span>
+    <span class="pl-c"><span class="pl-c">--</span> window.</span>
+    on_lines <span class="pl-k">=</span> <span class="pl-c1">nil</span>,
+  },
 }</pre></div>
 <a name="user-content-other-plugins"></a>
 <h4 dir="auto">Other Plugins</h4>

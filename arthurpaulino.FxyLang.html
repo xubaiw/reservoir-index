@@ -27,33 +27,33 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:9" dir="auto">FxyLang</h3>
-<p data-sourcepos="3:1-4:18" dir="auto">This repository contains the implementation of <em>Fxy</em>, a toy language created for
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">FxyLang</h3>
+<p dir="auto">This repository contains the implementation of <em>Fxy</em>, a toy language created for
 learning purposes.</p>
-<p data-sourcepos="6:1-8:46" dir="auto">The name <em>Fxy</em> comes from its way of defining functions: <code>f x y := x + y</code>. It is
+<p dir="auto">The name <em>Fxy</em> comes from its way of defining functions: <code>f x y := x + y</code>. It is
 implemented in <a href="https://leanprover.github.io/" rel="nofollow">Lean 4</a>, which also allows us to
 reason about the correctness of its semantics.</p>
-<p data-sourcepos="10:1-11:63" dir="auto">Big thanks to the <a href="https://leanprover.zulipchat.com/" rel="nofollow">Lean community</a>,
+<p dir="auto">Big thanks to the <a href="https://leanprover.zulipchat.com/" rel="nofollow">Lean community</a>,
 especially Mario Carneiro, Simon Hudon and the Lean developers!</p>
-<h4 data-sourcepos="13:1-13:8" dir="auto">Usage</h4>
-<p data-sourcepos="15:1-15:65" dir="auto">After cloning the repository, build the binary with <code>lake build</code>.</p>
-<p data-sourcepos="17:1-19:40" dir="auto">If you have a source file, say <code>test.fxy</code>, you can run it with
+<h4 dir="auto">Usage</h4>
+<p dir="auto">After cloning the repository, build the binary with <code>lake build</code>.</p>
+<p dir="auto">If you have a source file, say <code>test.fxy</code>, you can run it with
 <code>./build/bin/fxy run test.fxy</code>. Or, instead, use <code>run!</code> to execute <code>test.fxy</code>
 with the unverified (but faster) runner.</p>
-<h4 data-sourcepos="21:1-21:10" dir="auto">Fxy API</h4>
-<h5 data-sourcepos="23:1-23:15" dir="auto">Basic types</h5>
-<ul data-sourcepos="25:1-31:0" dir="auto">
-<li data-sourcepos="25:1-25:60"><code>int</code> is the type of integer numbers (e.g. <code>1</code>, <code>0</code>, <code>-3</code>)</li>
-<li data-sourcepos="26:1-26:53"><code>bool</code> is the type of booleans (<code>true</code> and <code>false</code>)</li>
-<li data-sourcepos="27:1-27:61"><code>str</code> is the type of strings (e.g. <code>"hi"</code>, <code>""</code>, <code>"world"</code>)</li>
-<li data-sourcepos="28:1-28:71"><code>float</code> is the type of floating pointer numbers (e.g. <code>1.0</code>, <code>-10.4</code>)</li>
-<li data-sourcepos="29:1-29:79"><code>list</code> is the type of lists of elements of the types above (e.g. <code>[1, "hi"]</code>)</li>
-<li data-sourcepos="30:1-31:0"><code>_ → ... → _</code> is the type of functions</li>
+<h4 dir="auto">Fxy API</h4>
+<h5 dir="auto">Basic types</h5>
+<ul dir="auto">
+<li><code>int</code> is the type of integer numbers (e.g. <code>1</code>, <code>0</code>, <code>-3</code>)</li>
+<li><code>bool</code> is the type of booleans (<code>true</code> and <code>false</code>)</li>
+<li><code>str</code> is the type of strings (e.g. <code>"hi"</code>, <code>""</code>, <code>"world"</code>)</li>
+<li><code>float</code> is the type of floating pointer numbers (e.g. <code>1.0</code>, <code>-10.4</code>)</li>
+<li><code>list</code> is the type of lists of elements of the types above (e.g. <code>[1, "hi"]</code>)</li>
+<li><code>_ → ... → _</code> is the type of functions</li>
 </ul>
-<h5 data-sourcepos="32:1-32:16" dir="auto">Declarations</h5>
-<p data-sourcepos="34:1-35:31" dir="auto">To assign a value to a variable, use the walrus operator <code>:=</code>. Example:
+<h5 dir="auto">Declarations</h5>
+<p dir="auto">To assign a value to a variable, use the walrus operator <code>:=</code>. Example:
 <code>a := 1</code>, <code>s := "Fxy is cool"</code>.</p>
-<p data-sourcepos="37:1-38:36" dir="auto">To declare a function, use the same walrus operator, but naming the arguments on
+<p dir="auto">To declare a function, use the same walrus operator, but naming the arguments on
 its left. Example: <code>f x y := x + y</code>.</p>
 </article></div></main>
 </body>

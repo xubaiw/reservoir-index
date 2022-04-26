@@ -27,14 +27,14 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 data-sourcepos="1:1-1:36" dir="auto"><code>mlir-lean</code>: embedded MLIR in LEAN</h3>
-<p data-sourcepos="3:1-3:33" dir="auto">This provides infrastructure for:</p>
-<ul data-sourcepos="5:1-10:0" dir="auto">
-<li data-sourcepos="5:1-5:56">An embedding of the MLIR AST in lean (<code>MLIR/AST.lean</code>)</li>
-<li data-sourcepos="6:1-6:102">A lightweight pretty printer library to pretty print the MLIR AST and parse errors (<code>MLIR/Doc.lean</code>)</li>
-<li data-sourcepos="7:1-7:100">A embedded-domain-specific language to build MLIR generic operations via macros (<code>MLIR/EDSL.lean</code>)</li>
-<li data-sourcepos="8:1-8:79">A parser from MLIR generic into LEAN data structures (<code>MLIR/MLIRParser.lean</code>)</li>
-<li data-sourcepos="9:1-10:0">A lightweight parser combinator library with error tracking (<code>MLIR/P.lean</code>)</li>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto"><code>mlir-lean</code>: embedded MLIR in LEAN</h3>
+<p dir="auto">This provides infrastructure for:</p>
+<ul dir="auto">
+<li>An embedding of the MLIR AST in lean (<code>MLIR/AST.lean</code>)</li>
+<li>A lightweight pretty printer library to pretty print the MLIR AST and parse errors (<code>MLIR/Doc.lean</code>)</li>
+<li>A embedded-domain-specific language to build MLIR generic operations via macros (<code>MLIR/EDSL.lean</code>)</li>
+<li>A parser from MLIR generic into LEAN data structures (<code>MLIR/MLIRParser.lean</code>)</li>
+<li>A lightweight parser combinator library with error tracking (<code>MLIR/P.lean</code>)</li>
 </ul>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def opRgnAttr0 : Op := (mlir_op_call%
  "module"() (
@@ -63,26 +63,26 @@
  }) : () -> ()
 )
 <span class="pl-k">#print</span> opRgnAttr0</pre></div>
-<p data-sourcepos="28:1-28:34" dir="auto">As a research project, we explore:</p>
-<ul data-sourcepos="30:1-34:0" dir="auto">
-<li data-sourcepos="30:1-30:92">How to provide formal semantics for MLIR, especially in the presence of multiple dialects.</li>
-<li data-sourcepos="31:1-31:102">What default logics are useful, and how best to enable them for MLIR? Hoare logic? Separation logic?</li>
-<li data-sourcepos="32:1-34:0">Purely functional, immutable rewriter with a carefully chosen set of
+<p dir="auto">As a research project, we explore:</p>
+<ul dir="auto">
+<li>How to provide formal semantics for MLIR, especially in the presence of multiple dialects.</li>
+<li>What default logics are useful, and how best to enable them for MLIR? Hoare logic? Separation logic?</li>
+<li>Purely functional, immutable rewriter with a carefully chosen set of
 primitives to enable reasoning and efficient rewriting.</li>
 </ul>
-<h3 data-sourcepos="35:1-35:20" dir="auto">Build instructions</h3>
+<h3 dir="auto">Build instructions</h3>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
 $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>"><pre class="notranslate"><code class="notranslate">$ lake build
 $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
 </code></pre></div>
-<h4 data-sourcepos="42:1-42:6" dir="auto">Nix</h4>
-<p data-sourcepos="44:1-44:125" dir="auto">Start a "lean shell" per the <a href="https://leanprover.github.io/lean4/doc/setup.html#nix-setup" rel="nofollow">Nix Setup documentation</a> for lean:</p>
-<blockquote data-sourcepos="46:1-49:5">
-<p data-sourcepos="46:3-46:225" dir="auto">After installing (any version of) Nix (<a href="https://nixos.org/download.html" rel="nofollow">https://nixos.org/download.html</a>), you can easily open a shell with the particular pre-release version of Nix needed by and tested with our setup (called the "Lean shell" from here on):</p>
+<h4 dir="auto">Nix</h4>
+<p dir="auto">Start a "lean shell" per the <a href="https://leanprover.github.io/lean4/doc/setup.html#nix-setup" rel="nofollow">Nix Setup documentation</a> for lean:</p>
+<blockquote>
+<p dir="auto">After installing (any version of) Nix (<a href="https://nixos.org/download.html" rel="nofollow">https://nixos.org/download.html</a>), you can easily open a shell with the particular pre-release version of Nix needed by and tested with our setup (called the "Lean shell" from here on):</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix"><pre class="notranslate"><code class="notranslate">$ nix-shell https://github.com/leanprover/lean4/archive/master.tar.gz -A nix
 </code></pre></div>
 </blockquote>
-<p data-sourcepos="51:1-51:235" dir="auto">Ensure that these extra options are active in the nix you are running. Under NixOS, this means putting this in top-level config. Under a non OS level isntall, this means putting this in the <code>.nix-profile</code> and restarting the nix daemon.</p>
+<p dir="auto">Ensure that these extra options are active in the nix you are running. Under NixOS, this means putting this in top-level config. Under a non OS level isntall, this means putting this in the <code>.nix-profile</code> and restarting the nix daemon.</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="  nix = {
       package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
       extraOptions = ''
@@ -107,17 +107,17 @@ $ ./build/bin/MLIR <path-to-generic-mlir-file.mlir>
       '';
   };
 </code></pre></div>
-<h3 data-sourcepos="69:1-69:19" dir="auto">Test instructions</h3>
+<h3 dir="auto">Test instructions</h3>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd examples; lit -v . # run all examples, report failures."><pre class="notranslate"><code class="notranslate">$ cd examples; lit -v . # run all examples, report failures.
 </code></pre></div>
-<h3 data-sourcepos="75:1-75:15" dir="auto">Documentation</h3>
-<ul data-sourcepos="77:1-80:0" dir="auto">
-<li data-sourcepos="77:1-80:0">Go to <a href="./docs/README.md"><code>docs/README.md</code></a> for library documentation.</li>
+<h3 dir="auto">Documentation</h3>
+<ul dir="auto">
+<li>Go to <a href="./docs/README.md"><code>docs/README.md</code></a> for library documentation.</li>
 </ul>
-<h3 data-sourcepos="81:1-81:28" dir="auto">Other projects of interest</h3>
-<ul data-sourcepos="83:1-84:104" dir="auto">
-<li data-sourcepos="83:1-83:98"><a href="https://github.com/tydeu/lean4-papyrus"><code>tydeu/lean4-papyrus</code></a> is an LLVM interface for Lean 4.</li>
-<li data-sourcepos="84:1-84:104"><a href="https://github.com/GaloisInc/lean-llvm"><code>GaloisInc/lean-llvm</code></a> is Lean4 bindings to the LLVM library.</li>
+<h3 dir="auto">Other projects of interest</h3>
+<ul dir="auto">
+<li><a href="https://github.com/tydeu/lean4-papyrus"><code>tydeu/lean4-papyrus</code></a> is an LLVM interface for Lean 4.</li>
+<li><a href="https://github.com/GaloisInc/lean-llvm"><code>GaloisInc/lean-llvm</code></a> is Lean4 bindings to the LLVM library.</li>
 </ul>
 </article></div></main>
 </body>
