@@ -1,10 +1,9 @@
 import Lake
 open Lake DSL
 
+
 package HouLean {
-  defaultFacet := PackageFacet.sharedLib
-  libName := "libHouLean"
-  moreLeancArgs := #["-O2", "-Wall", "-DNDEBUG"]
+  defaultFacet := PackageFacet.staticLib
 }
 
 script compileCpp (args) do
@@ -48,16 +47,23 @@ script install (args) do
 
   let houUserPrefDir := System.FilePath.mk (args.getD 0 "")
   let dsoDir := houUserPrefDir / "dso"
+  let libDir := houUserPrefDir / "lib"
   let otlDir := houUserPrefDir / "otls"
+
+  -- make lib directory
+  let makeLibDir ← IO.Process.run {
+    cmd := "mkdir"
+    args := #["-p", libDir.toString]
+  }
   
-  -- Link libHouLean to dso directory
   let linkLib ← IO.Process.run {
     cmd := "ln"
     args := #["-sf", 
-              (← IO.currentDir) / "build" / "lib" / "libHouLean.so" |>.toString,
-              "libHouLean.so"]
-    cwd := dsoDir
+              (← getLeanLibDir) / "lean" / "libleanshared.so" |>.toString,
+              "libleanshared.so"]
+    cwd := libDir
   }
+
   let linkOtl ← IO.Process.run {
     cmd := "ln"
     args := #["-sf", 

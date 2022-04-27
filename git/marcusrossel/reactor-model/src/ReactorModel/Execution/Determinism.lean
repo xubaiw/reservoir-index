@@ -345,25 +345,34 @@ theorem InstStep.preserves_nondep_actions :
   case skipReaction => rfl
   case execReaction hr' _ ho hs => exact hs.preserves_unchanged_actions (s₁.rcnOutput_action_dep_only · · ho hr hd)
 
+theorem InstStep.pure_preserves_state : 
+  (s₁ ⇓ᵢ[i] s₂) → (s₁.rtr.obj? .rcn i = some rcn) → (rcn.isPure) → 
+  (s₁.rtr.con? .rcn i = some c₁) → (s₂.rtr.con? .rcn i = some c₂) →
+  (c₁.obj.state = c₂.obj.state) := by
+  intro h hr hp hc₁ hc₂
+  cases h 
+  case skipReaction => rfl
+  case execReaction hr' _ ho hs => 
+    sorry
+
 theorem InstStep.acyclic_deps : (s₁ ⇓ᵢ[rcn] s₂) → (rcn >[s₁.rtr]< rcn) :=
   λ h => by cases h <;> exact State.allows_requires_acyclic_deps $ by assumption
 
-theorem InstStep.indep_rcns_indep_input :
-  (s ⇓ᵢ[rcn'] s') → (rcn >[s.rtr]< rcn') → s.rcnInput rcn = s'.rcnInput rcn := by
+theorem InstStep.indep_rcns_indep_output :
+  (s ⇓ᵢ[rcn'] s') → (rcn >[s.rtr]< rcn') → s.rcnOutput rcn = s'.rcnOutput rcn := by
   intro h hi
-  simp [State.rcnInput]
   have hp := h.preserves_rcns (i := rcn)
   cases ho : s.rtr.obj? .rcn rcn <;> cases ho' : s'.rtr.obj? .rcn rcn 
-  case none.none => simp
+  case none.none => simp [State.rcnOutput, ho, ho']
   case' none.some, some.none => simp [hp, ho'] at ho
   case some.some => 
-    have ⟨_, hc, hm⟩ := Reactor.obj?_to_con?_and_cmp? ho
-    have ⟨_, hc', hm'⟩ := Reactor.obj?_to_con?_and_cmp? ho'
-    rw [←hp] at ho'
-    have he := Option.some_inj.mp $ ho.symm.trans ho'
-    simp [ho, hc, ho', hc', h.preserves_time, he]
-    refine ⟨?ports, ?acts, ?state⟩
-    case ports =>
+    have ⟨⟨p, a, x, t⟩, hj⟩ := State.rcnInput_iff_obj?.mpr ⟨_, ho⟩
+    have ⟨⟨p', a', x', t'⟩, hj'⟩ := State.rcnInput_iff_obj?.mpr ⟨_, ho'⟩
+    have H1 : p = p' := by 
+      simp [s.rcnInput_portVals_def hj ho, s'.rcnInput_portVals_def hj' ho']
+      rw [←hp] at ho'
+      have he := Option.some_inj.mp $ ho.symm.trans ho'
+      simp [he]
       refine congr_arg2 _ ?_ rfl
       apply Finmap.restrict_ext
       intro p hp
@@ -372,7 +381,11 @@ theorem InstStep.indep_rcns_indep_input :
       simp [Finset.eq_empty_iff_forall_not_mem, Finset.mem_inter] at hd
       have hd := mt (hd p) $ not_not.mpr hp
       simp [Reactor.obj?'_eq_obj?, h.preserves_nondep_ports hr hd]
-    case acts =>
+    have H2 : a = a' := by
+      simp [s.rcnInput_actions_def hj ho, s'.rcnInput_actions_def hj' ho']
+      rw [←hp] at ho'
+      have he := Option.some_inj.mp $ ho.symm.trans ho'
+      simp [he]
       apply Finmap.restrict_ext
       intro a ha
       apply Finmap.filterMap_congr
@@ -381,13 +394,33 @@ theorem InstStep.indep_rcns_indep_input :
       simp [Finset.eq_empty_iff_forall_not_mem, Finset.mem_inter] at hd
       have hd := mt (hd a) $ not_not.mpr ha
       simp [Reactor.obj?'_eq_obj?, h.preserves_nondep_actions hr hd]
-    case state =>
-      sorry
-
--- Corollary of `InstStep.indep_rcns_indep_input`.
-theorem InstStep.indep_rcns_indep_output :
-  (s ⇓ᵢ[rcn'] s') → (rcn >[s.rtr]< rcn') → s.rcnOutput rcn = s'.rcnOutput rcn := 
-  λ h hi => State.rcnOutput_congr (h.indep_rcns_indep_input hi) h.preserves_rcns
+    have H3 : t = t' := by 
+      simp [s.rcnInput_time_def hj, s'.rcnInput_time_def hj', h.preserves_time]
+    simp [H1, H2, H3] at hj
+    have ⟨r, hr⟩ := Reactor.contains_iff_obj?.mp h.rtr_contains_rcn
+    cases hi.ne_rtr_or_pure ho hr
+    case inl he => 
+      have ⟨c, hc, _⟩ := Reactor.obj?_to_con?_and_cmp? ho
+      have ⟨c', hc', _⟩ := Reactor.obj?_to_con?_and_cmp? ho'
+      have hs := State.rcnInput_state_def hj hc
+      have hs' := State.rcnInput_state_def hj' hc'
+      have HH : c.obj.state = c'.obj.state := sorry -- This follows from `he` and some lemma akin to `preserves_nondep_actions`
+      rw [HH] at hs
+      rw [hs.trans hs'.symm] at hj
+      exact State.rcnOutput_congr (hj.trans hj'.symm) hp
+    case inr hc =>
+      cases hc
+      case inl hp' => exact State.rcnOutput_pure_congr hj hj' ho sorry /-this is ho'-/ hp'
+      case inr hp' => 
+        have ⟨hp₁, hp₂⟩ := hp'
+        -- Follows from x = x' which follows from hp₂
+        -- Create a `preserves_nondep_actions`-type of lemma for this.
+        have ⟨_, hro, _⟩ := Reactor.obj?_to_con?_and_cmp? hr
+        have ⟨_, hro'⟩ : ∃ c, s'.rtr.con? .rcn rcn' = some c := sorry
+        have := h.pure_preserves_state hr hp' hro hro'
+        -- TODO: Turn `this` into H:
+        have H : s.rcnInput rcn = s'.rcnInput rcn := sorry 
+        exact State.rcnOutput_congr H hp
 
 theorem InstStep.indep_rcns_changes_comm_equiv {s : State} :
   (rcn₁ >[s.rtr]< rcn₂) → (s.rcnOutput rcn₁ = some o₁) → (s.rcnOutput rcn₂ = some o₂) → 
