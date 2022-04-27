@@ -1,4 +1,4 @@
-use crate::hir::ir::{Declaration, Inductive, Term, HIR};
+use crate::hir::ir::{Declaration, Inductive, Name, Term, HIR};
 use environment::local;
 use inkwell::{
     builder::Builder,
@@ -11,47 +11,40 @@ use inkwell::{
 use std::{fs, process::Command, thread};
 
 mod environment {
-    pub mod local {
-        use crate::hir::ir::DeBruijnIndex;
-        use inkwell::values::PointerValue;
-
-        pub struct Environment<'ctx> {
-            debruijn_values: Vec<PointerValue<'ctx>>,
-        }
-
-        impl<'ctx> Environment<'ctx> {
-            pub fn new() -> Environment<'ctx> {
-                Environment {
-                    debruijn_values: Vec::new(),
-                }
-            }
-
-            pub fn push(&mut self, value: PointerValue<'ctx>) {
-                self.debruijn_values.push(value)
-            }
-
-            pub fn pop(&mut self) {
-                self.debruijn_values.pop().unwrap();
-            }
-
-            pub fn lookup(&self, debruijn_index: DeBruijnIndex) -> &PointerValue<'ctx> {
-                self.debruijn_values.get(debruijn_index).unwrap()
-            }
-        }
-    }
-
     pub mod global {
         use inkwell::{
             types::{PointerType, StructType},
             values::PointerValue,
         };
 
-        use crate::hir::ir::{Identifier, Term};
+        use crate::hir::ir::Identifier;
+
+        #[derive(Debug)]
+        enum Declaration<'ctx> {
+            Constant {
+                name: String,
+                llvm_value: PointerValue<'ctx>,
+            },
+            Inductive(String, Inductive<'ctx>),
+        }
+
+        #[derive(Debug)]
+        pub struct Inductive<'ctx> {
+            pub name: Identifier,
+            pub llvm_type: PointerType<'ctx>,
+            pub constructors: Vec<Constructor<'ctx>>,
+        }
+
+        #[derive(Debug)]
+        pub struct Constructor<'ctx> {
+            pub name: Identifier,
+            pub llvm_struct_type: StructType<'ctx>,
+            pub llvm_function: PointerValue<'ctx>,
+        }
 
         #[derive(Debug)]
         pub struct Environment<'ctx> {
             declarations: Vec<Declaration<'ctx>>,
-            // TODO: `universe_graph: uGraph.t`
         }
 
         impl<'ctx> Environment<'ctx> {
@@ -93,6 +86,25 @@ mod environment {
                     .unwrap()
             }
 
+            pub fn lookup_constant_value(&self, name: &str) -> PointerValue<'ctx> {
+                *self
+                    .declarations
+                    .iter()
+                    .find_map(|declaration| {
+                        if let Declaration::Constant {
+                            name: constant_name,
+                            llvm_value,
+                        } = declaration
+                        {
+                            if constant_name == name {
+                                return Some(llvm_value);
+                            }
+                        }
+                        None
+                    })
+                    .unwrap()
+            }
+
             pub fn push_inductive(&mut self, name: String, llvm_type: PointerType<'ctx>) {
                 self.declarations.push(Declaration::Inductive(
                     name.clone(),
@@ -102,6 +114,11 @@ mod environment {
                         constructors: vec![],
                     },
                 ))
+            }
+
+            pub fn push_constant_value(&mut self, name: String, llvm_value: PointerValue<'ctx>) {
+                self.declarations
+                    .push(Declaration::Constant { name, llvm_value })
             }
 
             pub fn add_constructor(
@@ -114,32 +131,34 @@ mod environment {
                     .push(constructors);
             }
         }
+    }
 
-        #[derive(Debug)]
-        enum Declaration<'ctx> {
-            Constant(String, ConstantBody),
-            Inductive(String, Inductive<'ctx>),
+    pub mod local {
+        use crate::hir::ir::DeBruijnIndex;
+        use inkwell::values::PointerValue;
+
+        pub struct Environment<'ctx> {
+            debruijn_values: Vec<PointerValue<'ctx>>,
         }
 
-        #[derive(Debug)]
-        pub struct Inductive<'ctx> {
-            pub name: Identifier,
-            pub llvm_type: PointerType<'ctx>,
-            pub constructors: Vec<Constructor<'ctx>>,
-        }
+        impl<'ctx> Environment<'ctx> {
+            pub fn new() -> Environment<'ctx> {
+                Environment {
+                    debruijn_values: Vec::new(),
+                }
+            }
 
-        #[derive(Debug)]
-        pub struct Constructor<'ctx> {
-            pub name: Identifier,
-            pub llvm_struct_type: StructType<'ctx>,
-            pub llvm_function: PointerValue<'ctx>,
-        }
+            pub fn push(&mut self, value: PointerValue<'ctx>) {
+                self.debruijn_values.push(value)
+            }
 
-        #[derive(Debug)]
-        struct ConstantBody {
-            typ: Term,
-            body: Option<Term>,
-            // TODO: `universes: universe_context`
+            pub fn pop(&mut self) {
+                self.debruijn_values.pop().unwrap();
+            }
+
+            pub fn lookup(&self, debruijn_index: DeBruijnIndex) -> &PointerValue<'ctx> {
+                self.debruijn_values.get(debruijn_index).unwrap()
+            }
         }
     }
 }
@@ -198,14 +217,28 @@ impl<'ctx> Context<'ctx> {
     pub fn codegen_hir(&mut self, hir: &HIR) {
         for declaration in &hir.declarations {
             match declaration {
-                Declaration::Constant(term) => self.codegen_term(term),
+                Declaration::Constant(term) => {
+                    let llvm_value = self.codegen_term(term);
+
+                    // Add value to global environment if it has a name.
+                    match term {
+                        Term::Lambda {
+                            name: Name::Named(name),
+                            ..
+                        } => self.global.push_constant_value(name.clone(), llvm_value),
+                        Term::Fixpoint { name, .. } => {
+                            self.global.push_constant_value(name.clone(), llvm_value)
+                        }
+                        _ => (),
+                    }
+                }
                 Declaration::Inductive(inductive) => self.codegen_inductive(inductive),
             }
         }
         self.module.verify().unwrap();
     }
 
-    pub fn codegen_term(&self, term: &Term) {
+    pub fn codegen_term(&self, term: &Term) -> PointerValue<'ctx> {
         if self.module.get_function("main").is_none() {
             // Declare the main function
             let llvm_main_function =
@@ -218,12 +251,14 @@ impl<'ctx> Context<'ctx> {
             self.builder
                 .position_at_end(llvm_main_function_entry_basic_block);
 
-            self.codegen_term_helper(term, &mut local::Environment::new());
+            let llvm_value = self.codegen_term_helper(term, &mut local::Environment::new());
 
             self.builder
                 .build_return(Some(&self.context.i32_type().const_int(0, false)));
+
+            llvm_value
         } else {
-            self.codegen_term_helper(term, &mut local::Environment::new());
+            self.codegen_term_helper(term, &mut local::Environment::new())
         }
     }
 
@@ -400,7 +435,8 @@ impl<'ctx> Context<'ctx> {
                     .unwrap_left()
                     .into_pointer_value()
             }
-            Term::Constructor(inductive_name, branch_index, _) => {
+            Term::Constant(name) => self.global.lookup_constant_value(name),
+            Term::Constructor(inductive_name, branch_index) => {
                 let llvm_constructor_function_pointer = self
                     .global
                     .lookup_inductive(inductive_name)
@@ -416,7 +452,7 @@ impl<'ctx> Context<'ctx> {
             }
             Term::Fixpoint { body, .. } => self.codegen_term_helper(body, local),
             Term::Sort(_) | Term::DependentProduct { .. } => unreachable!(),
-            _ => todo!("Match"),
+            _ => todo!("{:#?}", term),
         }
     }
 
@@ -529,7 +565,7 @@ impl<'ctx> Context<'ctx> {
         self.builder
             .build_return(Some(&llvm_constructor_struct_pointer));
 
-        llvm_function.verify(false);
+        llvm_function.verify(true);
 
         // Return a pointer to this constructor.
         llvm_function.as_global_value().as_pointer_value()
@@ -553,7 +589,7 @@ impl<'ctx> Context<'ctx> {
                 self.codegen_constructor_type_helper(parameter_type, accumulator);
                 self.codegen_constructor_type_helper(return_type, accumulator);
             }
-            Term::Inductive(name, _) => {
+            Term::Inductive(name) => {
                 accumulator.push(self.global.lookup_inductive_llvm_type(name).into());
             }
             _ => panic!(),
@@ -722,6 +758,11 @@ mod tests {
     #[test]
     fn nat_identity() {
         test_hir(&examples::nat_identity());
+    }
+
+    #[test]
+    fn global_constant_use_nat_identity() {
+        test_hir(&examples::global_constant_use_nat_identity());
     }
 
     #[test]
