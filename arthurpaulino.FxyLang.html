@@ -31,16 +31,20 @@
 <p dir="auto">This repository contains the implementation of <em>Fxy</em>, a toy language created for
 learning purposes.</p>
 <p dir="auto">The name <em>Fxy</em> comes from its way of defining functions: <code>f x y := x + y</code>. It is
-implemented in <a href="https://leanprover.github.io/" rel="nofollow">Lean 4</a>, which also allows us to
-reason about the correctness of its semantics.</p>
+implemented in <a href="https://leanprover.github.io/" rel="nofollow">Lean 4</a>, which allows us not only
+to build software, but also to reason about it.</p>
 <p dir="auto">Big thanks to the <a href="https://leanprover.zulipchat.com/" rel="nofollow">Lean community</a>,
 especially Mario Carneiro, Simon Hudon and the Lean developers!</p>
+<p dir="auto">This repository also serves the purpose of being a somewhat brief demonstration
+of the capabilities of Lean 4 as a hybrid of programming language and an
+interactive theorem prover assistant. Feel free to continue reading through
+<a href="FxyLang">FxyLang</a> if you're interested in knowing more about it!</p>
 <h4 dir="auto">Usage</h4>
 <p dir="auto">After cloning the repository, build the binary with <code>lake build</code>.</p>
 <p dir="auto">If you have a source file, say <code>test.fxy</code>, you can run it with
 <code>./build/bin/fxy run test.fxy</code>. Or, instead, use <code>run!</code> to execute <code>test.fxy</code>
-with the unverified (but faster) runner.</p>
-<h4 dir="auto">Fxy API</h4>
+with the unverified (but faster) executor.</p>
+<h4 dir="auto">Fxy specification</h4>
 <h5 dir="auto">Basic types</h5>
 <ul dir="auto">
 <li><code>int</code> is the type of integer numbers (e.g. <code>1</code>, <code>0</code>, <code>-3</code>)</li>
@@ -50,11 +54,96 @@ with the unverified (but faster) runner.</p>
 <li><code>list</code> is the type of lists of elements of the types above (e.g. <code>[1, "hi"]</code>)</li>
 <li><code>_ → ... → _</code> is the type of functions</li>
 </ul>
+<p dir="auto">Integers, booleans, strings and floating pointer numbers are also called
+"literals".</p>
 <h5 dir="auto">Declarations</h5>
 <p dir="auto">To assign a value to a variable, use the walrus operator <code>:=</code>. Example:
 <code>a := 1</code>, <code>s := "Fxy is cool"</code>.</p>
-<p dir="auto">To declare a function, use the same walrus operator, but naming the arguments on
-its left. Example: <code>f x y := x + y</code>.</p>
+<p dir="auto">To declare a function, use the same walrus operator, but also naming the
+arguments on its left. Example: <code>f x y := x + y</code>.</p>
+<h5 dir="auto">Functions</h5>
+<p dir="auto">As mentioned above, functions are defined with the syntax:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="<function name> <names of input variables> := <function body>"><pre class="notranslate"><code class="notranslate"><function name> <names of input variables> := <function body>
+</code></pre></div>
+<p dir="auto">The "names" are identifiers that start with letters. The scope of the function
+body is defined with indentation (as do the scopes of other structures in Fxy).</p>
+<p dir="auto">The return of the function is defined by its last line. Example:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="prod a b c :=
+  ab := a * b
+  ab * c
+
+!print prod 2 3 7"><pre class="notranslate"><code class="notranslate">prod a b c :=
+  ab := a * b
+  ab * c
+
+!print prod 2 3 7
+</code></pre></div>
+<p dir="auto">The function <code>prod</code> computes the product of three variables. The code above
+should print out <code>42</code> upon execution.</p>
+<h6 dir="auto">Currying</h6>
+<p dir="auto">Fxy has a common feature of functional languages: currying. That is, one can
+store functions with partially applied arguments for later computations.
+Example:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="prod23 := prod 2 3
+
+!print prod23 7"><pre class="notranslate"><code class="notranslate">prod23 := prod 2 3
+
+!print prod23 7
+</code></pre></div>
+<p dir="auto">The code above should print out <code>42</code> upon execution.</p>
+<h5 dir="auto">Forks and loops</h5>
+<p dir="auto">Fxy supports logic bifurcation and looping via the respective syntaxes:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="if <expression> then <body> else <body>"><pre class="notranslate"><code class="notranslate">if <expression> then <body> else <body>
+</code></pre></div>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="while <expression> do <body>"><pre class="notranslate"><code class="notranslate">while <expression> do <body>
+</code></pre></div>
+<p dir="auto">Example:</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="countTo n :=
+  i := 0
+  while i < n do
+    i := i + 1
+  i
+
+if countTo 42 = 42 then
+  !print "42"
+else
+  !print "not 42 :(""><pre class="notranslate"><code class="notranslate">countTo n :=
+  i := 0
+  while i < n do
+    i := i + 1
+  i
+
+if countTo 42 = 42 then
+  !print "42"
+else
+  !print "not 42 :("
+</code></pre></div>
+<p dir="auto">The code above should print out <code>42</code> upon execution.</p>
+<h5 dir="auto">Basic operators</h5>
+<p dir="auto">Since Fxy is a toy language, it only has the following operators:</p>
+<ul dir="auto">
+<li>
+<p dir="auto"><code>+</code> is the regular addition for numbers. For booleans, it represents an "or".
+For lists, it does concatenations and can also push a literal to its end. For
+strings, <code>+</code> does concatenation;</p>
+</li>
+<li>
+<p dir="auto"><code>*</code> is the regular multiplication for numbers. For booleans, it represents an
+"and".</p>
+</li>
+<li>
+<p dir="auto"><code>!</code> represents a "not" for booleans</p>
+</li>
+<li>
+<p dir="auto"><code>=</code>, <code>!=</code>, <code><</code>, <code><=</code>, <code>></code> and <code>>=</code> are the symbols to encode "equals", "not
+equals", "less than", "less than or equals to", "greater than" and "greater than
+or equals to" respectively.</p>
+</li>
+</ul>
+<h5 dir="auto">Commentaries</h5>
+<p dir="auto">Similarly to Python, Fxy uses <code>#</code> to represent the beginning of a commentary. So
+everything to the right of a <code>#</code> (including the <code>#</code> itself) will be filtered out
+before the parsing phase.</p>
 </article></div></main>
 </body>
 </html>
