@@ -1,0 +1,54 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>technosentience/ltlcheck</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>technosentience/ltlcheck</h1>
+<p>LTL model checker for the FM-CPS course.</p>
+<a href="https://github.com/technosentience/ltlcheck">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">LTLCheck - Linear Temporal Logic model checker written in Lean 4</h3>
+<h4 dir="auto">Build</h4>
+<ol dir="auto">
+<li>
+<p dir="auto">Install Lean 4 as described <a href="https://leanprover.github.io/lean4/doc/quickstart.html" rel="nofollow">there</a> or <a href="https://leanprover.github.io/lean4/doc/setup.html" rel="nofollow">there</a>.
+Optionally, install the Lean 4 VSCode plugin for interactive editing.</p>
+</li>
+<li>
+<p dir="auto">Run <code>lake build</code></p>
+</li>
+</ol>
+<p dir="auto">Resulting binary can be accessed at <code>./build/bin/ltlcheck</code>.</p>
+<h4 dir="auto">Project structure</h4>
+<p dir="auto"><code>Main.lean</code> — main executable code (just running the tests).</p>
+<p dir="auto"><code>Ltlcheck.lean</code> — placeholder file, imports everything in <code>Ltlcheck/</code>.</p>
+<p dir="auto"><code>Ltlcheck/Util.lean</code> — utility definitions and functions.</p>
+<p dir="auto"><code>Ltlcheck/Automata.lean</code> — definitions of transition systems, Buchi automata,
+conversions between them, handshake and interleaving products.</p>
+<p dir="auto"><code>Ltlcheck/Ltl.lean</code> — definition of LTL formulas, LTL-to-Buchi translation,
+property checking for transition systems.</p>
+<p dir="auto"><code>Ltlcheck/Syntax.lean</code> — syntax extension for LTL.</p>
+<p dir="auto"><code>Ltlcheck/Tests.lean</code> — illustrated test cases.</p>
+</article></div></main>
+</body>
+</html>
