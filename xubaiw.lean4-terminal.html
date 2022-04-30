@@ -32,7 +32,7 @@
 <p dir="auto">A Lean package for programming the terminal.</p>
 <p dir="auto">This pacakge is mostly "translated" from Rust's <a href="https://github.com/crossterm-rs/crossterm"><code>crossterm</code></a>.</p>
 <h4 dir="auto">Example</h4>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Terminal
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="import Terminal
 
 open Terminal
 
@@ -40,15 +40,16 @@ def main : IO Unit := do
   queue #[
     Terminal.SetBackgroundColor.mk Color.red
   ]
-  IO.println "Hello, world""><pre><span class="pl-k">import</span> Terminal
+  IO.println "Hello, world""><pre class="notranslate" lang="lean"><code class="notranslate">import Terminal
 
-<span class="pl-k">open</span> Terminal
+open Terminal
 
-<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+def main : IO Unit := do
   queue #[
     Terminal.SetBackgroundColor.mk Color.red
   ]
-  IO.println <span class="pl-s"><span class="pl-pds">"</span>Hello, world<span class="pl-pds">"</span></span></pre></div>
+  IO.println "Hello, world"
+</code></pre></div>
 <h4 dir="auto">Limitations</h4>
 <ul dir="auto">
 <li><code>stdout</code> only, until IO primitives for Lean 4 is more usable.</li>
