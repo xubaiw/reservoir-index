@@ -70,7 +70,7 @@ instance exponentiation_base : Exponentiation.Base Nat where
   pow_zero {n : Nat} : n ^ 0 ≃ 1 := rfl
   pow_step {n m : Nat} : n ^ step m ≃ n ^ m * n := rfl
 
-instance : Decl Nat where
+instance : Natural Nat where
   toCore := core
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Derived.sign_derived

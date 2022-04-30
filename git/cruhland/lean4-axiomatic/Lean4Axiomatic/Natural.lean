@@ -1,15 +1,24 @@
-import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Operators
-
 import Lean4Axiomatic.Natural.Exponentiation
 import Lean4Axiomatic.Natural.Order
 import Lean4Axiomatic.Natural.Sign
 
-namespace Lean4Axiomatic.Natural
+namespace Lean4Axiomatic
 
-open Operators (TildeDash)
+open Natural
 
-class Decl (ℕ : Type) where
+/--
+The class of [natural numbers](https://en.wikipedia.org/wiki/Natural_number).
+
+The fields of this class express many natural number properties. Any type `α`
+for which an instance of `Natural α` exists must obey all of them. However,
+most of the properties can be derived from a few essential ones (e.g. the
+[Peano axioms](https://en.wikipedia.org/wiki/Peano_axioms)), reducing the work
+required to construct an instance.
+
+**Named parameters**
+- `ℕ`: a type that obeys all of the properties provided by this class.
+-/
+class Natural (ℕ : Type) where
   toCore : Core ℕ
   toAddition : Addition.Derived ℕ
   toSign : Sign.Derived ℕ
@@ -17,7 +26,11 @@ class Decl (ℕ : Type) where
   toMultiplication : Multiplication.Derived ℕ
   toExponentiation : Exponentiation.Base ℕ
 
-attribute [instance] Decl.toMultiplication
+namespace Natural
+
+attribute [instance] toAddition
+attribute [instance] toCore
+attribute [instance] toMultiplication
 
 export Addition (
   add_associative add_commutative add_one_step addOp add_step add_substitutive
