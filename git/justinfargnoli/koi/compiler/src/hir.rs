@@ -26,8 +26,16 @@ pub mod ir {
         pub typ: Term,
     }
 
-    pub type DeBruijnIndex = usize;
     type BranchesCount = usize;
+    pub type DeBruijnIndex = usize;
+
+    pub fn debruijn_index_lookup<T>(slice: &[T], debruijn_index: DeBruijnIndex) -> &T {
+        &slice[slice.len() - 1 - debruijn_index]
+    }
+
+    pub fn debruijn_index_lookup_mut<T>(slice: &mut [T], debruijn_index: DeBruijnIndex) -> &mut T {
+        &mut slice[slice.len() - 1 - debruijn_index]
+    }
 
     #[derive(Clone, Debug, PartialEq)]
     pub enum Term {
@@ -58,7 +66,6 @@ pub mod ir {
             branches: Vec<Term>,
         },
         Fixpoint {
-            name: String,
             expression_type: Box<Term>,
             body: Box<Term>,
         },
@@ -86,6 +93,12 @@ pub mod ir {
 
 pub mod examples {
     use super::ir::*;
+
+    // FIXME
+    // - Codegen
+    //   Not calling the zero constructor of `Nat`
+    //   Currying
+    //      Curring in constructors
 
     /// enum Unit() : Type 0 {}
     pub fn unit() -> Inductive {
@@ -142,7 +155,6 @@ pub mod examples {
         let b = Name::Named("b".to_string());
 
         let add = Term::Fixpoint {
-            name: "add".to_string(),
             expression_type: Box::new(Term::DependentProduct {
                 parameter_name: a.clone(),
                 parameter_type: nat_term.clone(),
@@ -205,6 +217,67 @@ pub mod examples {
         }
     }
 
+    /// func identity(a : Nat) -> Nat {
+    ///     match a -> Nat {
+    ///         Nat.Zero => Nat.Zero,
+    ///         Nat.Successor (n : Nat) => Nat.Successor n
+    ///     }
+    /// }
+    pub fn nat_match_identity() -> HIR {
+        let nat = nat();
+
+        let identity = Term::Lambda {
+            name: Name::Named("identity".to_string()),
+            parameter_name: Name::Named("x".to_string()),
+            parameter_type: Box::new(Term::Inductive(nat.name.clone())),
+            body: Box::new(Term::Match {
+                inductive_name: nat.name.clone(),
+                return_type: Box::new(Term::Inductive(nat.name.clone())),
+                scrutinee: Box::new(Term::DeBruijnIndex(0)),
+                branches: vec![
+                    Term::Constructor(nat.name.clone(), 0),
+                    Term::Application {
+                        function: Box::new(Term::Constructor(nat.name.clone(), 1)),
+                        argument: Box::new(Term::DeBruijnIndex(0)),
+                    },
+                ],
+            }),
+        };
+
+        HIR {
+            declarations: vec![Declaration::Inductive(nat), Declaration::Constant(identity)],
+        }
+    }
+
+    /// func identity(a : Nat) -> Nat {
+    ///     match a -> Nat {
+    ///         Nat.Zero => a,
+    ///         Nat.Successor (n : Nat) => a
+    ///     }
+    /// }
+    pub fn nat_match_simple() -> HIR {
+        let nat = nat();
+
+        let identity = Term::Lambda {
+            name: Name::Named("identity".to_string()),
+            parameter_name: Name::Named("x".to_string()),
+            parameter_type: Box::new(Term::Inductive(nat.name.clone())),
+            body: Box::new(Term::Match {
+                inductive_name: nat.name.clone(),
+                return_type: Box::new(Term::Inductive(nat.name.clone())),
+                scrutinee: Box::new(Term::DeBruijnIndex(0)),
+                branches: vec![Term::DeBruijnIndex(0), Term::DeBruijnIndex(1)],
+            }),
+        };
+
+        HIR {
+            declarations: vec![Declaration::Inductive(nat), Declaration::Constant(identity)],
+        }
+    }
+
+    /// func (a : Nat) -> Nat {
+    ///     identity(a)
+    /// }
     pub fn global_constant_use_nat_identity() -> HIR {
         let mut nat_identity_hir = nat_identity();
 
@@ -224,7 +297,7 @@ pub mod examples {
     }
 
     /// func (_ : Nat) {
-    ///     Nat.S(Nat.O)
+    ///     Nat.O
     /// }
     pub fn nat_zero() -> HIR {
         let nat = nat();
@@ -263,6 +336,74 @@ pub mod examples {
 
         HIR {
             declarations: vec![Declaration::Inductive(nat), Declaration::Constant(one)],
+        }
+    }
+
+    /// func nat_left(left : Nat, right : Nat) {
+    ///     left
+    /// }
+    pub fn nat_left() -> HIR {
+        let nat = nat();
+        let nat_term = Box::new(Term::Inductive(nat.name.clone()));
+
+        let left = Term::Lambda {
+            name: Name::Named("nat_left".to_string()),
+            parameter_name: Name::Named("left".to_string()),
+            parameter_type: nat_term.clone(),
+            body: Box::new(Term::Lambda {
+                name: Name::Anonymous,
+                parameter_name: Name::Named("right".to_string()),
+                parameter_type: nat_term,
+                body: Box::new(Term::DeBruijnIndex(1)),
+            }),
+        };
+
+        HIR {
+            declarations: vec![Declaration::Inductive(nat), Declaration::Constant(left)],
+        }
+    }
+
+    /// func rec nat_to_zero(number : Nat) -> Nat {
+    ///     match number -> Nat {
+    ///         Nat.O => number
+    ///         Nat.S(n : Nat) => nat_to_zero(n)
+    ///     }
+    /// }
+    pub fn nat_to_zero() -> HIR {
+        let nat = nat();
+        let nat_term = Box::new(Term::Inductive(nat.name.clone()));
+        let number_string = "number".to_string();
+
+        let nat_to_zero = Term::Fixpoint {
+            expression_type: Box::new(Term::DependentProduct {
+                parameter_name: Name::Named(number_string.clone()),
+                parameter_type: nat_term.clone(),
+                return_type: nat_term.clone(),
+            }),
+            body: Box::new(Term::Lambda {
+                name: Name::Named("nat_to_zero".to_string()),
+                parameter_name: Name::Named(number_string),
+                parameter_type: nat_term.clone(),
+                body: Box::new(Term::Match {
+                    inductive_name: nat.name.clone(),
+                    return_type: nat_term,
+                    scrutinee: Box::new(Term::DeBruijnIndex(0)),
+                    branches: vec![
+                        Term::DeBruijnIndex(0),
+                        Term::Application {
+                            function: Box::new(Term::DeBruijnIndex(2)),
+                            argument: Box::new(Term::DeBruijnIndex(0)),
+                        },
+                    ],
+                }),
+            }),
+        };
+
+        HIR {
+            declarations: vec![
+                Declaration::Inductive(nat),
+                Declaration::Constant(nat_to_zero),
+            ],
         }
     }
 
@@ -334,7 +475,6 @@ pub mod examples {
         let a_name = "a".to_string();
 
         let append = Term::Fixpoint {
-            name: "list_append".to_string(),
             expression_type: Box::new(Term::DependentProduct {
                 parameter_name: Name::Named(t_name.clone()),
                 parameter_type: Box::new(Term::Sort(Sort::Set)),
@@ -358,7 +498,7 @@ pub mod examples {
                 }),
             }),
             body: Box::new(Term::Lambda {
-                name: Name::Anonymous,
+                name: Name::Named("list_append".to_string()),
                 parameter_name: Name::Named(t_name),
                 parameter_type: Box::new(Term::Sort(Sort::Set)),
                 body: Box::new(Term::Lambda {
@@ -524,7 +664,6 @@ pub mod examples {
         let vector_term = Term::Inductive(vector_string.clone());
 
         let append = Term::Fixpoint {
-            name: "vector_append".to_string(),
             expression_type: Box::new(Term::DependentProduct {
                 parameter_name: Name::Named(t_string.clone()),
                 parameter_type: Box::new(Term::Sort(Sort::Set)),
@@ -571,7 +710,7 @@ pub mod examples {
                 }),
             }),
             body: Box::new(Term::Lambda {
-                name: Name::Anonymous,
+                name: Name::Named("vector_append".to_string()),
                 parameter_name: Name::Named(t_string),
                 parameter_type: Box::new(Term::Sort(Sort::Set)),
                 body: Box::new(Term::Lambda {

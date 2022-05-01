@@ -310,12 +310,6 @@ open Lean.Parser.Tactic
 open Lean.Elab.Tactic
 open Lean.Elab.Term
 
-@[inline]
-def liftMetaTactic1' (tac : MVarId → MetaM (α × MVarId)) : TacticM α := do
-let (x, g) ← liftMetaMAtMain tac
-replaceMainGoal [g]
-return x
-
 def showProofState : TacticM MessageData := do
 let gs ← getGoals
 let mut res : Format := s!"Goals ({gs.length})"
@@ -442,7 +436,7 @@ macro "opaque " "namespace " id:ident : command => do
     namespace $(Lean.mkIdent id.getId):ident
 
     local elab d:($declaration:ident) : $command =>
-      elabAndTransport $idLit:nameLit d
+      elabAndTransport $idLit:name d
 
     -- local elab_rules : $command
     -- | `($$d:declaration) => elabAndTransport $idLit:nameLit

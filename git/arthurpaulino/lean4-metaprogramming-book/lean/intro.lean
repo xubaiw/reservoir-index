@@ -27,7 +27,7 @@ activities. So for example, one can write their own notation to instantiate a
 term of a certain type and use it right away, on the same file! This concept is
 generally called
 [__reflection__](https://en.wikipedia.org/wiki/Reflective_programming). We can
-say that, in Lean, the metal-level is _reflected_ to the object-level.
+say that, in Lean, the meta-level is _reflected_ to the object-level.
 
 Since the objects defined in the meta-level are not the ones we're most
 interested in proving theorems about, it can sometimes be overly tedious to
@@ -117,8 +117,8 @@ syntax " ⟪ " arith " ⟫ " : term
 
 -- Our macro rules perform the "obvious" translation:
 macro_rules
-  | `(⟪ $s:strLit ⟫)           => `(Arith.var $s)
-  | `(⟪ $num:numLit ⟫)         => `(Arith.nat $num)
+  | `(⟪ $s:str ⟫)              => `(Arith.var $s)
+  | `(⟪ $num:num ⟫)            => `(Arith.nat $num)
   | `(⟪ $x:arith + $y:arith ⟫) => `(Arith.add ⟪ $x ⟫ ⟪ $y ⟫)
   | `(⟪ $x:arith * $y:arith ⟫) => `(Arith.mul ⟪ $x ⟫ ⟪ $y ⟫)
   | `(⟪ ( $x ) ⟫)              => `( ⟪ $x ⟫ )
