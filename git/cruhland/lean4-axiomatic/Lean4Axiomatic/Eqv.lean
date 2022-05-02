@@ -42,7 +42,13 @@ instance : Trans (· → ·) where
 class Eqv {α : Sort u} (rel : α → α → Prop)
     extends Refl rel, Symm rel, Trans rel
 
-class EqvOp (α : Sort u) extends TildeDash α Prop, Eqv tildeDash
+/--
+Provides an equivalence relation over `α` with the operator `· ≃ ·`.
+
+**Named parameters**
+- `α`: the `Sort` of the elements in the relation.
+-/
+class EqvOp (α : Sort u) extends TildeDash α, Eqv tildeDash
 
 def neq.symm {α : Sort u} [EqvOp α] {x y : α} : x ≄ y → y ≄ x := by
   intro (_ : x ≄ y) (_ : y ≃ x)
@@ -51,8 +57,13 @@ def neq.symm {α : Sort u} [EqvOp α] {x y : α} : x ≄ y → y ≄ x := by
   show x ≃ y
   exact Symm.symm ‹y ≃ x›
 
-class EqvOp? (α : Sort u)
-    extends EqvOp α, TildeDashQuestion α (λ x y => Decidable (x ≃ y))
+/--
+Extends `EqvOp` with `· ≃? ·`, a decision procedure for equivalence.
+
+**Named parameters**
+- `α`: the `Sort` of the elements in the relation.
+-/
+class EqvOp? (α : Sort u) extends EqvOp α, TildeDashQuestion tildeDash
 
 end Relation
 

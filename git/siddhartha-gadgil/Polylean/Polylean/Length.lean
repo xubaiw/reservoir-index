@@ -9,9 +9,9 @@ def Letter.int : Letter → Int
   | α! => -1
   | β! => -2 
 
-abbrev Wrd := Array Int
+abbrev Wrd := Array Letter
 
-def Word.wrd (w: Word) : Wrd := w.toArray.map <| fun l => l.int
+def Word.wrd (w: Word) : Wrd := w.toArray -- .map <| fun l => l.int
 
 universe u
 
@@ -24,18 +24,30 @@ instance : Hashable Wrd := ⟨hashfn⟩
 
 initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 
-def splits(w: Wrd)(l : Int) : IO <| Array (Wrd × Wrd) := do
-  let mut tail := w.eraseIdx 0
-  let mut init : Wrd := #[]
-  let mut accum : Array (Wrd × Wrd) := #[]
-  for x in w do
-    if l = x then
-      accum := accum.push (init, tail)
-    init := init.push x
-    tail := tail.eraseIdx 0
-  return accum
+def splits(l : Letter) : (w : Wrd) → Array {p : Wrd × Wrd // p.1.size + p.2.size < w.size} := fun w =>
+  match h:w.size with
+  | 0 => #[]
+  | m + 1  =>    
+    let x := w.back
+    have lll : w.size -1 < w.size := by
+      rw [h] 
+      apply Nat.le_refl
+    let ys := w.pop
+    have ysize : ys.size = m := by
+      rw [Array.size_pop, h]
+      rfl
+    let tailSplits := (splits l ys).map fun ⟨(fst, snd), h⟩ =>
+      ⟨(fst, snd.push x), by 
+        rw [Array.size_push]
+        rw [ysize] at h
+        simp [Nat.add_succ, Nat.succ_lt_succ h]⟩
+    if x = l then tailSplits.push ⟨(ys, #[]), 
+      by 
+        rw [ysize]
+        apply Nat.le_refl⟩ else tailSplits
+termination_by _ l w => w.size
 
-partial def length : Wrd →  IO Nat := fun w =>
+def length(w : Wrd) :  IO Nat := 
 do
   let cache ← normCache.get
   match cache.find? w with
@@ -43,26 +55,38 @@ do
       pure n
   | none =>
     let res ← 
-      match w.size with
+      match h:w.size with
       | 0 => pure 0
-      | k + 1 => do
+      | m + 1 => do
         let ys := w.pop
         let x := w.back
-        let mut l := 1 + (← length <| ys)
-        let pairs ←  splits ys (-x)
-        for (fst, snd) in pairs do
-          let pl := (← length <| fst) + (← length <| snd)
-          if pl < l then
-            l := pl
-        pure l
-    normCache.set <| cache.insert w res
+        have lll : w.size -1 < w.size := by
+          rw [h] 
+          apply Nat.le_refl
+        let base := 1 + (← length <| ys)
+        let derived ←  (splits x⁻¹ ys).mapM fun ⟨(fst, snd), h0⟩ => 
+          have ysize : ys.size = m := by
+            rw [Array.size_pop, h]
+            rfl
+          have h0 : fst.size + snd.size < w.size := by
+            rw [h]
+            rw [← ysize]
+            apply Nat.lt_trans h0 (Nat.lt_succ_self _)
+          have h1 : snd.size < w.size  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h0
+          have h2 : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
+          return (← length fst) + (← length snd)
+        derived.foldl (fun x y => do return min (← x) y) (pure base)
+    normCache.set <| (← normCache.get).insert w res
     return res
+termination_by _ w => w.size
 
 end Wrd
 
 def wordLength(w: Word):IO Nat :=
   Wrd.length <| Word.wrd w
 
-#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (1)
+#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (α)
 
-#check Array.reverse
+#check Array.size_push
+
+#check Nat.pred

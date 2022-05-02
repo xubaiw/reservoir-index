@@ -14,7 +14,7 @@ Definitions pertaining to equality of integer values.
 -/
 class Equality (ℤ : Type) :=
   /-- The equality relation on integers, expressed with the syntax `a ≃ b`. -/
-  tildeDash : Operators.TildeDash ℤ Prop
+  tildeDash : Operators.TildeDash ℤ
 
 attribute [instance] Equality.tildeDash
 

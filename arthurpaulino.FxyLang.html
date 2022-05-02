@@ -96,6 +96,7 @@ Example:</p>
 !print prod23 7
 </code></pre></div>
 <p dir="auto">The code above should print out <code>42</code> upon execution.</p>
+<p dir="auto">Note: It's also possible to do <code>!print (prod 2 3) 7</code></p>
 <h5 dir="auto">Forks and loops</h5>
 <p dir="auto">Fxy supports logic bifurcation and looping via the respective syntaxes:</p>
 <div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="if <expression> then <body> else <body>"><pre class="notranslate"><code class="notranslate">if <expression> then <body> else <body>
@@ -124,6 +125,7 @@ else
   !print "not 42 :("
 </code></pre></div>
 <p dir="auto">The code above should print out <code>42</code> upon execution.</p>
+<p dir="auto">Note: if the <code>else</code> is omitted, it's replaced with a no-op during parsing.</p>
 <h5 dir="auto">Basic operators</h5>
 <p dir="auto">Since Fxy is a toy language, it only has the following operators:</p>
 <ul dir="auto">

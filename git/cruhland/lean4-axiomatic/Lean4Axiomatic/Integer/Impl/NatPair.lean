@@ -45,7 +45,7 @@ Doing that produces the expression that is the definition of this relation.
 def eqv : PosNegPair ℕ → PosNegPair ℕ → Prop
 | ⟨ap, an⟩, ⟨bp, bn⟩ => ap + bn ≃ bp + an
 
-def tildeDash : Operators.TildeDash (PosNegPair ℕ) Prop := {
+def tildeDash : Operators.TildeDash (PosNegPair ℕ) := {
   tildeDash := eqv
 }
 
