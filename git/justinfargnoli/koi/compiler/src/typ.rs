@@ -31,11 +31,25 @@ pub mod check {
                     panic!()
                 }
 
+                fn name_is_unique(&self, name: &str) {
+                    for declaration in &self.declarations {
+                        match declaration {
+                            Declaration::Inductive(inductive) => assert_ne!(inductive.name, name),
+                            Declaration::Constant {
+                                name: constant_name,
+                                ..
+                            } => assert_ne!(constant_name, name),
+                        }
+                    }
+                }
+
                 pub fn push_inductive(&mut self, inductive: Inductive) {
+                    self.name_is_unique(&inductive.name);
                     self.declarations.push(Declaration::Inductive(inductive))
                 }
 
                 pub fn push_constant(&mut self, name: String, typ: Term) {
+                    self.name_is_unique(&name);
                     self.declarations.push(Declaration::Constant { name, typ })
                 }
 
@@ -419,6 +433,22 @@ pub mod check {
         }
 
         #[test]
+        #[should_panic]
+        fn generic_unit() {
+            Context::type_check_fresh_inductive(&examples::generic_unit())
+        }
+
+        #[test]
+        fn single_argument_constructor2() {
+            Context::type_check_fresh_inductive(&examples::single_argument_constructor2())
+        }
+
+        #[test]
+        fn single_argument_constructor() {
+            Context::type_check_hir(&examples::single_argument_constructor())
+        }
+
+        #[test]
         fn nat_type() {
             Context::type_check_fresh_inductive(&examples::nat())
         }
@@ -480,6 +510,29 @@ pub mod check {
         #[ignore]
         fn vector_append() {
             Context::type_check_hir(&examples::vector_append());
+        }
+
+        #[test]
+        #[should_panic]
+        fn same_name_types_inductive() {
+            Context::type_check_hir(&HIR {
+                declarations: vec![
+                    Declaration::Inductive(examples::unit()),
+                    Declaration::Inductive(examples::unit()),
+                ],
+            });
+        }
+
+        #[test]
+        #[should_panic]
+        fn same_name_types_constant() {
+            Context::type_check_hir(&HIR {
+                declarations: vec![
+                    Declaration::Inductive(examples::nat()),
+                    Declaration::Constant(examples::nat_add().get_constant(1).clone()),
+                    Declaration::Constant(examples::nat_add().get_constant(1).clone()),
+                ],
+            });
         }
     }
 }

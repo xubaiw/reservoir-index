@@ -1,14 +1,14 @@
 use crate::hir::ir::{DeBruijnIndex, Declaration, Inductive, Name, Term, HIR};
-use environment::{local, local::DeBruijnValue};
+use environment::{global::ConstructorFunction, local, local::DeBruijnValue};
 use inkwell::{
     builder::Builder,
     context::Context as InkwellContext,
     module::{Linkage, Module},
-    types::{AnyTypeEnum, BasicType, BasicTypeEnum, PointerType, StructType},
+    types::{BasicType, BasicTypeEnum, PointerType, StructType},
     values::{CallableValue, FunctionValue, PointerValue},
     AddressSpace,
 };
-use std::{fs, process::Command, thread};
+use std::{collections::HashSet, fs, process::Command, thread};
 
 mod environment {
     pub mod global {
@@ -39,7 +39,13 @@ mod environment {
         pub struct Constructor<'ctx> {
             pub name: Identifier,
             pub llvm_struct_type: StructType<'ctx>,
-            pub llvm_function: PointerValue<'ctx>,
+            pub llvm_function: ConstructorFunction<'ctx>,
+        }
+
+        #[derive(Debug)]
+        pub enum ConstructorFunction<'ctx> {
+            ZeroArgumentFunctionPointer(PointerValue<'ctx>),
+            FunctionPointer(PointerValue<'ctx>),
         }
 
         #[derive(Debug)]
@@ -142,12 +148,13 @@ mod environment {
     pub mod local {
         use crate::{hir, hir::ir::DeBruijnIndex};
         use inkwell::values::PointerValue;
+        use std::collections::HashSet;
 
         #[derive(Debug, Clone)]
         pub enum DeBruijnValue<'ctx> {
             Value(PointerValue<'ctx>),
             RecursiveFunction {
-                free_debruijn_indexes: Vec<DeBruijnIndex>,
+                free_debruijn_indexes: HashSet<DeBruijnIndex>,
                 function_pointer: PointerValue<'ctx>,
             },
         }
@@ -170,7 +177,7 @@ mod environment {
 
             pub fn push_recusive_function(
                 &mut self,
-                free_debruijn_indexes: Vec<DeBruijnIndex>,
+                free_debruijn_indexes: HashSet<DeBruijnIndex>,
                 function_pointer: PointerValue<'ctx>,
             ) {
                 self.debruijn_values.push(DeBruijnValue::RecursiveFunction {
@@ -344,10 +351,6 @@ impl<'ctx> Context<'ctx> {
         self.codegen_term_helper(term, &mut local::Environment::new())
     }
 
-    fn llvm_pointer_type(&self) -> PointerType<'ctx> {
-        self.context.i8_type().ptr_type(AddressSpace::Generic)
-    }
-
     fn codegen_term_helper(
         &self,
         term: &Term,
@@ -372,15 +375,21 @@ impl<'ctx> Context<'ctx> {
             Term::Lambda { .. } => self.codegen_lambda(term, local, false),
             Term::Application { function, argument } => {
                 let llvm_function_struct_pointer = self.codegen_term_helper(function, local);
-                println!("{}", self.module.print_to_string().to_string());
-                dbg!(llvm_function_struct_pointer.clone());
-                Self::is_struct_pointer(&llvm_function_struct_pointer);
+
+                let llvm_function_struct_pointer_casted = self
+                    .builder
+                    .build_bitcast(
+                        llvm_function_struct_pointer,
+                        self.general_llvm_function_struct_pointer_type(),
+                        "llvm_function_struct_pointer_casted",
+                    )
+                    .into_pointer_value();
 
                 // Get the function pointer.
                 let llvm_function_pointer_pointer = self
                     .builder
                     .build_struct_gep(
-                        llvm_function_struct_pointer,
+                        llvm_function_struct_pointer_casted,
                         0,
                         "application_lambda_struct_function_address",
                     )
@@ -396,7 +405,7 @@ impl<'ctx> Context<'ctx> {
                 let llvm_captures_struct_pointer_pointer = self
                     .builder
                     .build_struct_gep(
-                        llvm_function_struct_pointer,
+                        llvm_function_struct_pointer_casted,
                         1,
                         "application_lambda_struct_captures_address",
                     )
@@ -408,26 +417,17 @@ impl<'ctx> Context<'ctx> {
                         "application_lambda_struct_captures_pointer",
                     )
                     .into_pointer_value();
-                Self::is_struct_pointer(&llvm_captures_struct_pointer);
 
                 // Get the argument to the function.
                 let llvm_argument_pointer = self.codegen_term_helper(argument, local);
 
-                // Cast the function pointer so that the parameter types reflect the types of the arguments.
-                let llvm_function_pointer = self
+                // Cast the argument to be an `i8*`.
+                let llvm_argument_pointer_cast = self
                     .builder
                     .build_bitcast(
-                        llvm_function_pointer,
-                        self.llvm_pointer_type()
-                            .fn_type(
-                                &[
-                                    llvm_argument_pointer.get_type().into(),
-                                    llvm_captures_struct_pointer.get_type().into(),
-                                ],
-                                false,
-                            )
-                            .ptr_type(AddressSpace::Generic),
-                        "application_function_pointer_cast",
+                        llvm_argument_pointer,
+                        self.general_llvm_pointer_type(),
+                        "application_argument_cast",
                     )
                     .into_pointer_value();
 
@@ -436,7 +436,7 @@ impl<'ctx> Context<'ctx> {
                     .build_call(
                         CallableValue::try_from(llvm_function_pointer).unwrap(),
                         &[
-                            llvm_argument_pointer.into(),
+                            llvm_argument_pointer_cast.into(),
                             llvm_captures_struct_pointer.into(),
                         ],
                         "call",
@@ -451,7 +451,7 @@ impl<'ctx> Context<'ctx> {
                 self.codegen_lambda_struct(constant_function_pointer, empty_captures_struct)
             }
             Term::Constructor(inductive_name, branch_index) => {
-                let llvm_constructor_function_pointer = self
+                let llvm_constructor_value = &self
                     .global
                     .lookup_inductive(inductive_name)
                     .constructors
@@ -459,13 +459,30 @@ impl<'ctx> Context<'ctx> {
                     .unwrap()
                     .llvm_function;
 
-                let temp_llvm_constructor_empty_captures_struct =
-                    self.codegen_pointer_to_empty_struct();
+                match llvm_constructor_value {
+                    ConstructorFunction::ZeroArgumentFunctionPointer(function_pointer) => self
+                        .builder
+                        .build_call(
+                            CallableValue::try_from(*function_pointer).unwrap(),
+                            &[
+                                self.general_llvm_null_pointer().into(),
+                                self.general_llvm_null_pointer().into(),
+                            ],
+                            "call_zero_argument_constructor",
+                        )
+                        .try_as_basic_value()
+                        .unwrap_left()
+                        .into_pointer_value(),
+                    ConstructorFunction::FunctionPointer(function_pointer) => {
+                        let temp_llvm_constructor_empty_captures_struct =
+                            self.codegen_pointer_to_empty_struct();
 
-                self.codegen_lambda_struct(
-                    llvm_constructor_function_pointer,
-                    temp_llvm_constructor_empty_captures_struct,
-                )
+                        self.codegen_lambda_struct(
+                            *function_pointer,
+                            temp_llvm_constructor_empty_captures_struct,
+                        )
+                    }
+                }
             }
             Term::Match {
                 inductive_name,
@@ -497,7 +514,7 @@ impl<'ctx> Context<'ctx> {
 
                 let llvm_match_expression_value = self
                     .builder
-                    .build_alloca(self.llvm_pointer_type(), "match_expression_value");
+                    .build_alloca(self.general_llvm_pointer_type(), "match_expression_value");
 
                 let current_basic_block = self.builder.get_insert_block().unwrap();
 
@@ -564,7 +581,7 @@ impl<'ctx> Context<'ctx> {
 
                         let casted_llvm_case_expression_value = self.builder.build_bitcast(
                             llvm_case_expression_value,
-                            self.llvm_pointer_type(),
+                            self.general_llvm_pointer_type(),
                             "case_expression_value_cast",
                         );
                         self.builder.build_store(
@@ -618,14 +635,38 @@ impl<'ctx> Context<'ctx> {
         }
     }
 
+    fn initialize_curried_llvm_function(
+        &self,
+        return_type: &dyn BasicType<'ctx>,
+        name: &str,
+    ) -> FunctionValue<'ctx> {
+        // Create the function for this constructor.
+        let llvm_function_type = return_type.fn_type(
+            &[
+                self.general_llvm_pointer_type().into(),
+                self.general_llvm_pointer_type().into(),
+            ],
+            false,
+        );
+        let llvm_function_value = self.module.add_function(name, llvm_function_type, None);
+        // Add a basic block to the function.
+        let llvm_function_entry_basic_block = self
+            .context
+            .append_basic_block(llvm_function_value, "entry");
+        self.builder
+            .position_at_end(llvm_function_entry_basic_block);
+
+        llvm_function_value
+    }
+
     fn codegen_capturing(
         &self,
-        free_debruijn_indexes: &[DeBruijnIndex],
+        free_debruijn_indexes: &HashSet<DeBruijnIndex>,
         local: &environment::local::Environment,
     ) -> PointerValue<'ctx> {
         // Build the `captures` struct.
         let llvm_captures_struct_type = self.context.struct_type(
-            vec![self.llvm_pointer_type().into(); free_debruijn_indexes.len()].as_slice(),
+            vec![self.general_llvm_pointer_type().into(); free_debruijn_indexes.len()].as_slice(),
             false,
         );
         let llvm_captures_struct_ptr = self
@@ -672,7 +713,7 @@ impl<'ctx> Context<'ctx> {
                 let llvm_previous_basic_block = self.builder.get_insert_block().unwrap();
 
                 let llvm_function = self.initialize_curried_llvm_function(
-                    &self.llvm_pointer_type(),
+                    &self.general_llvm_pointer_type(),
                     match name {
                         Name::Named(name) => name,
                         Name::Anonymous => Self::llvm_anonymous_function_name(),
@@ -738,7 +779,7 @@ impl<'ctx> Context<'ctx> {
 
                 let casted_return_value = self.builder.build_bitcast(
                     return_value,
-                    self.llvm_pointer_type(),
+                    self.general_llvm_pointer_type(),
                     "return_i8_pointer",
                 );
 
@@ -755,30 +796,6 @@ impl<'ctx> Context<'ctx> {
             }
             _ => unreachable!(),
         }
-    }
-
-    fn initialize_curried_llvm_function(
-        &self,
-        return_type: &dyn BasicType<'ctx>,
-        name: &str,
-    ) -> FunctionValue<'ctx> {
-        // Create the function for this constructor.
-        let llvm_function_type = return_type.fn_type(
-            &[
-                self.llvm_pointer_type().into(),
-                self.llvm_pointer_type().into(),
-            ],
-            false,
-        );
-        let llvm_function_value = self.module.add_function(name, llvm_function_type, None);
-        // Add a basic block to the function.
-        let llvm_function_entry_basic_block = self
-            .context
-            .append_basic_block(llvm_function_value, "entry");
-        self.builder
-            .position_at_end(llvm_function_entry_basic_block);
-
-        llvm_function_value
     }
 
     fn codegen_lambda_struct(
@@ -830,19 +847,6 @@ impl<'ctx> Context<'ctx> {
         llvm_lambda_struct_ptr
     }
 
-    fn is_struct_pointer(pointer: &PointerValue) {
-        assert!(matches!(
-            pointer.get_type().get_element_type(),
-            AnyTypeEnum::StructType(_)
-        ));
-    }
-
-    fn codegen_pointer_to_empty_struct(&self) -> PointerValue<'ctx> {
-        self.builder
-            .build_malloc(self.context.struct_type(&[], false), "empty_struct")
-            .unwrap()
-    }
-
     fn codegen_exit_with_failure(&self) {
         let llvm_int_type = self.context.i32_type();
         self.builder.build_call(
@@ -859,6 +863,44 @@ impl<'ctx> Context<'ctx> {
         self.builder.build_unreachable();
     }
 
+    fn general_llvm_null_pointer(&self) -> PointerValue<'ctx> {
+        self.general_llvm_pointer_type().const_null()
+    }
+
+    fn general_llvm_pointer_type(&self) -> PointerType<'ctx> {
+        self.context.i8_type().ptr_type(AddressSpace::Generic)
+    }
+
+    fn general_llvm_function_pointer_type(&self) -> PointerType<'ctx> {
+        self.general_llvm_pointer_type()
+            .fn_type(
+                &[
+                    self.general_llvm_pointer_type().into(),
+                    self.general_llvm_pointer_type().into(),
+                ],
+                false,
+            )
+            .ptr_type(AddressSpace::Generic)
+    }
+
+    fn general_llvm_function_struct_pointer_type(&self) -> PointerType<'ctx> {
+        self.context
+            .struct_type(
+                &[
+                    self.general_llvm_function_pointer_type().into(),
+                    self.general_llvm_pointer_type().into(),
+                ],
+                false,
+            )
+            .ptr_type(AddressSpace::Generic)
+    }
+
+    fn codegen_pointer_to_empty_struct(&self) -> PointerValue<'ctx> {
+        self.builder
+            .build_malloc(self.context.struct_type(&[], false), "empty_struct")
+            .unwrap()
+    }
+
     fn llvm_anonymous_function_name() -> &'static str {
         "anonymous_lambda"
     }
@@ -867,13 +909,15 @@ impl<'ctx> Context<'ctx> {
         &self,
         term: &Term,
         max_bound_debruijn_index: DeBruijnIndex,
-    ) -> Vec<DeBruijnIndex> {
+    ) -> HashSet<DeBruijnIndex> {
         match term {
             Term::DeBruijnIndex(debruijn_index) => {
                 if (*debruijn_index) > max_bound_debruijn_index {
-                    vec![debruijn_index - max_bound_debruijn_index - 1]
+                    let mut set = HashSet::new();
+                    set.insert(debruijn_index - max_bound_debruijn_index - 1);
+                    set
                 } else {
-                    vec![]
+                    HashSet::new()
                 }
             }
             Term::Lambda { body, .. } => {
@@ -899,15 +943,23 @@ impl<'ctx> Context<'ctx> {
                     })
                     .collect()
             }
-            Term::Constant(_)
-            | Term::Constructor(_, _)
-            | Term::Fixpoint { .. }
-            | Term::Application { .. } => vec![],
+            Term::Constant(_) | Term::Constructor(_, _) => HashSet::new(),
+            Term::Application { function, argument } => {
+                let mut free_indexes =
+                    self.free_variables_helper(&**function, max_bound_debruijn_index);
+                free_indexes.extend(
+                    &mut self
+                        .free_variables_helper(&**argument, max_bound_debruijn_index)
+                        .iter(),
+                );
+                free_indexes
+            }
+            Term::Fixpoint { .. } => todo!("Fixpoint"),
             _ => unreachable!("{:#?}", term),
         }
     }
 
-    fn free_variables(&self, lambda: &Term, recursive_function: bool) -> Vec<DeBruijnIndex> {
+    fn free_variables(&self, lambda: &Term, recursive_function: bool) -> HashSet<DeBruijnIndex> {
         match lambda {
             Term::Lambda { body, .. } => {
                 self.free_variables_helper(body, if recursive_function { 1 } else { 0 })
@@ -918,12 +970,15 @@ impl<'ctx> Context<'ctx> {
 
     // Codegen llvm function for each constructor.
     // TODO: Enable curried constructors.
-    fn codegen_constructor_function(
+    fn codegen_constructor_value(
         &self,
         constructor_index: u8,
         constructor_llvm_name: &str,
         constructor_llvm_struct_type: StructType<'ctx>,
-    ) -> PointerValue<'ctx> {
+    ) -> ConstructorFunction<'ctx> {
+        let is_zero_argument_constructor =
+            constructor_llvm_struct_type.get_field_types().len() == 1;
+
         let llvm_function = self.initialize_curried_llvm_function(
             &constructor_llvm_struct_type.ptr_type(AddressSpace::Generic),
             constructor_llvm_name,
@@ -1003,8 +1058,14 @@ impl<'ctx> Context<'ctx> {
 
         llvm_function.verify(true);
 
+        let llvm_function_pointer = llvm_function.as_global_value().as_pointer_value();
+
         // Return a pointer to this constructor.
-        llvm_function.as_global_value().as_pointer_value()
+        if is_zero_argument_constructor {
+            ConstructorFunction::ZeroArgumentFunctionPointer(llvm_function_pointer)
+        } else {
+            ConstructorFunction::FunctionPointer(llvm_function_pointer)
+        }
     }
 
     pub fn constructor_llvm_name(inductive_name: &str, constructor_name: &str) -> String {
@@ -1017,6 +1078,8 @@ impl<'ctx> Context<'ctx> {
         accumulator: &mut Vec<BasicTypeEnum<'ctx>>,
     ) {
         match constructor_type {
+            Term::DeBruijnIndex(_) => accumulator.push(self.general_llvm_pointer_type().into()),
+            Term::Sort(_) => (),
             Term::DependentProduct {
                 parameter_type,
                 return_type,
@@ -1025,14 +1088,17 @@ impl<'ctx> Context<'ctx> {
                 self.codegen_constructor_type_helper(parameter_type, accumulator);
                 self.codegen_constructor_type_helper(return_type, accumulator);
             }
+            Term::Application { function, .. } => {
+                self.codegen_constructor_type_helper(function, accumulator);
+            }
             Term::Inductive(name) => {
                 accumulator.push(self.global.lookup_inductive_llvm_type(name).into());
             }
-            _ => panic!(),
+            _ => unreachable!("{:#?}", constructor_type),
         }
     }
 
-    fn codegen_constructor_type(
+    fn codegen_constructor_struct_type(
         &self,
         constructor_llvm_name: &str,
         constructor_type: &Term,
@@ -1057,14 +1123,14 @@ impl<'ctx> Context<'ctx> {
         let constructor_llvm_name = Self::constructor_llvm_name(inductive_name, &constructor.name);
 
         let constructor_llvm_type =
-            self.codegen_constructor_type(&constructor_llvm_name, &constructor.typ);
+            self.codegen_constructor_struct_type(&constructor_llvm_name, &constructor.typ);
 
         self.global.add_constructor(
             inductive_name,
             environment::global::Constructor {
                 name: constructor.name.clone(),
                 llvm_struct_type: constructor_llvm_type,
-                llvm_function: self.codegen_constructor_function(
+                llvm_function: self.codegen_constructor_value(
                     constructor_index,
                     &constructor_llvm_name,
                     constructor_llvm_type,
@@ -1206,7 +1272,6 @@ mod tests {
     }
 
     #[test]
-    // #[ignore]
     fn nat_add() {
         test_hir(&examples::nat_add());
     }
@@ -1429,7 +1494,7 @@ mod tests {
                 },
                 false
             ),
-            expected_indexes
+            HashSet::from_iter(expected_indexes)
         );
     }
 
@@ -1449,12 +1514,15 @@ mod tests {
                         name: Name::Anonymous,
                         parameter_name: Name::Anonymous,
                         parameter_type: Box::new(unit_term),
-                        body: Box::new(Term::DeBruijnIndex(debruijn_index))
+                        body: Box::new(Term::Application {
+                            function: Box::new(Term::DeBruijnIndex(debruijn_index)),
+                            argument: Box::new(Term::DeBruijnIndex(debruijn_index))
+                        }),
                     })
                 },
                 false
             ),
-            expected_indexes
+            HashSet::from_iter(expected_indexes)
         );
     }
 
@@ -1474,7 +1542,7 @@ mod tests {
                 },
                 true
             ),
-            expected_indexes
+            HashSet::from_iter(expected_indexes)
         );
     }
 
