@@ -1,0 +1,50 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>joehendrix/lean-sat-checker</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>joehendrix/lean-sat-checker</h1>
+<p>A work in progress proof checker for LRAT files written in Lean.</p>
+<a href="https://github.com/joehendrix/lean-sat-checker">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean SAT Proof Checker</h3>
+<p dir="auto">This is an exploratory effort to build a proof checker for various formats
+used by the SAT community.  Currently, we have focused on the <a href="https://www.cs.utexas.edu/~marijn/publications/lrat.pdf" rel="nofollow">LRAT SAT Proof format</a>.</p>
+<h4 dir="auto">Building</h4>
+<p dir="auto">To build the tool, you should follow the instructions in the
+<a href="https://leanprover.github.io/lean4/doc/" rel="nofollow">Lean manual</a> for installing
+Lean 4 including the <code>lake</code> build tool.
+The main binary can then be built by running:</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="% lake build"><pre>% lake build</pre></div>
+<p dir="auto">This will put the binary in <code>./build/bin/sat-checker</code>.</p>
+<h4 dir="auto">Checking a DIMACS file</h4>
+<p dir="auto">To check if a dimacs file is valid, you can use the <code>dimacs</code> command:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="% ./build/bin/sat-checker dimacs <dimacsPath>"><pre>% ./build/bin/sat-checker dimacs <dimacsPath></pre></div>
+<h4 dir="auto">Checking a lrat proof</h4>
+<p dir="auto">To check a proof, use the <code>lrat</code> command:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="% ./build/bin/sat-checker lrat <dimacsFile> <lratFile>"><pre>% ./build/bin/sat-checker lrat <dimacsFile> <lratFile></pre></div>
+<p dir="auto">As an example, this checks one of the handcrafted proofs:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="% ./build/bin/sat-checker lrat examples/handcrafted/lrat-fig1.dimacs examples/handcrafted/lrat-fig1.lrat"><pre>% ./build/bin/sat-checker lrat examples/handcrafted/lrat-fig1.dimacs examples/handcrafted/lrat-fig1.lrat</pre></div>
+</article></div></main>
+</body>
+</html>
