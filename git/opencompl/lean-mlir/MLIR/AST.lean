@@ -50,19 +50,11 @@ instance : Pretty BBName where
 deriving instance DecidableEq for BBName
 
 inductive Dimension
-| Known: Int -> Dimension
+| Known: Nat -> Dimension
 | Unknown: Dimension
 
 deriving instance DecidableEq for Dimension
 
-inductive MLIRTy : Type where
-| fn : MLIRTy -> MLIRTy -> MLIRTy
-| int : Int -> MLIRTy
-| float: Int -> MLIRTy
-| tuple : List MLIRTy -> MLIRTy
-| vector: List Dimension -> MLIRTy -> MLIRTy
-| tensor: List Dimension -> MLIRTy -> MLIRTy
-| user: String -> MLIRTy -- user defined type
 
 inductive SSAVal : Type where
   | SSAVal : String -> SSAVal
@@ -71,16 +63,51 @@ deriving instance DecidableEq for SSAVal
 
 inductive TensorElem := 
 | int: Int -> TensorElem
+| float: Float -> TensorElem
+| bool: Bool -> TensorElem
 | nested: List TensorElem -> TensorElem
+| empty: TensorElem
 
+mutual
+
+inductive MemrefLayoutSpec : Type where 
+| stride: (offset: Dimension) -> (stride: List Dimension) -> MemrefLayoutSpec
+| attr: AttrVal -> MemrefLayoutSpec
+
+inductive MLIRTy : Type where
+| fn : MLIRTy -> MLIRTy -> MLIRTy
+| int : Int -> MLIRTy
+| float: Int -> MLIRTy
+| index:  MLIRTy
+| tuple : List MLIRTy -> MLIRTy
+| vector: (fixed: (List Int)) -> (scaled: (List Int)) -> MLIRTy -> MLIRTy
+| tensorRanked: List Dimension -> MLIRTy -> MLIRTy
+| tensorUnranked: MLIRTy -> MLIRTy
+| memrefRanked: (dims: List Dimension) -> (t: MLIRTy) -> 
+  (layout: Option MemrefLayoutSpec) -> (memspace: Option AttrVal) -> MLIRTy
+| memrefUnranked:  (t: MLIRTy) ->  (memspace: Option AttrVal) -> MLIRTy
+| user: String -> MLIRTy -- user defined type
+
+
+-- | TODO: factor Symbol out from AttrVal
 inductive AttrVal : Type where
 | symbol: String -> AttrVal -- symbol ref attr
 | str : String -> AttrVal
 | int : Int -> MLIRTy -> AttrVal
+| bool : Bool -> AttrVal
+| float : Float -> MLIRTy -> AttrVal
 | type :MLIRTy -> AttrVal
 | dense: TensorElem -> MLIRTy -> AttrVal -- dense<10> : vector<i32>
 | affine: AffineMap -> AttrVal
 | list: List AttrVal -> AttrVal
+-- | guaranteee: both components will be AttrVal.Symbol.
+-- | TODO: factor symbols out.
+| nestedsymbol: AttrVal -> AttrVal -> AttrVal 
+| alias: String -> AttrVal
+| dict: AttrDict -> AttrVal
+| opaque: (dialect: String) -> (value: String) -> AttrVal
+| opaqueElements: (dialect: String) -> (value: String) -> (type: MLIRTy) -> AttrVal
+| unit: AttrVal
 
 -- https://mlir.llvm.org/docs/LangRef/#attributes
 -- | TODO: add support for mutually inductive records / structures
@@ -91,6 +118,7 @@ inductive AttrEntry : Type where
 
 inductive AttrDict : Type := 
 | mk: List AttrEntry -> AttrDict
+end
 
 
 mutual
@@ -106,7 +134,7 @@ inductive Op : Type where
       -> Op
 
 inductive BasicBlockStmt : Type where
-| StmtAssign : SSAVal -> Op -> BasicBlockStmt
+| StmtAssign : SSAVal -> (ix: Option Int) -> Op ->BasicBlockStmt
 | StmtOp : Op -> BasicBlockStmt
 
 
@@ -167,14 +195,23 @@ def MLIRTy.beq (t1 t2: MLIRTy): Bool :=
       n1 == n2
   | MLIRTy.float n1, MLIRTy.float n2 =>
       n1 == n2
+  | MLIRTy.index, MLIRTy.index =>
+      true
   | MLIRTy.tuple [], MLIRTy.tuple [] =>
       true
   | MLIRTy.tuple (t1::l1), MLIRTy.tuple (t2::l2) =>
       beq t1 t2 && beq (MLIRTy.tuple l1) (MLIRTy.tuple l2)
-  | MLIRTy.vector l1 t1, MLIRTy.vector l2 t2 =>
+  | MLIRTy.vector fixed1 scaled1 t1, MLIRTy.vector fixed2 scaled2 t2 =>
+      fixed1 = fixed2 && scaled1 = scaled2 && beq t1 t2
+  | MLIRTy.tensorRanked l1 t1, MLIRTy.tensorRanked l2 t2 =>
       l1 == l2 && beq t1 t2
-  | MLIRTy.tensor l1 t1, MLIRTy.tensor l2 t2 =>
-      l1 == l2 && beq t1 t2
+  | MLIRTy.tensorUnranked t1, MLIRTy.tensorUnranked t2 =>
+      beq t1 t2
+  | MLIRTy.memrefRanked dims1 t1 _ _, MLIRTy.memrefRanked dims2 t2 _ _ =>
+      -- | TODO: MLIRTy.beq: Also compare memref settings?
+      dims1 == dims2 && beq t1 t2
+  | MLIRTy.memrefUnranked t1 _, MLIRTy.memrefUnranked t2 _ =>
+      beq t1 t2
   | MLIRTy.user n1, MLIRTy.user n2 =>
       n1 == n2
   | _, _ =>
@@ -193,58 +230,107 @@ instance : Pretty Dimension where
   | Dimension.Unknown => "?"
   | Dimension.Known i => doc i
 
-partial instance :  Pretty MLIRTy where
-  doc (ty: MLIRTy) :=
-    let rec  go (ty: MLIRTy) :=  
-    match ty with
-    | MLIRTy.user k => [doc| "!"k]
-    | MLIRTy.int k => [doc| "i"k]
-    | MLIRTy.float k => [doc| "f"k]
-    | MLIRTy.tuple ts => [doc| "(" (ts.map go),* ")" ]
-    | MLIRTy.fn dom codom => (go dom) ++ " -> " ++ (go codom)
-    | MLIRTy.vector dims ty => "vector<" ++ (intercalate_doc dims "x") ++ "x" ++ go ty ++ ">"
-    | MLIRTy.tensor dims ty => "tensor<" ++ (intercalate_doc dims "x") ++ "x" ++ go ty ++ ">"
-    go ty
-
 
 partial instance : Pretty TensorElem where
   doc (t: TensorElem) := 
     let rec go (t: TensorElem) := 
       match t with
        | TensorElem.int i => doc i
+       | TensorElem.bool b => doc b
+       | TensorElem.float f => doc f
        | TensorElem.nested ts => [doc| "["  (ts.map go),* "]" ] 
+       | TensorElem.empty => ""
     go t
 
-partial instance : Pretty AttrVal where
- doc (v: AttrVal) := 
-  let rec go (v: AttrVal) :=
+-- | TODO: allow typeclass instances inside mutual blocks
+mutual
+
+partial def docMemrefLayoutSpec(spec: MemrefLayoutSpec) : Doc :=
+match spec with
+| MemrefLayoutSpec.stride offset strides => [doc| "offset:" offset ", strides: " "[" (strides),* "]"] 
+|  MemrefLayoutSpec.attr v => docAttrVal v
+
+
+partial def docMlirTy(ty: MLIRTy) : Doc := 
+    let rec  go (ty: MLIRTy) :=  
+    match ty with
+    | MLIRTy.user k => [doc| "!"k]
+    | MLIRTy.int k => [doc| "i"k]
+    | MLIRTy.float k => [doc| "f"k]
+    | MLIRTy.index => [doc| "index"]
+    | MLIRTy.tuple ts => [doc| "(" (ts.map go),* ")" ]
+    | MLIRTy.fn dom codom => (go dom) ++ " -> " ++ (go codom)
+    | MLIRTy.vector fixed scaled ty => 
+      let docFixed := match fixed with 
+        | [] => "" 
+        | _ => (intercalate_doc fixed "×") ++ "×"
+      let docScaling := match scaled with 
+        | [] => ""
+        | _ => (intercalate_doc fixed "×") ++ "×"
+      [doc| "vector<" (docFixed) (docScaling) (go ty) ">"]
+    | MLIRTy.memrefRanked dims ty layout? memspace? => 
+      let docLayout := match layout? with | some x => [doc| "," (docMemrefLayoutSpec x)] | none => ""
+      let docMemspace := match memspace? with | some x => [doc| "," (docAttrVal x)] | none => ""
+      [doc| "memref<" (intercalate_doc dims "x") "x" (go ty) (docLayout)  (docMemspace) ">"]
+    | MLIRTy.memrefUnranked ty memspace? => 
+      let docMemspace := match memspace? with | some x => [doc| "," (docAttrVal x)] | none => ""
+      [doc| "memref<" "*x" (go ty) (docMemspace) ">"]
+    | MLIRTy.tensorRanked dims ty => "tensor<" ++ (intercalate_doc dims "x") ++ "x" ++ go ty ++ ">"
+    | MLIRTy.tensorUnranked ty => "tensor<" ++ "*x" ++ go ty ++ ">"
+    go ty
+
+partial def docAttrVal (v: AttrVal) := 
    match v with
    | AttrVal.symbol s => "@" ++ doc_surround_dbl_quot s
+   | AttrVal.nestedsymbol s t => (docAttrVal s) ++ "::" ++ (docAttrVal t)
    | AttrVal.str str => doc_surround_dbl_quot str 
-   | AttrVal.type ty => doc ty
-   | AttrVal.int i ty => doc i ++ " : " ++ doc ty
-   | AttrVal.dense elem ty => "dense<" ++ doc elem ++ ">" ++ ":" ++ doc ty
+   | AttrVal.type ty => docMlirTy ty
+   | AttrVal.int i ty => doc i ++ " : " ++ docMlirTy ty
+   | AttrVal.bool b => if b then "true" else "false"
+   | AttrVal.float f ty => doc f ++ " : " ++ docMlirTy ty
+   | AttrVal.dense elem ty => "dense<" ++ doc elem ++ ">" ++ ":" ++ docMlirTy ty
    | AttrVal.affine aff => "affine_map<" ++ doc aff ++ ">" 
-   | AttrVal.list xs => "[" ++ Doc.Nest (vintercalate_doc (xs.map go) ", ") ++ "]"
-  go v
+   | AttrVal.list xs => "[" ++ Doc.Nest (vintercalate_doc (xs.map docAttrVal) ", ") ++ "]"
+   | AttrVal.alias a => "#" ++ a
+   | AttrVal.dict d => docAttrDict d 
+   | AttrVal.opaque dialect val => [doc| "#" (dialect) "<"  (val) ">"]
+   | AttrVal.opaqueElements dialect val ty => [doc| "#opaque<" (dialect) ","  (val) ">" ":" (docMlirTy ty)]
+   | AttrVal.unit => "()"
+
+partial def docAttrEntry (a: AttrEntry) := 
+    match a with
+    | AttrEntry.mk k v => k ++ " = " ++ (docAttrVal v)
+
+
+partial def docAttrDict (v: AttrDict) :=
+   match v with
+   | AttrDict.mk attrs => 
+        if List.isEmpty attrs
+        then Doc.Text ""
+        else "{" ++ Doc.Nest (vintercalate_doc (attrs.map docAttrEntry)  ", ")  ++ "}" 
+end
+
+partial instance : Pretty MemrefLayoutSpec where
+ doc  := docMemrefLayoutSpec
+
+partial instance : Pretty MLIRTy where
+ doc := docMlirTy
+
+partial instance : Pretty AttrVal where
+ doc (v: AttrVal) := docAttrVal v
 
 instance : Pretty AttrEntry where
-  doc (a: AttrEntry) := 
-    match a with
-    | AttrEntry.mk k v => k ++ " = " ++ (doc v)
+  doc (a: AttrEntry) := docAttrEntry a 
+
+
+ instance : Pretty AttrDict where
+   doc v := docAttrDict v
 
 instance : Pretty AttrDefn where
   doc (v: AttrDefn) := 
   match v with
   | AttrDefn.mk name val => "#" ++ name ++ " := " ++ (doc val)
  
-
- instance : Pretty AttrDict where
-   doc v := match v with
-   | AttrDict.mk attrs => 
-        if List.isEmpty attrs
-        then Doc.Text ""
-        else "{" ++ Doc.Nest (vintercalate_doc attrs ", ")  ++ "}" 
 
 instance: Coe String SSAVal where
   coe (s: String) := SSAVal.SSAVal s
@@ -265,9 +351,11 @@ instance : Coe MLIRTy AttrVal where
   coe (t: MLIRTy) := AttrVal.type t
 
 
+-- | create a dense vector with values 'xs' and type vector<len(xs)xity>
 def AttrVal.dense_vector (xs: List Int) (ity: MLIRTy := MLIRTy.int 32): AttrVal :=
-  let vshape := [Dimension.Known (xs.length)]
-  let vty := MLIRTy.vector vshape ity 
+  let fixedShape := [Int.ofNat xs.length]
+  let scaledShape := []
+  let vty := MLIRTy.vector fixedShape scaledShape ity 
   AttrVal.dense xs vty
 
 instance : Coe (String × AttrVal) AttrEntry where 
@@ -367,8 +455,10 @@ partial def op_to_doc (op: Op): Doc :=
 
 partial def bb_stmt_to_doc (stmt: BasicBlockStmt): Doc :=
   match stmt with
-  | BasicBlockStmt.StmtAssign lhs rhs => 
+  | BasicBlockStmt.StmtAssign lhs none rhs => 
       [doc| lhs "="  (op_to_doc rhs) ]
+  | BasicBlockStmt.StmtAssign lhs (some ix) rhs => 
+      [doc| lhs ":" ix "="  (op_to_doc rhs) ]
   | BasicBlockStmt.StmtOp rhs => (op_to_doc rhs)
 
 
@@ -646,7 +736,7 @@ def blocklens_update {f: Type -> Type} {t: Type}[Applicative f] (lens: BasicBloc
         | none => Pure.pure src 
         | some stmt => 
             let stmt := match stmt with 
-            | BasicBlockStmt.StmtAssign lhs op => (BasicBlockStmt.StmtAssign lhs) <$> (oplens_update oplens transform op)  
+            | BasicBlockStmt.StmtAssign lhs ix op => (BasicBlockStmt.StmtAssign lhs ix) <$> (oplens_update oplens transform op)  
             | BasicBlockStmt.StmtOp op => BasicBlockStmt.StmtOp <$> (oplens_update oplens transform op)
             (fun stmt => BasicBlock.mk name args (ops.set ix stmt)) <$> stmt
 end

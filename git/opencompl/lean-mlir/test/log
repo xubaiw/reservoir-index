@@ -1,0 +1,16 @@
+make -C mlir-files/
+make[1]: Entering directory '/home/siddu_druid/work/lean-mlir/test/mlir-files'
+go run make-mlir-files-to-test.go 
+make[1]: Leaving directory '/home/siddu_druid/work/lean-mlir/test/mlir-files'
+go run run-mlir-round-trip-tests.go
+PROGRESS    0/ 163: 0.00 | % | num success:    0 | num failures:    0  | success ratio: 0.00
+PROGRESS    1/ 163: 0.61 | % | num success:    1 | num failures:    0  | success ratio: 0.61
+PROGRESS    2/ 163: 1.23 | % | num success:    2 | num failures:    0  | success ratio: 1.23
+PROGRESS    3/ 163: 1.84 | % | num success:    2 | num failures:    1  | success ratio: 1.23
+PROGRESS    4/ 163: 2.45 | % | num success:    3 | num failures:    1  | success ratio: 1.84
+PROGRESS    5/ 163: 3.07 | % | num success:    4 | num failures:    1  | success ratio: 2.45
+PROGRESS    6/ 163: 3.68 | % | num success:    4 | num failures:    2  | success ratio: 2.45
+PROGRESS    7/ 163: 4.29 | % | num success:    4 | num failures:    3  | success ratio: 2.45
+PROGRESS    8/ 163: 4.91 | % | num success:    5 | num failures:    3  | success ratio: 3.07
+PROGRESS    9/ 163: 5.52 | % | num success:    5 | num failures:    4  | success ratio: 3.07
+PROGRESS   10/ 163: 6.13 | % | num success:    6 | num failures:    4  | success ratio: 3.68

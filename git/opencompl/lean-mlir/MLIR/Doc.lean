@@ -44,8 +44,18 @@ instance : Pretty Doc where
 instance : Pretty String where
   doc := Doc.Text
 
+instance : Pretty Nat where
+  doc := Doc.Text ∘ toString
+
 instance : Pretty Int where
   doc := Doc.Text ∘ toString
+
+instance : Pretty Bool where
+  doc := Doc.Text ∘ toString
+
+
+instance : Pretty Float where
+  doc f := Doc.Text (toString (repr f)) 
 
 instance : Pretty Char where
   doc := Doc.Text ∘ toString
@@ -59,6 +69,14 @@ instance : Coe String Doc where
 
 instance : Append Doc where 
   append := Doc.Concat
+
+
+instance : HAppend Doc String Doc where 
+  hAppend d s := Doc.Concat d (Doc.Text s)
+
+instance : HAppend String Doc Doc where 
+  hAppend s d:= Doc.Concat (Doc.Text s) d
+
 
 def doc_dbl_quot : Doc :=  doc '"'
 
@@ -146,7 +164,7 @@ syntax "[escape|" term "]" : docLeaf
 
 --- | string
 macro_rules 
-| `([docLeaf| $x:strLit ]) => do 
+| `([docLeaf| $x:str ]) => do 
     `(Doc.Text $x)
 
 def testDocStr : Doc := [docLeaf|"x"]

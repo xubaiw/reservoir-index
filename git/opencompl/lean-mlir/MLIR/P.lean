@@ -253,6 +253,13 @@ def pident? (s: String) : P Unit := do
    else perror $ "expected |" ++ s ++ "| but found |" ++ i ++ "|"
 
 
+def pnat : P Nat := do
+  eat_whitespace
+  let name <- ptakewhile (fun c => c.isDigit)
+  match name.toNat? with
+   | some num => return num
+   | none => perror $ "expected natural, found |" ++ name ++ "|."
+
 def pnumber : P Int := do
   eat_whitespace
   let name <- ptakewhile (fun c => c.isDigit)
@@ -358,7 +365,7 @@ partial def find_newline_in_dir
  if pos <= 0
  then 0
  else if pos >= s.length -1  then s.length - 1
- else if s.get pos.toNat == '\n' then pos - dir
+ else if s.get (Pos.mk pos.toNat) == '\n' then pos - dir
  else find_newline_in_dir s (pos + dir) dir
 
 

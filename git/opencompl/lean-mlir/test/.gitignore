@@ -1,3 +1,6 @@
+1-canon/
+1-gen/
+1-failures/
 *~
 \#*
 .#*
@@ -28,3 +31,5 @@ build/
 examples/.lit_test_times.txt
 examples/Output
 temp.mlir
+test.fasl
+mlir-files/

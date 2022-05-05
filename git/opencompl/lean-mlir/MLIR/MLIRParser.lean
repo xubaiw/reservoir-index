@@ -43,17 +43,17 @@ partial def pdim : P Dimension := do
   if (<- ppeek? '?')
   then return Dimension.Unknown
   else do 
-    let sz <- pnumber
+    let sz <- pnat
     return Dimension.Known sz
 
 partial def ptype_vector : P MLIRTy := do
   pident? "vector"
   pconsume '<'
-  let sz <- pdim
+  let sz <- pnumber
   pconsume 'x'
   let ty <- ptype ()
   pconsume '>'
-  return MLIRTy.vector [sz] ty
+  return MLIRTy.vector [sz] [] ty
 
 -- !<ident>.<ident>  
 partial def puser (u: Unit): P MLIRTy := do
@@ -175,7 +175,8 @@ partial def popcall (u: Unit) : P BasicBlockStmt := do
      let val <- pssaval
      pconsume '='
      let op <- pop u
-     return (BasicBlockStmt.StmtAssign val op)
+     let index := none -- for syntax %val:ix = ...
+     return (BasicBlockStmt.StmtAssign val index op)
    else do
      let op <- pop u
      return (BasicBlockStmt.StmtOp op)
