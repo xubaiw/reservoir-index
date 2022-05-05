@@ -60,6 +60,7 @@
  "javra/iit",
  "joehendrix/lean-arith-solver",
  "joehendrix/lean-crypto",
+ "joehendrix/lean-sat-checker",
  "justinfargnoli/koi",
  "langfield/nflow",
  "larsk21/iris-lean",
