@@ -1,7 +1,10 @@
-import SciLean.Basic
+-- import SciLean.Core.Functions
 import SciLean.Mechanics
+import SciLean.Operators.ODE
+import SciLean.Solver 
+import SciLean.Tactic.LiftLimit
+import SciLean.Tactic.FinishImpl
 
-set_option synthInstance.maxHeartbeats 5000
 
 open SciLean
 
@@ -9,12 +12,12 @@ abbrev V := ℝ × ℝ
 
 def H (m k : ℝ) (x p : V) := (1/(2*m)) * ∥p∥² + k/2 * ∥x∥²
 
+-- set_option trace.Meta.Tactic.simp.rewrite true in
 def solver (m k : ℝ) (steps : Nat)
   : Impl (ode_solve (HamiltonianSystem (H m k))) :=
 by
   -- Unfold Hamiltonian definition and compute gradients
-  simp[HamiltonianSystem, H]
-  simp[gradient, adjoint_differential, AtomicAdjointFun₂.adj₁, AtomicAdjointFun₂.adj₂, AtomicAdjointFun.adj]
+  simp [HamiltonianSystem, H]; unfold hold; simp
 
   -- Apply RK4 method
   rw [ode_solve_fixed_dt runge_kutta4_step]
@@ -44,4 +47,3 @@ def main : IO Unit := do
       if j < 10*(x.1+1) then
         IO.print "o"
     IO.println ""
-  
