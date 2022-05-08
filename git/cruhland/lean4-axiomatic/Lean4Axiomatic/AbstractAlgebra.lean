@@ -142,4 +142,31 @@ structure ExactlyOneOfThree (α β γ : Prop) : Prop where
   atLeastOne :   OneOfThree α β γ
   atMostOne  : ¬ TwoOfThree α β γ
 
+/--
+Swaps the middle two elements of a balanced four-element expression involving a
+single binary operation.
+
+The sort `α` and its binary operation `f` must form a commutative semigroup.
+
+**Named parameters**
+- `α`: the sort over which `f` operates.
+- `f`: the binary operation used in the expression.
+- `a`, `b`, `c`, `d`: the operands to `f` in the expression.
+
+**Class parameters**
+- `EqvOp α`: needed to express the identity between expressions.
+- `Associative f`, `Commutative f`: needed to rearrange the operands freely.
+- `Substitutive₂ f tc (· ≃ ·) (· ≃ ·)`: needed to rearrange subexpressions.
+-/
+theorem expr_xxfxxff_lr_swap_rl
+    {α : Sort u} {f : α → α → α} {a b c d : α} [EqvOp α]
+    [Associative f] [Commutative f] [Substitutive₂ f tc (· ≃ ·) (· ≃ ·)]
+    : f (f a b) (f c d) ≃ f (f a c) (f b d) := calc
+  f (f a b) (f c d) ≃ _ := AA.assoc
+  f a (f b (f c d)) ≃ _ := Eqv.symm (AA.substR AA.assoc)
+  f a (f (f b c) d) ≃ _ := AA.substR (AA.substL AA.comm)
+  f a (f (f c b) d) ≃ _ := AA.substR AA.assoc
+  f a (f c (f b d)) ≃ _ := Eqv.symm AA.assoc
+  f (f a c) (f b d) ≃ _ := Eqv.refl
+
 end AA

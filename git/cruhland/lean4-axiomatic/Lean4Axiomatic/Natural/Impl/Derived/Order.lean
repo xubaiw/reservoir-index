@@ -197,7 +197,7 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
     _ ≃ n + (m₁ + d) := Eqv.refl
     _ ≃ (n + m₁) + d := Eqv.symm AA.assoc
     _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
-  exact Addition.cancel_add ‹n + (m₁ + d) ≃ n + m₂›
+  exact AA.cancelL ‹n + (m₁ + d) ≃ n + m₂›
 
 def le_cancelL_add
     : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
@@ -219,7 +219,7 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
     _ ≃ n             := ‹m + d₂ ≃ n›
     _ ≃ n + 0         := Eqv.symm Addition.add_zero
-  have : d₁ + d₂ ≃ 0 := Addition.cancel_add ‹n + (d₁ + d₂) ≃ n + 0›
+  have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
   have ⟨(_ : d₁ ≃ 0), _⟩ := Addition.zero_sum_split ‹d₁ + d₂ ≃ 0›
   calc
     _ ≃ n      := Eqv.refl
@@ -316,7 +316,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         _ ≃ m := ‹n + step d ≃ m›
         _ ≃ n := Eqv.symm ‹n ≃ m›
         _ ≃ n + 0 := Eqv.symm Addition.add_zero
-      have : step d ≃ 0 := Addition.cancel_add ‹n + step d ≃ n + 0›
+      have : step d ≃ 0 := AA.cancelL ‹n + step d ≃ n + 0›
       exact absurd this Axioms.step_neq_zero
     show n < m
     apply Order.Base.lt_defn.mpr

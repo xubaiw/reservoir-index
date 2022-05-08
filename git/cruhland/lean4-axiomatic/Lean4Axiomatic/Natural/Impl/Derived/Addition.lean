@@ -143,6 +143,12 @@ def add_associative : AA.Associative (α := ℕ) (· + ·) := by
       _ ≃ step (n + (m + k)) := AA.subst₁ ih
       _ ≃ step n + (m + k)   := Eqv.symm Addition.step_add
 
+/--
+The right-hand sides of two equal sums are equal if their left-hand sides are.
+
+**Proof intuition**: the left-hand sides can be removed one `step` at a time by
+applying `step_injective` and finally `zero_add`, leaving the desired result.
+-/
 theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
   apply Axioms.ind_on (motive := λ n => n + m ≃ n + k → m ≃ k) n
   case zero =>
@@ -165,6 +171,17 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
       _ ≃ step n + m   := Eqv.symm Addition.step_add
       _ ≃ step n + k   := ‹step n + m ≃ step n + k›
       _ ≃ step (n + k) := Addition.step_add
+
+def add_cancelL
+    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+  cancel := λ (_ : True) => cancel_add
+}
+
+instance add_cancellative
+    : AA.Cancellative (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+  cancellativeL := add_cancelL
+  cancellativeR := AA.cancelR_from_cancelL add_cancelL
+}
 
 theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
   apply Axioms.cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
@@ -189,7 +206,7 @@ instance addition_derived : Addition.Derived ℕ where
   add_one_step := add_one_step
   add_commutative := add_commutative
   add_associative := add_associative
-  cancel_add := cancel_add
+  add_cancellative := add_cancellative
   zero_sum_split := zero_sum_split
 
 end Derived

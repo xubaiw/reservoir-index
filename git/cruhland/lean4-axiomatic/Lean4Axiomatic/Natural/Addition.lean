@@ -47,13 +47,10 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   add_associative : AA.Associative (α := ℕ) (· + ·)
 
   /--
-  If two equal sums of natural numbers have the same left operand, then their
-  right operands are also equal.
-
-  This is called the cancellation law because it allows the same quantity to be
-  removed (cancelled) from both sides of an equality of sums.
+  The same quantity can be removed (cancelled) from both sides of an equality
+  of sums.
   -/
-  cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k
+  add_cancellative : AA.Cancellative (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
 
   /--
   Both operands in a sum of natural numbers must be zero if the result is zero.
@@ -61,14 +58,15 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0
 
 attribute [instance] Addition.Derived.add_associative
+attribute [instance] Addition.Derived.add_cancellative
 attribute [instance] Addition.Derived.add_commutative
 attribute [instance] Addition.Derived.add_substitutive
 
 namespace Addition
 export Addition.Base (addOp step_add zero_add)
 export Addition.Derived (
-  add_associative add_commutative add_one_step add_step add_substitutive
-  add_zero cancel_add zero_sum_split
+  add_associative add_cancellative add_commutative add_one_step add_step
+  add_substitutive add_zero zero_sum_split
 )
 end Addition
 

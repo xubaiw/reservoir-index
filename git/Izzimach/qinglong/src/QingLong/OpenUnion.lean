@@ -1,0 +1,53 @@
+-- open union for use with Eff
+import Lean
+open Lean Elab Command Term Meta
+
+namespace openunion
+
+class ShowEff (t : Type → Type) where
+  effString : String
+
+
+def showType (t : Syntax) : TermElabM Expr := do
+  let ty ← elabType t
+  match ty with
+  | Expr.fvar id d   => pure <| mkStrLit <| toString ty --"Fvar " ++ (toString id.name)
+  | Expr.app f arg d => pure <| mkStrLit <| "App " ++ toString f ++ " " ++ toString arg
+  | _ => pure <| mkStrLit <| Expr.ctorName ty
+
+elab "reflType" t:term : term => showType t
+
+
+
+inductive OU : List (Type → Type) → Type → Type 1 where
+| Leaf : t x → OU (t :: effs) x
+| Cons : OU effs x → OU (t :: effs) x
+
+def asStringOU (ou : OU r α) : String := 
+  match ou with
+  | OU.Leaf l => "Leaf"
+  | OU.Cons c => "Node/" ++ asStringOU c
+
+instance [ToString x] : ToString (OU r x) where
+    toString := asStringOU
+
+-- the freer-simple library used an unsafeCoerce to convert (t v) to (t' v) since it had
+-- already verifired (t = t') by looking at the index in the OU. Here we use typeclasses
+-- to generate a sum type in OU
+
+class HasEffect (e : Type → Type) (effs : List (Type → Type)) where
+  inject : e α → OU effs α
+  project : OU effs α → Option (e α)
+
+instance : HasEffect (r : Type → Type) (r :: effs) where
+  inject := fun ea => OU.Leaf ea
+  project := fun ou => match ou with
+                       | OU.Leaf l => Option.some l
+                       | OU.Cons c => Option.none
+
+instance [HasEffect r effs] : HasEffect (r : Type → Type) (x :: effs) where
+  inject := fun ea => OU.Cons (HasEffect.inject ea)
+  project := fun ou => match ou with
+                       | OU.Leaf l => Option.none
+                       | OU.Cons c => HasEffect.project c
+
