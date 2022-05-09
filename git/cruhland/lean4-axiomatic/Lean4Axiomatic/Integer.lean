@@ -1,4 +1,6 @@
+import Lean4Axiomatic.Integer.Addition
 import Lean4Axiomatic.Integer.Core
+import Lean4Axiomatic.Integer.Multiplication
 
 /-!
 # Combined typeclass of all integer definitions and properties
@@ -6,7 +8,7 @@ import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic
 
-open Integer (Core)
+open Integer (Addition.Base Core Equality Multiplication.Base)
 
 /--
 The class of [integers](https://en.wikipedia.org/wiki/Integer).
@@ -19,11 +21,17 @@ required to construct an instance.
 **Named parameters**
 - `ℤ`: a type that obeys all of the properties provided by this class.
 -/
-class Integer (ℤ : Type) where
+class Integer (ℤ : Type) :=
+  toAddition : Addition.Base ℤ
   toCore : Core ℤ
+  toMultiplication : Multiplication.Base ℤ
 
 namespace Integer
 
 attribute [instance] toCore
+
+export Addition (addOp)
+export Equality (eqvOp)
+export Multiplication (mulOp)
 
 end Lean4Axiomatic.Integer

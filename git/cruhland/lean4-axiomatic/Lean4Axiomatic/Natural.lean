@@ -31,6 +31,8 @@ namespace Natural
 attribute [instance] toAddition
 attribute [instance] toCore
 attribute [instance] toMultiplication
+attribute [instance] toOrder
+attribute [instance] toSign
 
 export Addition (
   add_associative add_cancellative add_commutative add_one_step addOp add_step

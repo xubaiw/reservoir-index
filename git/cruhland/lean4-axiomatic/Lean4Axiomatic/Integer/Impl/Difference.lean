@@ -121,8 +121,56 @@ def core : Core (Difference ℕ) := {
   toEquality := equality
 }
 
+/--
+Addition of differences.
+
+**Definition intuition**: the sum of two differences should be the net effect
+of applying both of them.
+-/
+def add : Difference ℕ → Difference ℕ → Difference ℕ
+| a——b, c——d => (a + c)——(b + d)
+
+instance addOp : Add (Difference ℕ) := {
+  add := add
+}
+
+def addition : Addition.Base (Difference ℕ) := {
+  addOp := addOp
+}
+
+/--
+Multiplication of differences.
+
+**Definition intuition**: Geometry might be the best way to understand this
+definition. Let's interpret each difference as the sum of a _positive_ value
+(on the left) and a _negative_ value (on the right). Visualize this as a line
+segment divided into two subsegments, colored black and red, with lengths
+proportional to the positive and negative parts of the difference,
+respectively.
+
+The multiplication of two differences is then represented by a rectangle, where
+each difference gets a dimension. The rectangle is divided into four smaller
+rectangles, one for each combination of subsegments. The four regions are
+colored according to the rules for multiplication of signs: if both sides of a
+region are the same color, the region is colored black; if they are different
+colors, the region is colored red. The difference in area between the black and
+red regions is the result of the multiplication.
+-/
+def mul : Difference ℕ → Difference ℕ → Difference ℕ
+| a——b, c——d => (a * c + b * d)——(a * d + b * c)
+
+instance mulOp : Mul (Difference ℕ) := {
+  mul := mul
+}
+
+def multiplication : Multiplication.Base (Difference ℕ) := {
+  mulOp := mulOp
+}
+
 instance integer : Integer (Difference ℕ) := {
+  toAddition := addition
   toCore := core
+  toMultiplication := multiplication
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
