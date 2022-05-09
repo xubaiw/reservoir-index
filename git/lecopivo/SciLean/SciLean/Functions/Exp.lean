@@ -1,4 +1,4 @@
-import SciLean.Core.Functions
+import SciLean.Core
 
 namespace SciLean
 
@@ -8,5 +8,3 @@ namespace SciLean
     diff_simp  := dx * Math.exp x by sorry,
     hasAdjDiff := by constructor; infer_instance; simp; infer_instance done,
     adjDiff_simp := dx' * Math.exp x by simp[adjDiff] done
-  
-  

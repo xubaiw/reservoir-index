@@ -11,11 +11,7 @@ import SciLean.Core.Extra
 
 open Function SciLean
 
--- notation x "[[" i "]]" => PowType.powType.getOp x i
-
 variable {n : USize} [Nonempty (Idx n)]
-
-instance : Coe USize ℝ := ⟨λ n => n.toNat.toReal⟩
 
 def H (m k : ℝ) (x p : ℝ^n) : ℝ := 
   let Δx := (1 : ℝ)/(n : ℝ)
@@ -69,5 +65,3 @@ def main : IO Unit := do
           IO.print "."
 
       IO.println ""
-
-

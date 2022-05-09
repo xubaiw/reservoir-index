@@ -1,11 +1,5 @@
--- import SciLean.Core.IsSmooth
--- import SciLean.Core.IsLin
--- import SciLean.Core.HasAdjoint
-
-import SciLean.Core.Diff
-import SciLean.Core.Adjoint
-import SciLean.Core.AdjDiff
-import SciLean.Core.Inv
+import SciLean.Core.Mor
+import SciLean.Core.Fun
 
 namespace SciLean
 
@@ -15,9 +9,8 @@ namespace SciLean
 
 function_properties Prod.fst {X Y : Type} (xy : X × Y) : X
 argument xy [Vec X] [Vec Y]
-  isSmooth     := sorry,
   isLin        := sorry,
-  diff_simp    := dxy.1 by sorry
+  isSmooth, diff_simp, fwdDiff_simp
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (xy', 0) by sorry,
@@ -35,9 +28,8 @@ argument xy [Nonempty X] [Subsingleton Y] [Inhabited Y]
 
 function_properties Prod.snd {X Y : Type} (xy : X × Y) : Y
 argument xy [Vec X] [Vec Y]
-  isSmooth     := sorry, 
   isLin        := sorry,
-  diff_simp    := dxy.2 by sorry
+  isSmooth, diff_simp, fwdDiff_simp
 argument xy [SemiHilbert X] [SemiHilbert Y]
   hasAdjoint   := sorry,
   adj_simp     := (0, xy') by sorry,
