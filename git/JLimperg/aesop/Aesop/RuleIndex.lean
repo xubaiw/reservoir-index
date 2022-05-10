@@ -8,19 +8,19 @@ import Aesop.RuleIndex.Basic
 
 open Lean
 open Lean.Meta
-open Std (RBMap mkRBMap HashSet)
+open Std (RBMap mkRBMap PHashSet)
 
 namespace Aesop
 
-structure RuleIndex (α : Type) [Ord α] [Hashable α] where
+structure RuleIndex (α : Type) [BEq α] [Hashable α] where
   byTarget : DiscrTree α
   byHyp : DiscrTree α
-  unindexed : HashSet α
+  unindexed : PHashSet α
   deriving Inhabited
 
 namespace RuleIndex
 
-variable [Ord α] [Hashable α]
+variable [BEq α] [Hashable α]
 
 open MessageData in
 instance [ToMessageData α] : ToMessageData (RuleIndex α) where
@@ -42,18 +42,19 @@ def merge (ri₁ ri₂ : RuleIndex α) : RuleIndex α where
   byHyp := ri₁.byHyp.merge ri₂.byHyp
   unindexed := ri₁.unindexed.merge ri₂.unindexed
 
-instance : Append (RuleIndex α) :=
-  ⟨merge⟩
-
 @[specialize]
-def add (r : α) (imode : IndexingMode) (ri : RuleIndex α) :
+partial def add (r : α) (imode : IndexingMode) (ri : RuleIndex α) :
     RuleIndex α :=
   match imode with
-  | IndexingMode.unindexed => { ri with unindexed := ri.unindexed.insert r }
+  | IndexingMode.unindexed =>
+    { ri with unindexed := ri.unindexed.insert r }
   | IndexingMode.target keys =>
     { ri with byTarget := ri.byTarget.insertCore keys r }
   | IndexingMode.hyps keys =>
     { ri with byHyp := ri.byHyp.insertCore keys r }
+  | IndexingMode.or imodes =>
+    imodes.foldl (init := ri) λ ri imode =>
+      ri.add r imode
 
 def foldM [Monad m] (ri : RuleIndex α) (f : σ → α → m σ) (init : σ) : m σ :=
   match ri with
@@ -71,50 +72,50 @@ def size : RuleIndex α → Nat
   | { byHyp, byTarget, unindexed } =>
     byHyp.size + byTarget.size + unindexed.size
 
-@[specialize]
-def applicableByTargetRules (ri : RuleIndex α) (goal : MVarId)
-    (include? : α → Bool) : MetaM (Array (IndexMatchResult α)) :=
+-- May return duplicate `IndexMatchLocation`s.
+@[inline]
+private def applicableByTargetRules (ri : RuleIndex α) (goal : MVarId)
+    (include? : α → Bool) : MetaM (Array (α × Array IndexMatchLocation)) :=
   withMVarContext goal do
     let rules ← ri.byTarget.getUnify (← getMVarType goal)
-    return rules.filterMap λ r =>
+    let mut rs := Array.mkEmpty rules.size
+      -- Assumption: include? is true for most rules.
+    for r in rules do
       if include? r then
-        some { rule := r, matchLocations := #[IndexMatchLocation.target] }
-      else
-        none
+        rs := rs.push (r, #[.target])
+    return rs
 
-@[specialize]
-def applicableByHypRules (ri : RuleIndex α) (goal : MVarId)
-    (include? : α → Bool) : MetaM (Array (IndexMatchResult α)) :=
+-- May return duplicate `IndexMatchLocation`s.
+@[inline]
+private def applicableByHypRules (ri : RuleIndex α) (goal : MVarId)
+    (include? : α → Bool) : MetaM (Array (α × Array IndexMatchLocation)) :=
   withMVarContext goal do
     let mut rs := #[]
     for localDecl in ← getLCtx do
       if localDecl.isAuxDecl then continue
-      let rules ← ri.byHyp.getMatch localDecl.type
+      let rules ← ri.byHyp.getUnify localDecl.type
       for r in rules do
         if include? r then
-          let r :=
-            { rule := r, matchLocations := #[IndexMatchLocation.hyp localDecl] }
-          rs := rs.push r
+          rs := rs.push (r, #[.hyp localDecl])
     return rs
 
-@[specialize]
-def applicableUnindexedRules (ri : RuleIndex α) (include? : α → Bool) :
-    Array (IndexMatchResult α) := Id.run do
-  let mut rs := Array.mkEmpty ri.unindexed.size
-    -- Assumption: include? is true for most rules.
-  for r in ri.unindexed do
+-- May return duplicate `IndexMatchLocation`s.
+@[inline]
+private def applicableUnindexedRules (ri : RuleIndex α) (include? : α → Bool) :
+    Array (α × Array IndexMatchLocation) :=
+  -- Assumption: include? is true for most rules.
+  ri.unindexed.fold (init := Array.mkEmpty ri.unindexed.size) λ acc r =>
     if include? r then
-      rs := rs.push { rule := r, matchLocations := #[IndexMatchLocation.none] }
-  return rs
+      acc.push (r, #[.none])
+    else
+      acc
 
--- Returns the rules in the order given by `cmp` (which can be different from
--- the order given by `Ord α`). `cmp` must return `Ordering.eq` only for rules
--- which are really equal.
+-- Returns the rules in the order given by the `Ord α` instance.
 @[specialize]
-def applicableRules (ri : RuleIndex α) (goal : MVarId) (cmp : α → α → Ordering)
+def applicableRules [ord : Ord α] (ri : RuleIndex α) (goal : MVarId)
     (include? : α → Bool) : MetaM (Array (IndexMatchResult α)) := do
   instantiateMVarsInGoal goal
-  let mut result := mkRBMap α (Array IndexMatchLocation) cmp -- TODO avoid RBMap
+  let mut result := mkRBMap α (Array IndexMatchLocation) compare
   result := insertIndexMatchResults result
     (← applicableByTargetRules ri goal include?)
   result := insertIndexMatchResults result
@@ -122,13 +123,13 @@ def applicableRules (ri : RuleIndex α) (goal : MVarId) (cmp : α → α → Ord
   result := insertIndexMatchResults result
     (applicableUnindexedRules ri include?)
   return result.fold (init := Array.mkEmpty result.size) λ rs rule locs =>
-    rs.push { rule := rule, matchLocations := locs }
+    rs.push { rule := rule, locations := .ofArray locs }
   where
     @[inline]
-    insertIndexMatchResults (m : RBMap α (Array IndexMatchLocation) cmp)
-        (rs : Array (IndexMatchResult α)) :
-        RBMap α (Array IndexMatchLocation) cmp :=
-      rs.foldl (init := m) λ m r =>
-        m.insertWith r.rule r.matchLocations (· ++ r.matchLocations)
+    insertIndexMatchResults (m : RBMap α (Array IndexMatchLocation) compare)
+        (rs : Array (α × Array IndexMatchLocation)) :
+        RBMap α (Array IndexMatchLocation) compare :=
+      rs.foldl (init := m) λ m (rule, locs) =>
+        m.insertWith rule locs (· ++ locs)
 
 end Aesop.RuleIndex

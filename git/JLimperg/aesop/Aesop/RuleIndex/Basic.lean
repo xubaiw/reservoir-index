@@ -16,40 +16,70 @@ inductive IndexingMode : Type
   | unindexed
   | target (keys : Array DiscrTree.Key)
   | hyps (keys : Array DiscrTree.Key)
+  | or (imodes : Array IndexingMode)
   deriving Inhabited
 
 namespace IndexingMode
 
+protected partial def format : IndexingMode → Format
+  | unindexed => "unindexed"
+  | target keys => f!"target {keys}"
+  | hyps keys => f!"hyps {keys}"
+  | or imodes => f!"or {imodes.map IndexingMode.format}"
+
+instance : ToFormat IndexingMode :=
+  ⟨IndexingMode.format⟩
+
 def targetMatchingConclusion (type : Expr) : MetaM IndexingMode := do
-  let path ← withoutModifyingState do
-    let (_, _, conclusion) ← forallMetaTelescope type
-    DiscrTree.mkPath conclusion
-    -- We use a meta telescope because `DiscrTree.mkPath` ignores metas (they
-    -- turn into `Key.star`) but not fvars.
-  return IndexingMode.target path
+  let path ← DiscrTree.getConclusionKeys type
+  return target path
+
+def hypsMatchingConst (decl : Name) : MetaM IndexingMode := do
+  let path ← DiscrTree.getConstKeys decl
+  return hyps path
 
 end IndexingMode
 
 
 inductive IndexMatchLocation
   | target
-  | hyp (ldecl : LocalDecl)
   | none
+  | hyp (ldecl : LocalDecl)
+  deriving Inhabited
 
 namespace IndexMatchLocation
 
 instance : ToMessageData IndexMatchLocation where
   toMessageData
     | target => "target"
-    | hyp ldecl => m!"hyp {ldecl.userName}"
     | none => "none"
+    | hyp ldecl => m!"hyp {ldecl.userName}"
+
+instance : BEq IndexMatchLocation where
+  beq
+    | target, target => true
+    | none, none => true
+    | hyp ldecl₁, hyp ldecl₂ => ldecl₁.fvarId == ldecl₂.fvarId
+    | _, _ => false
+
+instance : Ord IndexMatchLocation where
+  compare
+    | target, target => .eq
+    | target, none => .lt
+    | target, hyp .. => .lt
+    | none, target => .gt
+    | none, none => .eq
+    | none, hyp .. => .lt
+    | hyp .., target => .gt
+    | hyp .., none => .gt
+    | hyp ldecl₁, hyp ldecl₂ => ldecl₁.fvarId.name.quickCmp ldecl₂.fvarId.name
 
 end IndexMatchLocation
 
 
 structure IndexMatchResult (α : Type) where
   rule : α
-  matchLocations : Array IndexMatchLocation
+  locations : UnorderedArraySet IndexMatchLocation
   deriving Inhabited
 
 namespace IndexMatchResult

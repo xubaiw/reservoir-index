@@ -10,41 +10,32 @@ import Aesop.RuleIndex
 
 open Lean
 open Lean.Meta
-open Std (HashMap HashSet)
+open Std (PHashMap HashSet)
 
 namespace Aesop
 
-inductive RuleSetMember' τ
-  | normRule (r : NormRule' τ)
+inductive RuleSetMember
+  | normRule (r : NormRule)
   | normSimpRule (e : NormSimpRule)
-  | unsafeRule (r : UnsafeRule' τ)
-  | safeRule (r : SafeRule' τ)
+  | unsafeRule (r : UnsafeRule)
+  | safeRule (r : SafeRule)
   deriving Inhabited
 
-abbrev RuleSetMember := RuleSetMember' RuleTacWithBuilderDescr
-abbrev RuleSetMemberDescr := RuleSetMember' GlobalRuleTacBuilderDescr
+namespace RuleSetMember
 
-namespace RuleSetMember'
-
-def mapM [Monad m] (f : τ → m ι) : RuleSetMember' τ → m (RuleSetMember' ι)
-  | normRule r => return normRule (← r.mapTacM f)
-  | normSimpRule e => return normSimpRule e
-  | unsafeRule r => return unsafeRule (← r.mapTacM f)
-  | safeRule r => return safeRule (← r.mapTacM f)
-
-def toDescr (r : RuleSetMember) : Option RuleSetMemberDescr :=
-  OptionM.run $ r.mapM (·.descr)
-
-def ofDescr (r : RuleSetMemberDescr) : MetaM RuleSetMember :=
-  r.mapM (·.toRuleTacBuilder)
-
-def name : RuleSetMember' τ → RuleName
+def name : RuleSetMember → RuleName
   | normRule r => r.name
   | unsafeRule r => r.name
   | safeRule r => r.name
   | normSimpRule e => e.name
 
-end RuleSetMember'
+def isGlobal : RuleSetMember → Bool
+  | normRule r => r.tac.isGlobal
+  | unsafeRule r => r.tac.isGlobal
+  | safeRule r => r.tac.isGlobal
+  | normSimpRule r => true
+
+end RuleSetMember
 
 
 structure RuleNameFilter where
@@ -65,16 +56,16 @@ end RuleNameFilter
 
 structure RuleSet where
   normRules : RuleIndex NormRule
-  normSimpLemmas : SimpTheorems
   unsafeRules : RuleIndex UnsafeRule
   safeRules : RuleIndex SafeRule
-  normSimpLemmaDescrs : HashMap RuleName (Array SimpEntry)
+  normSimpLemmas : SimpTheorems
+  normSimpLemmaDescrs : PHashMap RuleName (Array SimpEntry)
     -- A cache of the norm simp rules added to `normSimpLemmas`. Invariant: the
     -- simp entries in this map are a subset of those in `normSimpLemmas`. When
     -- a rule is erased, its entry is removed from this map. We use this map (a)
     -- to figure out which `SimpEntry`s to erase from `normSimpLemmas` when a
     -- rule is erased; (b) to serialise the norm simp rules.
-  ruleNames : HashMap RuleIdent (Array RuleName)
+  ruleNames : PHashMap RuleIdent (Array RuleName)
     -- A cache of (non-erased) rule names. Invariant: `ruleNames` contains
     -- exactly the names of the rules in `normRules`, `normSimpLemmaDescrs`,
     -- `unsafeRules` and `safeRules`, minus the rules in `erased`. We use this
@@ -82,8 +73,11 @@ structure RuleSet where
   erased : HashSet RuleName
     -- A collection of erased rules. When we erase a rule -- or a family of
     -- rules, e.g. all rules associated with a certain declaration --, we do not
-    -- remove them from `normRules`, `normSimpLemmas` etc. Instead, we add them
+    -- remove them from `normRules`, `unsafeRules` etc. Instead, we add them
     -- to the `erased` set and remove them from `ruleNames`.
+    --
+    -- Exception: for simp theorems, when erasing a rule we remove it from
+    -- both `normSimpLemmas` and `normSimpLemmaDescrs`.
   deriving Inhabited
 
 namespace RuleSet
@@ -114,10 +108,10 @@ instance : EmptyCollection RuleSet :=
   ⟨empty⟩
 
 def merge (rs₁ rs₂ : RuleSet) : RuleSet where
-  normRules := rs₁.normRules ++ rs₂.normRules
+  normRules := rs₁.normRules.merge rs₂.normRules
   normSimpLemmas := rs₁.normSimpLemmas.merge rs₂.normSimpLemmas
-  unsafeRules := rs₁.unsafeRules ++ rs₂.unsafeRules
-  safeRules := rs₁.safeRules ++ rs₂.safeRules
+  unsafeRules := rs₁.unsafeRules.merge rs₂.unsafeRules
+  safeRules := rs₁.safeRules.merge rs₂.safeRules
   normSimpLemmaDescrs :=
     rs₁.normSimpLemmaDescrs.merge rs₂.normSimpLemmaDescrs λ _ nsd₁ nsd₂ => nsd₁
     -- We can merge left-biased here because `nsd₁` and `nsd₂` should be equal
@@ -136,10 +130,6 @@ def merge (rs₁ rs₂ : RuleSet) : RuleSet where
           if ns.contains n then x else x.insert n
     go rs₂ rs₁ $ go rs₁ rs₂ {}
 
-instance : Append RuleSet :=
-  ⟨merge⟩
-
-open RuleSetMember' in
 def add (rs : RuleSet) (r : RuleSetMember) : RuleSet :=
   let n := r.name
   let erased := rs.erased.erase n
@@ -147,17 +137,17 @@ def add (rs : RuleSet) (r : RuleSetMember) : RuleSet :=
     if ns.contains n then ns else ns.push n
   let rs := { rs with erased := erased, ruleNames := ruleNames }
   match r with
-  | normRule r =>
+  | .normRule r =>
     { rs with normRules := rs.normRules.add r r.indexingMode }
-  | normSimpRule r =>
+  | .normSimpRule r =>
     { rs with
       normSimpLemmas :=
         r.entries.foldl (init := rs.normSimpLemmas) λ simpLemmas e =>
           simpLemmas.addSimpEntry e
       normSimpLemmaDescrs := rs.normSimpLemmaDescrs.insert r.name r.entries }
-  | unsafeRule r =>
+  | .unsafeRule r =>
     { rs with unsafeRules := rs.unsafeRules.add r r.indexingMode }
-  | safeRule r =>
+  | .safeRule r =>
     { rs with safeRules := rs.safeRules.add r r.indexingMode }
 
 def addArray (rs : RuleSet) (ra : Array RuleSetMember) : RuleSet :=
@@ -198,37 +188,39 @@ def erase (rs : RuleSet) (f : RuleNameFilter) : RuleSet × Bool :=
 def eraseAllRulesWithIdent (rs : RuleSet) (i : RuleIdent) : RuleSet × Bool :=
   rs.erase { ident := i, builders := #[], phases := #[] }
 
+@[inline]
 private def isErased (rs : RuleSet) (n : RuleName) : Bool :=
   rs.erased.contains n
 
 def contains (rs : RuleSet) (n : RuleName) : Bool :=
+  ! rs.isErased n &&
   match rs.ruleNames.find? n.toRuleIdent with
   | none => false
   | some ns => ns.contains n
 
 def applicableNormalizationRules (rs : RuleSet) (goal : MVarId) :
     MetaM (Array (IndexMatchResult NormRule)) :=
-  rs.normRules.applicableRules goal Rule'.compareByPriorityThenName
+  rs.normRules.applicableRules (ord := ⟨Rule.compareByPriorityThenName⟩) goal
     (!rs.isErased ·.name)
 
 def applicableUnsafeRules (rs : RuleSet) (goal : MVarId) :
     MetaM (Array (IndexMatchResult UnsafeRule)) := do
-  rs.unsafeRules.applicableRules goal Rule'.compareByPriorityThenName
+  rs.unsafeRules.applicableRules (ord := ⟨Rule.compareByPriorityThenName⟩) goal
     (!rs.isErased ·.name)
 
 def applicableSafeRules (rs : RuleSet) (goal : MVarId) :
     MetaM (Array (IndexMatchResult SafeRule)) := do
-  rs.safeRules.applicableRules goal Rule'.compareByPriorityThenName
+  rs.safeRules.applicableRules (ord := ⟨Rule.compareByPriorityThenName⟩) goal
     (!rs.isErased ·.name)
 
 def foldM [Monad m] (rs : RuleSet) (f : σ → RuleSetMember → m σ) (init : σ) :
     m σ := do
   let mut s := init
-  s ← rs.normRules.foldM           (init := s) λ s r => go s (RuleSetMember'.normRule r)
-  s ← rs.safeRules.foldM           (init := s) λ s r => go s (RuleSetMember'.safeRule r)
-  s ← rs.unsafeRules.foldM         (init := s) λ s r => go s (RuleSetMember'.unsafeRule r)
-  s ← rs.normSimpLemmaDescrs.foldM (init := s) λ s n es =>
-        f s (RuleSetMember'.normSimpRule { name := n, entries := es })
+  s ← rs.normRules.foldM            (init := s) λ s r => go s (.normRule r)
+  s ← rs.safeRules.foldM            (init := s) λ s r => go s (.safeRule r)
+  s ← rs.unsafeRules.foldM          (init := s) λ s r => go s (.unsafeRule r)
+  s ← rs.normSimpLemmaDescrs.foldlM (init := s) λ s n es =>
+        f s (.normSimpRule { name := n, entries := es })
         -- Erased rules are removed from `normSimpLemmaDescrs`, so we do not
         -- need to filter here.
   return s
@@ -320,6 +312,16 @@ def eraseRuleSet (rss : RuleSets) (rsName : RuleSetName) : RuleSets :=
 def getRuleSet? (rss : RuleSets) (rsName : RuleSetName) : Option RuleSet :=
   if rsName == defaultRuleSetName then rss.default else rss.others.find? rsName
 
+@[inline]
+def foldM [Monad m] (f : σ → RuleSetName → RuleSet → m σ) (init : σ)
+    (rss : RuleSets) : m σ := do
+  let acc ← f init defaultRuleSetName rss.default
+  rss.others.foldlM (init := acc) f
+
+@[inline]
+def fold (f : σ → RuleSetName → RuleSet → σ) (init : σ) (rss : RuleSets) : σ :=
+  Id.run $ foldM f init rss
+
 -- If `rss` does not contain a rule set with name `rsName`, `rss` is returned
 -- unchanged.
 def modifyRuleSetM [Monad m] (rss : RuleSets) (rsName : RuleSetName)
@@ -395,24 +397,15 @@ def makeMergedRuleSet (rss : RuleSets)
       continue
     match rss.others.find? name with
     | none => continue
-    | some rs => result := result ++ rs
+    | some rs => result := result.merge rs
   return result
 
--- Precondition: all rule set members in `rss` have a `RuleSetMemberDescr`.
-def toDescrArray! (rss : RuleSets) :
-    Array (RuleSetName × RuleSetMemberDescr) := Id.run do
-  let mut s := #[]
-  s := addRuleSetMembers s defaultRuleSetName rss.default
-  s := rss.others.foldl (init := s) λ s rsName rs =>
-    addRuleSetMembers s rsName rs
-  return s
-  where
-    addRuleSetMembers (s : Array (RuleSetName × RuleSetMemberDescr))
-        (rsName : RuleSetName) (rs : RuleSet) :
-        Array (RuleSetName × RuleSetMemberDescr) :=
-      rs.fold (init := s) λ s r =>
-        let descr := r.toDescr.getD $ panic!
-          "aesop: trying to serialise a rule set where not every rule has a RuleSetMemberDescr"
-        s.push (rsName, descr)
+def globalRules (rss : RuleSets) : Array (RuleSetName × RuleSetMember) :=
+  rss.fold (init := #[]) λ acc rsName rs =>
+    rs.fold (init := acc) λ acc r =>
+      if r.isGlobal then
+        acc.push (rsName, r)
+      else
+        acc
 
 end Aesop.RuleSets

@@ -30,13 +30,11 @@ attribute [aesop 50%] EvenOrOdd.even EvenOrOdd.odd
 attribute [aesop safe] Even.zero Even.plus_two
 attribute [aesop 100%] Odd.one Odd.plus_two
 
+@[aesop norm unfold]
 def EvenOrOdd' (n : Nat) : Prop := EvenOrOdd n
 
-@[aesop norm tactic]
-def testNormTactic : TacticM Unit := do
-  evalTactic (← `(tactic|try simp only [EvenOrOdd']))
-
-example : EvenOrOdd' 3 := by aesop
+example : EvenOrOdd' 3 := by
+  aesop
 
 end EvenOdd
 
@@ -64,3 +62,10 @@ end Loop
 example (Even : Nat → Prop) (zero : Even 0)
     (plusTwo : ∀ n, Even n → Even (n + 2)) : Even 20 := by
   aesop
+
+
+-- This example checks that norm simp does not use local hypotheses (unless
+-- instructed to).
+example {α : Prop} (h : α) : α := by
+  fail_if_success aesop (rule_sets [-builtin, -default])
+  exact h

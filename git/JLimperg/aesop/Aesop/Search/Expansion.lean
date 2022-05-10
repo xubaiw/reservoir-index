@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jannis Limperg
 -/
 
+import Aesop.RuleTac
 import Aesop.Search.RuleSelection
 
 open Lean
@@ -30,7 +31,7 @@ def RuleResult.isSuccessful
 inductive NormRuleResult
   | succeeded (goal : MVarId) (branchState : BranchState)
   | proven
-  | failed (err : Exception)
+  | failed
 
 def runRuleTac (tac : RuleTac) (ruleName : RuleName)
     (preState : Meta.SavedState) (input : RuleTacInput) :
@@ -48,7 +49,7 @@ def runRuleTac (tac : RuleTac) (ruleName : RuleName)
   return result
 
 def runRegularRuleTac (goal : Goal) (tac : RuleTac) (ruleName : RuleName)
-    (indexMatchLocations : Array IndexMatchLocation)
+    (indexMatchLocations : UnorderedArraySet IndexMatchLocation)
     (branchState : Option RuleBranchState) :
     MetaM (Sum Exception RuleTacOutput) := do
   let some (postNormGoal, postNormState) := goal.postNormGoalAndState? | throwError
@@ -65,22 +66,27 @@ def runRegularRuleTac (goal : Goal) (tac : RuleTac) (ruleName : RuleName)
 def runNormRuleTac (bs : BranchState) (rule : NormRule) (input : RuleTacInput) :
     MetaM NormRuleResult := do
   let preMetaState ← saveState
-  let result? ← runRuleTac rule.tac.tac rule.name preMetaState input
+  let result? ← runRuleTac rule.tac.run rule.name preMetaState input
   match result? with
   | Sum.inl e =>
-    return NormRuleResult.failed e
+    aesop_trace[stepsNormalization] "Rule failed with error:{indentD e.toMessageData}"
+    return .failed
   | Sum.inr result =>
     let #[rapp] := result.applications
       | err m!"rule did not produce exactly one rule application."
     restoreState rapp.postState
     if rapp.goals.isEmpty then
-      return NormRuleResult.proven
+      aesop_trace[stepsNormalization] "Rule proved the goal."
+      return .proven
     let (#[(g, mvars)]) := rapp.goals
       | err m!"rule produced more than one subgoal."
     unless rapp.introducedMVars.isEmpty do
       err m!"rule introduced additional metavariables"
     let postBranchState := bs.update rule result.postBranchState?
-    return NormRuleResult.succeeded g postBranchState
+    aesop_trace[stepsNormalization] do
+      aesop_trace![stepsNormalization] "Rule succeeded. New goal:{indentD $ .ofGoal g}"
+      aesop_trace[stepsBranchStates] "Branch state after rule application: {postBranchState.find? rule}"
+    return .succeeded g postBranchState
   where
     err {α} (msg : MessageData) : MetaM α := throwError
       "aesop: error while running norm rule {rule.name}: {msg}\nThe rule was run on this goal:{indentD $ MessageData.ofGoal input.goal}"
@@ -92,25 +98,13 @@ def runNormRuleCore (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
   let branchState? := bs.find? rule.rule
   aesop_trace[stepsNormalization] do
     aesop_trace![stepsNormalization] "Running {rule.rule}"
-    if ← TraceOption.stepsBranchStates.isEnabled then
-      aesop_trace![stepsNormalization] "Branch state before rule application: {branchState?}"
+    aesop_trace[stepsBranchStates] "Branch state before rule application: {branchState?}"
   let ruleInput := {
     goal, mvars
-    indexMatchLocations := rule.matchLocations
+    indexMatchLocations := rule.locations
     branchState?
   }
-  let result ← runNormRuleTac bs rule.rule ruleInput
-  aesop_trace[stepsNormalization] do
-    match result with
-    | NormRuleResult.failed e =>
-      aesop_trace![stepsNormalization] "Rule failed with error:{indentD e.toMessageData}"
-    | NormRuleResult.succeeded goal bs =>
-      aesop_trace![stepsNormalization] "Rule succeeded. New goal:{indentD $ MessageData.ofGoal goal}"
-      if ← TraceOption.stepsBranchStates.isEnabled then
-        aesop_trace![stepsNormalization] "Branch state after rule application: {bs.find? rule.rule}"
-    | NormRuleResult.proven =>
-      aesop_trace![stepsNormalization] "Rule proved the goal."
-  return result
+  runNormRuleTac bs rule.rule ruleInput
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
 def runNormRule (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
@@ -127,61 +121,84 @@ def runNormRule (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
     recordAndTraceRuleProfile ruleProfile
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def runNormRules (goal : MVarId) (mvars : Array MVarId)
-    (branchState : BranchState) (rules : Array (IndexMatchResult NormRule)) :
-    ProfileT MetaM (Option (MVarId × BranchState)) := do
-  let mut goal := goal
-  let mut branchState := branchState
+def runFirstNormRule (goal : MVarId) (mvars : Array MVarId)
+    (branchState : BranchState) (rules : Array (IndexMatchResult NormRule)):
+    ProfileT MetaM NormRuleResult := do
   for rule in rules do
     let result ← runNormRule goal mvars branchState rule
     match result with
-    | NormRuleResult.proven => return none
-    | NormRuleResult.failed _ => continue
-    | NormRuleResult.succeeded g bs =>
-      goal := g
-      branchState := bs
-  return some (goal, branchState)
+    | .proven => return result
+    | .failed => continue
+    | .succeeded goal bs => return result
+  return .failed
 
-def runNormalizationSimpCore (goal : MVarId) (rs : RuleSet) :
-    MetaM (Option MVarId) := do
-  let simpCtx :=
-    { (← Simp.Context.mkDefault) with simpTheorems := #[rs.normSimpLemmas] }
-    -- TODO This computation should be done once, not every time we normalise
-    -- a goal.
-  let preMetaState ← saveState
-  let newGoal? ← simpAll goal simpCtx
-  if ← Check.rules.isEnabled then
-    let postMetaState ← saveState
-    let introduced :=
-      (← introducedExprMVars preMetaState postMetaState).filter (some · != newGoal?)
-    unless introduced.isEmpty do
-      throwError "{Check.rules.name}: norm simp introduced metas:{introduced.map (·.name)}"
-    let assigned :=
-      (← assignedExprMVars preMetaState postMetaState).filter (· != goal)
-    unless assigned.isEmpty do
-      throwError "{Check.rules.name}: norm simp assigned metas:{introduced.map (·.name)}"
-  newGoal?.mapM λ goal => Prod.snd <$> intros goal
-
-def runNormalizationSimp (goal : MVarId) (rs : RuleSet) :
-    ProfileT MetaM (Option MVarId) :=
-  profiling (runNormalizationSimpCore goal rs) λ _ elapsed =>
-    recordAndTraceRuleProfile { rule := .normSimp, elapsed, successful := true }
+def normSimpCore (ctx : Simp.Context) (cache : Simp.Cache) (goal : MVarId) :
+    MetaM (Option MVarId × Simp.Cache) :=
+  withMVarContext goal do
+    let lctx ← getLCtx
+    let mut fvarIds := Array.mkEmpty lctx.decls.size
+    for ldecl in lctx do
+      unless ldecl.isAuxDecl do
+        fvarIds := fvarIds.push ldecl.fvarId
+    let (result?, cache) ←
+      simpGoalWithCache goal ctx cache (fvarIdsToSimp := fvarIds)
+    return (result?.map (·.snd), cache)
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def normalizeGoalMVar (rs : RuleSet) (goal : MVarId) (mvars : Array MVarId)
-    (branchState : BranchState) :
-    ProfileT MetaM (Option (MVarId × BranchState)) := do
-  let rules ← selectNormRules rs goal
-  let (preSimpRules, postSimpRules) :=
-    rules.partition λ r => r.rule.extra.penalty < (0 : Int)
-  let preSimpResult? ← runNormRules goal mvars branchState preSimpRules
-  let (some (goal, branchState)) := preSimpResult?
-    | return none
-  aesop_trace[stepsNormalization] "Running normalisation simp"
-  let (some goal) ← runNormalizationSimp goal rs
-    | return none
-  aesop_trace[stepsNormalization] "Goal after normalisation simp:{indentD $ MessageData.ofGoal goal}"
-  runNormRules goal mvars branchState postSimpRules
+def normSimp (goal : MVarId) (ctx : Simp.Context) (cache : Simp.Cache) :
+    ProfileT MetaM (Option MVarId × Simp.Cache) :=
+  profiling go λ _ elapsed =>
+    recordAndTraceRuleProfile { rule := .normSimp, elapsed, successful := true }
+  where
+    go : MetaM (Option MVarId × Simp.Cache) := do
+      if ← Check.rules.isEnabled then
+        let preMetaState ← saveState
+        let (newGoal?, cache) ← normSimpCore ctx cache goal
+        let postMetaState ← saveState
+        let introduced :=
+          (← introducedExprMVars preMetaState postMetaState).filter
+            (some · != newGoal?)
+        unless introduced.isEmpty do throwError
+          "{Check.rules.name}: norm simp introduced metas:{introduced.map (·.name)}"
+        let assigned :=
+          (← assignedExprMVars preMetaState postMetaState).filter (· != goal)
+        unless assigned.isEmpty do throwError
+          "{Check.rules.name}: norm simp assigned metas:{introduced.map (·.name)}"
+        return (newGoal?, cache)
+      else
+        normSimpCore ctx cache goal
+
+-- NOTE: Must be run in the MetaM context of the relevant goal.
+partial def normalizeGoalMVar (rs : RuleSet) (ctx : Simp.Context)
+    (cache : Simp.Cache) (maxIterations : Nat) (goal : MVarId)
+    (mvars : Array MVarId) (bs : BranchState) :
+    ProfileT MetaM (Option (MVarId × BranchState) × Simp.Cache) :=
+  go 0 goal bs cache
+  where
+    go (iteration : Nat) (goal : MVarId) (bs : BranchState)
+        (cache : Simp.Cache) :
+        ProfileT MetaM (Option (MVarId × BranchState) × Simp.Cache) := do
+      if maxIterations > 0 && iteration > maxIterations then throwError
+        "aesop: exceeded maximum number of normalisation iterations ({maxIterations}). This means normalisation probably got stuck in an infinite loop."
+      let rules ← selectNormRules rs goal
+      let (preSimpRules, postSimpRules) :=
+        rules.partition λ r => r.rule.extra.penalty < (0 : Int)
+      let preSimpResult ← runFirstNormRule goal mvars bs preSimpRules
+      match preSimpResult with
+      | .proven => return (none, cache)
+      | .succeeded goal bs => go (iteration + 1) goal bs cache
+      | .failed =>
+        aesop_trace[stepsNormalization] "Running normalisation simp"
+        let (simpResult?, cache) ← normSimp goal ctx cache
+        match simpResult? with
+        | none => return (none, cache)
+        | some goal =>
+          aesop_trace[stepsNormalization] "Goal after normalisation simp:{indentD $ MessageData.ofGoal goal}"
+          let postSimpResult ← runFirstNormRule goal mvars bs postSimpRules
+          match postSimpResult with
+          | .proven => return (none, cache)
+          | .succeeded goal bs => go (iteration + 1) goal bs cache
+          | .failed => return (some (goal, bs), cache)
 
 -- Returns true if the goal was solved by normalisation.
 def normalizeGoalIfNecessary (gref : GoalRef) : SearchM Q Bool := do
@@ -189,20 +206,23 @@ def normalizeGoalIfNecessary (gref : GoalRef) : SearchM Q Bool := do
   if g.isNormal then
     return false
   aesop_trace[steps] "Normalising the goal"
-  let rs := (← read).ruleSet
+  let ctx ← read
   let profilingEnabled ← isProfilingEnabled
   let profile ← getThe Profile
-  let ((postGoal?, profile), postState) ← (← gref.get).runMetaMInParentState do
-    aesop_trace[steps] "Goal before normalisation:{indentD $ MessageData.ofGoal g.preNormGoal}"
-    let (postGoal?, profile) ←
-      normalizeGoalMVar rs g.preNormGoal g.mvars g.branchState
-      |>.run profilingEnabled profile
-    if let (some (postGoal, _)) := postGoal? then
-      aesop_trace[steps] "Goal after normalisation ({postGoal.name}):{indentD $ toMessageData postGoal}"
-      -- This trace needs to happen within the `runMetaMInParentState` to make
-      -- sure that the goal is printed correctly.
-    return (postGoal?, profile)
-  setThe Profile profile
+  let normSimpCache := (← get).normSimpCache
+  let ((postGoal?, normSimpCache, profile), postState) ←
+    (← gref.get).runMetaMInParentState do
+      aesop_trace[steps] "Goal before normalisation:{indentD $ MessageData.ofGoal g.preNormGoal}"
+      let ((postGoal?, normSimpCache), profile) ←
+        normalizeGoalMVar ctx.ruleSet ctx.normSimpContext normSimpCache
+          ctx.options.maxNormIterations g.preNormGoal g.mvars g.branchState
+        |>.run profilingEnabled profile
+      if let (some (postGoal, _)) := postGoal? then
+        aesop_trace[steps] "Goal after normalisation ({postGoal.name}):{indentD $ toMessageData postGoal}"
+        -- This trace needs to happen within the `runMetaMInParentState` to make
+        -- sure that the goal is printed correctly.
+      return (postGoal?, normSimpCache, profile)
+  modify λ s => { s with profile, normSimpCache }
   match postGoal? with
   | some (postGoal, postBranchState) =>
     gref.modify λ g =>
@@ -267,13 +287,13 @@ def addRapps (parentRef : GoalRef) (rule : RegularRule)
       return rrefs
 
 def runRegularRuleCore (parentRef : GoalRef) (rule : RegularRule)
-    (indexMatchLocations : Array IndexMatchLocation) :
+    (indexMatchLocations : UnorderedArraySet IndexMatchLocation) :
     SearchM Q RuleResult := do
   let parent ← parentRef.get
   let initialBranchState := rule.withRule λ r => parent.branchState.find? r
   aesop_trace[stepsBranchStates] "Initial branch state: {initialBranchState}"
   let ruleOutput? ←
-    runRegularRuleTac parent rule.tac.tac rule.name indexMatchLocations
+    runRegularRuleTac parent rule.tac.run rule.name indexMatchLocations
       initialBranchState
   match ruleOutput? with
   | Sum.inl exc => onFailure exc.toMessageData
@@ -281,7 +301,7 @@ def runRegularRuleCore (parentRef : GoalRef) (rule : RegularRule)
     onFailure $ "Rule returned no rule applications."
   | Sum.inr output =>
     let rapps := output.applications
-    if let (RegularRule'.safe rule) := rule then
+    if let (.safe rule) := rule then
       if rapps.any (! ·.assignedMVars.isEmpty) then
         aesop_trace[steps] "Safe rule assigned metavariables. Postponing it."
         return RuleResult.postponed ⟨rule, output⟩
@@ -294,7 +314,7 @@ def runRegularRuleCore (parentRef : GoalRef) (rule : RegularRule)
       return RuleResult.failed
 
 def runRegularRule (parentRef : GoalRef) (rule : RegularRule)
-    (indexMatchLocations : Array IndexMatchLocation) :
+    (indexMatchLocations : UnorderedArraySet IndexMatchLocation) :
     SearchM Q RuleResult :=
   profiling (runRegularRuleCore parentRef rule indexMatchLocations)
     λ result elapsed => do
@@ -305,8 +325,7 @@ def runRegularRule (parentRef : GoalRef) (rule : RegularRule)
         | .proven => true
         | .postponed .. => true
       let rule := RuleProfileName.rule rule.name
-      let ruleProfile := { rule := rule, elapsed, successful }
-      recordAndTraceRuleProfile ruleProfile
+      recordAndTraceRuleProfile { rule, elapsed, successful }
 
 def runFirstSafeRule (gref : GoalRef) :
     SearchM Q (RuleResult × Array PostponedSafeRule) := do
@@ -322,7 +341,7 @@ def runFirstSafeRule (gref : GoalRef) :
   for r in rules do
     aesop_trace[steps] "Trying {r.rule}"
     let result' ←
-      runRegularRule gref (RegularRule'.safe r.rule) r.matchLocations
+      runRegularRule gref (.safe r.rule) r.locations
     match result' with
     | .failed => continue
     | .proven => return (result', #[])
@@ -354,7 +373,7 @@ partial def runFirstUnsafeRule (postponedSafeRules : Array PostponedSafeRule)
       | .unsafeRule r =>
         aesop_trace[steps] "Trying {r.rule}"
         let result ←
-          runRegularRule parentRef (RegularRule'.unsafe r.rule) r.matchLocations
+          runRegularRule parentRef (.«unsafe» r.rule) r.locations
         match result with
         | .proven => return (queue, result)
         | .succeeded => return (queue, result)
@@ -364,7 +383,7 @@ partial def runFirstUnsafeRule (postponedSafeRules : Array PostponedSafeRule)
       | .postponedSafeRule r =>
         aesop_trace[steps] "Applying postponed safe rule {r.rule}"
         let result ←
-          addRapps parentRef (RegularRule'.unsafe r.toUnsafeRule) r.output
+          addRapps parentRef (.«unsafe» r.toUnsafeRule) r.output
         return (queue, result)
 
 def expandGoal (gref : GoalRef) : SearchM Q Unit := do

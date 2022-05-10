@@ -88,6 +88,18 @@ instance : Append (MyList α) :=
 
 <span class="pl-k">instance</span> : Append (MyList α) :=
   ⟨MyList.append⟩</pre></div>
+<p dir="auto">We also tell <code>simp</code> to unfold applications of <code>append</code>. <code>aesop</code> uses the default
+simp set when it normalises a goal, so it will automatically pick up these rules
+as well.</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[simp]
+theorem nil_append : nil ++ xs = xs := rfl
+
+@[simp]
+theorem cons_append : cons x xs ++ ys = cons x (xs ++ ys) := rfl"><pre><span class="pl-k">@[simp]</span>
+<span class="pl-k">theorem</span> <span class="pl-en">nil_append</span> : nil ++ xs = xs := rfl
+
+<span class="pl-k">@[simp]</span>
+<span class="pl-k">theorem</span> <span class="pl-en">cons_append</span> : cons x xs ++ ys = cons x (xs ++ ys) := rfl</pre></div>
 <p dir="auto">Now we define the <code>NonEmpty</code> predicate on <code>MyList</code>:</p>
 <div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [MyList.NonEmpty]
 
@@ -227,13 +239,14 @@ operates.</p>
 <ul dir="auto">
 <li>
 <p dir="auto"><strong>Normalisation rules</strong> (keyword <code>norm</code>) must generate zero or one subgoal.
-(Zero means that the rule closed the goal). They must not fail. Each
-normalisation rule is associated with an integer <strong>penalty</strong> (default 1).
-Normalisation rules are applied in order of penalty, lowest first. For rules
-with equal penalties, the order is unspecified.</p>
+(Zero means that the rule closed the goal). Each normalisation rule is
+associated with an integer <strong>penalty</strong> (default 1). Normalisation rules are
+applied in a fixpoint loop in order of penalty, lowest first. For rules with
+equal penalties, the order is unspecified. See below for details on
+the normalisation algorithm.</p>
 <p dir="auto">Normalisation rules can also be simp lemmas. These are constructed with the
 <code>unfold</code> or <code>simp</code> builder. They are used by a special <code>simp</code> call during
-the normalisation process; see below.</p>
+the normalisation process.</p>
 </li>
 <li>
 <p dir="auto"><strong>Safe rules</strong> (keyword <code>safe</code>) are applied after normalisation but before any
@@ -295,15 +308,19 @@ is active if it is not proved and we haven't yet applied all possible rules to
 it.</p>
 </li>
 <li>
-<p dir="auto">If the goal of <code>G</code> has not been normalised yet, normalise it. That means:</p>
+<p dir="auto">If the goal of <code>G</code> has not been normalised yet, normalise it. That means we
+run the following normalisation loop:</p>
 <ul dir="auto">
-<li>Run all normalisation rules with negative penalty (lowest penalty first).</li>
-<li>Run <code>simp</code> with the global simp set plus Aesop's normalisation simp rules.</li>
-<li>Run all normalisation rules with non-negative penalty (lowest penalty
-first).</li>
+<li>Run the normalisation rules with negative penalty (lowest penalty first). If
+any of these rules is successful, restart the normalisation loop with the
+goal produced by the rule.</li>
+<li>Run <code>simp</code> on all hypotheses and the target, using the global simp set (i.e.
+lemmas tagged <code>@[simp]</code>) plus Aesop's <code>simp</code> rules.</li>
+<li>Run the normalisation rules with positive penalty (lowest penalty first).
+If any of these rules is successful, restart the normalisation loop.</li>
 </ul>
-<p dir="auto">This process destructively updates the goal of <code>G</code>. (It may also prove it
-outright.)</p>
+<p dir="auto">The loop ends when all normalisation rules fail. It destructively updates
+the goal of <code>G</code> (and may prove it outright).</p>
 </li>
 <li>
 <p dir="auto">If we haven't tried to apply the safe rules to the goal of <code>G</code> yet, try to
@@ -438,6 +455,15 @@ the rule to operate somewhat more efficiently.</p>
 <p dir="auto">The builder may be given an option <code>uses_branch_state := <boolean></code> (default
 true). This indicates whether the given tactic uses the branch state; see
 below.</p>
+<p dir="auto">Rule tactics should not be 'no-ops': if a rule tactic is not applicable to a
+goal, it should fail rather than return the goal unchanged. All no-op rules
+waste time and no-op <code>norm</code> rules will send normalisation into an infinite
+loop.</p>
+<p dir="auto">Normalisation rules may not assign metavariables (other than the goal
+metavariable) or introduce new metavariables (other than the new goal
+metavariable). This can be a problem because some Lean tactics, e.g. <code>cases</code>,
+do so even in cases where you probably would not expect them to. I'm afraid
+there is currently no good solution for this.</p>
 </li>
 <li>
 <p dir="auto"><strong><code>safe_default</code></strong>: default builder for safe rules. This is the builder used
