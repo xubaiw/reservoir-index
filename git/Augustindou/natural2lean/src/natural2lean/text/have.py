@@ -1,16 +1,21 @@
 import re
 
 from .such_that import SuchThat
-from ..math_mode.equation import Equation
 from ..math_mode.math import Math
 from ..propositions.implication import Implication
 from ..propositions.multiple_propositions import MultiplePropositions
-from ..structure.matching import Matching, Unmatchable
+from ..structure.matching import Matching, Translatable
 from ..utils.indentation import indent
 
-# simple statements (contradiction, ...)
 SIMPLE_STATEMENTS = {
     "contradiction": "contradiction",
+}
+
+PROOFS = {
+    r"contradiction": "by contradiction",
+    r"definition": "by \n" + indent("simp at *\nassumption"),
+    r"possibilities.*modulo": "mod_3_poss _",
+    r"modulo.*possibilities": "mod_3_poss _",
 }
 
 
@@ -33,12 +38,10 @@ class Have(Matching):
         self.left_side = match.group(2).strip(" ,.;")
         self.right_side = match.group(3).strip(" ,.;")
         # definition
-        self.statement = self.get_statement()
-        self.proof = self.get_proof()
+        self.statement: Translatable = self.get_statement()
+        self.proof: str = self.get_proof()
 
-    def get_statement(
-        self,
-    ):
+    def get_statement(self):
         full_match_possibilities: list[Matching] = [
             Implication,
             SuchThat,
@@ -46,16 +49,15 @@ class Have(Matching):
 
         for possibility in full_match_possibilities:
             match = possibility.match(self.right_side)
-            if match != None:
+            if match is not None:
                 return match
 
         # match math mode
         match = re.search(Math.pattern, self.right_side)
-        if match != None:
+        if match is not None:
             math_match: Math = Math.match(self.right_side[match.start() : match.end()])
             if (
                 math_match.is_equation()
-                or math_match.is_identifiers_in_set()
                 or math_match.is_expression_possibilities()
             ):
                 return math_match
@@ -80,15 +82,12 @@ class Have(Matching):
         if isinstance(self.statement, Math) and self.statement.is_equation():
             return f"by \n{indent(self.statement.content.translate_to_calc())}"
 
-        if "definition" in self.string.lower():
-            proof = "simp at *\nassumption\n"
-            return f"by \n{indent(proof)}"
-
-        if "possibilities" in self.string.lower() and "modulo" in self.string.lower():
-            return f"mod_3_poss _"
+        for pattern, proof in PROOFS.items():
+            if re.search(pattern, self.string.lower()):
+                return proof + "\n"
 
         # if no proof is given, just use simp [*]
-        return "simp [*]"
+        return "by simp [*]"
 
     def translate(self, hyp="h", **kwargs) -> str:
 
@@ -96,4 +95,7 @@ class Have(Matching):
         if isinstance(self.statement, str) and self.statement in SIMPLE_STATEMENTS:
             return SIMPLE_STATEMENTS[self.statement]
 
-        return f"have {self.statement.translate(hyp=hyp)} := {self.proof}"
+        return f"have {self.statement.translate(hyp=hyp, proof=f' := {self.proof}')}"
+
+    def can_create_new_goals(self) -> bool:
+        return self.statement.can_create_new_goals()

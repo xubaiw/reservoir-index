@@ -1,7 +1,6 @@
 from InquirerPy import inquirer
 from ..structure.matching import Matching
 from ..text.theorem import Example, Theorem
-from ..text.case import Case
 from ..text.have import Have
 from ..propositions.multiple_propositions import MultiplePropositions
 from .lean_feedback import BACKTRACK, EXIT
@@ -17,7 +16,6 @@ THEOREM_POSSIBILITIES: list[Matching] = [
 ]
 
 STATEMENT_POSSIBILITIES: list[Matching] = [
-    Case,
     Have,
     MultiplePropositions,
 ]
@@ -39,7 +37,7 @@ def theorem_prompt() -> Matching:
     )
 
     user_input = inquirer.text(
-        message="Enter a theorem statement. You can also type 'exit' or 'backtrack'.\n ",
+        message="Enter a theorem statement.\n ",
         validate=valid_input,
         invalid_message="Invalid theorem. Try 'theorem [th_name]: if [hyp] then [ccl]' or simply 'if [hyp] then [ccl]'",
     ).execute()
@@ -65,7 +63,7 @@ def statement_prompt() -> Matching:
     )
 
     user_input = inquirer.text(
-        message="Input a statement. You can also type 'exit' or 'backtrack'.\n ",
+        message="Input a statement.\n ",
         validate=valid_input,
         invalid_message="Invalid statement.",
     ).execute()

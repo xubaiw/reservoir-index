@@ -28,15 +28,36 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Natural2Lean</h3>
-<p dir="auto">Translation of natural language proofs to lean4 for verification.</p>
+<p dir="auto">Translation of natural language proofs to lean4 for verification. The objective was to make a proof of concept, integrating a command line interface (CLI) to try out some proofs quickly.</p>
 <p dir="auto">Project developed for a master's thesis.
 Advisor : François Glineur</p>
-<h4 dir="auto">Installation</h4>
-
-<h4 dir="auto">Contributing</h4>
-<p dir="auto">To install natural2lean along with the tools you need to develop and run the tests, run the following in your virtualenv:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ pip install -e .[dev]"><pre>$ pip install -e .[dev]</pre></div>
-
+<h3 dir="auto">Installation</h3>
+<p dir="auto">To use this project, you need <code>lean4</code> and the python packages mentioned in <code>requirements.txt</code>. You can go <a href="https://leanprover.github.io/lean4/doc/setup.html" rel="nofollow">here to install <code>lean4</code></a> and run <code>pip install -r requirements.txt</code>.</p>
+<h3 dir="auto">How the system works</h3>
+<p dir="auto">The system will try to understand the meaning of the natural language sentences by matching specific keywords.</p>
+<h4 dir="auto">Keywords</h4>
+<h5 dir="auto">Specific keywords</h5>
+<ul dir="auto">
+<li>To close the CLI, you can use <code>quit</code> or <code>exit</code>.</li>
+<li>If you made a mistake, use <code>back</code> or <code>backtrack</code> to undo the last step.</li>
+</ul>
+<h5 dir="auto">Theorem statements</h5>
+<ul dir="auto">
+<li>A theorem statement is simply an implication you want to prove. <code>if [...] then [...]</code> will be matched, and hypotheses / theses will be extracted from that.</li>
+<li>You can also define a theorem name, by writing <code>theorem [...] : if [...] then [...]</code>.</li>
+</ul>
+<h5 dir="auto">Statements</h5>
+<ul dir="auto">
+<li>For now, most statements need the <code>have</code> keyword. The system will try to match a substatement on the right of the <code>have</code> keyword and will try to find the proof of that substatement in the sentence. Any equation should be solved automatically, and in addition to that, the keys in <a href="src/natural2lean/text/have.py"><code>natural2lean.text.have.PROOFS</code></a> will also be understood.</li>
+<li>You can also conclude a goal by simply stating it (for example, if your goal is to prove that $m^2$ is even, then stating <code>$m^2$ is even</code> will work).</li>
+<li>You can add words to make your proof more readable, such as <code>Hence, $m^2$ is even</code>, even though just writing <code>$m^2$ even</code> will have the same effect.</li>
+</ul>
+<h3 dir="auto">Contributing</h3>
+<p dir="auto">To install <code>natural2lean</code> along with the tools you need to develop and run the tests, run the following in your virtual environnment :</p>
+<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install -e .[dev]"><pre>pip install -e .[dev]</pre></div>
+<p dir="auto">Note that if you use <code>zsh</code>, you need to run the following instead :</p>
+<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install -e .'[dev]'"><pre class="notranslate"><code class="notranslate">pip install -e .'[dev]'
+</code></pre></div>
 </article></div></main>
 </body>
 </html>

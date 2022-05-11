@@ -7,6 +7,7 @@ green = lambda text: f"\033[38;2;0;255;0m{text}\033[38;2;255;255;255m"
 blue = lambda text: f"\033[38;2;0;0;255m{text}\033[38;2;255;255;255m"
 white = lambda text: f"\033[38;2;255;255;255m{text}\033[38;2;255;255;255m"
 
+# TODO : transform to be line-by-line ?
 
 def string_differences(old, new):
     result = ""
@@ -30,5 +31,6 @@ def nth(n):
         return "3rd"
     return f"{n}th"
 
+
 if __name__ == "__main__":
-    print(get_edits_string("abce", "abcd"))
+    print(string_differences("abce", "abcd\nhello\nworld\n\n\ntest"))
