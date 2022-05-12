@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jannis Limperg
 -/
 
-import Aesop.Frontend.ParseT
+import Aesop.Frontend.ElabM
 import Aesop.Percent
 import Aesop.Rule.Name
 import Aesop.Builder
@@ -12,10 +12,14 @@ import Aesop.RuleSet
 
 open Lean
 open Lean.Meta
+open Lean.Elab
+open Std (HashSet)
 
-namespace Aesop.Frontend
 
 variable [Monad m] [MonadError m]
+
+
+namespace Aesop.Frontend
 
 namespace Parser
 
@@ -33,21 +37,21 @@ inductive Priority
 
 namespace Priority
 
-def parse (stx : Syntax) : ParseT m Priority :=
+def «elab» (stx : Syntax) : ElabM Priority :=
   withRef stx do
     unless (← read).parsePriorities do throwError
-      "aesop: unexpected priority."
+      "unexpected priority."
     match stx with
     | `(priority| $p:num %) =>
       let p := p.toNat
       match Percent.ofNat p with
       | some p => return percent p
-      | none => throwError "aesop: percentage '{p}%' is not between 0 and 100."
+      | none => throwError "percentage '{p}%' is not between 0 and 100."
     | `(priority| - $i:num) =>
       return int $ - i.toNat
     | `(priority| $i:num) =>
       return int i.toNat
-    | _ => unreachable!
+    | _ => throwUnsupportedSyntax
 
 instance : ToString Priority where
   toString
@@ -65,6 +69,7 @@ def toPercent? : Priority → Option Percent
 end Priority
 
 
+
 namespace Parser
 
 declare_syntax_cat Aesop.phase (behavior := symbol)
@@ -75,11 +80,12 @@ syntax &"unsafe" : Aesop.phase
 
 end Parser
 
-def parsePhaseName : Syntax → PhaseName
-  | `(phase| safe) => PhaseName.safe
-  | `(phase| norm) => PhaseName.norm
-  | `(phase| unsafe) => PhaseName.unsafe
-  | _ => unreachable!
+def PhaseName.«elab» (stx : Syntax) : ElabM PhaseName :=
+  withRefThen stx λ
+    | `(phase| safe) => return .safe
+    | `(phase| norm) => return .norm
+    | `(phase| unsafe) => return .«unsafe»
+    | _ => throwUnsupportedSyntax
 
 
 namespace Parser
@@ -91,10 +97,11 @@ syntax &"false" : Aesop.bool_lit
 
 end Parser
 
-def parseBoolLit : Syntax → Bool
-  | `(bool_lit| true) => true
-  | `(bool_lit| false) => false
-  | _ => unreachable!
+def elabBoolLit (stx : Syntax) : ElabM Bool :=
+  withRefThen stx λ
+    | `(bool_lit| true) => return true
+    | `(bool_lit| false) => return false
+    | _ => throwUnsupportedSyntax
 
 
 namespace Parser
@@ -120,17 +127,18 @@ inductive DBuilderName
 
 namespace DBuilderName
 
-def parse : Syntax → DBuilderName
-  | `(builder_name| apply) => regular $ BuilderName.apply
-  | `(builder_name| simp) => regular $ BuilderName.simp
-  | `(builder_name| unfold) => regular $ BuilderName.unfold
-  | `(builder_name| tactic) => regular $ BuilderName.tactic
-  | `(builder_name| constructors) => regular $ BuilderName.constructors
-  | `(builder_name| forward) => regular $ BuilderName.forward
-  | `(builder_name| elim) => regular $ BuilderName.elim
-  | `(builder_name| cases) => regular $ BuilderName.cases
-  | `(builder_name| default) => dflt
-  | _ => unreachable!
+def «elab» (stx : Syntax) : ElabM DBuilderName :=
+  withRefThen stx λ
+    | `(builder_name| apply) => return regular .apply
+    | `(builder_name| simp) => return regular .simp
+    | `(builder_name| unfold) => return regular .unfold
+    | `(builder_name| tactic) => return regular .tactic
+    | `(builder_name| constructors) => return regular .constructors
+    | `(builder_name| forward) => return regular .forward
+    | `(builder_name| elim) => return regular .elim
+    | `(builder_name| cases) => return regular .cases
+    | `(builder_name| default) => return dflt
+    | _ => throwUnsupportedSyntax
 
 instance : ToString DBuilderName where
   toString
@@ -155,48 +163,77 @@ syntax builderOptions := Aesop.builder_option*
 
 end Parser
 
-structure BuilderOptions (m : Type _ → Type _) (α : Type _) where
-  parseOption : Syntax → m α -- parse a single `Aesop.builder_option`
-  empty : α
-  combine : α → α → α
+inductive BuilderOption
+  | usesBranchState (b : Bool)
+  | immediate (names : Array Name)
+
+namespace BuilderOption
+
+def «elab» (stx : Syntax) : ElabM BuilderOption :=
+  withRefThen stx λ
+    | `(builder_option| (uses_branch_state := $b:Aesop.bool_lit)) =>
+      return usesBranchState $ ← elabBoolLit b
+    | `(builder_option| (immediate := [$ns:ident,*])) =>
+      return immediate $ (ns : Array Syntax).map (·.getId)
+    | _ => throwUnsupportedSyntax
+
+protected def name : BuilderOption → String
+  | usesBranchState .. => "uses_branch_state"
+  | immediate .. => "immediate"
+
+end BuilderOption
+
+
+structure BuilderOptions (σ : Type _) where
+  builderName : DBuilderName
+  init : σ
+  add : σ → BuilderOption → Option σ
 
 namespace BuilderOptions
 
-def parse [Inhabited α] (bo : BuilderOptions m α) : Syntax → m α
-  | `(Parser.builderOptions| $opts:Aesop.builder_option*) =>
-    opts.foldlM (init := bo.empty) λ o stx =>
-      return bo.combine o (← bo.parseOption stx)
-  | _ => unreachable!
+def «elab» (bo : BuilderOptions α) (stx : Syntax) : ElabM α :=
+  withRefThen stx λ
+    | `(Parser.builderOptions| $stxs:Aesop.builder_option*) => do
+      let mut opts := bo.init
+      let mut seen : HashSet String := {}
+      for stx in stxs do
+        let opt ← BuilderOption.elab stx
+        let optName := opt.name
+        if seen.contains optName then withRef stx $ throwError
+          "duplicate builder option '{optName}'"
+        seen := seen.insert optName
+        match bo.add opts opt with
+        | some opts' => opts := opts'
+        | none => withRef stx $ throwError
+          "builder '{bo.builderName}' does not accept option '{optName}'"
+      return opts
+    | _ => throwUnsupportedSyntax
 
-protected def none (builder : DBuilderName) : BuilderOptions m Unit where
-  parseOption _ :=
-    throwError "aesop: builder {builder} does not accept any options"
-  empty := ()
-  combine := λ _ _ => ()
+protected def none (builderName : DBuilderName) : BuilderOptions Unit where
+  builderName := builderName
+  init := ()
+  add := λ _ _ => none
 
-def tactic : BuilderOptions m TacticBuilderOptions where
-  parseOption
-    | `(builder_option| (uses_branch_state := $b:Aesop.bool_lit)) =>
-      return { usesBranchState := parseBoolLit b }
-    | _ => throwError "aesop: invalid option for builder {BuilderName.tactic}"
-  empty := { usesBranchState := true }
-  combine o p := { usesBranchState := p.usesBranchState }
+def tactic : BuilderOptions TacticBuilderOptions where
+  builderName := .regular .tactic
+  init := { usesBranchState := true }
+  add
+    | opts, .usesBranchState b => some { opts with usesBranchState := b }
+    | opts, _ => none
 
+@[inline]
 private def forwardCore (clear : Bool) :
-    BuilderOptions m ForwardBuilderOptions where
-  parseOption
-    | `(builder_option| (immediate := [$ns:ident,*])) => return {
-        immediateHyps := some $ (ns : Array Syntax).map (·.getId)
-        clear := clear
-      }
-    | _ => throwError "aesop: invalid option for builder {BuilderName.forward}"
-  empty := { immediateHyps := none, clear := clear }
-  combine o p := { immediateHyps := p.immediateHyps, clear := clear }
+    BuilderOptions ForwardBuilderOptions where
+  builderName := .regular $ if clear then .elim else .forward
+  init := { immediateHyps := none, clear := clear }
+  add
+    | opts, .immediate ns => some { opts with immediateHyps := ns }
+    | opts, _ => none
 
-def forward : BuilderOptions m ForwardBuilderOptions :=
+def forward : BuilderOptions ForwardBuilderOptions :=
   forwardCore (clear := false)
 
-def elim : BuilderOptions m ForwardBuilderOptions :=
+def elim : BuilderOptions ForwardBuilderOptions :=
   forwardCore (clear := true)
 
 end BuilderOptions
@@ -247,29 +284,30 @@ instance : ToString Builder where
     | dflt => "default"
 
 open DBuilderName in
-def parseOptions (b : DBuilderName) (opts : Syntax) : m Builder := do
+def elabOptions (b : DBuilderName) (opts : Syntax) : ElabM Builder := do
   match b with
   | regular BuilderName.apply => checkNoOptions; return apply
   | regular BuilderName.simp => checkNoOptions; return simp
   | regular BuilderName.unfold => checkNoOptions; return unfold
   | regular BuilderName.tactic =>
-    return tactic $ ← BuilderOptions.tactic.parse opts
+    return tactic $ ← BuilderOptions.tactic.elab opts
   | regular BuilderName.constructors => checkNoOptions; return constructors
   | regular BuilderName.forward =>
-    return forward $ ← BuilderOptions.forward.parse opts
+    return forward $ ← BuilderOptions.forward.elab opts
   | regular BuilderName.elim =>
-    return forward $ ← BuilderOptions.elim.parse opts
+    return forward $ ← BuilderOptions.elim.elab opts
   | regular BuilderName.cases => checkNoOptions; return cases
   | DBuilderName.dflt => checkNoOptions; return default
   where
-    checkNoOptions := BuilderOptions.none b |>.parse opts
+    checkNoOptions := BuilderOptions.none b |>.«elab» opts
 
-def parse : Syntax → m Builder
-  | `(builder| $b:Aesop.builder_name) =>
-    parseOptions (DBuilderName.parse b) (mkNode ``Parser.builderOptions #[])
-  | `(builder| ($b:Aesop.builder_name $opts:builderOptions)) =>
-    parseOptions (DBuilderName.parse b) opts
-  | _ => unreachable!
+def «elab» (stx : Syntax) : ElabM Builder :=
+  withRefThen stx λ
+    | `(builder| $b:Aesop.builder_name) => do
+      elabOptions (← DBuilderName.elab b) (mkNode ``Parser.builderOptions #[])
+    | `(builder| ($b:Aesop.builder_name $opts:builderOptions)) => do
+      elabOptions (← DBuilderName.elab b) opts
+    | _ => throwUnsupportedSyntax
 
 def toRuleBuilder : Builder → RuleBuilder
   | apply => RuleBuilder.apply
@@ -283,14 +321,14 @@ def toRuleBuilder : Builder → RuleBuilder
 
 open DBuilderName in
 def toDBuilderName : Builder → DBuilderName
-  | apply => regular BuilderName.apply
-  | simp => regular BuilderName.simp
-  | unfold => regular BuilderName.unfold
-  | tactic .. => regular BuilderName.tactic
-  | constructors => regular BuilderName.constructors
-  | forward .. => regular BuilderName.forward
-  | cases => regular BuilderName.cases
-  | dflt => DBuilderName.dflt
+  | apply => regular .apply
+  | simp => regular .simp
+  | unfold => regular .unfold
+  | tactic .. => regular .tactic
+  | constructors => regular .constructors
+  | forward .. => regular .forward
+  | cases => regular .cases
+  | dflt => .dflt
 
 end Builder
 
@@ -309,10 +347,11 @@ namespace RuleSets
 instance : ToString RuleSets where
   toString rs := s!"(rule_sets [{String.joinSep ", " $ rs.ruleSets.map toString}])"
 
-def parse : Syntax → RuleSets
-  | `(Parser.ruleSetsFeature| (rule_sets [$ns:ident,*])) =>
-    ⟨(ns : Array Syntax).map (·.getId)⟩
-  | _ => unreachable!
+def «elab» (stx : Syntax) : ElabM RuleSets :=
+  withRefThen stx λ
+    | `(Parser.ruleSetsFeature| (rule_sets [$ns:ident,*])) =>
+      return ⟨(ns : Array Syntax).map (·.getId)⟩
+    | _ => throwUnsupportedSyntax
 
 end RuleSets
 
@@ -352,22 +391,23 @@ instance : ToString Feature where
     | name n => toString n
     | ruleSets rs => toString rs
 
-partial def parse : Syntax → ParseT m Feature
-  | `(feature| $p:Aesop.priority) => priority <$> Priority.parse p
-  | `(feature| $p:Aesop.phase) => return phase $ parsePhaseName p
-  | `(feature| $b:Aesop.builder) => builder <$> Builder.parse b
-  | `(feature| $rs:ruleSetsFeature) => return ruleSets $ RuleSets.parse rs
-  | `(feature| $i:ident) => return name i.getId
-  | stx =>
-    if stx.isOfKind choiceKind then
-      let nonIdentAlts :=
-        stx.getArgs.filter λ stx => ! stx.isOfKind ``Parser.featIdent
-      if nonIdentAlts.size != 1 then
-        panic! "expected choice node with exactly one non-ident child"
+partial def «elab» (stx : Syntax) : ElabM Feature :=
+  withRefThen stx λ
+    | `(feature| $p:Aesop.priority) => priority <$> Priority.elab p
+    | `(feature| $p:Aesop.phase) => phase <$> PhaseName.elab p
+    | `(feature| $b:Aesop.builder) => builder <$> Builder.elab b
+    | `(feature| $rs:ruleSetsFeature) => ruleSets <$> RuleSets.elab rs
+    | `(feature| $i:ident) => return name i.getId
+    | stx =>
+      if stx.isOfKind choiceKind then
+        let nonIdentAlts :=
+          stx.getArgs.filter λ stx => ! stx.isOfKind ``Parser.featIdent
+        if nonIdentAlts.size != 1 then
+          panic! "expected choice node with exactly one non-ident child"
+        else
+          «elab» nonIdentAlts[0]
       else
-        parse nonIdentAlts[0]
-    else
-      unreachable!
+        throwUnsupportedSyntax
 
 end Feature
 
@@ -403,14 +443,15 @@ protected partial def toString : RuleExpr → String
 instance : ToString RuleExpr :=
   ⟨RuleExpr.toString⟩
 
-partial def parse : Syntax → ParseT m RuleExpr
-  | `(rule_expr| $f:Aesop.feature $e:Aesop.rule_expr) => do
-    return node (← Feature.parse f) #[← parse e]
-  | `(rule_expr| $f:Aesop.feature [ $es:Aesop.rule_expr,* ]) => do
-    return node (← Feature.parse f) (← (es : Array Syntax).mapM parse)
-  | `(rule_expr| $f:Aesop.feature) => do
-    return node (← Feature.parse f) #[]
-  | _ => unreachable!
+partial def «elab» (stx : Syntax) : ElabM RuleExpr :=
+  withRefThen stx λ
+    | `(rule_expr| $f:Aesop.feature $e:Aesop.rule_expr) => do
+      return node (← Feature.elab f) #[← «elab» e]
+    | `(rule_expr| $f:Aesop.feature [ $es:Aesop.rule_expr,* ]) => do
+      return node (← Feature.elab f) (← (es : Array Syntax).mapM «elab»)
+    | `(rule_expr| $f:Aesop.feature) => do
+      return node (← Feature.elab f) #[]
+    | _ => throwUnsupportedSyntax
 
 -- Fold the branches of a `RuleExpr`. We treat each branch as a list of features
 -- which we fold over. The result is an array containing one result per branch.
@@ -457,12 +498,12 @@ def toStringId (c : RuleConfig Id) : String :=
 
 def getPenalty (phase : PhaseName) (c : RuleConfig Id) : m Int := do
   let (some penalty) := c.priority.toInt? | throwError
-    "aesop: {phase} rules must specify an integer penalty (not a success probability)"
+    "{phase} rules must specify an integer penalty (not a success probability)"
   return penalty
 
 def getSuccessProbability (c : RuleConfig Id) : m Percent := do
   let (some prob) := c.priority.toPercent? | throwError
-    "aesop: unsafe rules must specify a success probability (not an integer penalty)"
+    "unsafe rules must specify a success probability (not an integer penalty)"
   return prob
 
 def buildLocalRule (c : RuleConfig Id) (goal : MVarId) :
@@ -495,19 +536,24 @@ def buildLocalRule (c : RuleConfig Id) (goal : MVarId) :
     let penalty ← c.getPenalty phase
     let (goal, res) ← runBuilder goal phase c.builder
     match res with
-    | RuleBuilderResult.regular res =>
+    | .regular res =>
       let rule := RuleSetMember.normRule {
+        res with
         name := c.ident.toRuleName phase res.builder
-        tac := res.tac
-        indexingMode := res.indexingMode
         usesBranchState := res.mayUseBranchState
         extra := { penalty }
       }
       return (goal, rule, c.ruleSets.ruleSets)
-    | RuleBuilderResult.simp res =>
+    | .globalSimp res =>
       let rule := RuleSetMember.normSimpRule {
+        res with
         name := c.ident.toRuleName phase res.builder
-        entries := res.entries
+      }
+      return (goal, rule, c.ruleSets.ruleSets)
+    | .localSimp res =>
+      let rule := RuleSetMember.localNormSimpRule {
+        res with
+        name := c.ident.toRuleName phase res.builder
       }
       return (goal, rule, c.ruleSets.ruleSets)
   where
@@ -524,13 +570,13 @@ def buildLocalRule (c : RuleConfig Id) (goal : MVarId) :
             kind := RuleBuilderKind.local fvarUserName goal
           }
       match ← b.toRuleBuilder builderInput with
-      | RuleBuilderOutput.global r => return (goal, r)
-      | RuleBuilderOutput.local r goal => return (goal, r)
+      | .global r => return (goal, r)
+      | .«local» goal r => return (goal, r)
 
     runRegularBuilder (goal : MVarId) (phase : PhaseName) (b : Builder) :
         MetaM (MVarId × RegularRuleBuilderResult) := do
       let (goal, RuleBuilderResult.regular r) ← runBuilder goal phase b
-        | throwError "aesop: builder {b} cannot be used for {phase} rules"
+        | throwError "builder {b} cannot be used for {phase} rules"
       return (goal, r)
 
 -- Precondition: `c.ident = RuleIdent.const _`.
@@ -543,13 +589,13 @@ def buildGlobalRule (c : RuleConfig Id) :
 def toRuleNameFilter (c : RuleConfig Option) :
     m (RuleSetNameFilter × RuleNameFilter) := do
   let (some ident) := c.ident | throwError
-    "aesop: rule name not specified"
+    "rule name not specified"
   let builders ←
     match c.builder with
     | none => pure #[]
     | some b => do
       let (some builder) := b.toDBuilderName.toBuilderName? | throwError
-        "aesop: {b.toDBuilderName} cannot be used when erasing rules.\nUse the corresponding non-default builder (e.g. 'apply' or 'constructors') instead."
+        "{b.toDBuilderName} cannot be used when erasing rules.\nUse the corresponding non-default builder (e.g. 'apply' or 'constructors') instead."
         -- We could instead look for the correct non-default builder ourselves
         -- by re-running the logic that determines which builder to use.
       pure #[builder]
@@ -566,26 +612,27 @@ end RuleConfig
 namespace RuleExpr
 
 def toAdditionalRules (e : RuleExpr) (init : RuleConfig Option)
-    (nameToIdent : Name → m RuleIdent) : m (Array (RuleConfig Id)) := do
+    (defaultRuleSet : RuleSetName) (nameToIdent : Name → m RuleIdent) :
+    m (Array (RuleConfig Id)) := do
   let cs ← e.foldBranchesM (init := init) go
   cs.mapM finish
   where
     go (r : RuleConfig Option) : Feature → m (RuleConfig Option)
       | Feature.phase p => do
         if let (some previous) := r.phase then throwError
-          "aesop: duplicate phase declaration: '{p}'\n(previous declaration: '{previous}')"
+          "duplicate phase declaration: '{p}'\n(previous declaration: '{previous}')"
         return { r with phase := some p }
       | Feature.priority p => do
         if let (some previous) := r.priority then throwError
-          "aesop: duplicate priority declaration: '{p}'\n(previous declaration: '{previous}')"
+          "duplicate priority declaration: '{p}'\n(previous declaration: '{previous}')"
         return { r with priority := some p }
       | Feature.builder b => do
         if let (some previous) := r.builder then throwError
-          "aesop: duplicate builder declaration: '{b}'\n(previous declaration: '{previous}')"
+          "duplicate builder declaration: '{b}'\n(previous declaration: '{previous}')"
         return { r with builder := some b }
       | Feature.name n => do
         if let (some previous) := r.ident then throwError
-          "aesop: duplicate rule name: '{n}'\n(previous rule name: '{previous}')"
+          "duplicate rule name: '{n}'\n(previous rule name: '{previous}')"
         let ident ← nameToIdent n
         return { r with ident }
       | Feature.ruleSets newRuleSets =>
@@ -599,9 +646,9 @@ def toAdditionalRules (e : RuleExpr) (init : RuleConfig Option)
         m (PhaseName × Priority) :=
       match c.phase, c.priority with
       | none, none =>
-        throwError "aesop: phase (safe/unsafe/norm) not specified."
+        throwError "phase (safe/unsafe/norm) not specified."
       | some PhaseName.unsafe, none =>
-        throwError "aesop: unsafe rules must specify a success probability ('x%')."
+        throwError "unsafe rules must specify a success probability ('x%')."
       | some phase@PhaseName.safe, none =>
         return (phase, Priority.int defaultSafePenalty)
       | some phase@PhaseName.norm, none =>
@@ -611,16 +658,16 @@ def toAdditionalRules (e : RuleExpr) (init : RuleConfig Option)
       | none, some prio@(Priority.percent prob) =>
         return (PhaseName.unsafe, prio)
       | none, some _ =>
-        throwError "aesop: phase (safe/unsafe/norm) not specified."
+        throwError "phase (safe/unsafe/norm) not specified."
 
     finish (c : RuleConfig Option) : m (RuleConfig Id) := do
       let (some ident) := c.ident | throwError
-        "aesop: rule name not specified"
+        "rule name not specified"
       let (phase, priority) ← getPhaseAndPriority c
       let builder := c.builder.getD Builder.dflt
       let ruleSets :=
         if c.ruleSets.ruleSets.isEmpty then
-          ⟨#[defaultRuleSetName]⟩
+          ⟨#[defaultRuleSet]⟩
         else
           c.ruleSets
       return { ident, phase, priority, builder, ruleSets }
@@ -635,8 +682,8 @@ def toAdditionalGlobalRules (decl : Name) (e : RuleExpr) :
     ruleSets := ⟨#[]⟩
   }
   let nameToIdent n := throwError
-    "aesop: rule name '{n}' not allowed in aesop attribute.\n(Perhaps you misspelled a builder or phase.)"
-  toAdditionalRules e init nameToIdent
+    "rule name '{n}' not allowed in aesop attribute.\n(Perhaps you misspelled a builder or phase.)"
+  toAdditionalRules e init defaultRuleSetName nameToIdent
 
 def buildAdditionalGlobalRules (decl : Name) (e : RuleExpr) :
     MetaM (Array (RuleSetMember × Array RuleSetName)) := do
@@ -652,7 +699,7 @@ def toAdditionalLocalRules (goal : MVarId) (e : RuleExpr) :
     ruleSets := ⟨#[]⟩
   }
   let nameToIdent n := withMVarContext goal $ RuleIdent.ofName n
-  toAdditionalRules e init nameToIdent
+  toAdditionalRules e init localRuleSetName nameToIdent
 
 def buildAdditionalLocalRules (goal : MVarId) (e : RuleExpr) :
     MetaM (MVarId × Array (RuleSetMember × Array RuleSetName)) := do
@@ -680,17 +727,17 @@ def toRuleNameFilters (e : RuleExpr) (nameToIdent : Name → m RuleIdent) :
     go (r : RuleConfig Option) : Feature → m (RuleConfig Option)
       | Feature.phase p => do
         if let (some previous) := r.phase then throwError
-          "aesop: duplicate phase declaration: '{p}'\n(previous declaration: '{previous}')"
+          "duplicate phase declaration: '{p}'\n(previous declaration: '{previous}')"
         return { r with phase := some p }
       | Feature.priority prio =>
-        throwError "aesop: unexpected priority '{prio}'"
+        throwError "unexpected priority '{prio}'"
       | Feature.name n => do
         if let (some previous) := r.ident then throwError
-          "aesop: duplicate rule name: '{n}'\n(previous rule name: '{previous}')"
+          "duplicate rule name: '{n}'\n(previous rule name: '{previous}')"
         return { r with ident := (← nameToIdent n) }
       | Feature.builder b => do
         if let (some previous) := r.builder then throwError
-          "aesop: duplicate builder declaration: '{b}'\n(previous declaration: '{previous}')"
+          "duplicate builder declaration: '{b}'\n(previous declaration: '{previous}')"
         return { r with builder := some b }
       | Feature.ruleSets newRuleSets =>
         have ord : Ord RuleSetName := ⟨Name.quickCmp⟩

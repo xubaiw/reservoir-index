@@ -60,7 +60,7 @@ private def getIndexingMode (type : Expr) (immediate : UnorderedArraySet Nat) :
       match args.get? i with
       | some arg =>
         let argT ← inferType arg
-        let keys ← DiscrTree.mkPath argT
+        let keys ← DiscrTree.mkPathWithTransparency argT indexingTransparency
         return .hyps keys
       | none => throwError
         "aesop: internal error: immediate arg for forward rule is out of range"
@@ -82,7 +82,7 @@ def forward (opts : ForwardBuilderOptions) : RuleBuilder := λ input =>
         getImmediatePremises ldecl.userName ldecl.type opts.immediateHyps
       let tac := .forwardFVar ldecl.userName immediate opts.clear
       let imode ← getIndexingMode ldecl.type immediate
-      return RuleBuilderOutput.local (mkResult tac imode) goal
+      return RuleBuilderOutput.local goal (mkResult tac imode)
   where
     mkResult (tac : RuleTacDescr) (indexingMode : IndexingMode) :
         RuleBuilderResult :=

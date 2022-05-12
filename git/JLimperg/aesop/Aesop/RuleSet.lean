@@ -5,8 +5,8 @@ Authors: Jannis Limperg
 -/
 
 import Aesop.Builder
+import Aesop.Index
 import Aesop.Rule
-import Aesop.RuleIndex
 
 open Lean
 open Lean.Meta
@@ -16,9 +16,10 @@ namespace Aesop
 
 inductive RuleSetMember
   | normRule (r : NormRule)
-  | normSimpRule (e : NormSimpRule)
   | unsafeRule (r : UnsafeRule)
   | safeRule (r : SafeRule)
+  | normSimpRule (r : NormSimpRule)
+  | localNormSimpRule (r : LocalNormSimpRule)
   deriving Inhabited
 
 namespace RuleSetMember
@@ -27,13 +28,11 @@ def name : RuleSetMember → RuleName
   | normRule r => r.name
   | unsafeRule r => r.name
   | safeRule r => r.name
-  | normSimpRule e => e.name
+  | normSimpRule r => r.name
+  | localNormSimpRule r => r.name
 
-def isGlobal : RuleSetMember → Bool
-  | normRule r => r.tac.isGlobal
-  | unsafeRule r => r.tac.isGlobal
-  | safeRule r => r.tac.isGlobal
-  | normSimpRule r => true
+def isGlobal (m : RuleSetMember) : Bool :=
+  m.name.scope == .global
 
 end RuleSetMember
 
@@ -55,9 +54,9 @@ end RuleNameFilter
 
 
 structure RuleSet where
-  normRules : RuleIndex NormRule
-  unsafeRules : RuleIndex UnsafeRule
-  safeRules : RuleIndex SafeRule
+  normRules : Index NormRule
+  unsafeRules : Index UnsafeRule
+  safeRules : Index SafeRule
   normSimpLemmas : SimpTheorems
   normSimpLemmaDescrs : PHashMap RuleName (Array SimpEntry)
     -- A cache of the norm simp rules added to `normSimpLemmas`. Invariant: the
@@ -65,19 +64,20 @@ structure RuleSet where
     -- a rule is erased, its entry is removed from this map. We use this map (a)
     -- to figure out which `SimpEntry`s to erase from `normSimpLemmas` when a
     -- rule is erased; (b) to serialise the norm simp rules.
-  ruleNames : PHashMap RuleIdent (Array RuleName)
+  localNormSimpLemmas : Array LocalNormSimpRule
+    -- This does not need to be persistent because the global rule set (which is
+    -- stored in an env extension and should therefore be persistent) never
+    -- contains local norm simp lemmas.
+  ruleNames : PHashMap RuleIdent (UnorderedArraySet RuleName)
     -- A cache of (non-erased) rule names. Invariant: `ruleNames` contains
     -- exactly the names of the rules in `normRules`, `normSimpLemmaDescrs`,
     -- `unsafeRules` and `safeRules`, minus the rules in `erased`. We use this
     -- cache to quickly determine whether a rule is present in the rule set.
   erased : HashSet RuleName
-    -- A collection of erased rules. When we erase a rule -- or a family of
-    -- rules, e.g. all rules associated with a certain declaration --, we do not
-    -- remove them from `normRules`, `unsafeRules` etc. Instead, we add them
-    -- to the `erased` set and remove them from `ruleNames`.
-    --
-    -- Exception: for simp theorems, when erasing a rule we remove it from
-    -- both `normSimpLemmas` and `normSimpLemmaDescrs`.
+    -- The set of rules that were erased from `normRules`, `unsafeRules` and
+    -- `safeRules`. When erasing a rule which is present in any of these three
+    -- indices, the rule is not removed from the indices but just added to this
+    -- set.
   deriving Inhabited
 
 namespace RuleSet
@@ -90,6 +90,8 @@ instance : ToMessageData RuleSet where
       "Safe rules:" ++ toMessageData rs.safeRules,
       "Normalisation rules:" ++ toMessageData rs.normRules,
       "Normalisation simp lemmas:" ++ rs.normSimpLemmas.toMessageData,
+      "Local normalisation simp lemmas:" ++ .node
+        (rs.localNormSimpLemmas.map (·.originalFVarUserName)),
       "Erased rules:" ++ indentD (unlines $
         rs.erased.toArray.qsort (λ x y => compare x y |>.isLT)
           |>.map toMessageData)
@@ -101,6 +103,7 @@ def empty : RuleSet where
   unsafeRules := {}
   safeRules := {}
   normSimpLemmaDescrs := {}
+  localNormSimpLemmas := {}
   ruleNames := {}
   erased := {}
 
@@ -116,9 +119,10 @@ def merge (rs₁ rs₂ : RuleSet) : RuleSet where
     rs₁.normSimpLemmaDescrs.merge rs₂.normSimpLemmaDescrs λ _ nsd₁ nsd₂ => nsd₁
     -- We can merge left-biased here because `nsd₁` and `nsd₂` should be equal
     -- anyway.
+  localNormSimpLemmas := rs₁.localNormSimpLemmas ++ rs₂.localNormSimpLemmas
   ruleNames :=
     rs₁.ruleNames.merge rs₂.ruleNames λ _ ns₁ ns₂ =>
-      ns₁.mergeUnsortedFilteringDuplicates ns₂
+      ns₁ ++ ns₂
   erased :=
     -- Add the erased rules from `rs₁` to `init`, except those rules which are
     -- present (and not erased) in `rs₂`.
@@ -133,22 +137,24 @@ def merge (rs₁ rs₂ : RuleSet) : RuleSet where
 def add (rs : RuleSet) (r : RuleSetMember) : RuleSet :=
   let n := r.name
   let erased := rs.erased.erase n
-  let ruleNames := rs.ruleNames.insertWith n.toRuleIdent #[n] λ ns =>
-    if ns.contains n then ns else ns.push n
+  let ruleNames := rs.ruleNames.insertWith n.toRuleIdent (.singleton n) λ ns =>
+    if ns.contains n then ns else ns.insert n
   let rs := { rs with erased := erased, ruleNames := ruleNames }
   match r with
   | .normRule r =>
     { rs with normRules := rs.normRules.add r r.indexingMode }
+  | .unsafeRule r =>
+    { rs with unsafeRules := rs.unsafeRules.add r r.indexingMode }
+  | .safeRule r =>
+    { rs with safeRules := rs.safeRules.add r r.indexingMode }
   | .normSimpRule r =>
     { rs with
       normSimpLemmas :=
         r.entries.foldl (init := rs.normSimpLemmas) λ simpLemmas e =>
           simpLemmas.addSimpEntry e
       normSimpLemmaDescrs := rs.normSimpLemmaDescrs.insert r.name r.entries }
-  | .unsafeRule r =>
-    { rs with unsafeRules := rs.unsafeRules.add r r.indexingMode }
-  | .safeRule r =>
-    { rs with safeRules := rs.safeRules.add r r.indexingMode }
+  | .localNormSimpRule r =>
+    { rs with localNormSimpLemmas := rs.localNormSimpLemmas.push r }
 
 def addArray (rs : RuleSet) (ra : Array RuleSetMember) : RuleSet :=
   ra.foldl add rs
@@ -177,11 +183,14 @@ def erase (rs : RuleSet) (f : RuleNameFilter) : RuleSet × Bool :=
           normSimpLemmaDescrs := normSimpLemmaDescrs.erase r
           for e in simpEntries do
             normSimpLemmas := normSimpLemmas.eraseSimpEntry e
-      let res := { rs with
-        ruleNames := ruleNames
-        erased := erased
-        normSimpLemmas := normSimpLemmas
-        normSimpLemmaDescrs := normSimpLemmaDescrs
+
+      let localNormSimpLemmas := rs.localNormSimpLemmas.filter λ r =>
+        ! toErase.contains r.name
+
+      let res := {
+        rs with
+        ruleNames, erased, normSimpLemmas, normSimpLemmaDescrs,
+        localNormSimpLemmas
       }
       return (res, true)
 
@@ -256,8 +265,13 @@ def defaultRuleSetName : RuleSetName := `default
 
 def builtinRuleSetName : RuleSetName := `builtin
 
+def localRuleSetName : RuleSetName := `local
+
 def defaultEnabledRuleSets : Array RuleSetName :=
-  #[defaultRuleSetName, builtinRuleSetName]
+  #[defaultRuleSetName, builtinRuleSetName, localRuleSetName]
+
+def RuleSetName.isReserved (n : RuleSetName) : Bool :=
+  n == defaultRuleSetName || n == builtinRuleSetName || n == localRuleSetName
 
 
 structure RuleSetNameFilter where
@@ -280,7 +294,10 @@ namespace RuleSets
 
 protected def empty : RuleSets where
   default := {}
-  others := Std.PersistentHashMap.empty.insert builtinRuleSetName {}
+  others :=
+    Std.PersistentHashMap.empty
+    |>.insert builtinRuleSetName {}
+    |>.insert localRuleSetName {}
 
 instance : EmptyCollection RuleSets :=
   ⟨RuleSets.empty⟩
