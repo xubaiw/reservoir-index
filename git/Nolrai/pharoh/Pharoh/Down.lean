@@ -1,8 +1,89 @@
 import Mathlib
 import Init.Data.Range
 
-lemma List.get?_succ (n : ℕ) (x : α) (xs : List α) : (x :: xs).get? (n + 1) = xs.get? n := by
-  simp
+lemma List.get?_succ (n : ℕ) (x : α) (xs : List α) : (x :: xs).get? (n + 1) = xs.get? n := by simp
+
+def upto : ∀ (n : ℕ), List ℕ
+  | 0 => []
+  | n+1 => n :: upto n
+
+lemma mem_upto : ∀ {n m}, m ∈ upto n ↔ m < n :=
+  by
+  intros n m
+  induction n
+  case zero =>
+    rw [iff_iff_and_or_not_and_not]
+    simp
+    apply Or.inr (List.not_mem_nil _)
+  case succ n n_ih =>
+    apply Iff.intro
+    case mp =>
+      intro h
+      cases h
+      case head => apply Nat.lt_succ_self m
+      case tail h =>
+       apply Nat.lt_trans (_ : m < n) (Nat.lt_succ_self n)
+       rw [← n_ih]
+       apply h
+    case mpr =>
+      intro h
+      cases h
+      simp [upto]
+      case step h =>
+        simp [upto]
+        apply Or.inr (n_ih.mpr h)
+
+section SplitStream
+
+variable (n : ℕ)
+
+def list2 : List (ℕ × ℕ) := (upto (n+1)).map (λ x => (n, x))
+
+lemma list2_contains (m : ℕ) : m ≤ n -> (n, m) ∈ list2 n :=
+  by
+  intros mh
+  apply List.mem_map_of_mem
+  apply mem_upto.mpr (Nat.lt_succ_of_le mh)
+
+def split_stream_aux : {l : List (ℕ × ℕ) // l ≠ ∅} where
+  val := list2 n ++ (list2 n).map (λ p => (p.2, p.1))
+  property := 
+    have ⟨x, xs, xh⟩ : ∃ x xs, x :: xs = list2 n := by
+      simp [list2]
+    by
+    rw [← xh]
+    simp
+ 
+lemma split_stream_aux_contains : ∀ p, p ∈ (split_stream_aux (max.uncurry p)).val
+  | (x, y) =>
+    if h : y < x
+      then by
+        rw [split_stream_aux]
+        apply List.mem_append_left
+        simp [max, if_pos h]
+        apply list2_contains
+        apply le_of_lt h
+      else by
+        rw [split_stream_aux]
+        apply List.mem_append_right; case h =>
+        simp [max, if_neg h]
+        clear n
+        have h := le_of_not_gt h
+        cases h
+        case refl => apply Or.inl; rfl
+        case step m hm =>
+          apply Or.inr; case h =>
+          rw [List.mem_map]
+          exists x
+          constructor
+          case left =>
+            have h' := le_of_not_gt h
+            rw [mem_upto]
+            apply Nat.lt_succ_of_le hm
+          case right =>
+            simp
+
+end SplitStream
 
 def Sequence α := ℕ → α
 
@@ -45,12 +126,91 @@ lemma get?_take_aux : ∀ n ix (s : Sequence α), ix < n → List.get? (s.take n
 abbrev get?_take (s : Sequence α) : ∀ n ix, ix < n → List.get? (s.take n) ix = some (s ix) := 
   λ n ix => get?_take_aux n ix s
 
+def concat_aux : ℕ → Sequence ({ l : List α // l ≠ []}) → α := by
+  intros n
+  apply @Nat.strong_rec_on (λ n => Sequence ({ l : List α // l ≠ []}) → α) n
+  exact λ n recOn s =>
+    if h : n < (s 0).val.length
+    then (s 0).val.get ⟨n, h⟩
+    else
+      have : n - List.length (s 0).val < n := by
+        have m_pos : 0 < List.length (s 0).val
+        have ⟨s0, s0_prop⟩ := s 0
+        simp
+        apply List.length_pos_of_ne_nil s0_prop 
+        apply Nat.sub_lt
+        apply Nat.lt_of_lt_of_le m_pos
+        apply le_of_not_gt h
+        exact m_pos
+      recOn (n - (s 0).val.length) this s.tail 
+
+def concat : Sequence ({ l : List α // l ≠ []}) → Sequence α
+  | s, n => concat_aux n s
+
+lemma concat_mem (a : α) (n m : ℕ) (l : List α) (s : Sequence ({ l : List α // l ≠ []})) 
+  (a_in_l : l.get? n = some a) 
+  (l_in_s : (s m).val = l) : 
+  ∃ k, s.concat k = a := by
+  revert s
+  induction m
+  case zero =>
+    intros s l_in_s
+    exists n
+    simp [concat, concat_aux, Nat.strong_rec_on]
+    rw [WellFounded.fix', WellFounded.fix, WellFounded.fixFEq]
+    have : n < (s 0).val.length
+    cases l_in_s
+    exact (List.get?_eq_some.mp a_in_l).1
+    rw [dif_pos this]
+    rw [← l_in_s] at a_in_l
+    rw [List.get?_eq_get] at a_in_l
+    simp at a_in_l
+    injection a_in_l with h
+    rw [← h]
+    simp
+    exact this
+  case succ m m_ih =>
+    intros s l_in_s
+    have : ∃ k, concat (tail s) k = a
+    apply m_ih (tail s)
+    rw [tail]
+    apply l_in_s
+    have ⟨k, kh⟩ := this
+    exists (k + (s 0).val.length)
+    have : k = k + (s 0).val.length - (s 0).val.length
+    rw [Nat.add_sub_cancel]
+    rw [this] at kh
+    apply Eq.trans _ kh
+    simp [concat, concat_aux, Nat.strong_rec_on, WellFounded.fix', WellFounded.fix]
+    rw [WellFounded.fixFEq]
+    have : ¬ k + (s 0).val.length < (s 0).val.length
+    simp
+    apply Nat.le_add_left
+    rw [dif_neg this]
+
+def split_stream := concat split_stream_aux
+
+instance : Membership α (Sequence α) where
+  mem a s := ∃ n, s n = a
+
+lemma split_stream_contains : ∀ p : ℕ × ℕ, p ∈ split_stream :=
+  by
+  intros p
+  have ⟨n, nh⟩ := List.get?_of_mem (split_stream_aux_contains p)
+  apply concat_mem
+  case l => exact (split_stream_aux $ Function.uncurry max p).val
+  case a_in_l => exact nh
+  case m => exact (Function.uncurry max p)
+  case l_in_s => rfl
+
 end Sequence
 
-open Sequence
-
-def List.cycle : ∀ l : List α, l.length > 0 → Sequence α :=
+namespace List
+def cycle : ∀ l : List α, l.length > 0 → Sequence α :=
   λ l p n => l.get ⟨n % l.length, Nat.mod_lt _ p⟩
+end List
+
+open Sequence
 
 @[simp]
 def Sequence.cycle_def' (l : List α) (p : l.length > 0) : 
@@ -642,43 +802,261 @@ lemma zero_le : ∀ a : Down, 0 ≤ a
     apply _root_.le_trans (zero_le (a 0)) (le_of_lt (mem_lt _))
     exists 0
 
+lemma zero_lt_Limit (f) : 0 < Limit f :=
+  by
+  have := zero_le (Limit f)
+  rw [le_iff_lt_or_eq] at this
+  cases this
+  case inl h => exact h
+  case inr h => cases h
+
 universe u
 
--- lemma strong_induction_aux 
---   (P : Down → Prop) 
---   (P_lt : ∀ a, (∀ b, b < a → P b) → P a)
---   : ∀ x y, y ≤ x → P y := by
+decidable_
+
+lemma strong_induction_aux 
+  (P : Down → Type) 
+  (P_lt : ∀ a, (∀ b, b < a → P b) → P a)
+  : ∀ x y, y ≤ x → P y := by
+
+  intros x
+  induction x with
+  | Zero =>
+    intros y yh
+    rw [le_iff_lt_or_eq] at yh
+    cases yh with
+    | inl h => exfalso; apply not_lt_zero _ h
+    | inr h => 
+      cases h
+      apply P_lt
+      intros b b_lt_zero
+      exfalso
+      apply not_lt_zero b b_lt_zero
+  | Limit elems elems_ih =>
+    intros y yh
+    rw [le_iff_lt_or_eq] at yh
+    cases yh
+    case inr y_eq =>
+      cases y_eq
+      apply P_lt
+      intros b bh
+      have ⟨b_list, ⟨b_head, b_tail⟩, b_chain, b_length⟩ := bh
+      match b_list with
+      | [] => simp at *
+      | [_] => simp at *
+      | _::bs::bss => 
+        simp at *
+        cases b_head
+        clear b_length; case refl =>
+        have ⟨n, nh⟩ : mem bs (Limit elems) := b_chain 0 (Limit elems) bs rfl rfl
+        apply elems_ih n b
+        exists (bs :: bss)
+        constructor
+        constructor
+        simp; exact nh
+        exact b_tail
+        apply isChain_down _ _ b_chain
+    case inl y_lt =>
+      have ⟨y_list, ⟨y_head, y_tail⟩, y_chain, y_length⟩ := y_lt
+      match y_list with
+      | [] => simp at *
+      | [_] => simp at *
+      | _::ys::yss => 
+        simp at *
+        cases y_head; case refl =>
+        clear y_length
+        have ⟨n, nh⟩ : mem ys (Limit elems) := y_chain 0 (Limit elems) ys rfl rfl
+        cases nh; case refl =>
+        apply elems_ih n; case a =>
+        exists (elems n :: yss)
+        repeat constructor
+        exact y_tail
+        apply isChain_down _ _ y_chain
+
+lemma strong_induction (P : Down → Prop) (P_lt : ∀ a, (∀ b, b < a → P b) → P a) : ∀ x, P x
+  | x => strong_induction_aux P P_lt x x (le_refl x)
+
+def add : Down → Down → Down
+  | x, Zero => x
+  | x, Limit f => Limit (λ n => add x (f n))
+
+@[simp]
+lemma add_zero : add x Zero = x := rfl
+
+@[simp]
+lemma add_Limit' : add x (Limit f) = Limit (λ n => add x (f n)) := rfl
+
+lemma zero_add : add Zero x = x :=
+  by
+  induction x
+  case Zero => simp [add]
+  case Limit f f_ih => simp [add, f_ih]
+
+lemma add_assoc : ∀ a b c, add (add a b) c = add a (add b c)
+  | a, b, Zero => rfl
+  | a, b, Limit f => by simp; funext x; apply add_assoc 
+
+instance : AddMonoid Down where
+  add := add
+  zero := Zero
+  zero_add := λ _ => zero_add
+  add_zero := λ _ => rfl
+  add_assoc := add_assoc
+  nsmul_zero' := λ _ => rfl
+  nsmul_succ' := λ _ _ => rfl
+
+lemma add_Limit : x + Limit f = Limit (λ n => x + f n) := rfl
+
+inductive Sub (a b : Down.{u}) : Prop
+  | intro 
+    (map : {x : Down // x < a} → {x : Down // x < b}) 
+    (zero_to_zero : ∀ {x : {x : Down // x < a}}, x.val = Zero -> (map x).val = Zero)
+    (monotonic : ∀ {x : {x : Down // x < a}} {y : {y : Down // y < a}}, x.val < y.val → (map x).val < (map y).val)
+    (initial : ∀ {x : {x : Down // x < a}} {y : {y : Down // y < a}}, (map x).val < (map y).val → x.val < y.val)
+    : Sub a b
+
+instance : Subset Down where
+  subset := Down.Sub
+
+def Sub_fromf 
+  (f : Down → Down) 
+  (f_zero : f Zero = Zero) 
+  (f_mono : ∀ {x y : Down}, x < y → f x < f y) 
+  (f_initial : ∀ {x y : Down}, f x < f y → x < y) 
+  (f_takes : ∀ {x : Down}, x < a → f x < b) : a ⊆ b :=
+  by
+  constructor
+  case map => exact λ ⟨z, z_lt⟩ => ⟨f z, f_takes z_lt⟩
+  case zero_to_zero =>
+    intros x; cases x; case mk x x_lt => 
+      intros x_eq_Zero; cases x_eq_Zero
+      apply f_zero
+  case monotonic =>
+    simp
+    intros x x_lt y y_lt x_lt_y
+    apply f_mono x_lt_y
+  case initial =>
+    simp
+    intro x x_lt y y_lt map_x_lt_map_y
+    apply f_initial map_x_lt_map_y
+
+variable {a b c : Down}
+
+lemma Sub.refl : a ⊆ a := by
+  apply Sub_fromf
+  case f => exact id
+  case f_zero => exact rfl
+  case f_mono => exact id
+  case f_takes => exact id
+  case f_initial => exact id
+
+lemma Sub.of_le (a_lt_b : a ≤ b) : a ⊆ b := by
+  apply Sub_fromf
+  case f => exact id
+  case f_zero => exact rfl
+  case f_mono => exact id
+  case f_takes =>
+    intros a a_lt_x
+    rw [id]
+    apply lt_of_lt_of_le a_lt_x a_lt_b
+  case f_initial => exact id
+
+lemma Sub.trans (ab : a ⊆ b) (bc : b ⊆ c) : a ⊆ c :=
+  have ⟨ab_map, ab_zero_to_zero, ab_monotonic, ab_initial⟩ := ab
+  have ⟨bc_map, bc_zero_to_zero, bc_monotonic, bc_initial⟩ := bc
+  by
+  constructor
+  case map => exact bc_map ∘ ab_map
+  case zero_to_zero => 
+    intros x p
+    cases x; case mk x x_lt => 
+    cases p; case refl =>
+      simp [ab_zero_to_zero, bc_zero_to_zero]
+  case monotonic => exact λ a_lt_b => bc_monotonic (ab_monotonic a_lt_b)
+  case initial => exact λ map_a_lt_map_b => ab_initial (bc_initial map_a_lt_map_b)
+
+lemma Sub_zero : ∀ {a : Down}, a ⊆ 0 → a = 0
+  | Zero, _ => rfl
+  | Limit g, ⟨map, zero_to_zero, monotonic, initial⟩ =>
+    have g0_lt_g : g 0 < Limit g := mem_lt ⟨0, rfl⟩
+    have y := (map ⟨(g 0), g0_lt_g⟩)
+    (not_lt_zero y y.property).elim
+
+lemma Sub.to_map : ∀ a b : Down, a ⊆ b → {x // x < a} → {y // y < b}
+  | a, Zero, a_sub_b, ⟨_, lt_a⟩ => 
+    
+    by
+    have : a = 0 := Sub_zero a_sub_b
+    rw [this] at lt_a
+    exfalso; apply not_lt_zero _ lt_a
+
+  | Zero, Limit b, a_sub_b, ⟨x, lt_a⟩ => ⟨Zero, zero_lt_Limit _⟩
+  | Limit a, Limit b, a_sub_b, ⟨x, lt_a⟩ => 
+
+inductive eqv (x y : Down.{u}) : Prop :=
+  | mk (xy : x ⊆ y) (yx : y ⊆ x) : eqv x y
+
+instance Setoid : Setoid Down where
+  r := eqv
+  iseqv := {
+    refl := λ x => ⟨Sub.refl, Sub.refl⟩
+    symm := λ ⟨xy, yx⟩ => ⟨yx, xy⟩
+    trans := λ ⟨xy, yx⟩ ⟨yz, zy⟩ => ⟨Sub.trans xy yz, Sub.trans zy yx⟩
+  }
+
+lemma eqv_zero {a : Down} : a ≈ 0 → a = 0 
+  | ⟨l, r⟩ => Sub_zero l
+
+lemma eqv_limit {f : ℕ → Down} : ∀ {b}, Limit f ≈ b → ∃ g, Limit g = b
+  | Zero, ⟨l, r⟩ => by cases (Sub_zero l)
+  | (Limit g), _ => ⟨g, rfl⟩
+
+section
+
+def motive y := ∀ {x : Down}, (h : ∀ (f' : { f' // f' < x }), Σ' (g' : {g' // g' < y}) , f'.val ⊆ g'.val) → x ⊆ y
+
+lemma Sub_limit_limit : motive a := by
+  apply strong_induction motive; case P_lt =>
+  intros a a_ih
+  intros c
+  have := a_ih c
+  intros h
+  constructor
+  case map =>
+    intros x
+    have ⟨g, ⟨gmap, g1, g2, g3⟩⟩ := h x
 
 
-  -- | _, Zero, _ => P_lt Zero (λ b b_lt => (not_lt_zero b b_lt).elim)
-  -- | Zero, y, h => by
-  --   rw [le_iff_lt_or_eq] at h
-  --   cases h with
-  --   | inl h => exfalso; apply not_lt_zero _ h
-  --   | inr h => 
-  --     cases h
-  --     apply strong_induction_aux _ P_lt
-  --     apply zero_le Zero
-  -- | Limit elems_x, Limit elems_y, ⟨l, ⟨l_head, l_tail⟩, l_chain⟩ => 
-  --   match l with
-  --   | [] => by simp at *
-  --   | [x] => by simp at *
 
-  -- intros x
-  -- induction x with
-  -- | Zero =>
-  --   intros y yh
-  --   rw [le_iff_lt_or_eq] at yh
-  --   cases yh with
-  --   | inl h => exfalso; apply not_lt_zero _ h
-  --   | inr h => 
-  --     cases h
-  --     apply strong_induction_aux _ P_lt
-  --     apply zero_le Zero
-  -- | Limit elems elems_ih =>
-  --   intros y yh
-  --   have ⟨l, ⟨l_head, l_tail⟩, l_chain⟩ := yh
-  --   cases l with
-  --   | nil => simp at *
-  --   | cons x xs =>
-  --     cases l with
+end Down
+
+def Ordinal := Quotient Down.Setoid
+
+namespace Ordinal
+
+def mk : Down → Ordinal := Quotient.mk Down.Setoid
+
+lemma addWellDefined 
+  (a₁ : Down) (b₁ : Down) (a₂ : Down) (b₂ : Down) 
+  (a_eqv : a₁ ≈ a₂) (b_eqv : b₁ ≈ b₂) :
+    mk (a₁ + b₁) = mk (a₂ + b₂) :=
+  by
+  apply Quotient.sound
+  case a =>
+    revert a₁ a₂ b₂
+    induction b₁
+    case Zero =>
+      intros a₁ a₂ b₂ a_eqv b_eqv
+      have := Down.eqv_zero (Setoid.symm b_eqv)
+      cases this; case refl =>
+      have : Down.Zero = 0 := rfl
+      simp [this] at *
+      exact a_eqv
+    case Limit b₁f b₁f_ih =>
+      intros a₁ a₂ b₂ a_eqv b_eqv
+      have ⟨b₂f, b_eq⟩ := Down.eqv_limit b_eqv
+      simp [← b_eq, Down.add_Limit] at *
+
+def add : Ordinal → Ordinal → Ordinal :=
+
+  Quotient.lift₂ (λ a b => mk $ a + b) _
