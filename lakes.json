@@ -76,6 +76,7 @@
  "leanprover/lean4",
  "leanprover/lean4-samples",
  "leanprover/vscode-lean4",
+ "lecopivo/EigenLean",
  "lecopivo/HouLean",
  "lecopivo/SciLean",
  "lecopivo/lean4-karray",
@@ -106,4 +107,5 @@
  "xubaiw/lean4-terminal",
  "xubaiw/sjtu-math2501-ode",
  "yatima-inc/Http.lean",
+ "yatima-inc/Radiya.lean",
  "zygi/lean4-sha3"]
