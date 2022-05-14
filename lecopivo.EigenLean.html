@@ -1,0 +1,62 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>lecopivo/EigenLean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>lecopivo/EigenLean</h1>
+<p>Lean 4 interface to Eigen</p>
+<a href="https://github.com/lecopivo/EigenLean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="org" data-path="readme.org" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean 4 interface to Eigen</h3>
+<p dir="auto">Proof of concept for interfacing Eigen’s linear solvers in Lean 4.</p>
+<p dir="auto">To compile and build examples:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="lake script run compileCpp
+lake build
+lake scropt run buildExamples"><pre>lake script run compileCpp
+lake build
+lake scropt run buildExamples</pre></div>
+<p dir="auto">Example of solving simple 2x2 system with LDLT:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def main : IO Unit := do
+  let A : Matrix 2 2 := ⟨FloatArray.mk #[2,1,1,2], by native_decide⟩
+  let b : Matrix 2 1 := ⟨FloatArray.mk #[1,1], by native_decide⟩
+  IO.println A
+  IO.println b
+  IO.println (A.ldlt.solve b)"><pre><span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> A : Matrix <span class="pl-c1">2</span> <span class="pl-c1">2</span> := ⟨FloatArray.mk #[<span class="pl-c1">2</span>,<span class="pl-c1">1</span>,<span class="pl-c1">1</span>,<span class="pl-c1">2</span>], <span class="pl-k">by</span> native_decide⟩
+  <span class="pl-k">let</span> b : Matrix <span class="pl-c1">2</span> <span class="pl-c1">1</span> := ⟨FloatArray.mk #[<span class="pl-c1">1</span>,<span class="pl-c1">1</span>], <span class="pl-k">by</span> native_decide⟩
+  IO.println A
+  IO.println b
+  IO.println (A.ldlt.solve b)</pre></div>
+<p dir="auto">To run the example <code>./build/exmaples/dense</code>.</p>
+<p dir="auto">Example of initializing sparse matrix:</p>
+<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def main : IO Unit := do
+  let entries : Array (Triplet 2 2) := (#[(0,0,1.0), (1,1,-1.0), (0,1, 2.0)] : Array (Nat×Nat×Float))
+  let B := SparseMatrix.mk entries
+  IO.println B.toDense"><pre><span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> entries : Array (Triplet <span class="pl-c1">2</span> <span class="pl-c1">2</span>) := (#[(<span class="pl-c1">0</span>,<span class="pl-c1">0</span>,<span class="pl-c1">1</span>.<span class="pl-c1">0</span>), (<span class="pl-c1">1</span>,<span class="pl-c1">1</span>,-<span class="pl-c1">1</span>.<span class="pl-c1">0</span>), (<span class="pl-c1">0</span>,<span class="pl-c1">1</span>, <span class="pl-c1">2</span>.<span class="pl-c1">0</span>)] : Array (Nat×Nat×Float))
+  <span class="pl-k">let</span> B := SparseMatrix.mk entries
+  IO.println B.toDense</pre></div>
+<p dir="auto">To run the example <code>./build/exmaples/sparse</code>.</p>
+</article></div></main>
+</body>
+</html>
