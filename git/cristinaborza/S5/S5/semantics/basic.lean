@@ -16,7 +16,7 @@ structure model where
 
 noncomputable def forces_form (M : model) : form → world → Bool
 | (form.atom p) => fun w => M.val p w 
-| (form.bot) => fun w => False 
+| (form.bot) => fun w => False
 | (form.impl p q) => fun w => (!(forces_form M p w) || (forces_form M q w)) 
 | (form.box p) => fun w => 
     if (∀ v , (v ∈ M.worlds) → (w ∈ M.worlds) → (M.access w v = True) → (forces_form M p v = True))
@@ -25,7 +25,7 @@ noncomputable def forces_form (M : model) : form → world → Bool
 
 notation M "," w "⊩" p => forces_form M p w
 
-/- Local logical consequence -/
+-- Local logical consequence
 noncomputable def forces_ctx (M : model) (Γ : ctx) (w : world) : Bool :=
   if (∀ p, (p ∈ Γ) → (forces_form M p w = True))
     then True 

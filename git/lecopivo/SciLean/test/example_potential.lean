@@ -23,6 +23,24 @@ def Coloumb (ε strength mass : ℝ) (x : ℝ^(3:ℕ)) : ℝ := - strength * mas
 argument x [Fact (ε≠0)]
   isSmooth, diff, hasAdjDiff, adjDiff
 
+example (n : ℕ) (ε : ℝ) [Fact (n≠0)] [Fact (ε≠0)] (C LJ : ℝ) (r m : Idx n → ℝ)
+  : (δ† λ (x : (ℝ^(3:ℕ))^n) => 
+  ∑ i j, Coloumb ε C (m i * m j) (x[i] - x[j])
+         +
+         LennardJones ε LJ (r i + r j) (x[i] - x[j]))
+   = 
+   λ x dx' => PowType.intro λ i =>
+     ∑ j,   Coloumb.arg_x.adjDiff ε C (m i * m j) (x[i] - x[j]) dx'
+          - Coloumb.arg_x.adjDiff ε C (m j * m i) (x[j] - x[i]) dx'
+          + (  LennardJones.arg_x.adjDiff ε LJ (r i + r j) (x[i] - x[j]) dx'
+             - LennardJones.arg_x.adjDiff ε LJ (r j + r i) (x[j] - x[i]) dx') :=
+by
+  simp; unfold hold; simp
+  simp [sum_into_lambda]
+  simp [← sum_of_add]
+  done
+
+
 def H (n : ℕ) (ε : ℝ) (C LJ : ℝ) (r m : Idx n → ℝ) (x p : (ℝ^(3:ℕ))^n) : ℝ :=
   (∑ i, (1/(2*m i)) * ∥p[i]∥²)
   +
@@ -36,14 +54,3 @@ argument x [Fact (n≠0)] [Fact (ε≠0)]
     simp[H]; unfold hold; simp
     simp [sum_into_lambda]
     simp [← sum_of_add]
-
-def solver (steps : ℕ) (n : ℕ) (ε : ℝ) [Fact (n≠0)] [Fact (ε≠0)] (C LJ : ℝ) (r m : Idx n → ℝ) : Impl (ode_solve (HamiltonianSystem (H n ε C LJ r m))) :=
-by
-  -- Unfold Hamiltonian definition and compute gradients
-  simp [HamiltonianSystem]
-
-  -- Apply RK4 method
-  rw [ode_solve_fixed_dt runge_kutta4_step]
-  lift_limit steps "Number of ODE solver steps."; admit; simp
-    
-  finish_impl
