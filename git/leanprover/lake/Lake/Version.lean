@@ -10,8 +10,9 @@ def version.major := 3
 def version.minor := 1
 def version.patch := 0
 
-def version.isRelease := false
-def version.specialDesc := "pre"
+def version.isPrerelease := true
+def version.isRelease := !isPrerelease
+def version.specialDesc := if isPrerelease then "pre" else ""
 
 def versionStringCore :=
   s!"{version.major}.{version.minor}.{version.patch}"

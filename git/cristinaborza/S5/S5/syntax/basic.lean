@@ -12,6 +12,9 @@ inductive prf : ctx → form → Prop where
 | s5 { Γ } { p } : prf Γ (¬(□p) → □(¬(□p)))
 | nec { Γ } { p } (h : (prf [] p)) : prf Γ (□p)
  
-notation Γ "⊢ₛ₅" p => prf Γ p 
+set_option quotPrecheck false
+
+notation Γ "⊢ₛ₅" p => prf Γ p
+notation Γ "⊬ₛ₅" p => (prf Γ p) → False
 notation "⊢ₛ₅" p => prf [] p 
  

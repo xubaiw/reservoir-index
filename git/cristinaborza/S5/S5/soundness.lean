@@ -57,6 +57,13 @@ theorem soundness { Γ : ctx } { p : form } : (Γ ⊢ₛ₅ p) → (Γ ⊩ₛ₅
   {
     apply sem_csq.is_true;
     intros;
+    unfold forces_form; simp;
+    rename_i h_ih;
     sorry;
-    sorry
+    sorry;
+    -- induction h_ih;
+    -- intros;
+    -- apply h_ih;
+    -- assumption;
+    -- apply empty_ctx_tt;
   }
