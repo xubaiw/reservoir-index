@@ -78,7 +78,7 @@ lift_limit steps "Number of ODE solver steps."; admit; simp
 finish_impl
 </pre>
 <p dir="auto">Let’s start with a warning! This code is not meant to be consumed as it is but it should be read interactively in a text editor, see the following animation:</p>
-<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="anim.gif"><img src="anim.gif" alt="anim.gif" style="max-width: 100%;"></a></p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="anim.gif"><img src="anim.gif" alt="anim.gif" data-animated-image="" style="max-width: 100%;"></a></p>
 <p dir="auto">On the right side you can see what is our current goal based on the position of the cursor. At the beginning, the goal is <code>Impl (ode_solve (HamiltonianSystem (H m k)))</code> as we have defined <code>solver</code> function.</p>
 <p dir="auto">In the next step, we expand the definition of <code>HamiltonianSystem</code> and <code>H</code>. This allows us to proceed to symbolic differentiation step.</p>
 <p dir="auto">Let’s pause for a bit. If we expand only <code>HamiltonianSystem</code>, the goal would contain:</p>
@@ -107,9 +107,9 @@ finish_impl
 <pre>lake env lean --run examples/WaveEquation.lean
 </pre>
 <p dir="auto">Produces the following animation:
-  <a target="_blank" rel="noopener noreferrer" href="wave.gif"><img src="wave.gif" alt="wave.gif" style="max-width: 100%;"></a></p>
+  <a target="_blank" rel="noopener noreferrer" href="wave.gif"><img src="wave.gif" alt="wave.gif" data-animated-image="" style="max-width: 100%;"></a></p>
 <p dir="auto">Or when nicely rendered:</p>
-<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="wavering.gif"><img src="wavering.gif" alt="wavering.gif" style="max-width: 100%;"></a></p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="wavering.gif"><img src="wavering.gif" alt="wavering.gif" data-animated-image="" style="max-width: 100%;"></a></p>
 </article></div></main>
 </body>
 </html>
