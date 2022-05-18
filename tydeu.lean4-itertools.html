@@ -29,7 +29,7 @@
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lean 4 Itertools</h3>
 <p dir="auto">This package provides an assortment of abstraction tools for performing iterations.</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def foo :=
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def foo :=
   generate 0 (· + 1)
   |> until (· == 10)
   |> filter (· % 2 == 0)
@@ -45,7 +45,7 @@
 
 <span class="pl-k">#eval</span> foo <span class="pl-c"><span class="pl-c">--</span> #[0, 4, 8, 12, 16]</span></pre></div>
 <p dir="auto">It makes heavy use of type-level iterators and the <code>@[inline]</code> amd <code>@[specialize]</code> attributes to produce highly efficient code. This way, write iterators using the tools provided is just as efficient as writing the loop manually.</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="def Itertools.MGenerate.forIn.loop._at.foo._spec_1 (x_1 : obj) (x_2 : obj) : obj :=
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def Itertools.MGenerate.forIn.loop._at.foo._spec_1 (x_1 : obj) (x_2 : obj) : obj :=
   let x_3 : obj := 10;
   let x_4 : u8 := Nat.decEq x_1 x_3;
   case x_4 : u8 of
@@ -81,7 +81,7 @@ def foo : obj :=
   let x_1 : obj := 0;
   let x_2 : obj := foo._closed_1;
   let x_3 : obj := Itertools.MGenerate.forIn.loop._at.foo._spec_1 x_1 x_2;
-  ret x_3"><pre class="notranslate" lang="text"><code class="notranslate">def Itertools.MGenerate.forIn.loop._at.foo._spec_1 (x_1 : obj) (x_2 : obj) : obj :=
+  ret x_3"><pre class="notranslate" lang="text"><code>def Itertools.MGenerate.forIn.loop._at.foo._spec_1 (x_1 : obj) (x_2 : obj) : obj :=
   let x_3 : obj := 10;
   let x_4 : u8 := Nat.decEq x_1 x_3;
   case x_4 : u8 of

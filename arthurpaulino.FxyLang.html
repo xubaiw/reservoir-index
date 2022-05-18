@@ -68,16 +68,16 @@ with the unverified (but faster) executor.</p>
 arguments on its left. Example: <code>f x y := x + y</code>.</p>
 <h5 dir="auto">Functions</h5>
 <p dir="auto">As mentioned above, functions are defined with the syntax:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="<function name> <names of input variables> := <function body>"><pre class="notranslate"><code class="notranslate"><function name> <names of input variables> := <function body>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="<function name> <names of input variables> := <function body>"><pre class="notranslate"><code><function name> <names of input variables> := <function body>
 </code></pre></div>
 <p dir="auto">The "names" are identifiers that start with letters. The scope of the function
 body is defined with indentation (as do the scopes of other structures in Fxy).</p>
 <p dir="auto">The return of the function is defined by its last line. Example:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="prod a b c :=
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="prod a b c :=
   ab := a * b
   ab * c
 
-!print prod 2 3 7"><pre class="notranslate"><code class="notranslate">prod a b c :=
+!print prod 2 3 7"><pre class="notranslate"><code>prod a b c :=
   ab := a * b
   ab * c
 
@@ -89,9 +89,9 @@ should print out <code>42</code> upon execution.</p>
 <p dir="auto">Fxy has a common feature of functional languages: currying. That is, one can
 store functions with partially applied arguments for later computations.
 Example:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="prod23 := prod 2 3
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="prod23 := prod 2 3
 
-!print prod23 7"><pre class="notranslate"><code class="notranslate">prod23 := prod 2 3
+!print prod23 7"><pre class="notranslate"><code>prod23 := prod 2 3
 
 !print prod23 7
 </code></pre></div>
@@ -99,12 +99,12 @@ Example:</p>
 <p dir="auto">Note: It's also possible to do <code>!print (prod 2 3) 7</code></p>
 <h5 dir="auto">Forks and loops</h5>
 <p dir="auto">Fxy supports logic bifurcation and looping via the respective syntaxes:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="if <expression> then <body> else <body>"><pre class="notranslate"><code class="notranslate">if <expression> then <body> else <body>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="if <expression> then <body> else <body>"><pre class="notranslate"><code>if <expression> then <body> else <body>
 </code></pre></div>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="while <expression> do <body>"><pre class="notranslate"><code class="notranslate">while <expression> do <body>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="while <expression> do <body>"><pre class="notranslate"><code>while <expression> do <body>
 </code></pre></div>
 <p dir="auto">Example:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="countTo n :=
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="countTo n :=
   i := 0
   while i < n do
     i := i + 1
@@ -113,7 +113,7 @@ Example:</p>
 if countTo 42 = 42 then
   !print "42"
 else
-  !print "not 42 :(""><pre class="notranslate"><code class="notranslate">countTo n :=
+  !print "not 42 :(""><pre class="notranslate"><code>countTo n :=
   i := 0
   while i < n do
     i := i + 1

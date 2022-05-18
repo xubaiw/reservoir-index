@@ -34,7 +34,7 @@
 <h4 dir="auto">Installation</h4>
 <h5 dir="auto">Lake</h5>
 <p dir="auto">Add the following dependency to your <code>lakefile.lean</code> :</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
   dependencies := #[{
     name := `postgres
     src := Source.git "https://github.com/FWuermse/lean-postgres.git" "master"
@@ -46,15 +46,15 @@
 <h4 dir="auto">Usage</h4>
 <h5 dir="auto">Requirements</h5>
 <p dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
 <p dir="auto">and currently only supports free text password auth, enabled by changing the following line in your <code>~/my-volume/pg_hba.conf</code></p>
 <p dir="auto">from</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre>host all all all scram-sha-256</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre>host all all all scram-sha-256</pre></div>
 <p dir="auto">to</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre>host all all all password</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre>host all all all password</pre></div>
 <h5 dir="auto">Code</h5>
 <p dir="auto">Currently only simple queries and inserts are supported:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
 
 open Insert
 open Connect
@@ -98,7 +98,7 @@ def main : IO Unit := do
   IO.println $ ← sendQuery conn query
   conn.close</pre></div>
 <p dir="auto">Output:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="INSERT 0 2
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="INSERT 0 2
 surname × nr × employment_date
 (Jaeger, 999, 0850-03-30)"><pre>INSERT 0 2
 surname × nr × employment_date

@@ -32,11 +32,11 @@
 <h4 dir="auto">Installation</h4>
 <h5 dir="auto">Lake</h5>
 <p dir="auto">Add the following dependency to your <code>lakefile.lean</code>:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
   dependencies := #[{
     name := `«sql-utils»
     src := Source.git "https://github.com/FWuermse/lean4-sql-utils" "main"
-  }]"><pre class="notranslate"><code class="notranslate">package your-package where
+  }]"><pre class="notranslate"><code>package your-package where
   dependencies := #[{
     name := `«sql-utils»
     src := Source.git "https://github.com/FWuermse/lean4-sql-utils" "main"
@@ -44,7 +44,7 @@
 </code></pre></div>
 <h4 dir="auto">Usage</h4>
 <p dir="auto">Currently the main feature includes built in query syntax that can be used the following way:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import SqlUtils.SQLSyntax
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import SqlUtils.SQLSyntax
 
 def main : IO Unit := do
   let query :=

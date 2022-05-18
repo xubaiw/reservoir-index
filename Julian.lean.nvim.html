@@ -50,7 +50,7 @@
 <h4 dir="auto">Installation</h4>
 <p dir="auto">Install via your favorite plugin manager. E.g., with
 <a href="https://github.com/junegunn/vim-plug">vim-plug</a> via:</p>
-<div class="highlight highlight-source-viml position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'Julian/lean.nvim'
+<div class="highlight highlight-source-viml notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'Julian/lean.nvim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-lua/plenary.nvim'
 
@@ -78,7 +78,7 @@ required or recommended.</p>
 <h5 dir="auto">Lean 3</h5>
 <p dir="auto">For Lean 3 support, in addition to the instructions above, you should
 install <code>lean-language-server</code>, which can be done via e.g.:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ npm install -g lean-language-server"><pre>$ npm install -g lean-language-server</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ npm install -g lean-language-server"><pre>$ npm install -g lean-language-server</pre></div>
 <p dir="auto">Given that Lean 3's language server is separate from
 Lean itself, also ensure you've <a href="https://leanprover-community.github.io/get_started.html" rel="nofollow">installed Lean 3 itself</a>.</p>
 <a name="user-content-id2"></a>
@@ -90,7 +90,7 @@ developed in <a href="https://github.com/Julian/tree-sitter-lean">https://github
 be used for enhanced indentation (TODO), text object (TODO), syntax
 highlighting and querying but which is still very nascent.</p>
 <p dir="auto">If you wish to try it, it can be installed by adding e.g.:</p>
-<div class="highlight highlight-source-viml position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'nvim-treesitter/nvim-treesitter'
+<div class="highlight highlight-source-viml notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'"><pre>Plug <span class="pl-s"><span class="pl-pds">'</span>nvim-treesitter/nvim-treesitter<span class="pl-pds">'</span></span>
 Plug <span class="pl-s"><span class="pl-pds">'</span>nvim-treesitter/nvim-treesitter-textobjects<span class="pl-pds">'</span></span></pre></div>
 <p dir="auto">if you do not already have tree sitter installed.</p>
@@ -129,7 +129,7 @@ this</code> suggestion replacement</li>
 <h4 dir="auto">Configuration & Usage</h4>
 <p dir="auto">The short version -- after following the installation instructions above,
 add the below to <code>~/.config/nvim/plugin/lean.lua</code> or an equivalent:</p>
-<div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
+<div class="highlight highlight-source-lua notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
   abbreviations = { builtin = true },
   lsp = { on_attach = on_attach },
   lsp3 = { on_attach = on_attach },
@@ -262,7 +262,7 @@ infoview window</td>
 </table>
 <a name="user-content-full-configuration-settings-information"></a>
 <h4 dir="auto">Full Configuration & Settings Information</h4>
-<div class="highlight highlight-source-lua position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
+<div class="highlight highlight-source-lua notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require('lean').setup{
   -- Enable the Lean language server(s)?
   --
   -- false to disable, otherwise should be a table of options to pass to
@@ -478,17 +478,17 @@ showing a grouped view of diagnostics to pair with the "infauxview"</li>
 <p dir="auto">Contributions are most welcome. Feel free to send pull requests for anything
 you'd like to see, or open an issue if you'd like to discuss.</p>
 <p dir="auto">Running the tests can be done via the <code>Makefile</code>:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make test"><pre>$ make <span class="pl-c1">test</span></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make test"><pre>$ make <span class="pl-c1">test</span></pre></div>
 <p dir="auto">which will execute against a minimal <code>vimrc</code> isolated from your own setup.</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ TEST_FILE=lua/tests/foo_spec.lua make test"><pre>$ TEST_FILE=lua/tests/foo_spec.lua make <span class="pl-c1">test</span></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ TEST_FILE=lua/tests/foo_spec.lua make test"><pre>$ TEST_FILE=lua/tests/foo_spec.lua make <span class="pl-c1">test</span></pre></div>
 <p dir="auto">can be used to run just one specific test file, which can be faster.</p>
 <p dir="auto">Some linting and style checking is done via <a href="https://pre-commit.com/#install" rel="nofollow">pre-commit</a>, which once installed (via the linked
 instructions) can be run via:</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make lint"><pre>$ make lint</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make lint"><pre>$ make lint</pre></div>
 <p dir="auto">or on each commit automatically by running <code>pre-commit install</code> in your
 repository checkout.</p>
 <p dir="auto">You can also use</p>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make nvim SETUP_TABLE='{ lsp3 = { enable = true }, mappings = true }'"><pre>$ make nvim SETUP_TABLE=<span class="pl-s"><span class="pl-pds">'</span>{ lsp3 = { enable = true }, mappings = true }<span class="pl-pds">'</span></span></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ make nvim SETUP_TABLE='{ lsp3 = { enable = true }, mappings = true }'"><pre>$ make nvim SETUP_TABLE=<span class="pl-s"><span class="pl-pds">'</span>{ lsp3 = { enable = true }, mappings = true }<span class="pl-pds">'</span></span></pre></div>
 <p dir="auto">to get a normal running neovim (again isolated from your own configuration),
 where <code>SETUP_TABLE</code> is a (Lua) table like one would pass to <code>lean.setup</code>.</p>
 

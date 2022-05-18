@@ -29,7 +29,7 @@
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Problems with Lean Dynamic Link</h3>
 <h4 dir="auto">How to reproduce the error</h4>
-<div class="highlight highlight-source-shell position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd bar1
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd bar1
 $ lake build
 ...
 $ cd ../bar2
@@ -53,11 +53,11 @@ zsh: abort      ./build/bin/bar2</pre></div>
 <h4 dir="auto">Details</h4>
 <p dir="auto">In this repo we have two lean packages: <code>bar1</code> and <code>bar2</code>.</p>
 <p dir="auto">In <code>bar1</code> there is:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[export bar1_greet]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[export bar1_greet]
 def greet (name : String) := s!"Hello, {name}!""><pre><span class="pl-k">@[export bar1_greet]</span>
 <span class="pl-k">def</span> <span class="pl-en">greet</span> (name : String) := s!<span class="pl-s"><span class="pl-pds">"</span>Hello, {name}!<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto">Then <code>bar1</code> is compiled to  a sharedLib. In order to use the definition, in <code>bar2</code> we have:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[extern "bar1_greet"]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[extern "bar1_greet"]
 constant greet : String → String
 
 def main : IO Unit :=
@@ -67,7 +67,7 @@ def main : IO Unit :=
 <span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit :=
   IO.println <| greet <span class="pl-s"><span class="pl-pds">"</span>Lean Programmers<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto">Both <code>moreLibTargets</code> and <code>moreLinkArgs</code> is used in <code>bar2</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="package bar2 (pkgDir) (args) do
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package bar2 (pkgDir) (args) do
   let current ← IO.currentDir
   let dylibDir := current / ".." / "bar1" / "build" / "lib" 
   let dylib := dylibDir / s!"libbar1.{sharedLibExt}"

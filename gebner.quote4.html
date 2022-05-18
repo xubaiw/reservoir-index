@@ -39,24 +39,24 @@ The <code>Q(·)</code> modality quotes types:
 <code>Q(α)</code> denotes an expression of type <code>α</code>.
 The type former comes with the following
 natural introduction rule:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
 -----------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type"><pre class="notranslate"><code class="notranslate">$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type"><pre class="notranslate"><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
 -----------------------------------------
  a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type
 </code></pre></div>
 <p dir="auto">The lower-case <code>q(·)</code> macro serves
 as the modal inference rule,
 allowing us to construct values in <code>Q(·)</code>:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
 -----------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)"><pre class="notranslate"><code class="notranslate">$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
+ a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)"><pre class="notranslate"><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
 -----------------------------------------
  a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)
 </code></pre></div>
 <h4 dir="auto">Example</h4>
 <p dir="auto">Let us write a type-safe version of <code>mkApp</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Qq
 open Qq
 
 set_option trace.compiler.ir.result true in
@@ -117,7 +117,7 @@ does what you think it does!</p>
 that we can write metaprograms
 transforming terms of nonconcrete types
 in inconsistent contexts:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ..."><pre><span class="pl-k">def</span> <span class="pl-en">tryProve</span> (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > <span class="pl-c1">0</span>) := ...</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def tryProve (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > 0) := ..."><pre><span class="pl-k">def</span> <span class="pl-en">tryProve</span> (n : Q(Nat)) (i : Q(Fin $n)) : Option Q($i > <span class="pl-c1">0</span>) := ...</pre></div>
 <p dir="auto">If the <code>i > 0</code> in the return type were a concrete type in the metalanguage,
 then we could not call <code>tryProve</code> with <code>n := 0</code>
 (because we would need to provide a value for <code>i : Fin 0</code>).
@@ -127,7 +127,7 @@ then we could not call <code>tryProve</code> on
 the subterm <code>t</code> of <code>fun n : Nat => t</code>.</p>
 <h4 dir="auto">Implementation</h4>
 <p dir="auto">The type family on which this package is built is called <code>QQ</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre><span class="pl-k">def</span> <span class="pl-en">QQ</span> (α : Expr) := Expr</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def QQ (α : Expr) := Expr"><pre><span class="pl-k">def</span> <span class="pl-en">QQ</span> (α : Expr) := Expr</pre></div>
 <p dir="auto">The intended meaning of <code>e : QQ t</code> is that
 <code>e</code> is an expression of type <code>t</code>.
 Or if you will,
@@ -168,7 +168,7 @@ somewhere else, by somebody else.</p>
 Maybe something like this:</p>
 </li>
 </ul>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
   | ~q(∃ x, p x) => do
      q(∀ x, $(x => turnExistsIntoForall q($p $x)))
   | e => e"><pre><span class="pl-k">def</span> <span class="pl-en">turnExistsIntoForall</span> : Q(<span class="pl-k">Prop</span>) → MetaM Q(<span class="pl-k">Prop</span>)
@@ -178,7 +178,7 @@ Maybe something like this:</p>
 <ul dir="auto">
 <li>Matching should provide control over type-class diamonds, such as</li>
 </ul>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="~q((a + b : α) where
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="~q((a + b : α) where
   Semiring α
   commutes ∀ n, OfNat α n
   a + a defEq 0)"><pre>~q((a + b : α) where

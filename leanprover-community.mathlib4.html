@@ -44,15 +44,15 @@ and the "real" port hasn't started yet</p>
 <h3 dir="auto">Build instructions</h3>
 <ul dir="auto">
 <li>Get the newest version of <code>elan</code>. If you already have installed a version of Lean, you can run
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="elan self update"><pre class="notranslate"><code class="notranslate">elan self update
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="elan self update"><pre class="notranslate"><code>elan self update
 </code></pre></div>
 If the above command fails, or if you need to install <code>elan</code>, run
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh"><pre class="notranslate"><code class="notranslate">curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh"><pre class="notranslate"><code>curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
 </code></pre></div>
 If this also fails, follow the instructions under <code>Regular install</code> <a href="https://leanprover-community.github.io/get_started.html" rel="nofollow">here</a>.</li>
 <li>To build <code>mathlib4</code> run <code>lake build</code>. To build and run all tests, run <code>make</code>.</li>
 <li>If you added a new file, run the following command to update <code>Mathlib.lean</code>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="find Mathlib -name "*.lean" | env LC_ALL=C sort | sed 's/\.lean//;s,/,.,g;s/^/import /' > Mathlib.lean"><pre class="notranslate"><code class="notranslate">find Mathlib -name "*.lean" | env LC_ALL=C sort | sed 's/\.lean//;s,/,.,g;s/^/import /' > Mathlib.lean
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="find Mathlib -name "*.lean" | env LC_ALL=C sort | sed 's/\.lean//;s,/,.,g;s/^/import /' > Mathlib.lean"><pre class="notranslate"><code>find Mathlib -name "*.lean" | env LC_ALL=C sort | sed 's/\.lean//;s,/,.,g;s/^/import /' > Mathlib.lean
 </code></pre></div>
 </li>
 </ul>

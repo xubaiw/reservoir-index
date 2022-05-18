@@ -35,7 +35,7 @@ should suffice.</p>
 <h4 dir="auto">Adding Aesop to Your Project</h4>
 <p dir="auto">To use Aesop in a Lean 4 project, first add this package as a dependency. In
 your <code>lakefile.lean</code>, add</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="dependencies := #[
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="dependencies := #[
   { name := `aesop
     src := Source.git "https://github.com/JLimperg/aesop" "<current HEAD commit of this repo>" }
 ]"><pre>dependencies := #[
@@ -47,7 +47,7 @@ project (see our <code>lean-toolchain</code>), you'll get a warning. If you use 
 nightly, you'll probably be fine and Aesop will compile anyway. If not, please
 open an issue and we'll update the tactic.</p>
 <p dir="auto">You should now be able to use the <code>aesop</code> tactic:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import Aesop
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Aesop
 
 example : α → α :=
   by aesop"><pre><span class="pl-k">import</span> Aesop
@@ -65,7 +65,7 @@ examples. A more thorough, reference-style discussion of follows in the next
 section.</p>
 <p dir="auto">We first define our own version of lists (so as not to clash with the standard
 library) and an <code>append</code> function:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="inductive MyList (α : Type _)
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="inductive MyList (α : Type _)
   | nil
   | cons (hd : α) (tl : MyList α)
 
@@ -91,7 +91,7 @@ instance : Append (MyList α) :=
 <p dir="auto">We also tell <code>simp</code> to unfold applications of <code>append</code>. <code>aesop</code> uses the default
 simp set when it normalises a goal, so it will automatically pick up these rules
 as well.</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[simp]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[simp]
 theorem nil_append : nil ++ xs = xs := rfl
 
 @[simp]
@@ -101,7 +101,7 @@ theorem cons_append : cons x xs ++ ys = cons x (xs ++ ys) := rfl"><pre><span cla
 <span class="pl-k">@[simp]</span>
 <span class="pl-k">theorem</span> <span class="pl-en">cons_append</span> : cons x xs ++ ys = cons x (xs ++ ys) := rfl</pre></div>
 <p dir="auto">Now we define the <code>NonEmpty</code> predicate on <code>MyList</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [MyList.NonEmpty]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [MyList.NonEmpty]
 
 @[aesop safe (rule_sets [MyList.NonEmpty]) [constructors, cases]]
 inductive NonEmpty : MyList α → Prop
@@ -130,7 +130,7 @@ goal encountered during the proof search, it is applied and the goal is never
 revisited thereafter. In other words, the search does not backtrack safe rules.
 We will later see <strong>unsafe</strong> rules, which can backtrack.</p>
 <p dir="auto">With these rules, we can prove a theorem about <code>NonEmpty</code> and <code>append</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop safe apply]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop safe apply]
 theorem nonEmpty_append {xs : MyList α} ys :
     NonEmpty xs → NonEmpty (xs ++ ys) := by
   aesop (rule_sets [MyList.NonEmpty])"><pre><span class="pl-k">@[aesop safe apply]</span>
@@ -143,7 +143,7 @@ introducing the hypothesis <code>h : NonEmpty xs</code>, performing case analysi
 and applying the <code>NonEmpty.cons</code> constructor.</p>
 <p dir="auto">If you want to see how Aesop proves your goal (or more likely, why it doesn't
 prove your goal or why it takes too long to do so), you can enable tracing:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
 <p dir="auto">This makes Aesop print out the steps it takes while searching for a proof. There
 are also other tracing options which autocompletion should show you if you type
 <code>set_option trace.aesop</code>.</p>
@@ -152,13 +152,13 @@ the default rule set. For this rule we use the <strong><code>apply</code></stron
 generates a rule that tries to apply <code>nonEmpty_append</code> whenever the target is of
 the form <code>NonEmpty (_ ++ _)</code>.</p>
 <p dir="auto">After adding <code>nonEmpty_append</code>, Aesop can now prove consequences of this lemma:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="example {α : Type u} {xs : MyList α} ys zs :
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="example {α : Type u} {xs : MyList α} ys zs :
     NonEmpty xs → NonEmpty (xs ++ ys ++ zs) := by
   aesop"><pre><span class="pl-k">example</span> {α : <span class="pl-k">Type</span> u} {xs : MyList α} ys zs :
     NonEmpty xs → NonEmpty (xs ++ ys ++ zs) := <span class="pl-k">by</span>
   aesop</pre></div>
 <p dir="auto">Next, we prove another simple theorem about <code>NonEmpty</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="theorem nil_not_NonEmpty (xs : MyList α) : xs = nil → ¬ NonEmpty xs := by
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="theorem nil_not_NonEmpty (xs : MyList α) : xs = nil → ¬ NonEmpty xs := by
   aesop (add unsafe 10% cases MyList, norm unfold Not)
     (rule_sets [MyList.NonEmpty])"><pre><span class="pl-k">theorem</span> <span class="pl-en">nil_not_NonEmpty</span> (xs : MyList α) : xs = nil → ¬ NonEmpty xs := <span class="pl-k">by</span>
   aesop (add unsafe <span class="pl-c1">10</span>% cases MyList, norm unfold Not)
@@ -196,7 +196,7 @@ well.)</p>
 </li>
 </ul>
 <p dir="auto">Here are some other examples where normalisation comes in handy:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm]
 theorem nil_append (xs : MyList α) : nil ++ xs = xs := rfl
 
 @[aesop norm]
@@ -362,15 +362,15 @@ hypothesis <code>x</code> to the target. The rule acts like the tactic <code>app
 <p dir="auto"><strong><code>forward</code></strong>: when applied to a declaration or hypothesis of type <code>A₁ → ... Aₙ → B</code>, generates a rule which looks for hypotheses <code>h₁ : A₁</code>, ..., <code>hₙ : Aₙ</code>
 in the goal and, if they are found, adds a new hypothesis <code>h : B</code>. As an
 example, consider the lemma <code>even_or_odd</code>:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="even_or_odd : ∀ (n : Nat), Even n ∨ Odd n"><pre>even_or_odd : ∀ (n : Nat), Even n ∨ Odd n</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="even_or_odd : ∀ (n : Nat), Even n ∨ Odd n"><pre>even_or_odd : ∀ (n : Nat), Even n ∨ Odd n</pre></div>
 <p dir="auto">Registering this as a forward rule will cause the goal</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
 m : Nat
 ⊢ T"><pre>n : Nat
 m : Nat
 ⊢ T</pre></div>
 <p dir="auto">to be transformed into this:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="n : Nat
 hn : Even n ∨ Odd n
 m : Nat
 hm : Even m ∨ Odd m
@@ -380,7 +380,7 @@ m : Nat
 hm : Even m ∨ Odd m
 ⊢ T</pre></div>
 <p dir="auto">The forward builder may also be given a list of <em>immediate names</em>:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(forward (immediate := [n])) even_or_odd "><pre class="notranslate"><code class="notranslate">(forward (immediate := [n])) even_or_odd 
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(forward (immediate := [n])) even_or_odd "><pre class="notranslate"><code>(forward (immediate := [n])) even_or_odd 
 </code></pre></div>
 <p dir="auto">The immediate names, here <code>n</code>, refer to the arguments of <code>even_or_odd</code>. When
 Aesop applies a forward rule with explicit immediate names, it only matches
@@ -398,18 +398,18 @@ many forward rules would be applied infinitely often.</p>
 hypotheses that were used as immediate arguments are cleared. As the name
 suggests, this is useful when you want to eliminate a hypothesis. E.g. the
 rule</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm elim]
-theorem and_elim_right : α ∧ β → α := ..."><pre class="notranslate"><code class="notranslate">@[aesop norm elim]
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop norm elim]
+theorem and_elim_right : α ∧ β → α := ..."><pre class="notranslate"><code>@[aesop norm elim]
 theorem and_elim_right : α ∧ β → α := ...
 </code></pre></div>
 <p dir="auto">will cause the goal</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : (α ∧ β) ∧ γ
-h₂ : δ ∧ ε"><pre class="notranslate"><code class="notranslate">h₁ : (α ∧ β) ∧ γ
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : (α ∧ β) ∧ γ
+h₂ : δ ∧ ε"><pre class="notranslate"><code>h₁ : (α ∧ β) ∧ γ
 h₂ : δ ∧ ε
 </code></pre></div>
 <p dir="auto">to be transformed into</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : α
-h₂ : δ"><pre class="notranslate"><code class="notranslate">h₁ : α
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="h₁ : α
+h₂ : δ"><pre class="notranslate"><code>h₁ : α
 h₂ : δ
 </code></pre></div>
 <p dir="auto">Unlike with <code>forward</code> rules, when an <code>elim</code> rule is successfully applied, it
@@ -483,7 +483,7 @@ as <code>safe_default</code>.</p>
 </ul>
 <h6 dir="auto">Rule Sets</h6>
 <p dir="auto">Rule sets are declared with the command</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [r₁, ..., rₙ]"><pre>declare_aesop_rule_sets [r₁, ..., rₙ]</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="declare_aesop_rule_sets [r₁, ..., rₙ]"><pre>declare_aesop_rule_sets [r₁, ..., rₙ]</pre></div>
 <p dir="auto">where the <code>rᵢ</code> are arbitrary names. To avoid clashes, pick names in the
 namespace of your package.</p>
 <p dir="auto">Within a rule set, rules are identified by their name, builder and phase
@@ -499,7 +499,7 @@ attribute.</p>
 <b dir="auto">Single Rule</b>
 <p dir="auto">In most cases, you'll want to add one rule for the declaration. The syntax for
 this is</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop <phase>? <priority>? <builder>? <rule_sets>?]"><pre><span class="pl-k">@[aesop <phase>? <priority>? <builder>? <rule_sets>?]</span></pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop <phase>? <priority>? <builder>? <rule_sets>?]"><pre><span class="pl-k">@[aesop <phase>? <priority>? <builder>? <rule_sets>?]</span></pre></div>
 <p dir="auto">where</p>
 <ul dir="auto">
 <li>
@@ -518,13 +518,13 @@ You may omit the <code>unsafe</code> phase specification when giving a percentag
 <li>
 <p dir="auto"><code><builder></code> is one of the builders given above. If you want to pass options to
 a builder, write it like this (with mandatory parentheses):</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(tactic (uses_branch_state := true))"><pre class="notranslate" lang="text"><code class="notranslate">(tactic (uses_branch_state := true))
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(tactic (uses_branch_state := true))"><pre class="notranslate" lang="text"><code>(tactic (uses_branch_state := true))
 </code></pre></div>
 <p dir="auto">If no builder is specified, the default builder for the given phase is used.</p>
 </li>
 <li>
 <p dir="auto"><code><rule_sets></code> is a clause of the form</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [r₁, ..., rₙ])"><pre class="notranslate" lang="text"><code class="notranslate">(rule_sets [r₁, ..., rₙ])
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [r₁, ..., rₙ])"><pre class="notranslate" lang="text"><code>(rule_sets [r₁, ..., rₙ])
 </code></pre></div>
 <p dir="auto">where the <code>rᵢ</code> are declared rule sets. (Parentheses are mandatory.) The rule
 is added exactly to the specified rule sets. If this clause is omitted, it
@@ -535,7 +535,7 @@ defaults to <code>(rule_sets [default])</code>.</p>
 <p dir="auto">It is occasionally useful to add multiple rules for a single declaration, e.g.
 a <code>cases</code> and a <code>constructors</code> rule for the same inductive type. In this case,
 you can write for example</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop unsafe [constructors 75%, cases 90%]]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="@[aesop unsafe [constructors 75%, cases 90%]]
 inductive T ...
 
 @[aesop apply [safe (rule_sets [A]), 70% (rule_sets [B])]]
@@ -560,7 +560,7 @@ rule set <code>B</code>.</p>
 80% success probability using the <code>apply</code> builder and a <code>safe</code> rule with penalty
 5 using the <code>forward</code> builder.</p>
 <p dir="auto">In general, the grammar for the <code>@[aesop]</code> attribute is</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="attr      ::= @[aesop <rule_expr>]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="attr      ::= @[aesop <rule_expr>]
             | @[aesop [<rule_expr,+>]]
 
 rule_expr ::= feature
@@ -577,11 +577,11 @@ specifies one rule. (A branch is a list of features.)</p>
 <h6 dir="auto">Erasing Rules</h6>
 <p dir="auto">There are two ways to erase rules. Usually it suffices to remove the <code>@[aesop]</code>
 attribute:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="attribute [-aesop] foo"><pre><span class="pl-k">attribute [-aesop]</span> foo</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="attribute [-aesop] foo"><pre><span class="pl-k">attribute [-aesop]</span> foo</pre></div>
 <p dir="auto">This will remove all rules associated with the declaration <code>foo</code> from all rule
 sets.</p>
 <p dir="auto">When you want to remove only certain rules, you can use a command:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [safe apply foo, bar (rule_sets [A])]"><pre>erase_aesop_rules [safe apply foo, bar (rule_sets [A])]</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [safe apply foo, bar (rule_sets [A])]"><pre>erase_aesop_rules [safe apply foo, bar (rule_sets [A])]</pre></div>
 <p dir="auto">This will remove:</p>
 <ul dir="auto">
 <li>all safe rules for <code>foo</code> with the <code>apply</code> builder from all rule sets (but not
@@ -589,7 +589,7 @@ other, for example, unsafe rules or <code>forward</code> rules);</li>
 <li>all rules for <code>bar</code> from rule set <code>A</code>.</li>
 </ul>
 <p dir="auto">In general, the syntax is</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [<rule_expr,+>]"><pre>erase_aesop_rules [<rule_expr,+>]</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="erase_aesop_rules [<rule_expr,+>]"><pre>erase_aesop_rules [<rule_expr,+>]</pre></div>
 <p dir="auto">i.e. rules are specified in the same way as for the <code>@[aesop]</code> attribute.
 However, each rule must also specify the name of the declaration whose rules
 should be erased. The <code>rule_expr</code> grammar is therefore extended such that a
@@ -601,7 +601,7 @@ such a rule, you may have to specify that builder instead of the default
 builder.</p>
 <h6 dir="auto">The <code>aesop</code> Tactic</h6>
 <p dir="auto">In its most basic form, you can call the Aesop tactic just by writing</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="example : α → α := by
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="example : α → α := by
   aesop"><pre><span class="pl-k">example</span> : α → α := <span class="pl-k">by</span>
   aesop</pre></div>
 <p dir="auto">This will use the rules in the <code>default</code> rule set (i.e. those added via the
@@ -609,11 +609,11 @@ attribute with no explicit rule set specified) and the rules in the <code>builti
 rule set (i.e. those provided by Aesop itself).</p>
 <p dir="auto">The tactic's behaviour can also be customised with various options. A more
 involved Aesop call might look like this:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="aesop
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="aesop
   (add safe foo, 10% cases Or, safe cases Empty)
   (erase A [cases, constructors], baz)
   (rule_sets [A, B])
-  (options { maxRuleApplicationDepth := 10 })"><pre class="notranslate" lang="text"><code class="notranslate">aesop
+  (options { maxRuleApplicationDepth := 10 })"><pre class="notranslate" lang="text"><code>aesop
   (add safe foo, 10% cases Or, safe cases Empty)
   (erase A [cases, constructors], baz)
   (rule_sets [A, B])
@@ -625,12 +625,12 @@ is discussed in more detail below.</p>
 <b dir="auto">Adding Rules</b>
 <p dir="auto">Rules can be added to an Aesop call with an <code>add</code> clause. This won't affect any
 declared rule sets. The syntax of the <code>add</code> clause is</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(add <rule_expr,+>)"><pre class="notranslate" lang="text"><code class="notranslate">(add <rule_expr,+>)
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(add <rule_expr,+>)"><pre class="notranslate" lang="text"><code>(add <rule_expr,+>)
 </code></pre></div>
 <p dir="auto">i.e. rules can be specified in the same way as for the <code>@[aesop]</code> attribute.
 As with the <code>erase_aesop_rules</code> command, each rule must specify the name of
 declaration from which the rule should be built; for example</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(add safe [foo 1, bar 5])"><pre class="notranslate" lang="text"><code class="notranslate">(add safe [foo 1, bar 5])
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(add safe [foo 1, bar 5])"><pre class="notranslate" lang="text"><code>(add safe [foo 1, bar 5])
 </code></pre></div>
 <p dir="auto">will add the declaration <code>foo</code> as a safe rule with penalty 1 and <code>bar</code> as a safe
 rule with penalty 5.</p>
@@ -640,19 +640,19 @@ builders support this.</p>
 <p dir="auto">Rules can be removed from an Aesop call with an <code>erase</code> clause. Again, this
 affects only the current Aesop call and not the declared rule sets. The syntax
 of the <code>erase</code> clause is</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(erase <rule_expr,+>)"><pre class="notranslate" lang="text"><code class="notranslate">(erase <rule_expr,+>)
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(erase <rule_expr,+>)"><pre class="notranslate" lang="text"><code>(erase <rule_expr,+>)
 </code></pre></div>
 <p dir="auto">and it works exactly like the <code>erase_aesop_rules</code> command.</p>
 <b dir="auto">Selecting Rule Sets</b>
 <p dir="auto">By default, Aesop uses the <code>default</code> and <code>builtin</code> rule sets. A <code>rule_sets</code>
 clause can be given to include additional rule sets, e.g.</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [A, B])"><pre class="notranslate" lang="text"><code class="notranslate">(rule_sets [A, B])
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(rule_sets [A, B])"><pre class="notranslate" lang="text"><code>(rule_sets [A, B])
 </code></pre></div>
 <p dir="auto">This will use rule sets <code>A</code>, <code>B</code>, <code>default</code> and <code>builtin</code>. Rule sets can also
 be disabled with <code>rule_sets [-default, -builtin]</code>.</p>
 <b dir="auto">Setting Options</b>
 <p dir="auto">Various options can be set with an <code>options</code> clause, whose syntax is:</p>
-<div class="snippet-clipboard-content position-relative overflow-auto" data-snippet-clipboard-copy-content="(options <term>)"><pre class="notranslate" lang="text"><code class="notranslate">(options <term>)
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(options <term>)"><pre class="notranslate" lang="text"><code>(options <term>)
 </code></pre></div>
 <p dir="auto">The term is an arbitrary Lean expression of type <code>Aesop.Options</code>; see there for
 details.</p>
@@ -664,7 +664,7 @@ unstable, so for now I won't document them in detail. See
 <p dir="auto">To see how Aesop proves a goal -- or why it doesn't prove a goal, or why it's
 slow to prove a goal -- it is useful to see what it's doing. To that end, you
 can enable various tracing options. These use the usual syntax, e.g.</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option trace.aesop.steps true"><pre><span class="pl-k">set_option</span> trace.aesop.steps true</pre></div>
 <p dir="auto">The main options are:</p>
 <ul dir="auto">
 <li><code>trace.aesop.steps</code>: print a step-by-step log of which goals Aesop tried to

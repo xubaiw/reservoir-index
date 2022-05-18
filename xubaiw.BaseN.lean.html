@@ -30,7 +30,7 @@
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">BaseN.lean</h3>
 <p dir="auto">Encoding and decoding for <code>base16</code>, <code>base32</code>, <code>base32hex</code>, <code>base64</code> and <code>base64url</code>, compliant to <a href="https://datatracker.ietf.org/doc/html/rfc4648" rel="nofollow">RFC 4648</a>.</p>
 <h4 dir="auto">Usage</h4>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="import BaseN
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import BaseN
 open BaseN
 
 #eval encode64 "Man".toUTF8  -- "TWFu"
@@ -46,7 +46,7 @@ open BaseN
 <span class="pl-k">#eval</span> encode64 <span class="pl-s"><span class="pl-pds">"</span>Ma<span class="pl-pds">"</span></span>.toUTF8  <span class="pl-c"><span class="pl-c">--</span> "TWE="</span>
 <span class="pl-k">#eval</span> decode64 <span class="pl-s"><span class="pl-pds">"</span>TWE=<span class="pl-pds">"</span></span> |>.map String.fromUTF8Unchecked  <span class="pl-c"><span class="pl-c">--</span> some "Ma"</span></pre></div>
 <p dir="auto">To customize alphabet and other configutation:</p>
-<div class="highlight highlight-source-lean position-relative overflow-auto" data-snippet-clipboard-copy-content="
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="
 let myAlphabet := {
   list := "ABCDEFGHIJKLMNOPQRSTUV0123456789".data  -- length of `list` can be 16, 32 or 64
   padChar := '='  -- padChar can be `none` when list.length = 16
