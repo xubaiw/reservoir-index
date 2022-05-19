@@ -146,11 +146,18 @@ def strengthen : ∀{n}, Fin2 (succ n) → Option (Fin2 n)
 
 
 /--
-  Weakens the bound on a `Fin2`
+  Weakens the bound on a `Fin2`, without changing the value
 -/
 def weaken : Fin2 n → Fin2 (succ n)
   | fz   => fz
   | fs k => fs $ weaken k
+
+/--
+  Decrements a `Fin2` by one, simultaneously lowering the bound
+-/
+def decr : Fin2 (Nat.succ $ Nat.succ n) → Fin2 (Nat.succ n)
+  | fz    => fz
+  | fs j  => j
 
 /--
   The maximal element of `Fin2 (n+1)`, i.e., `n`
@@ -310,6 +317,12 @@ def lt_trichotomy {n : Nat}  :
   ∀(a b : Fin2 n), a < b ∨ a = b ∨ b < a
 := _root_.lt_trichotomy
 
+def zero_le {n : Nat} (i : Fin2 (n+1)) :
+  Fin2.fz ≤ i :=
+by
+  simp [LE.le, toNat];
+  apply Nat.zero_le
+
 
 theorem last_is_maximal {n : Nat} (i : Fin2 (n+1)) :
   i ≤ last :=
@@ -322,7 +335,7 @@ by
   case succ n ih =>
     cases i;
     . simp [LE.le, toNat]
-      apply zero_le 
+      apply Nat.zero_le 
     . simp [LE.le, toNat] at ih
       apply Nat.succ_le_succ
       apply ih

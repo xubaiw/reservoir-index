@@ -77,11 +77,13 @@ instance : Group (kernel ϕ) :=
       apply mul_assoc
 
     one := ⟨1, one_image⟩
-    mul_one := by intro ⟨a, prf⟩; sorry
-    one_mul := by intro ⟨a, prf⟩; sorry
+    mul_one := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply mul_one
+    one_mul := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply one_mul
 
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_kernel prf⟩
-    mul_left_inv := by intro ⟨a, prf⟩; simp [Inv.inv]; sorry
+    mul_left_inv := by 
+          intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; simp [Inv.inv]; 
+          apply mul_left_inv
 
     npow_zero' := by intros; rfl
     npow_succ' := by intros; rfl
@@ -98,6 +100,12 @@ section
 
 variable {G : Type _} [Grp : Group G]
 
+def subType (P: G → Prop) := {g : G // P g}
+
+theorem Subgroup.eq_of_val_eq (P : G → Prop)  : 
+    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
+  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
+
 instance (P : G → Prop)
   (mul_closure : ∀ {a b : G}, P a → P b → P (a * b))
   (inv_closure : ∀ {a : G}, P a → P a⁻¹)
@@ -105,14 +113,23 @@ instance (P : G → Prop)
   Group {g : G // P g} :=
    {
     mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, mul_closure prf₁ prf₂⟩
-    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => sorry
+    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
+      apply Subgroup.eq_of_val_eq; apply mul_assoc
 
     one := ⟨1, id_closure⟩
-    mul_one := by intro α; cases α; sorry
-    one_mul := by intro ⟨a, prf⟩; sorry
+    mul_one := by intro α 
+                  apply Subgroup.eq_of_val_eq
+                  apply mul_one 
+    one_mul := by intro α 
+                  apply Subgroup.eq_of_val_eq
+                  apply one_mul
 
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_closure prf⟩
-    mul_left_inv := by intro ⟨a, prf⟩; simp [Inv.inv]; sorry
+    mul_left_inv := by 
+                        intro ⟨a, prf⟩
+                        simp [Inv.inv]
+                        apply Subgroup.eq_of_val_eq
+                        apply mul_left_inv
 
     npow_zero' := by intros; rfl
     npow_succ' := by intros; rfl
@@ -136,5 +153,25 @@ class Monoid.Homomorphism {M N : Type _} [Monoid M] [Monoid N] (ϕ : M → N) wh
 
 class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R → S)
   extends AddCommGroup.Homomorphism ϕ, Monoid.Homomorphism ϕ
+
+
+instance {A B C : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+         (ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (ψ : B → C) [AddCommGroup.Homomorphism ψ] :
+         AddCommGroup.Homomorphism (ψ ∘ ϕ) where
+  add_dist := by intros; simp [AddCommGroup.Homomorphism.add_dist]
+
+instance {L M N : Type _} [Monoid L] [Monoid M] [Monoid N]
+         (ϕ : L → M) [Monoid.Homomorphism ϕ] (ψ : M → N) [Monoid.Homomorphism ψ] :
+         Monoid.Homomorphism (ψ ∘ ϕ) where
+  mul_dist := by intros; simp [Monoid.Homomorphism.mul_dist]
+  one_map := by simp [Monoid.Homomorphism.one_map]
+
+
+instance {A : Type _} [AddCommGroup A] : AddCommGroup.Homomorphism (id : A → A) where
+  add_dist := by intros; rfl
+
+instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
+  mul_dist := by intros; rfl
+  one_map := by rfl
 
 end Morphisms
