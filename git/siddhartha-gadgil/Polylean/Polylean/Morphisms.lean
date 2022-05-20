@@ -174,15 +174,23 @@ instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
   mul_dist := by intros; rfl
   one_map := by rfl
 
-theorem add_dist{A B : Type _} [AddCommGroup A] [AddCommGroup B] 
-    (ϕ : A → B)[abg : AddCommGroup.Homomorphism ϕ] :
-     ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
-
 end Morphisms
 
 section AddCommGroup.Homomorphism
 
-variable {A : Type _} [α : AddCommGroup A]
+variable {A B : Type _} [α : AddCommGroup A] [β : AddCommGroup B]
+variable (ϕ : A → B) [abg : AddCommGroup.Homomorphism ϕ]
+
+theorem add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
+
+theorem zero_image : ϕ (0 : A) = (0 : B) := by
+  have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist, add_zero, add_zero]
+  exact add_left_cancel this
+
+theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
+  intro a
+  have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist, add_right_neg, add_right_neg, zero_image ϕ]
+  exact add_left_cancel this
 
 theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
@@ -201,5 +209,18 @@ theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n 
 
 instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   add_dist := gsmul_hom n
+
+theorem neg_hom : ∀ a a' : A, -(a + a') = -a + -a' := by
+  intro a a'
+  rw [← @add_left_cancel_iff _ _ _ a _ _, ← @add_left_cancel_iff _ _ _ a' _ _, ← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
+  ← add_assoc, add_comm a a', add_right_neg]
+
+def neg (a : A) := -a
+
+instance : AddCommGroup.Homomorphism (neg : A → A) where
+  add_dist := neg_hom
+
+instance : AddCommGroup.Homomorphism (id : A → A) where
+  add_dist := λ _ _ => rfl
 
 end AddCommGroup.Homomorphism
