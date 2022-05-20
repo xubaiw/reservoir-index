@@ -74,7 +74,7 @@ theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
 theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
   | (k, q) => by
     simp [mul, inv, e]
-    rw [AddCommGroup.ActionByAutomorphisms.neg_push, ← AddCommGroup.Action.compatibiity, add_right_neg, AddCommGroup.Action.id_action, add_assoc, add_comm _ (c _ _), ← add_assoc, add_right_neg]
+    rw [AddCommGroup.ActionByAutomorphisms.neg_push, ← AddCommGroup.Action.compatibility, add_right_neg, AddCommGroup.Action.id_action, add_assoc, add_comm _ (c _ _), ← add_assoc, add_right_neg]
 
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
@@ -82,11 +82,11 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
     apply And.intro
     · rw [AddCommGroup.ActionByAutomorphisms.add_dist, add_assoc, add_assoc, add_assoc, add_assoc, add_assoc, add_left_cancel_iff,
          AddCommGroup.ActionByAutomorphisms.add_dist, add_assoc, add_left_cancel_iff,
-         AddCommGroup.Action.compatibiity, ← add_assoc, ← add_assoc, add_comm (c q q') _, add_assoc, add_assoc, add_left_cancel_iff]
+         AddCommGroup.Action.compatibility, ← add_assoc, ← add_assoc, add_comm (c q q') _, add_assoc, add_assoc, add_left_cancel_iff]
       exact cocycle.cocycleCondition q q' q''
     · rw [add_assoc]
 
-instance : Group (K × Q) :=
+instance metabeliangroup : Group (K × Q) :=
   {
     mul := mul c,
     mul_assoc := mul_assoc c,
@@ -108,4 +108,3 @@ instance : Group (K × Q) :=
   }
 
 end MetabelianGroup
-
