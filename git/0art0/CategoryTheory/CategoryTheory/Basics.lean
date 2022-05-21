@@ -15,8 +15,8 @@ structure Category where
 
 def Typ : Category :=
   {
-    ob := Type,
-    hom := λ (A B : Type) => (A → B),
+    ob := Type _,
+    hom := λ (A B : Type _) => (A → B),
     id := id,
     comp := λ f g => g ∘ f,
 
