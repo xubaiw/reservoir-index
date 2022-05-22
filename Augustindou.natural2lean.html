@@ -28,19 +28,22 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">natural2lean</h3>
-<p dir="auto">Translation of natural language proofs to lean4 for verification. The objective was to make a proof of concept of the translation system.</p>
-<p dir="auto">Project developed for a master's thesis.
-Advisor : François Glineur</p>
-<h3 dir="auto">Installation</h3>
-<p dir="auto">To use this project, you need <code>lean4</code> and the python packages mentioned in <code>requirements.txt</code>. You can go <a href="https://leanprover.github.io/lean4/doc/setup.html" rel="nofollow">here to install <code>lean4</code></a> and run <code>pip install -r requirements.txt</code>.</p>
-<h3 dir="auto">How the system works</h3>
-<p dir="auto">The system will try to understand the meaning of the natural language sentences by matching specific keywords.</p>
-<h4 dir="auto">Keywords</h4>
-<h5 dir="auto">Specific keywords</h5>
+<p dir="auto">Translation of natural language proofs to lean4 for verification. The objective was to make a proof of concept of the translation system. This project is developed for a master's thesis under the supervision of François Glineur and Sébastien Mattenet.</p>
+<p dir="auto">The project consists of a python package, <code>natural2lean</code>, giving access to a <code>Translator</code> class. This class contains the following methods:</p>
 <ul dir="auto">
-<li>To close the CLI, you can use <code>quit</code> or <code>exit</code>.</li>
-<li>If you made a mistake, use <code>back</code> or <code>backtrack</code> to undo the last step.</li>
+<li><code>__init__(lean_project_directory: str = None)</code>; creates the object and makes sure that it has access to the needed <a href="https://github.com/Augustindou/natural2lean-lean-project-template">lean-project-template</a>. The optional <code>lean_project_directory</code> indicates to the program where to store the project template.</li>
+<li><code>new_theorem(string: str)</code>; parses the string into a new theorem and returns the state of the proof after the theorem was added.</li>
+<li><code>new_statement(string: str)</code>; parses the string into a new statement and returns the state of the proof after the statement was added.</li>
+<li><code>new(string: str)</code>; delegates <code>new_theorem</code> or <code>new_statement</code> depending on the context (whether or not there is a goal to be solved).</li>
+<li><code>backtrack()</code>; removes the last theorem / statement added</li>
 </ul>
+<h3 dir="auto">Installation</h3>
+<ol dir="auto">
+<li>Install <code>lean4</code> (<a href="https://leanprover.github.io/lean4/doc/setup.html" rel="nofollow">install guide</a>)</li>
+<li>Install the project (<code>pip install .</code>)</li>
+</ol>
+<h3 dir="auto">How the system works</h3>
+<p dir="auto">The system will try to understand the meaning of the natural language sentences by matching specific keywords. Spaces are optional and the system will raise a <code>TranslationError</code> (<code>natural2lean.utils.exceptions</code>) if it could not parse the string, or a <code>LeanError</code> if the translated string was not accepted by lean.</p>
 <h5 dir="auto">Theorem statements</h5>
 <ul dir="auto">
 <li>A theorem statement is simply an implication you want to prove. <code>if [...] then [...]</code> will be matched, and hypotheses / theses will be extracted from that.</li>
@@ -48,16 +51,20 @@ Advisor : François Glineur</p>
 </ul>
 <h5 dir="auto">Statements</h5>
 <ul dir="auto">
-<li>For now, most statements need the <code>have</code> keyword. The system will try to match a substatement on the right of the <code>have</code> keyword and will try to find the proof of that substatement in the sentence. Any equation should be solved automatically, and in addition to that, the keys in <a href="src/natural2lean/text/have.py"><code>natural2lean.text.have.PROOFS</code></a> will also be understood.</li>
+<li>For now, most statements need the <code>have</code> keyword. The system will try to match a substatement on the right of the <code>have</code> keyword and will try to find the proof of that substatement in the sentence. Any equation should be solved automatically, and in addition to that, the keys in <a href="src/natural2lean/proof_elements/statement/have.py"><code>natural2lean.text.have.PROOFS</code></a> will also be understood.</li>
 <li>You can also conclude a goal by simply stating it (for example, if your goal is to prove that $m^2$ is even, then stating <code>$m^2$ is even</code> will work).</li>
 <li>You can add words to make your proof more readable, such as <code>Hence, $m^2$ is even</code>, even though just writing <code>$m^2$ even</code> will have the same effect.</li>
+</ul>
+<h5 dir="auto">Working examples</h5>
+<ul dir="auto">
+<li><a href="https://github.com/Augustindou/natural2lean-lean-project-template/blob/master/examples/example-1-sqr_m-even/theorem.tex">if $m \in \mathbb{N}$ is even, then $m^2$ is even</a></li>
+<li><a href="https://github.com/Augustindou/natural2lean-lean-project-template/blob/master/examples/example-2-sqr_q-mod-3/theorem.tex">if $q \in \mathbb{N}$ is not divisible by $3$, then $q^2 \mod 3 = 1$</a></li>
 </ul>
 <h3 dir="auto">Contributing</h3>
 <p dir="auto">To install <code>natural2lean</code> along with the tools you need to develop and run the tests, run the following in your virtual environnment :</p>
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install -e .[dev]"><pre>pip install -e .[dev]</pre></div>
 <p dir="auto">Note that if you use <code>zsh</code>, you need to run the following instead :</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install -e .'[dev]'"><pre class="notranslate"><code>pip install -e .'[dev]'
-</code></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install -e .'[dev]'"><pre>pip install -e .<span class="pl-s"><span class="pl-pds">'</span>[dev]<span class="pl-pds">'</span></span></pre></div>
 </article></div></main>
 </body>
 </html>

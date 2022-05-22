@@ -255,6 +255,10 @@ instance fromBasisHom {F: Type}[AddCommGroup F]
     apply fag.inducedMap
     exact f p
 
+instance inducedHomomorphism (F : Type) [AddCommGroup F] {X : Type} [fag : FreeAbelianGroup F X]
+  {A : Type} [abg : AddCommGroup A] (f : X → A) : AddCommGroup.Homomorphism (fag.inducedMap A f) :=
+    fag.induced_hom A f
+
 instance fromBasisFamilyHom {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]{D : Type}
   {f: D → X → A}{p : D} :  @AddCommGroup.Homomorphism F A _ _ 
@@ -304,14 +308,6 @@ def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
 
 -- def egHom (x: Fin 2)  : AddCommGroup.Homomorphism (egAction x) := inferInstance -- fails
 
-def egActionBasis : Fin 2 → Unit → ℤ 
-| ⟨0, _⟩ => fun _ => 1
-| ⟨1, _⟩ => fun _ => -1
-
-abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis)
-
-def egHom' (x: Fin 2)  : 
-  AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
 
 -- decidability
 
@@ -341,15 +337,32 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
       Decidable (f = g) := by apply decideHomsEqual X 
 
+-- proof of being an action
+
+def egActionBasis' : Fin 2 → Unit → ℤ 
+| ⟨0, _⟩ => fun _ => 1
+| ⟨1, _⟩ => fun _ => -1
+
+abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis')
+
+def egHom' (x: Fin 2)  : 
+  AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
+
+def egHom'' (x y: Fin 2)  : 
+  AddCommGroup.Homomorphism <| 
+      (egAction' x) ∘ (egAction' y) := inferInstance -- works!
+
+theorem egIsAction: ∀ (x y: Fin 2), 
+  (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
-variable {X_A X_B : Type _} (i_A : X_A → A) (i_B : X_B → B)
+variable {X_A X_B : Type _} 
 variable [FAb_A : FreeAbelianGroup A X_A] [FAb_B : FreeAbelianGroup B X_B ]
 
 def ι : (X_A ⊕ X_B) → A × B
-  | Sum.inl x_a => (i_A x_a, 0)
-  | Sum.inr x_b => (0, i_B x_b)
+  | Sum.inl x_a => (FAb_A.i x_a, 0)
+  | Sum.inr x_b => (0, FAb_B.i x_b)
 
 def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B → G
   | (a, b) =>
@@ -359,15 +372,70 @@ def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B �
     let ϕ_B : B → G := FAb_B.inducedMap  G f_B
     ϕ_A a + ϕ_B b
 
-#check @ι
-
-instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
+instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
   {
-    i := ι i_A i_B
+    i := ι
     inducedMap := inducedMap 
-    induced_extends := sorry
-    induced_hom := sorry
-    unique_extension := sorry
+    induced_extends := by
+      intro G GrpG f
+      simp [inducedMap]
+      apply funext
+      intro x
+      simp
+      cases x
+      · rename_i x_A
+        simp [ι]
+        have fA_extends := congrFun (FAb_A.induced_extends (f ∘ Sum.inl)) x_A
+        simp at fA_extends
+        rw [fA_extends]
+        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inr) (0 : B) = (0 : G) := by
+              rw [zero_image (FAb_B.inducedMap G (f ∘ Sum.inr))]
+        rw [this, add_zero]
+      · rename_i x_B
+        simp [ι]
+        have fB_extends := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
+        simp at fB_extends
+        rw [fB_extends]
+        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (0 : A) = (0 : G) := by
+          rw [zero_image (FAb_A.inducedMap G (f ∘ Sum.inl))]
+        rw [this, zero_add]
+    induced_hom := by
+      intro G GrpG f
+      apply AddCommGroup.Homomorphism.mk
+      intro (a, b)
+      intro (a', b')
+      simp [inducedMap, DirectSum.directSum_mul]
+      rw [add_dist (FAb_A.inducedMap G (f ∘ Sum.inl)), add_dist (FAb_B.inducedMap G (f ∘ Sum.inr))]
+      rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
+    unique_extension := by
+      intro G GrpG f g Homf Homg
+      intro h
+      apply funext
+      intro (a, b)
+      have coordsplit : (a, b) = (a, 0) + (0, b) := by
+        have := DirectSum.directSum_add a 0 0 b
+        rw [zero_add, add_zero] at this
+        exact Eq.symm this
+      rw [coordsplit, Homf.add_dist, Homg.add_dist]
+      have A_unique : f ∘ ι₁ = g ∘ ι₁ := by
+        apply FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁)
+        apply funext
+        intro x_A
+        simp [ι₁]
+        have := congrFun h (Sum.inl x_A)
+        simp [ι] at this
+        assumption
+      have B_unique : f ∘ ι₂ = g ∘ ι₂ := by
+        apply FAb_B.unique_extension (f ∘ ι₂) (g ∘ ι₂)
+        apply funext
+        intro x_B
+        simp [ι₂]
+        have := congrFun h (Sum.inr x_B)
+        simp [ι] at this
+        assumption
+      have acoordeq : f (a, 0) = g (a, 0) := congrFun A_unique a
+      have bcoordeq : f (0, b) = g (0, b) := congrFun B_unique b
+      rw [acoordeq, bcoordeq]
   }
 
 end Product
@@ -384,5 +452,8 @@ def onX {α : Type _} : α × α × α →   Unit ⊕ Unit ⊕ Unit → α
 | (_, b, _), (Sum.inr (Sum.inl _)) => b
 | (_, _, c), (Sum.inr (Sum.inr _)) => c
 
+
+instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
+        inferInstance
 
 end Z3
