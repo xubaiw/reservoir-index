@@ -1,9 +1,9 @@
 import re
 from .statement import Statement
 from .such_that import SuchThat
-from ..propositions.multiple_propositions import MultiplePropositions
-from ..propositions.implication import Implication
 from ...algebra.equation import Equation
+from ...propositions.multiple_propositions import MultiplePropositions
+from ...propositions.implication import Implication
 from ...utils.translatable import Translatable
 from ...utils.exceptions import MatchingError, TranslationError
 
@@ -91,6 +91,9 @@ class Have(Statement):
         return DEFAULT_PROOF
 
     def translate(self, hyp_name=None, **kwargs) -> str:
+        if not hyp_name:
+            return self.statement.translate()
+        
         if self.proof == CALC_PROOF and isinstance(self.statement, Equation):
             return f"have {self.statement.translate(hyp_name=hyp_name, by_calc=True)}"
 
