@@ -466,19 +466,14 @@ do so even in cases where you probably would not expect them to. I'm afraid
 there is currently no good solution for this.</p>
 </li>
 <li>
-<p dir="auto"><strong><code>safe_default</code></strong>: default builder for safe rules. This is the builder used
-when you register a safe rule without specifying a builder, but you can also
-request it explicitly. It tries the following builders, using the first one
-that works for the given declaration or hypothesis: <code>constructors</code>, <code>tactic</code>,
-<code>apply</code>.</p>
-</li>
-<li>
-<p dir="auto"><strong><code>unsafe_default</code></strong>: default builder for unsafe rules. Uses the same builders
-as <code>safe_default</code>.</p>
-</li>
-<li>
-<p dir="auto"><strong><code>norm_default</code></strong>: default builder for normalisation rules. Uses the builders
-<code>tactic</code>, <code>simp</code>, <code>apply</code>.</p>
+<p dir="auto"><strong><code>default</code></strong>: The default builder. This is the builder used when you
+register a rule without specifying a builder, but you can also use it
+explicitly. Depending on the rule's phase, the default builder tries
+different builders, using the first one that works. These builders are:</p>
+<ul dir="auto">
+<li>For <code>safe</code> and <code>unsafe</code> rules: <code>constructors</code>, <code>tactic</code>, <code>apply</code>.</li>
+<li>For <code>norm</code> rules: <code>constructors</code>, <code>tactic</code>, <code>simp</code>, <code>apply</code>.</li>
+</ul>
 </li>
 </ul>
 <h6 dir="auto">Rule Sets</h6>
