@@ -613,11 +613,11 @@ involved Aesop call might look like this:</p>
   (add safe foo, 10% cases Or, safe cases Empty)
   (erase A [cases, constructors], baz)
   (rule_sets [A, B])
-  (options { maxRuleApplicationDepth := 10 })"><pre class="notranslate" lang="text"><code>aesop
+  (options := { maxRuleApplicationDepth := 10 })"><pre class="notranslate" lang="text"><code>aesop
   (add safe foo, 10% cases Or, safe cases Empty)
   (erase A [cases, constructors], baz)
   (rule_sets [A, B])
-  (options { maxRuleApplicationDepth := 10 })
+  (options := { maxRuleApplicationDepth := 10 })
 </code></pre></div>
 <p dir="auto">Here we add some rules with an <code>add</code> clause, erase other rules with an <code>erase</code>
 clause, limit the used rule sets and set some options. Each of these clauses

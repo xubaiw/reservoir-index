@@ -90,7 +90,7 @@ Hello, world!
     src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
   }]
 }</pre></div>
-<p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it.</p>
+<p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it. Information on the specific revision cloned will then be saved to <code>manifest.json</code> in <code>lean_packages</code> to enable reproducibility. To update <code>mathlib</code> after this, you will need to run <code>lake update</code> -- other commands do not update resolved dependencies.</p>
 <p dir="auto">Further examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
 <h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>

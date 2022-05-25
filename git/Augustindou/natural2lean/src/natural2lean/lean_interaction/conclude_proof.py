@@ -1,13 +1,14 @@
 from pathlib import Path
 import re
 from .lean_feedback import LeanBlock, State, lean_feedback
-from ..utils.printing import indent
+from ..utils.text import indent
 from ..utils.exceptions import LeanError, NoConclusion
 from ..utils.translatable import Translatable
 
 
 # if any element of the key is in the goal, the system will add the value to the proof if it solves a goal
 CONCLUSIONS: dict[tuple[str], str] = {
+    (r"not\s*divisible",): "simp_all [divisible]",
     (r"even", r"divisible"): "try exact ⟨_, by assumption⟩",
     (r"%.*=",): "apply mod_rewrite.mpr; try exact ⟨_, by assumption⟩",
 }

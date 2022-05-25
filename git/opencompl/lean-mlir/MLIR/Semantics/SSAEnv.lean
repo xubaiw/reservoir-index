@@ -70,6 +70,9 @@ def SSAScope.maps (l: SSAScope) (name: SSAVal) (τ: MLIRTy) (v: τ.eval) :=
 def SSAEnv :=
   List SSAScope
 
+-- | An SSA environment with a single empty SSAScope
+def SSAEnv.empty: SSAEnv := [[]]
+
 @[simp]
 def SSAEnv.get (name: SSAVal) (τ: MLIRTy): SSAEnv → Option τ.eval
   | [] => none
@@ -93,9 +96,9 @@ instance: LE SSAEnv where
 
 -- Interactions manipulating the environment
 
-inductive SSAEnvE: Type → Type _ where
-  | Get: (τ: MLIRTy) → [Inhabited τ.eval] → SSAVal → SSAEnvE τ.eval
-  | Set: (τ: MLIRTy) → SSAVal → τ.eval → SSAEnvE Unit
+inductive SSAEnvE: Type u → Type _ where
+  | Get: (τ: MLIRTy) → [Inhabited τ.eval] → SSAVal → SSAEnvE (ULift τ.eval)
+  | Set: (τ: MLIRTy) → SSAVal → τ.eval → SSAEnvE PUnit
 
 @[simp_itree]
 def SSAEnvE.handle {E}: SSAEnvE ~> StateT SSAEnv (Fitree E) :=
@@ -103,10 +106,10 @@ def SSAEnvE.handle {E}: SSAEnvE ~> StateT SSAEnv (Fitree E) :=
     match e with
     | Get τ name =>
         match env.get name τ with
-        | some v => return (v, env)
-        | none => return (default, env)
+        | some v => return (ULift.up v, env)
+        | none => return (ULift.up default, env)
     | Set τ name v =>
-        return ((), env.set name τ v)
+        return (.unit, env.set name τ v)
 
 @[simp_itree]
 def SSAEnv.set? {E} [Member SSAEnvE E]
@@ -128,3 +131,108 @@ private def stateT_defaultHandler E: E ~> StateT SSAEnv (Fitree E) :=
 def interp_ssa {E R} (t: Fitree (SSAEnvE +' E) R):
     StateT SSAEnv (Fitree E) R :=
   interp_state (case_ SSAEnvE.handle (stateT_defaultHandler E)) t
+
+structure WriterT (m: Type _ -> Type _) (a: Type _) where
+  val: m (a × String)
+
+def WriterT.run (wm: WriterT m a ): m (a × String) := wm.val
+
+instance [Functor m]: Functor (WriterT m) where
+  map f w := { val := Functor.map (fun (a, log) => (f a, log)) w.val }
+
+instance [Pure m]: Pure (WriterT m) where
+  pure x := { val := pure (x, "") }
+
+instance [Monad m]: Seq (WriterT m) where
+   seq mx my :=
+     { val := do
+        let wx <- mx.val
+        let wy <- (my ()).val
+        let wb := wx.fst wy.fst
+        return (wb, wx.snd ++ wy.snd) }
+
+instance [Monad m] : SeqLeft (WriterT m) where
+   seqLeft mx my :=
+     { val := do
+        let wx <- mx.val
+        let wy <- (my ()).val
+        return (wx.fst, wx.snd ++ wy.snd) }
+
+instance [Monad m] : SeqRight (WriterT m) where
+   seqRight mx my :=
+     { val := do
+        let wx <- mx.val
+        let wy <- (my ()).val
+        return (wy.fst, wx.snd  ++ wy.snd ) }
+
+instance [Bind m] [Pure m]: Bind (WriterT m) where
+  bind wma a2wmb :=
+    let v := do
+      let (va, loga) <- wma.val
+      let wb <- (a2wmb va).val
+      let (vb, logb) := wb
+      return (vb, loga ++ logb)
+    { val := v }
+
+def WriterT.lift [Monad m] {α : Type u} (ma: m α): WriterT m α :=
+  { val := do let a <- ma; return (a, "") }
+
+
+instance [Monad m]: MonadLift m (WriterT m) where
+  monadLift := WriterT.lift
+
+instance : MonadFunctor m (WriterT m) := ⟨fun f mx => { val := f (mx.val) } ⟩
+
+instance [Monad m] : Applicative (WriterT m) where
+  pure := Pure.pure
+  seqLeft := SeqLeft.seqLeft
+  seqRight := SeqRight.seqRight
+
+instance [Monad m]: Monad (WriterT m) where
+  pure := Pure.pure
+  bind := Bind.bind
+  map  := Functor.map
+
+def logWriterT [Monad m] (s: String): WriterT.{u} m PUnit.{u+1} :=
+  { val := pure (.unit, s) }
+
+
+
+-- |
+-- def SSAEnvE.handleLogged {E} {R: Type} (e: SSAEnvE R):  WriterT (StateT SSAEnv (Fitree E)) R := do
+def SSAEnvE.handleLogged (E: Type -> Type _) (R: Type): SSAEnvE ~>  WriterT (StateT SSAEnv (Fitree E)) :=
+  fun R e => do
+    let env <- WriterT.lift $ StateT.get
+    match e with
+    | Get τ name =>
+        logWriterT ("getting " ++ (ToString.toString name))
+        match env.get name τ with
+        | some v => do
+          let debugStr := match τ with | MLIRTy.int _ => toString v | _ => "unk"
+          logWriterT ("[val=" ++ debugStr ++ "];  ")
+          return ULift.up v
+        | none =>
+            logWriterT ("[val=none];  ")
+           return ULift.up default
+    | Set τ name v =>
+        logWriterT ("setting " ++ (ToString.toString name))
+        let debugStr := match τ with | MLIRTy.int _ => toString v | _ => "unk"
+        logWriterT ("[val=" ++ debugStr ++ "];  ")
+        WriterT.lift $ StateT.set (env.set name τ v)
+        return .unit
+
+-- private def handleUnkLogged {E: Type -> Type _} {R: Type} (e: E R): WriterT (StateT SSAEnv (Fitree E)) R := do
+def handleUnkLogged (E: Type -> Type _): E ~> WriterT (StateT SSAEnv (Fitree E)) :=
+  fun R e => do
+    let r <- @Fitree.trigger E E _ _  e; -- TODO: understand precisely what this means
+    return r
+
+-- Interpretation into the writer monad
+def interp_writer [Monad M] {E} (h: E ~> WriterT M):
+    forall ⦃R⦄, Fitree E R → WriterT M R := interp h
+
+def interp_ssa_logged {E R} (t: Fitree (SSAEnvE +' E) R):
+    WriterT (StateT SSAEnv (Fitree E)) R :=
+  let x := (case_ (SSAEnvE.handleLogged E R) (handleUnkLogged E))
+  let y := interp_writer x t
+  y

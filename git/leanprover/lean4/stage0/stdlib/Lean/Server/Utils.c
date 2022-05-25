@@ -84,7 +84,7 @@ uint32_t lean_string_utf8_get(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_IO_FS_Stream_chainLeft___elambda__1___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Lean_Lsp_DocumentUri_ofPath___lambda__1___boxed(lean_object*);
 static lean_object* l_Lean_Server_publishProgress___closed__1;
-lean_object* l___private_Lean_Data_Lsp_Diagnostics_0__Lean_Lsp_toJsonPublishDiagnosticsParams____x40_Lean_Data_Lsp_Diagnostics___hyg_1318_(lean_object*);
+lean_object* l___private_Lean_Data_Lsp_Diagnostics_0__Lean_Lsp_toJsonPublishDiagnosticsParams____x40_Lean_Data_Lsp_Diagnostics___hyg_1303_(lean_object*);
 lean_object* l_Lean_FileMap_ofString(lean_object*);
 static lean_object* l_Lean_Lsp_DocumentUri_ofPath___closed__1;
 LEAN_EXPORT lean_object* l_Lean_Json_toStructured_x3f___at_Lean_Server_publishProgress___spec__2(lean_object*);
@@ -1271,7 +1271,7 @@ static lean_object* _init_l_Lean_Lsp_DocumentUri_ofPath___closed__2() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("file:///");
+x_1 = lean_mk_string_from_bytes("file:///", 8);
 return x_1;
 }
 }
@@ -1372,7 +1372,7 @@ static lean_object* _init_l_Lean_Lsp_DocumentUri_toPath_x3f___lambda__2___closed
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("file://");
+x_1 = lean_mk_string_from_bytes("file://", 7);
 return x_1;
 }
 }
@@ -1473,7 +1473,7 @@ static lean_object* _init_l_Lean_Server_instInhabitedDocumentMeta___closed__2() 
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("");
+x_1 = lean_mk_string_from_bytes("", 0);
 return x_1;
 }
 }
@@ -1589,7 +1589,7 @@ static lean_object* _init_l_Lean_Server_maybeTee___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("LEAN_SERVER_LOG_DIR");
+x_1 = lean_mk_string_from_bytes("LEAN_SERVER_LOG_DIR", 19);
 return x_1;
 }
 }
@@ -1886,7 +1886,7 @@ static lean_object* _init_l_Lean_Json_toStructured_x3f___at_Lean_Server_publishD
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("expected structured object, got '");
+x_1 = lean_mk_string_from_bytes("expected structured object, got '", 33);
 return x_1;
 }
 }
@@ -1894,7 +1894,7 @@ static lean_object* _init_l_Lean_Json_toStructured_x3f___at_Lean_Server_publishD
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("'");
+x_1 = lean_mk_string_from_bytes("'", 1);
 return x_1;
 }
 }
@@ -1902,7 +1902,7 @@ LEAN_EXPORT lean_object* l_Lean_Json_toStructured_x3f___at_Lean_Server_publishDi
 _start:
 {
 lean_object* x_2; lean_object* x_3; lean_object* x_4; lean_object* x_5; 
-x_2 = l___private_Lean_Data_Lsp_Diagnostics_0__Lean_Lsp_toJsonPublishDiagnosticsParams____x40_Lean_Data_Lsp_Diagnostics___hyg_1318_(x_1);
+x_2 = l___private_Lean_Data_Lsp_Diagnostics_0__Lean_Lsp_toJsonPublishDiagnosticsParams____x40_Lean_Data_Lsp_Diagnostics___hyg_1303_(x_1);
 x_3 = lean_ctor_get(x_2, 0);
 lean_inc(x_3);
 lean_dec(x_2);
@@ -1940,7 +1940,7 @@ static lean_object* _init_l_Lean_Server_publishDiagnostics___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("textDocument/publishDiagnostics");
+x_1 = lean_mk_string_from_bytes("textDocument/publishDiagnostics", 31);
 return x_1;
 }
 }
@@ -2010,7 +2010,7 @@ static lean_object* _init_l_Lean_Server_publishProgress___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("$/lean/fileProgress");
+x_1 = lean_mk_string_from_bytes("$/lean/fileProgress", 19);
 return x_1;
 }
 }

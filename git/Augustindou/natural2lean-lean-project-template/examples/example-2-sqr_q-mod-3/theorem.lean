@@ -15,8 +15,7 @@ theorem square_mod_3 (q : Nat) : (¬divisible 3 q) → (q^2 % 3 = 1) := by
   contradiction
 
   have ⟨k, h3⟩ : ∃ (k : Nat), q = 3 * k + 1 := by 
-    simp at *
-    assumption
+    simp_all
 
   have q_square : q^2 = 3 * (3 * k^2 + 2 * k) + 1  := by 
     calc

@@ -25,6 +25,7 @@ LEAN_EXPORT lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___boxed(
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___closed__1;
 size_t lean_usize_add(size_t, size_t);
 static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_69____closed__2;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4;
 static lean_object* l_Lean_Server_wrapRpcProcedure___elambda__1___closed__2;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___closed__8;
 LEAN_EXPORT lean_object* l_Lean_Server_registerBuiltinRpcProcedure___lambda__1___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
@@ -33,6 +34,7 @@ LEAN_EXPORT lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Ser
 lean_object* l_Lean_stringToMessageData(lean_object*);
 LEAN_EXPORT lean_object* l_List_foldlM___at_Lean_Server_registerRpcProcedure___spec__9(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* lean_mk_empty_array_with_capacity(lean_object*);
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2(lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* l_Lean_throwError___at_Lean_declareBuiltin___spec__1(lean_object*, lean_object*, lean_object*, lean_object*);
 uint8_t lean_uint64_dec_eq(uint64_t, uint64_t);
 static lean_object* l_Lean_Server_registerBuiltinRpcProcedure___closed__1;
@@ -47,6 +49,7 @@ static lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___closed__23;
 LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_32_(lean_object*);
 LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_69_(lean_object*);
 LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322_(lean_object*);
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259_(lean_object*);
 static lean_object* l_Lean_Server_registerLspRequestHandler___at_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322____spec__1___lambda__3___closed__1;
 lean_object* l_Lean_Server_FileWorker_instMonadRpcSession___rarg(lean_object*, lean_object*);
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__19;
@@ -71,6 +74,7 @@ lean_object* l_id___rarg___boxed(lean_object*);
 LEAN_EXPORT lean_object* l_List_foldlM___at_Lean_Server_registerRpcProcedure___spec__7(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_insertAux_traverse___at_Lean_Server_registerBuiltinRpcProcedure___spec__3___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* lean_st_ref_get(lean_object*, lean_object*);
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6;
 uint8_t lean_name_eq(lean_object*, lean_object*);
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__12;
 LEAN_EXPORT lean_object* l_Lean_Server_builtinRpcProcedures;
@@ -106,6 +110,7 @@ size_t lean_uint64_to_usize(uint64_t);
 lean_object* l_Lean_Expr_FindImpl_findUnsafe_x3f(lean_object*, lean_object*);
 lean_object* l_Lean_MapDeclarationExtension_find_x3f___rarg(lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__2;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2;
 lean_object* l_Except_map___rarg(lean_object*, lean_object*);
 lean_object* lean_array_fget(lean_object*, lean_object*);
 lean_object* l_Lean_MapDeclarationExtension_insert___rarg(lean_object*, lean_object*, lean_object*, lean_object*);
@@ -139,9 +144,11 @@ static lean_object* l_Lean_Server_registerRpcProcedure___closed__2;
 lean_object* lean_array_fset(lean_object*, lean_object*, lean_object*);
 lean_object* l_Std_PersistentHashMap_insert___at_Lean_Server_registerLspRequestHandler___spec__2(lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__21;
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1(lean_object*, lean_object*, uint8_t, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_ReaderT_bind___at_Lean_Server_wrapRpcProcedure___elambda__1___spec__3___rarg(lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Lean_throwKernelException___at_Lean_Server_registerRpcProcedure___spec__3___boxed(lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322____closed__1;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1;
 lean_object* l_Lean_mkMapDeclarationExtension___rarg(lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_containsAtAux___at_Lean_Server_registerBuiltinRpcProcedure___spec__7___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__2(lean_object*, lean_object*, lean_object*);
@@ -169,14 +176,18 @@ static lean_object* l_Lean_Server_registerLspRequestHandler___at_Lean_Server_ini
 static lean_object* l_Lean_Server_registerRpcProcedure___closed__1;
 lean_object* l_Lean_Server_RequestM_mapTask___rarg(lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3(lean_object*, lean_object*, lean_object*, lean_object*);
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7;
 static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_32____closed__2;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___closed__10;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__3;
 LEAN_EXPORT lean_object* l_Lean_Server_wrapRpcProcedure___elambda__1___lambda__3___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_instInhabitedRpcProcedure___rarg___closed__4;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__5;
+lean_object* l_Lean_registerBuiltinAttribute(lean_object*, lean_object*);
+lean_object* l_Lean_throwError___at_Lean_AttributeImpl_erase___default___spec__1(lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__14;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__4;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2;
 size_t lean_usize_mul(size_t, size_t);
 LEAN_EXPORT lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__2___boxed(lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_insertAux_traverse___at_Lean_Server_registerBuiltinRpcProcedure___spec__3(size_t, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
@@ -186,6 +197,7 @@ static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__8;
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_findAux___at___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___spec__2(lean_object*, size_t, lean_object*);
 extern lean_object* l_Task_Priority_default;
 static lean_object* l_Lean_Server_registerLspRequestHandler___at_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322____spec__1___lambda__2___closed__2;
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___boxed(lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* l_Lean_Server_RequestM_bindWaitFindSnap___rarg(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322____closed__2;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__18;
@@ -204,6 +216,7 @@ static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__3;
 LEAN_EXPORT lean_object* l_Std_RBNode_find___at_Lean_Server_wrapRpcProcedure___elambda__1___spec__1___boxed(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_insertAux___at_Lean_Server_registerBuiltinRpcProcedure___spec__2___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___closed__5;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__2___closed__14;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__17;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__8;
@@ -215,6 +228,7 @@ lean_object* l_String_intercalate(lean_object*, lean_object*);
 extern lean_object* l___private_Lean_Elab_Term_0__Lean_Elab_Term_mkSomeContext;
 static lean_object* l_Lean_Server_parseRequestParams___at_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_322____spec__2___closed__2;
 LEAN_EXPORT uint8_t l_Std_PersistentHashMap_containsAux___at_Lean_Server_registerBuiltinRpcProcedure___spec__6(lean_object*, size_t, lean_object*);
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1;
 LEAN_EXPORT lean_object* l_Lean_Server_wrapRpcProcedure___elambda__1(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, uint64_t, lean_object*, lean_object*, lean_object*);
 static lean_object* l_Lean_Server_registerBuiltinRpcProcedure___closed__3;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__22;
@@ -226,6 +240,7 @@ static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__15;
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__18;
 LEAN_EXPORT lean_object* l_Lean_Server_instInhabitedRpcProcedure(uint64_t, lean_object*, lean_object*);
 extern lean_object* l_Id_instMonadId;
+static lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3;
 uint8_t lean_nat_dec_le(lean_object*, lean_object*);
 uint8_t lean_usize_dec_le(size_t, size_t);
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__5;
@@ -311,6 +326,7 @@ static lean_object* l_Lean_Server_registerRpcProcedure___lambda__1___closed__16;
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___closed__3;
 lean_object* l_Lean_Server_RequestM_readDoc(lean_object*, lean_object*);
 static lean_object* l_Lean_Server_registerRpcProcedure___lambda__3___closed__4;
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 static lean_object* l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Server_handleRpcCallUnsafe___lambda__3___closed__7;
 LEAN_EXPORT lean_object* l_Std_PersistentHashMap_insertAtCollisionNodeAux___at_Lean_Server_registerBuiltinRpcProcedure___spec__4(lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* l_Std_PersistentHashMap_mkCollisionNode___rarg(lean_object*, lean_object*, lean_object*, lean_object*);
@@ -322,7 +338,7 @@ static lean_object* _init_l_Lean_Server_instInhabitedRpcProcedure___rarg___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("executing Inhabited instance?!");
+x_1 = lean_mk_string_from_bytes("executing Inhabited instance?!", 30);
 return x_1;
 }
 }
@@ -448,7 +464,7 @@ static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHan
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("userRpcProcedures");
+x_1 = lean_mk_string_from_bytes("userRpcProcedures", 17);
 return x_1;
 }
 }
@@ -666,7 +682,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("No RPC method '");
+x_1 = lean_mk_string_from_bytes("No RPC method '", 15);
 return x_1;
 }
 }
@@ -674,7 +690,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("' bound");
+x_1 = lean_mk_string_from_bytes("' bound", 7);
 return x_1;
 }
 }
@@ -682,7 +698,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("_private");
+x_1 = lean_mk_string_from_bytes("_private", 8);
 return x_1;
 }
 }
@@ -700,7 +716,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Lean");
+x_1 = lean_mk_string_from_bytes("Lean", 4);
 return x_1;
 }
 }
@@ -718,7 +734,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Server");
+x_1 = lean_mk_string_from_bytes("Server", 6);
 return x_1;
 }
 }
@@ -736,7 +752,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Rpc");
+x_1 = lean_mk_string_from_bytes("Rpc", 3);
 return x_1;
 }
 }
@@ -754,7 +770,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("RequestHandling");
+x_1 = lean_mk_string_from_bytes("RequestHandling", 15);
 return x_1;
 }
 }
@@ -802,7 +818,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("RpcProcedure");
+x_1 = lean_mk_string_from_bytes("RpcProcedure", 12);
 return x_1;
 }
 }
@@ -820,7 +836,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Failed to evaluate RPC constant '");
+x_1 = lean_mk_string_from_bytes("Failed to evaluate RPC constant '", 33);
 return x_1;
 }
 }
@@ -828,7 +844,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("': ");
+x_1 = lean_mk_string_from_bytes("': ", 3);
 return x_1;
 }
 }
@@ -836,7 +852,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("");
+x_1 = lean_mk_string_from_bytes("", 0);
 return x_1;
 }
 }
@@ -1094,7 +1110,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(":");
+x_1 = lean_mk_string_from_bytes(":", 1);
 return x_1;
 }
 }
@@ -1102,7 +1118,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Incorrect position '");
+x_1 = lean_mk_string_from_bytes("Incorrect position '", 20);
 return x_1;
 }
 }
@@ -1110,7 +1126,7 @@ static lean_object* _init_l___private_Lean_Server_Rpc_RequestHandling_0__Lean_Se
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("' in RPC call");
+x_1 = lean_mk_string_from_bytes("' in RPC call", 13);
 return x_1;
 }
 }
@@ -1232,7 +1248,7 @@ static lean_object* _init_l_Lean_Server_parseRequestParams___at_Lean_Server_init
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Cannot parse request params: ");
+x_1 = lean_mk_string_from_bytes("Cannot parse request params: ", 29);
 return x_1;
 }
 }
@@ -1240,7 +1256,7 @@ static lean_object* _init_l_Lean_Server_parseRequestParams___at_Lean_Server_init
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("\n");
+x_1 = lean_mk_string_from_bytes("\n", 1);
 return x_1;
 }
 }
@@ -1580,7 +1596,7 @@ static lean_object* _init_l_Lean_Server_registerLspRequestHandler___at_Lean_Serv
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Failed to register LSP request handler for '");
+x_1 = lean_mk_string_from_bytes("Failed to register LSP request handler for '", 44);
 return x_1;
 }
 }
@@ -1588,7 +1604,7 @@ static lean_object* _init_l_Lean_Server_registerLspRequestHandler___at_Lean_Serv
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("': already registered");
+x_1 = lean_mk_string_from_bytes("': already registered", 21);
 return x_1;
 }
 }
@@ -1671,7 +1687,7 @@ static lean_object* _init_l_Lean_Server_registerLspRequestHandler___at_Lean_Serv
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("': only possible during initialization");
+x_1 = lean_mk_string_from_bytes("': only possible during initialization", 38);
 return x_1;
 }
 }
@@ -1740,7 +1756,7 @@ static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHan
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("$/lean/rpc/call");
+x_1 = lean_mk_string_from_bytes("$/lean/rpc/call", 15);
 return x_1;
 }
 }
@@ -1953,7 +1969,7 @@ static lean_object* _init_l_Lean_Server_wrapRpcProcedure___elambda__1___lambda__
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Cannot decode params in RPC call '");
+x_1 = lean_mk_string_from_bytes("Cannot decode params in RPC call '", 34);
 return x_1;
 }
 }
@@ -1961,7 +1977,7 @@ static lean_object* _init_l_Lean_Server_wrapRpcProcedure___elambda__1___lambda__
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("(");
+x_1 = lean_mk_string_from_bytes("(", 1);
 return x_1;
 }
 }
@@ -1969,7 +1985,7 @@ static lean_object* _init_l_Lean_Server_wrapRpcProcedure___elambda__1___lambda__
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(")'\n");
+x_1 = lean_mk_string_from_bytes(")'\n", 3);
 return x_1;
 }
 }
@@ -2191,7 +2207,7 @@ static lean_object* _init_l_Lean_Server_wrapRpcProcedure___elambda__1___closed__
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Outdated RPC session");
+x_1 = lean_mk_string_from_bytes("Outdated RPC session", 20);
 return x_1;
 }
 }
@@ -3051,7 +3067,7 @@ static lean_object* _init_l_Lean_Server_registerBuiltinRpcProcedure___lambda__2_
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(": already registered");
+x_1 = lean_mk_string_from_bytes(": already registered", 20);
 return x_1;
 }
 }
@@ -3146,7 +3162,7 @@ static lean_object* _init_l_Lean_Server_registerBuiltinRpcProcedure___closed__1(
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Failed to register builtin RPC call handler for '");
+x_1 = lean_mk_string_from_bytes("Failed to register builtin RPC call handler for '", 49);
 return x_1;
 }
 }
@@ -3154,7 +3170,7 @@ static lean_object* _init_l_Lean_Server_registerBuiltinRpcProcedure___closed__2(
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("'");
+x_1 = lean_mk_string_from_bytes("'", 1);
 return x_1;
 }
 }
@@ -3162,7 +3178,7 @@ static lean_object* _init_l_Lean_Server_registerBuiltinRpcProcedure___closed__3(
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(": only possible during initialization");
+x_1 = lean_mk_string_from_bytes(": only possible during initialization", 37);
 return x_1;
 }
 }
@@ -3472,7 +3488,7 @@ static lean_object* _init_l_List_foldlM___at_Lean_Server_registerRpcProcedure___
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("code generator does not support recursor '");
+x_1 = lean_mk_string_from_bytes("code generator does not support recursor '", 42);
 return x_1;
 }
 }
@@ -3489,7 +3505,7 @@ static lean_object* _init_l_List_foldlM___at_Lean_Server_registerRpcProcedure___
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("' yet, consider using 'match ... with' and/or structural recursion");
+x_1 = lean_mk_string_from_bytes("' yet, consider using 'match ... with' and/or structural recursion", 66);
 return x_1;
 }
 }
@@ -4554,7 +4570,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Parser");
+x_1 = lean_mk_string_from_bytes("Parser", 6);
 return x_1;
 }
 }
@@ -4572,7 +4588,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Term");
+x_1 = lean_mk_string_from_bytes("Term", 4);
 return x_1;
 }
 }
@@ -4590,7 +4606,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("app");
+x_1 = lean_mk_string_from_bytes("app", 3);
 return x_1;
 }
 }
@@ -4608,7 +4624,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("wrapRpcProcedure");
+x_1 = lean_mk_string_from_bytes("wrapRpcProcedure", 16);
 return x_1;
 }
 }
@@ -4669,7 +4685,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("null");
+x_1 = lean_mk_string_from_bytes("null", 4);
 return x_1;
 }
 }
@@ -4687,7 +4703,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("hole");
+x_1 = lean_mk_string_from_bytes("hole", 4);
 return x_1;
 }
 }
@@ -4705,7 +4721,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("_");
+x_1 = lean_mk_string_from_bytes("_", 1);
 return x_1;
 }
 }
@@ -4740,7 +4756,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("quotedName");
+x_1 = lean_mk_string_from_bytes("quotedName", 10);
 return x_1;
 }
 }
@@ -4758,7 +4774,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(".");
+x_1 = lean_mk_string_from_bytes(".", 1);
 return x_1;
 }
 }
@@ -4766,7 +4782,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__1___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("`");
+x_1 = lean_mk_string_from_bytes("`", 1);
 return x_1;
 }
 }
@@ -5133,7 +5149,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__2___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("_rpc_wrapped");
+x_1 = lean_mk_string_from_bytes("_rpc_wrapped", 12);
 return x_1;
 }
 }
@@ -5597,7 +5613,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___lambda__3___close
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string("Failed to register RPC call handler for '{method}'");
+x_1 = lean_mk_string_from_bytes("Failed to register RPC call handler for '{method}'", 50);
 return x_1;
 }
 }
@@ -5690,7 +5706,7 @@ static lean_object* _init_l_Lean_Server_registerRpcProcedure___closed__1() {
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string(": already registered (builtin)");
+x_1 = lean_mk_string_from_bytes(": already registered (builtin)", 30);
 return x_1;
 }
 }
@@ -5861,6 +5877,141 @@ lean_object* x_6;
 x_6 = l_Lean_Server_registerRpcProcedure___lambda__2(x_1, x_2, x_3, x_4, x_5);
 lean_dec(x_2);
 return x_6;
+}
+}
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1(lean_object* x_1, lean_object* x_2, uint8_t x_3, lean_object* x_4, lean_object* x_5, lean_object* x_6) {
+_start:
+{
+lean_object* x_7; 
+x_7 = l_Lean_Server_registerRpcProcedure(x_1, x_4, x_5, x_6);
+return x_7;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1() {
+_start:
+{
+lean_object* x_1; 
+x_1 = lean_mk_string_from_bytes("attribute cannot be erased", 26);
+return x_1;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2() {
+_start:
+{
+lean_object* x_1; lean_object* x_2; 
+x_1 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1;
+x_2 = l_Lean_stringToMessageData(x_1);
+return x_2;
+}
+}
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2(lean_object* x_1, lean_object* x_2, lean_object* x_3, lean_object* x_4) {
+_start:
+{
+lean_object* x_5; lean_object* x_6; 
+x_5 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2;
+x_6 = l_Lean_throwError___at_Lean_AttributeImpl_erase___default___spec__1(x_5, x_2, x_3, x_4);
+return x_6;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1() {
+_start:
+{
+lean_object* x_1; 
+x_1 = lean_mk_string_from_bytes("serverRpcMethod", 15);
+return x_1;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2() {
+_start:
+{
+lean_object* x_1; lean_object* x_2; lean_object* x_3; 
+x_1 = lean_box(0);
+x_2 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1;
+x_3 = lean_name_mk_string(x_1, x_2);
+return x_3;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3() {
+_start:
+{
+lean_object* x_1; 
+x_1 = lean_mk_string_from_bytes("Marks a function as a Lean server RPC method.\n    Shorthand for `registerRpcProcedure`.\n    The function must have type `α → RequestM (RequestTask β)` with\n    RpcEncodings for both α and β.", 196);
+return x_1;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4() {
+_start:
+{
+lean_object* x_1; lean_object* x_2; uint8_t x_3; lean_object* x_4; 
+x_1 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2;
+x_2 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3;
+x_3 = 1;
+x_4 = lean_alloc_ctor(0, 2, 1);
+lean_ctor_set(x_4, 0, x_1);
+lean_ctor_set(x_4, 1, x_2);
+lean_ctor_set_uint8(x_4, sizeof(void*)*2, x_3);
+return x_4;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5() {
+_start:
+{
+lean_object* x_1; 
+x_1 = lean_alloc_closure((void*)(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1___boxed), 6, 0);
+return x_1;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6() {
+_start:
+{
+lean_object* x_1; 
+x_1 = lean_alloc_closure((void*)(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___boxed), 4, 0);
+return x_1;
+}
+}
+static lean_object* _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7() {
+_start:
+{
+lean_object* x_1; lean_object* x_2; lean_object* x_3; lean_object* x_4; 
+x_1 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4;
+x_2 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5;
+x_3 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6;
+x_4 = lean_alloc_ctor(0, 3, 0);
+lean_ctor_set(x_4, 0, x_1);
+lean_ctor_set(x_4, 1, x_2);
+lean_ctor_set(x_4, 2, x_3);
+return x_4;
+}
+}
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259_(lean_object* x_1) {
+_start:
+{
+lean_object* x_2; lean_object* x_3; 
+x_2 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7;
+x_3 = l_Lean_registerBuiltinAttribute(x_2, x_1);
+return x_3;
+}
+}
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1___boxed(lean_object* x_1, lean_object* x_2, lean_object* x_3, lean_object* x_4, lean_object* x_5, lean_object* x_6) {
+_start:
+{
+uint8_t x_7; lean_object* x_8; 
+x_7 = lean_unbox(x_3);
+lean_dec(x_3);
+x_8 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__1(x_1, x_2, x_7, x_4, x_5, x_6);
+lean_dec(x_2);
+return x_8;
+}
+}
+LEAN_EXPORT lean_object* l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___boxed(lean_object* x_1, lean_object* x_2, lean_object* x_3, lean_object* x_4) {
+_start:
+{
+lean_object* x_5; 
+x_5 = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2(x_1, x_2, x_3, x_4);
+lean_dec(x_3);
+lean_dec(x_2);
+lean_dec(x_1);
+return x_5;
 }
 }
 lean_object* initialize_Init(uint8_t builtin, lean_object*);
@@ -6139,6 +6290,27 @@ l_Lean_Server_registerRpcProcedure___closed__3 = _init_l_Lean_Server_registerRpc
 lean_mark_persistent(l_Lean_Server_registerRpcProcedure___closed__3);
 l_Lean_Server_registerRpcProcedure___closed__4 = _init_l_Lean_Server_registerRpcProcedure___closed__4();
 lean_mark_persistent(l_Lean_Server_registerRpcProcedure___closed__4);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__1);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____lambda__2___closed__2);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__1);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__2);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__3);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__4);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__5);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__6);
+l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7 = _init_l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7();
+lean_mark_persistent(l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259____closed__7);
+res = l_Lean_Server_initFn____x40_Lean_Server_Rpc_RequestHandling___hyg_1259_(lean_io_mk_world());
+if (lean_io_result_is_error(res)) return res;
+lean_dec_ref(res);
 return lean_io_result_mk_ok(lean_box(0));
 }
 #ifdef __cplusplus

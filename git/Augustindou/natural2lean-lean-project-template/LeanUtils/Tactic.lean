@@ -1,5 +1,4 @@
 import LeanUtils.Div
-import LeanUtils.Logic
 import LeanUtils.Parity
 
 -- Better simp
@@ -28,6 +27,5 @@ attribute [simp]
 
     -- defined in LeanUtils
     Nat.mod_rewrite
-    double_neg
     Nat.even
     Nat.odd

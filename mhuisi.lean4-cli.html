@@ -30,6 +30,12 @@
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean4-cli</h3>
 <h4 dir="auto">Usage</h4>
 <p dir="auto">See <a href="https://github.com/leanprover/lake">the documentation of Lake</a>.</p>
+<p dir="auto">Use one of the following for the <code><tag></code> in the dependency source <code>Source.git "https://github.com/mhuisi/lean4-cli.git" "<tag>"</code>:</p>
+<ul dir="auto">
+<li><code>main</code> if you want to stay in sync with Lean 4 milestone releases. The <code>main</code> branch will contain a working version of lean4-cli for the most recent Lean 4 milestone.</li>
+<li><code>nightly</code> if you want to stay in sync with Lean 4 nightly releases. The <code>nightly</code> branch will contain a working version of lean4-cli for the most recent Lean 4 nightly build.</li>
+<li>One of the specific release tags if you want to pin a specific version, e.g. <code>v1.0.0-lv4.0.0-m4</code> for the current release for the 4th Lean 4 milestone release or <code>v1.0.0-lnightly-2022-05-21</code> for the current release for the Lean 4 nightly version from 2022-05-21. Only nightlies where lean4-cli broke will receive a release tag. Please avoid using specific commit hashes since these are not guaranteed to remain static.</li>
+</ul>
 <h5 dir="auto">Configuration</h5>
 <p dir="auto">Commands are configured with a lightweight DSL. The following declarations define a command <code>exampleCmd</code> with two subcommands <code>installCmd</code> and <code>testCmd</code>. <code>doNothing</code> and <code>runExampleCmd</code> denote the handlers that are called when the command is called and are written out further down below in the <strong>Command Handlers</strong> subsection.</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="open Cli

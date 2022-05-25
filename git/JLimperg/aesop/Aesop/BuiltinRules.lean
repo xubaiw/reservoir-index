@@ -9,6 +9,7 @@ Authors: Jannis Limperg
 import Aesop.BuiltinRules.Assumption
 import Aesop.BuiltinRules.ApplyHyps
 import Aesop.BuiltinRules.DestructProducts
+import Aesop.BuiltinRules.Intros
 import Aesop.Frontend
 
 open Lean
@@ -18,32 +19,17 @@ open Lean.Meta
 
 namespace Aesop.BuiltinRules
 
-@[aesop norm -100 (tactic (uses_branch_state := false)) (rule_sets [builtin])]
-def intros : RuleTac := λ input => do
-    let (newFVars, goal) ← Meta.intros input.goal
-    if newFVars.size == 0 then
-      throwError "nothing to introduce"
-    let postState ← saveState
-    let mvars ← getGoalMVarsNoDelayed goal
-    return {
-      applications := #[{
-        goals := #[(goal, mvars)]
-        postState
-        introducedMVars := {}
-        assignedMVars := {}
-      }]
-      postBranchState? := none
-    }
-
--- Products are introduced lazily since the introduction rules are somewhat
--- expensive: those for products split into multiple goals; those for
--- existentials introduce a metavariable. We want to wait as long as possible
--- with either. We could even consider making these rules `unsafe`.
+-- Product introduction is considered unsafe. This is to support situations like
+--
+--   def p := q ∧ r
+--
+-- where we may have a bunch of lemmas concluding `p`. If we then split `p` as
+-- a safe rule, these lemmas never apply.
 --
 -- Hypotheses of product type are split by a separate builtin rule because the
 -- `cases` builder currently cannot be used for norm rules.
-attribute [aesop safe 100 constructors] And Prod PProd MProd
-attribute [aesop safe 100 constructors] Exists Subtype Sigma
+attribute [aesop unsafe 30% constructors] And Prod PProd MProd
+attribute [aesop unsafe 30% constructors] Exists Subtype Sigma
   PSigma
 
 -- Sums are split and introduced lazily.
@@ -60,6 +46,6 @@ attribute [aesop safe 0] Eq.refl HEq.refl
 
 attribute [aesop norm constructors] ULift
 
-attribute [aesop [norm 0 elim]] ULift.down
+attribute [aesop norm 0 elim] ULift.down
 
 end Aesop.BuiltinRules

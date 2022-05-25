@@ -4,7 +4,7 @@ from subprocess import PIPE, Popen
 from typing import Union
 from dataclasses import dataclass
 from ..utils.exceptions import LeanError, TranslationError
-from ..utils.printing import indent, nth
+from ..utils.text import indent, nth
 from ..proof_elements.statement.statement import Statement
 from ..proof_elements.theorem.theorem import Theorem
 
@@ -12,8 +12,9 @@ from ..proof_elements.theorem.theorem import Theorem
 ERRORS = [
     r"tactic .+ failed",
     r"error: unknown tactic",
-    r"error: expected .*",
     r"error: unknown namespace",
+    r"error: expected .+",
+    r"error: missing .+",
 ]
 
 # patterns need a fullmatch on a line to work
@@ -43,11 +44,11 @@ class LeanBlock:
 
     def __str__(self) -> str:
         # variables
-        variables = "\n".join(f"{_id} : {_set}" for _id, _set in self.variables)
+        variables = "\n".join(f"{id_} : {set_}" for id_, set_ in self.variables)
         var_block = f"Variables :\n{indent(variables)}\n" if self.variables else ""
 
         # hypotheses
-        hypotheses = "\n".join(f"{_name} : {_expr}" for _name, _expr in self.hypotheses)
+        hypotheses = "\n".join(f"{name_} : {expr_}" for name_, expr_ in self.hypotheses)
         hyp_block = f"Hypotheses :\n{indent(hypotheses)}\n" if self.hypotheses else ""
 
         return self.goal + "\n" + var_block + hyp_block
@@ -86,7 +87,7 @@ def lean_feedback(input: str, project_directory: Path) -> list[LeanBlock]:
     # errors
     match = match_list(ERRORS, feedback, type="search")
     if match is not None:
-        raise LeanError(f"Lean error: {match.group(0)}")
+        raise LeanError(f"Lean error: {feedback[match.start():match.end()]}\n")
 
     # separate blocks
     lean_blocks = separate_elements(feedback)
@@ -139,7 +140,7 @@ def match_list(patterns: list[str], text: str, type: str = "search") -> re.Match
         bool: _description_
     """
     if type not in ["search", "fullmatch", "match"]:
-        raise TranslationError(f"type must be one of 'search', 'fullmatch', 'match'")
+        raise Exception(f"type must be one of 'search', 'fullmatch', 'match'")
     if type == "search":
         call = re.search
     if type == "fullmatch":

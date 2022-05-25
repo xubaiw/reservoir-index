@@ -5,7 +5,7 @@ from pathlib import Path, PureWindowsPath
 from .proof_elements.statement import CCL_POSSIBILITIES, get_statement
 from .proof_elements.theorem import get_theorem
 from .utils.stack import Stack
-from .utils.printing import indent, subscript
+from .utils.text import indent, subscript
 from .utils.exceptions import LeanError, NoConclusion, TranslationError
 from .lean_interaction.conclude_proof import get_conclusion
 from .lean_interaction.lean_feedback import State, lean_feedback
@@ -39,11 +39,13 @@ class Translator:
     def __init__(self, lean_project_directory: str = None):
         self.stack = Stack()
         self.stack.push(State(goals=[], statements=[], lean_text=LEAN_HEADER))
-        
+
         try:
             default_path = DEFAULT_PATHS[platform.system()]
         except KeyError:
-            raise Exception(f"Unsupported platform: `{platform.system()}`, please report this bug.")
+            raise Exception(
+                f"Unsupported platform: `{platform.system()}`, please report this bug."
+            )
 
         # path to project
         if lean_project_directory:
@@ -64,7 +66,9 @@ class Translator:
             # otherwise, download the project
             else:
                 self.project_directory.mkdir(parents=True)
+                print("Downloading lean project template...\n")
                 os.system(f"git clone {LEAN_PROJECT_GIT_REPO} {self.project_directory}")
+                print()
 
         # lake build to make sure lean it will work (this will download Mathlib if it is not already)
         try:
@@ -155,12 +159,15 @@ class Translator:
         except NoConclusion:
             if any(isinstance(statement, poss) for poss in CCL_POSSIBILITIES):
                 raise NoConclusion(
-                    f"Could not match a non-conclusive statement, nor conclude a proof with '{string}'."
+                    f"Could not match a non-conclusive statement, nor conclude a proof with '{string}'.\n"
                 )
 
             hyp_count = len(old_state.goals[0].hypotheses)
             hyp_name = f"h{subscript(hyp_count)}"
-            translation = statement.translate(hyp_name=hyp_name)
+            translation = statement.translate(
+                hyp_name=hyp_name,
+                last_hyp=old_state.goals[0].hypotheses[-1][0],
+            )
 
             lean_fb = lean_feedback(
                 old_state.lean_text + "\n\n" + indent(translation),
@@ -176,18 +183,29 @@ class Translator:
             lean_text=lean_text,
         )
 
+        if (
+            len(new_state.goals) > len(old_state.goals)
+            and not statement.can_create_new_goals()
+        ):
+            raise LeanError(
+                "Statement created a new goal, but this type of statement is not allowed to.\n"
+            )
+
         self.stack.push(new_state)
         return new_state
 
     def backtrack(self) -> State:
-        """Removes the last input given to the Translator, hence, the last state of the stack.
+        """Removes the last input given to the Translator, hence, the last state of the stack. If no input had been given earlier, this function will return None.
 
         Returns:
             State: the state after the last input has been removed.
         """
+        if len(self.stack) == 1:
+            return None
+
         self.stack.pop()
-        return self.stack.peek()
-    
+        return self.state()
+
     def state(self) -> State:
         """Returns the current state of the Translator.
 
