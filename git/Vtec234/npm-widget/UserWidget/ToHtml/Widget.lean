@@ -1,4 +1,4 @@
-import UserWidget.WidgetCode
+import UserWidget.WidgetProtocol
 import UserWidget.Util
 import UserWidget.ToHtml.Html
 
@@ -15,6 +15,8 @@ unsafe def evalHtmlUnsafe (stx : Syntax) : TermElabM Html := do
 open Lean Elab Widget in
 @[implementedBy evalHtmlUnsafe]
 constant evalHtml : Syntax → TermElabM Html
+
+
 
 syntax (name := htmlCmd) "#html " term : command
 

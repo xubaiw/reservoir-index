@@ -1,4 +1,4 @@
-import UserWidget.WidgetCode
+import UserWidget.WidgetProtocol
 import UserWidget.Util
 import UserWidget.ToHtml.Widget
 
@@ -11,9 +11,6 @@ def codefn (s : String) := s!"
 @[staticJS]
 def widget1 : String := codefn "widget1"
 
-@[staticJS]
-def widgetJs : String := include_str "../../widget/dist/index.js"
-
 
 syntax (name := widget) "widget!" ident : tactic
 open Lean Elab Tactic in
@@ -22,17 +19,18 @@ def widgetTac : Tactic
   | stx@`(tactic| widget! $n) => do
     if let some pos := stx.getPos? then
       let id := n.getId
+      if  ¬ Lean.Widget.StaticJS.contains (←getEnv) id then
+        throwError "No widget present named '{id}'"
       let props := Json.mkObj [("pos", pos.byteIdx)]
       Lean.Widget.saveWidget id props stx
   | _ => throwUnsupportedSyntax
 
 theorem asdf : True := by
   widget! widget1
-  widget! widgetJs
   trivial
 
 open scoped Lean.Widget.Jsx in
 theorem ghjk : True := by
-  html! <b>What, HTML in Lean?!</b>
-  html! <i>And another!</i>
+  html! <b>What, HTML in Lean?! </b>
   trivial
+

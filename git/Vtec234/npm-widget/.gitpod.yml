@@ -1,0 +1,7 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: |
+      lake build
+      code --install-extension /workspace/npm-widget/lean4-0.0.70.vsix
