@@ -10,20 +10,20 @@ open Char
 
 namespace MLIR.P
 
-inductive Result (e : Type) (a : Type) : Type where 
+inductive Result (e : Type) (a : Type) : Type where
 | ok: a -> Result e a
 | err: e -> Result e a
 | debugfail : e -> Result e a
 
 instance [Inhabited e] : Inhabited (Result e a) where
-   default := Result.err (Inhabited.default) 
+   default := Result.err (Inhabited.default)
 
 
 inductive ErrKind : Type where
 | mk : (name : String) -> ErrKind
 
 instance : ToString ErrKind := {
-  toString := fun k => 
+  toString := fun k =>
     match k with
     | ErrKind.mk s => s
 }
@@ -47,7 +47,7 @@ instance : Pretty Loc where
 
 def locbegin : Loc := { line := 1, column := 1, ix := 0 }
 
- 
+
 def advance1 (l: Loc) (c: Char): Loc :=
   if c == '\n'
     then { line := l.line + 1, column := 1, ix := l.ix + 1  }
@@ -66,25 +66,25 @@ structure Note where
 
 
 instance : Inhabited Note where
-   default := 
-     { left := Inhabited.default 
+   default :=
+     { left := Inhabited.default
        , right := Inhabited.default
        , kind := Inhabited.default }
 
-instance : Pretty Note where 
-  doc (note: Note) := 
+instance : Pretty Note where
+  doc (note: Note) :=
       doc note.left ++ " " ++  note.kind
 
 
 -- | TODO: enable notes, refactor type into Loc x String x [Note] x (Result ParseError a)
-structure P (a: Type) where 
+structure P (a: Type) where
    runP: Loc -> List Note -> String ->  (Loc × (List Note) × String × (Result Note a))
 
 
 
 -- | map for parsers
 def pmap (f : a -> b) (pa: P a): P b := {
-  runP :=  λ loc ns s => 
+  runP :=  λ loc ns s =>
     match pa.runP loc ns s with
       | (l, ns, s, Result.ok a) => (l, ns,  s, Result.ok (f a))
       | (l, ns, s, Result.err e) => (l, ns, s, Result.err e)
@@ -95,8 +95,8 @@ def pmap (f : a -> b) (pa: P a): P b := {
 -- https://github.com/leanprover/lean4/blob/d0996fb9450dc37230adea9d10ecfdf10330ef67/tests/playground/flat_parser.lean
 def ppure {a: Type} (v: a): P a := { runP :=  λ loc ns s =>  (loc, ns, s, Result.ok v) }
 
-def pbind {a b: Type} (pa: P a) (a2pb : a -> P b): P b := 
-   { runP := λloc ns s => match pa.runP loc ns s with 
+def pbind {a b: Type} (pa: P a) (a2pb : a -> P b): P b :=
+   { runP := λloc ns s => match pa.runP loc ns s with
             | (l, ns, s, Result.ok a) => (a2pb a).runP l ns  s
             | (l, ns, s, Result.err e) => (l, ns, s, Result.err e)
             | (l, ns, s, Result.debugfail e) => (l, ns, s, Result.debugfail e)
@@ -109,7 +109,7 @@ instance : Monad P := {
 
 
 def pnote [Pretty α] (a: α): P Unit := {
-  runP := λ loc ns s => 
+  runP := λ loc ns s =>
     let n := { left := loc, right := loc, kind := doc a }
     (loc, ns ++ [n], s, Result.ok ())
 }
@@ -128,14 +128,14 @@ def pdebugfail [Pretty e] (err: e) :  P a := {
 instance : Inhabited (P a) where
    default := perror "INHABITED INSTANCE OF PARSER"
 
-def psuccess (v: a): P a := { 
-    runP := λ loc ns s  => 
+def psuccess (v: a): P a := {
+    runP := λ loc ns s  =>
       (loc, ns, s, Result.ok v)
   }
 
 
-def pmay (p: P a): P (Option a) := { 
-    runP := λ loc ns s  => 
+def pmay (p: P a): P (Option a) := {
+    runP := λ loc ns s  =>
       match p.runP loc ns s with
         |  (loc, ns, s, Result.ok v) => (loc, ns, s, Result.ok (Option.some v))
         | (loc, ns, s, Result.err e) => (loc, ns, s, Result.ok Option.none)
@@ -146,14 +146,14 @@ def pmay (p: P a): P (Option a) := {
 -- try p. if success, return value. if not, run q
 -- TODO: think about what to do about notes from p in por.
 def por (p: P a) (q: P a) : P a :=  {
-  runP := λ loc ns s => 
+  runP := λ loc ns s =>
     match p.runP loc ns s with
       | (loc', ns', s', Result.ok a) => (loc', ns', s', Result.ok a)
       | (loc', ns', s', Result.err e) => q.runP loc ns s
       | (l, ns, s, Result.debugfail e) => (l, ns, s, Result.debugfail e)
 }
 
--- def pors (ps: List (p a)) : P a := 
+-- def pors (ps: List (p a)) : P a :=
 --  match ps with
 --  | [] => []
 --  | [p] => p
@@ -171,10 +171,10 @@ partial def eat_line_ (l: Loc) (s: String): Loc × String :=
 partial def eat_whitespace_ (l: Loc) (s: String) : Loc × String :=
     if isEmpty s
     then (l, s)
-    else  
+    else
      let c:= front s
      if isPrefixOf "//" s
-     then 
+     then
       let (l, s) := eat_line_ l s
       eat_whitespace_ l s
      else if c == ' ' || c == '\t'  || c == '\n'
@@ -183,7 +183,7 @@ partial def eat_whitespace_ (l: Loc) (s: String) : Loc × String :=
 
 
 -- | never fails.
-def ppeek : P (Option Char) := { 
+def ppeek : P (Option Char) := {
   runP := λ loc ns haystack =>
     if isEmpty haystack
     then (loc, ns, haystack, Result.ok none)
@@ -198,8 +198,8 @@ def padvance_char_INTERNAL (c: Char) : P Unit := {
 
 def pconsume(c: Char) : P Unit := do
   let cm <- ppeek
-  match cm with 
-  | some c' => 
+  match cm with
+  | some c' =>
      if c == c' then padvance_char_INTERNAL c
      else perror ("pconsume: expected character |" ++ toString c ++ "|. Found |" ++ toString c' ++ "|.")
   | none =>  perror ("pconsume: expected character |" ++ toString c ++ "|. Found EOF")
@@ -222,18 +222,18 @@ partial def takeWhile (predicate: Char -> Bool)
    (loc: Loc)
    (s: String)
    (out: String):  (Loc × String × Result Note String) :=
-      if isEmpty s 
-      then (loc, s, Result.err {left := startloc, 
+      if isEmpty s
+      then (loc, s, Result.err {left := startloc,
                                 right := loc,
                                 kind := "expected delimiter but ran out of string"})
-      else 
+      else
         let c := front s;
         if predicate c
         then takeWhile predicate startloc (advance1 loc c) (s.drop 1) (out.push c)
         else (loc, s, Result.ok out)
 
 partial def ptakewhile (predicateWhile: Char -> Bool) : P String :=
-{ runP := λ startloc ns haystack => 
+{ runP := λ startloc ns haystack =>
       let (loc, s) := takeWhile predicateWhile startloc startloc haystack ""
       (loc, ns, s)
 }
@@ -242,7 +242,7 @@ partial def ptakewhile (predicateWhile: Char -> Bool) : P String :=
 
 -- | take an identifier. TODO: ban symbols
 def pident : P String := do
-  eat_whitespace 
+  eat_whitespace
   ptakewhile (fun c => (c != ' ' && c != '\t' && c != '\n') && (isAlphanum c || c == '_'))
 
 def pident? (s: String) : P Unit := do
@@ -271,7 +271,7 @@ def pnumber : P Int := do
 partial def pstarUntil (p: P a) (d: Char) : P (List a) := do
    eat_whitespace
    if (<- ppeek? d)
-   then do 
+   then do
      pconsume d
      return []
    else do
@@ -313,7 +313,7 @@ partial def pintercalated (l: Char) (p: P a) (i: Char) (r: Char) : P (List a) :=
                then do pconsume r; return []
                else do
                   let a <- p
-                  let as <- pintercalated_ p i r 
+                  let as <- pintercalated_ p i r
                   return (a :: as)
    | _ => perror "expected either ')' or a term to be parsed. Found EOF"
 
@@ -331,7 +331,7 @@ partial def pstr : P String :=  do
 -- |(ii) If it does not find `l`, it retrns []
 partial def ppeekstar (l: Char) (p: P a) : P (List a) := do
   let proceed <- ppeek? l
-  if proceed then do 
+  if proceed then do
         let a <- p
         let as <- ppeekstar l p
         return (a :: as)
@@ -356,7 +356,7 @@ partial def  pmany1 [Pretty a] (p: P a) : P (List a) := do
 
 
 
--- | find minimum k such that 
+-- | find minimum k such that
 -- s[pos + k*dir] == '\n'
 partial def find_newline_in_dir
    (s: String)
@@ -389,7 +389,7 @@ def note_add_file_content (contents: String) (note: Note): Doc :=
   let substr : Substring := (contents.toSubstring.drop ixl.toNat).take len.toNat
   let nspaces : Int := note.left.ix - ixl
   let underline : String :=   ("".pushn ' ' nspaces.toNat).push '^'
-  vgroup [doc "---|" ++ note.kind ++ "|---" 
+  vgroup [doc "---|" ++ note.kind ++ "|---"
           , doc note.left ++ " " ++ substr.toString
           , doc note.left ++ " " ++ underline
           , doc "---"]

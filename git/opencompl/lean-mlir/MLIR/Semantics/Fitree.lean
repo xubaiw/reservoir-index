@@ -32,23 +32,21 @@ only model programs that always terminate.
 -/
 
 import MLIR.Semantics.SimpItree
+import MLIR.Util.WriterT
 
 /- Extendable effect families -/
 
-section events
-universe u v
-
 -- | Polymorphic to and sum.
-def pto (E: Type → Type u) (F: Type → Type v) :=
+def pto (E: Type u → Type v₁) (F: Type u → Type v₂) :=
   ∀ T, E T → F T
-def psum (E: Type → Type u) (F: Type → Type v) :=
+def psum (E: Type u → Type v₁) (F: Type u → Type v₂) :=
   fun T => E T ⊕ F T
 inductive PVoid: Type -> Type u
 
 infixr:40 " ~> " => pto
 infixr:60 " +' " => psum
 
-class Member (E: Type → Type u) (F: Type → Type v) where
+class Member (E: Type u → Type v₁) (F: Type u → Type v₂) where
   inject : E ~> F
 
 instance {E}: Member E E where
@@ -61,12 +59,9 @@ instance {E F G} [Member E G]: Member E (F +' G) where
   inject T := Sum.inr ∘ Member.inject T
 
 -- Effects can now be put in context automatically by typeclass resolution
-example (E: Type → Type u):
-  Member E E := inferInstance
-example (E: Type → Type u) (F: Type → Type v):
-  Member E (E +' F) := inferInstance
-example (E: Type → Type u) (F: Type → Type v):
-  Member E (F +' (F +' E)) := inferInstance
+example E:    Member E E := inferInstance
+example E F:  Member E (E +' F) := inferInstance
+example E F:  Member E (F +' (F +' E)) := inferInstance
 
 @[simp_itree]
 def case_ (h1: E ~> G) (h2: F ~> G): E +' F ~> G :=
@@ -74,34 +69,29 @@ def case_ (h1: E ~> G) (h2: F ~> G): E +' F ~> G :=
   | Sum.inl e => h1 R e
   | Sum.inr f => h2 R f
 
-end events
-
 
 /- Examples of interactions -/
 
-inductive StateE {S: Type}: Type → Type where
+inductive StateE {S: Type _}: Type _ → Type _ where
   | Read: Unit → StateE S
-  | Write: S → StateE Unit
+  | Write: S → StateE PUnit
 
-inductive WriteE {W: Type}: Type → Type where
+inductive WriteE {W: Type _}: Type _ → Type _ where
   | Tell: W → WriteE Unit
 
 
 /- The monadic domain; essentially finite Interaction Trees -/
 
-section fitree
-universe u v
-
-inductive Fitree (E: Type → Type u) (R: Type) where
+inductive Fitree (E: Type _ → Type _) (R: Type _) where
   | Ret (r: R): Fitree E R
-  | Vis {T: Type} (e: E T) (k: T → Fitree E R): Fitree E R
+  | Vis {T: Type _} (e: E T) (k: T → Fitree E R): Fitree E R
 
 @[simp_itree]
 def Fitree.ret {E R}: R → Fitree E R :=
   Fitree.Ret
 
 @[simp_itree]
-def Fitree.trigger {E: Type → Type u} {F: Type → Type v} {T} [Member E F]
+def Fitree.trigger {E: Type _ → Type _} {F: Type _ → Type _} {T} [Member E F]
     (e: E T): Fitree F T :=
   Fitree.Vis (Member.inject _ e) Fitree.ret
 
@@ -134,13 +124,18 @@ def interp_state {M S} [Monad M] {E} (h: E ~> StateT S M):
     forall ⦃R⦄, Fitree E R → StateT S M R :=
   interp h
 
+-- Interpretation into the writer monad
+@[simp_itree]
+def interp_writer [Monad M] {E} (h: E ~> WriterT M):
+    forall ⦃R⦄, Fitree E R → WriterT M R :=
+  interp h
+
+
 -- Since we only use finite ITrees, we can actually run them when they're
 -- fully interpreted (which leaves only the Ret constructor)
 def Fitree.run {R}: Fitree PVoid R → R
   | Ret r => r
   | Vis e k => nomatch e
-
-end fitree
 
 
 /- Predicates to reason about the absence of events -/

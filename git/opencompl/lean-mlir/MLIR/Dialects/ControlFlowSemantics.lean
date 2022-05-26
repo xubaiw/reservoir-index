@@ -4,6 +4,7 @@ import MLIR.Semantics.Verifier
 import MLIR.Semantics.SSAEnv
 import MLIR.Semantics.InvalidOp
 import MLIR.Util.Metagen
+import MLIR.Util.Reduce
 
 import MLIR.AST
 import MLIR.EDSL
@@ -28,22 +29,20 @@ genInductive ControlFlowOp #[
   --    ControlFlowOp (τ.eval))
   ]
 
-#check ControlFlowOp
 
 
--- | What's the return type? x(
 inductive BranchType
 | Br (bbname: BBName)
 | Ret
 
 
 -- | interpret branch and conditional branch
-def cf_semantics_op {E: Type -> Type}: Op → Fitree (InvalidOpE +' SSAEnvE +' E) (Option BranchType)
+def cf_semantics_op {E: Type -> Type}: Op builtin → Fitree (InvalidOpE +' SSAEnvE builtin +' E) (Option BranchType)
   | Op.mk "cf.br" [] [bbname] [] _ _ => do
         return (BranchType.Br bbname)
   | Op.mk "cf.condbr" [vcond] [bbtrue, bbfalse] _ _ _ => do
-        let condval <- Fitree.trigger $ SSAEnvE.Get (MLIRTy.int 32) vcond
-        match condval.down with
+        let condval <- Fitree.trigger $ SSAEnvE.Get (δ := builtin) (.int 32) vcond
+        match condval with
         | 1 => return (BranchType.Br bbtrue)
         | _ => return (BranchType.Br bbfalse)
   | _ => do
@@ -55,36 +54,33 @@ def cf_semantics_op {E: Type -> Type}: Op → Fitree (InvalidOpE +' SSAEnvE +' E
 
 -- | TODO: generalize so that each dialect can have its effects.
 def cf_semantics_bbstmt {E: Type -> Type}:
-      BasicBlockStmt → Fitree (InvalidOpE +' SSAEnvE +' E) (Option BranchType)
+      BasicBlockStmt builtin → Fitree (InvalidOpE +' SSAEnvE builtin +' E) (Option BranchType)
   | BasicBlockStmt.StmtAssign val _ op => cf_semantics_op op
   | BasicBlockStmt.StmtOp op => cf_semantics_op op
 
 
 -- | dummy language to check that control flow works correctly.
-def dummy_semantics_op {E: Type -> Type} (ret_name: Option SSAVal): Op → Fitree (InvalidOpE +' SSAEnvE +' E) Unit
-  | Op.mk "dummy.dummy" _ _ _ _ _ => do
-        SSAEnv.set? (MLIRTy.int 32) ret_name 42
-        return ()
-  | Op.mk "dummy.true" _ _ _ _ _ => do
-        SSAEnv.set? (MLIRTy.int 32) ret_name 1
-        return ()
-  | Op.mk "dummy.false" _ _ _ _ _ => do
-        SSAEnv.set? (MLIRTy.int 32) ret_name 0
-        return ()
-  | _ => do
+def dummy_semantics_op {E: Type -> Type} (ret_name: Option SSAVal):
+      Op builtin → Fitree (InvalidOpE +' SSAEnvE builtin +' E) Unit
+  | Op.mk "dummy.dummy" _ _ _ _ _ =>
+        SSAEnv.set? (δ := builtin) (.int 32) ret_name 42
+  | Op.mk "dummy.true" _ _ _ _ _ =>
+        SSAEnv.set? (δ := builtin) (.int 32) ret_name 1
+  | Op.mk "dummy.false" _ _ _ _ _ =>
+        SSAEnv.set? (δ := builtin) (.int 32) ret_name 0
+  | _ =>
       -- TODO: add error messages.
       Fitree.trigger InvalidOpE.InvalidOp
-      return ()
 
 
-def dummy_semantics_bbstmt: BasicBlockStmt ->  Fitree (InvalidOpE +' SSAEnvE +' E) Unit
+def dummy_semantics_bbstmt: BasicBlockStmt builtin ->  Fitree (InvalidOpE +' SSAEnvE builtin +' E) Unit
 | BasicBlockStmt.StmtAssign val _ op => dummy_semantics_op (some val) op
 | BasicBlockStmt.StmtOp op => dummy_semantics_op none op
 
 
 -- | TODO: generalize so that each dialect can have its effects.
 @[simp]
-def cf_semantics_bb {E: Type -> Type} (bb: BasicBlock): Fitree (InvalidOpE +' SSAEnvE +' E) (Option BranchType) := do
+def cf_semantics_bb {E: Type -> Type} (bb: BasicBlock builtin): Fitree (InvalidOpE +' SSAEnvE builtin +' E) (Option BranchType) := do
   for stmt in bb.stmts.init do
      dummy_semantics_bbstmt stmt
   match bb.stmts.getLast? with
@@ -93,8 +89,8 @@ def cf_semantics_bb {E: Type -> Type} (bb: BasicBlock): Fitree (InvalidOpE +' SS
 
 -- | The semantics of a region are to use up fuel to run the basic block
 -- | as many times as necessary.
-def cf_semantics_region_go {E: Type -> Type} (fuel: Nat) (r: Region) (bb: BasicBlock):
-  Fitree (InvalidOpE +' SSAEnvE +' E) (Option BranchType) :=
+def cf_semantics_region_go {E: Type -> Type} (fuel: Nat) (r: Region builtin) (bb: BasicBlock builtin):
+  Fitree (InvalidOpE +' SSAEnvE builtin +' E) (Option BranchType) :=
   match fuel with
   | 0 => return Option.none
   | Nat.succ fuel' => do
@@ -112,49 +108,25 @@ def cf_semantics_region_go {E: Type -> Type} (fuel: Nat) (r: Region) (bb: BasicB
 -- | TODO: we need to run some static analysis to find the type of the region o_O ?
 @[simp]
 def cf_semantics_region
-  {E: Type -> Type} (fuel: Nat) (r: Region): Fitree (InvalidOpE +' SSAEnvE +' E) Unit := do
+  {E: Type -> Type} (fuel: Nat) (r: Region builtin): Fitree (InvalidOpE +' SSAEnvE builtin +' E) Unit := do
      let _ <- cf_semantics_region_go fuel r (r.bbs.get! 0)
 
 @[simp]
-def run_cf (t: Fitree (InvalidOpE +' SSAEnvE +' PVoid) Unit) (env: SSAEnv):
-    Fitree PVoid ((Unit × String) × SSAEnv) :=
+def run_cf (t: Fitree (InvalidOpE +' SSAEnvE builtin +' PVoid) Unit) (env: SSAEnv builtin):
+    Fitree PVoid ((Unit × String) × SSAEnv builtin) :=
   let x := interp_ssa_logged (interp_invalid t sorry)
   let y := x.run
   let z := y env
   z
 
-#check ControlFlowOp
 
 /-
 ### Examples and testing
 -/
 
--- The following extends #reduce with a (skipProofs := true/false) parameter
--- to not reduce proofs in the kernel. Reducing proofs would cause constant
--- timeouts, and proofs are used implicitly through well-founded induction for
--- mutual definitions.
--- See: https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Repr.20instance.20for.20functions/near/276504682
-
-open Lean
-open Lean.Parser.Term
-open Lean.Elab.Command
-open Lean.Elab
-open Lean.Meta
-
-elab "#reduce " skipProofs:group(atomic("(" &"skipProofs") " := " (trueVal <|> falseVal) ")") term:term : command =>
-  let skipProofs := skipProofs[3].isOfKind ``trueVal
-  withoutModifyingEnv <| runTermElabM (some `_check) fun _ => do
-    -- dbg_trace term
-    let e ← Term.elabTerm term none
-    Term.synthesizeSyntheticMVarsNoPostponing
-    let (e, _) ← Term.levelMVarToParam (← instantiateMVars e)
-    withTheReader Core.Context (fun ctx => { ctx with options := ctx.options.setBool `smartUnfolding false }) do
-      let e ← withTransparency (mode := TransparencyMode.all) <| reduce e (skipProofs := skipProofs) (skipTypes := false)
-      logInfo e
-
----
-
-def dummy_stmt := [mlir_bb_stmt|
+-- #reduce spins on the dialect coercion because it's mutually inductive, even
+-- with skipProofs := true (why?!), so define it as builtin directly
+def dummy_stmt: BasicBlockStmt builtin := [mlir_bb_stmt|
   %dummy = "dummy.dummy"() : ()
 ]
 
@@ -162,7 +134,7 @@ def dummy_stmt := [mlir_bb_stmt|
   dummy_semantics_bbstmt dummy_stmt
 
 
-def true_stmt := [mlir_bb_stmt|
+def true_stmt: BasicBlockStmt builtin := [mlir_bb_stmt|
   %true = "dummy.true"() : ()
 ]
 
@@ -170,14 +142,14 @@ def true_stmt := [mlir_bb_stmt|
   dummy_semantics_bbstmt true_stmt
 
 
-def false_stmt := [mlir_bb_stmt|
+def false_stmt: BasicBlockStmt builtin := [mlir_bb_stmt|
   %false = "dummy.false"() : ()
 ]
 #reduce (skipProofs := true)
   dummy_semantics_bbstmt false_stmt
 
 
-def branch_to_true_region := [mlir_region| {
+def branch_to_true_region: Region builtin := [mlir_region| {
   ^entry:
     %x = "dummy.true"() : ()
     "cf.condbr"(%x) [^bbtrue, ^bbfalse] : ()
@@ -192,13 +164,13 @@ def branch_to_true_region := [mlir_region| {
 
 }]
 
+#eval branch_to_true_region
 
 def run_branch_true : String :=
   let x := run_cf (cf_semantics_region 5 branch_to_true_region) SSAEnv.empty
   let y := Fitree.run x
   y.fst.snd
 
-set_option maxRecDepth 1000
 #eval run_branch_true
 
 
@@ -225,5 +197,4 @@ def run_branch_false : String :=
   let y := Fitree.run x
   y.fst.snd
 
-set_option maxRecDepth 1000
 #eval run_branch_false

@@ -753,13 +753,13 @@ end Rapp
 namespace Goal
 
 @[inline]
-def postNormGoalAndState? (g : Goal) : Option (MVarId × Meta.SavedState) :=
+def postNormGoalAndMetaState? (g : Goal) : Option (MVarId × Meta.SavedState) :=
   match g.normalizationState with
   | NormalizationState.normal postGoal postState => some (postGoal, postState)
   | _ => none
 
 def postNormGoal? (g : Goal) : Option MVarId :=
-  g.postNormGoalAndState?.map (·.fst)
+  g.postNormGoalAndMetaState?.map (·.fst)
 
 def currentGoal (g : Goal) : MVarId :=
   g.postNormGoal?.getD g.preNormGoal
@@ -771,6 +771,11 @@ def parentMetaState (g : Goal) : MetaM Meta.SavedState := do
   match ← g.parentRapp? with
   | none => saveState
   | some parent => return (← parent.get).metaState
+
+def currentGoalAndMetaState (g : Goal) : MetaM (MVarId × Meta.SavedState) :=
+  match g.postNormGoalAndMetaState? with
+  | some x => return x
+  | none => return (g.preNormGoal, ← g.parentMetaState)
 
 def isUnsafeExhausted (g : Goal) : Bool :=
   g.unsafeRulesSelected && g.unsafeQueue.isEmpty
