@@ -435,6 +435,12 @@ The rule recurses into subgoals, so <code>cases Or</code> will generate 6 goals 
 applied to a goal with hypotheses <code>h₁ : A ∨ B ∨ C</code> and <code>h₂ : D ∨ E</code>. However,
 if <code>T</code> is a recursive type (e.g. <code>List</code>), we only perform case analysis once
 on each hypothesis. Otherwise we would loop infinitely.</p>
+<p dir="auto">The <code>patterns</code> option can be used to apply the rule only on hypotheses of a
+certain shape. E.g. the rule <code>(cases (patterns := [Fin 0])) Fin</code> will perform
+case analysis only on hypotheses of type <code>Fin 0</code>. Patterns can contain
+underscores, e.g. <code>0 ≤ _</code>. Multiple patterns can be given (separated by
+commas); the rule is then applied whenever at least one of the patterns
+matches a hypothesis.</p>
 </li>
 <li>
 <p dir="auto"><strong><code>simp</code></strong>: when applied to an equation <code>eq : A₁ → ... Aₙ → x = y</code>, registers

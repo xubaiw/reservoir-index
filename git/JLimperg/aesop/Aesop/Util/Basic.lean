@@ -459,6 +459,12 @@ def arity : Expr → Nat
   | forallE _ _ body _ => 1 + arity body
   | _ => 0
 
+def isAppOf' : Expr → Name → Bool
+  | mdata _ b _, d => isAppOf' b d
+  | const c _ _, d => c == d
+  | app f _ _,   d => isAppOf' f d
+  | _,           _ => false
+
 end Lean.Expr
 
 
@@ -555,10 +561,11 @@ namespace Std.HashMap
 
 variable [BEq α] [Hashable α]
 
-def insertWith (m : HashMap α β) (a : α) (b : β) (f : β → β) : HashMap α β :=
+def insertWith (m : HashMap α β) (a : α) (b : Unit → β) (f : β → β) :
+    HashMap α β :=
   let b :=
     match m.find? a with
-    | none => b
+    | none => b ()
     | some b' => f b'
   m.insert a b
 
@@ -577,7 +584,8 @@ def merge (m n : HashMap α β) (combine : α → β → β → β) : HashMap α
   where
     @[inline]
     loop m n :=
-      m.fold (init := n) λ m a b => m.insertWith a b (λ b' => combine a b b')
+      m.fold (init := n) λ m a b =>
+        m.insertWith a (λ _ => b) (λ b' => combine a b b')
 
 instance : ForIn m (HashMap α β) (α × β) where
   forIn m init f := do
@@ -1350,6 +1358,15 @@ def sortFVarsByReverseContextOrder (goal : MVarId) (hyps : Array FVarId) :
 
 def tryClearMany' (goal : MVarId) (hyps : Array FVarId) : MetaM MVarId := do
   tryClearMany goal (← sortFVarsByReverseContextOrder goal hyps)
+
+def matchAppOf (f : Expr) (e : Expr) : MetaM (Option (Array Expr)) := do
+  let type ← inferType f
+  let (mvars, _, concl) ← forallMetaTelescope type
+  let app := mkAppN f mvars
+  if ← isDefEq app e then
+    some <$> mvars.mapM instantiateMVars
+  else
+    return none
 
 end Lean.Meta
 
