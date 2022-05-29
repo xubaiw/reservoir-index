@@ -1,0 +1,63 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>yatima-inc/LSpec</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>yatima-inc/LSpec</h1>
+<p>A Testing Framework for Lean</p>
+<a href="https://github.com/yatima-inc/LSpec">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">LSpec</h3>
+<p dir="auto">A Testing Framework for Lean</p>
+<h4 dir="auto">Usage</h4>
+<p dir="auto">In the file where you want to run the tests: <code>import LSpec</code>, define the specification using the
+<code>mkspec</code> syntax, and run the test using <code>#spec Tests <specname> with <input_param></code></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def foo (n : Nat) : Nat := n
+
+mkspec fooSpec : foo := alwaysEquals foo 4
+
+#spec Test fooSpec with 4 => "Always equals four"
+
+#spec Tests fooSpec with [2,3,4,5,6,6]"><pre><span class="pl-k">def</span> <span class="pl-en">foo</span> (n : Nat) : Nat := n
+
+mkspec fooSpec : foo := alwaysEquals foo <span class="pl-c1">4</span>
+
+#spec Test fooSpec <span class="pl-k">with</span> <span class="pl-c1">4</span> => <span class="pl-s"><span class="pl-pds">"</span>Always equals four<span class="pl-pds">"</span></span>
+
+#spec Tests fooSpec <span class="pl-k">with</span> [<span class="pl-c1">2</span>,<span class="pl-c1">3</span>,<span class="pl-c1">4</span>,<span class="pl-c1">5</span>,<span class="pl-c1">6</span>,<span class="pl-c1">6</span>]</pre></div>
+<p dir="auto">See <code>Tests/test.lean</code> for more examples.</p>
+<h4 dir="auto">Generic specs</h4>
+<p dir="auto">So far the following generic specs are defined:</p>
+<ul dir="auto">
+<li><code>equals</code></li>
+<li><code>alwaysEquals</code></li>
+<li><code>doesntContain</code></li>
+<li><code>depDoesntContain</code></li>
+<li><code>neverContains</code></li>
+</ul>
+<p dir="auto">But more can be defined by following the examples provided in <code>Spec.Lean</code>. The <code>reducible</code> attribute
+is important in defining the generic specification, so make sure to include it when you write your
+own specifications by hand.</p>
+</article></div></main>
+</body>
+</html>

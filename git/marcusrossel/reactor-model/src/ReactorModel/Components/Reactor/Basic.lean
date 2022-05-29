@@ -52,13 +52,13 @@ structure Reactor where
 
 namespace Reactor
 
-def ports (rtr : Reactor) : ID ▸ Port             := rtr.raw.ports
-def acts  (rtr : Reactor) : ID ▸ Time.Tag ▸ Value := rtr.raw.acts
-def state (rtr : Reactor) : ID ▸ Value            := rtr.raw.state
-def rcns  (rtr : Reactor) : ID ▸ Reaction         := rtr.raw.rcns
+def ports (rtr : Reactor) : ID ⇉ Port             := rtr.raw.ports
+def acts  (rtr : Reactor) : ID ⇉ Time.Tag ⇉ Value := rtr.raw.acts
+def state (rtr : Reactor) : ID ⇉ Value            := rtr.raw.state
+def rcns  (rtr : Reactor) : ID ⇉ Reaction         := rtr.raw.rcns
 
-def nest (rtr : Reactor) : ID ▸ Reactor :=
-  let raw : ID ▸ Raw.Reactor := { lookup := rtr.raw.nest, finite := rtr.rawWF.direct.nestFinite }
+def nest (rtr : Reactor) : ID ⇉ Reactor :=
+  let raw : ID ⇉ Raw.Reactor := { lookup := rtr.raw.nest, finite := rtr.rawWF.direct.nestFinite }
   raw.attach.map (λ ⟨_, h⟩ => Reactor.fromRaw _ (by
       have ⟨_, hm⟩ := Finmap.values_def.mp h
       exact rtr.rawWF.ancestor $ Raw.Reactor.Ancestor.nest hm
@@ -162,19 +162,19 @@ theorem ext {rtr₁ rtr₂ : Reactor} :
   rtr₁ = rtr₂ :=
   λ h => ext_iff.mpr h
 
-noncomputable def norms (rtr : Reactor) : ID ▸ Reaction :=
+noncomputable def norms (rtr : Reactor) : ID ⇉ Reaction :=
   rtr.rcns.filter' (Reaction.isNorm)
 
 theorem mem_muts_isNorm {rtr: Reactor} : (rtr.norms i = some n) → n.isNorm :=
   λ h => Finmap.filter'_mem.mp h |>.right
 
-noncomputable def muts (rtr : Reactor) : ID ▸ Reaction :=
+noncomputable def muts (rtr : Reactor) : ID ⇉ Reaction :=
   rtr.rcns.filter' (Reaction.isMut)  
 
 theorem mem_muts_isMut {rtr: Reactor} : (rtr.muts i = some m) → m.isMut :=
   λ h => Finmap.filter'_mem.mp h |>.right
 
-noncomputable def ports' (rtr : Reactor) (r : Port.Role) : ID ▸ Port := 
+noncomputable def ports' (rtr : Reactor) (r : Port.Role) : ID ⇉ Port := 
   rtr.ports.filter' (·.role = r)
 
 noncomputable def nestedPortIDs (rtr : Reactor) (r : Port.Role) : Finset ID :=
@@ -320,12 +320,12 @@ private def Lineage.toRaw {σ : Reactor} {i} : (Lineage σ i) → Raw.Reactor.Li
 theorem uniqueIDs (l₁ l₂ : Lineage σ i) : l₁ = l₂ := by
   have h := σ.rawWF.direct.uniqueIDs l₁.toRaw l₂.toRaw
   induction l₁
-  case nest rtr₁ _ _ _ hi =>
+  case nest rtr₁ _ _ _ _ _ hi =>
     cases l₂ 
     case nest rtr₂ _ _ _ =>
       simp [Lineage.toRaw] at h
-      have hσ : rtr₁ = rtr₂ := by apply Reactor.raw_ext_iff.mpr; exact h.left
-      subst hσ
+      have hr := Reactor.raw_ext_iff.mpr h.left
+      subst hr
       simp [h.right.left]
       exact hi _ $ eq_of_heq h.right.right
     all_goals { contradiction }

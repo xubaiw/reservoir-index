@@ -130,7 +130,7 @@ theorem Update.unique {σ σ₁ σ₂ : Reactor} {cmp : Cmp} {i : ID} {u : cmp.t
     let l₁' := Classical.choice hu₂.requires_lineage_to_target
     let l₂ := Lineage.nest l₁ hn₁
     let l₂' := Lineage.nest l₁' hn₁'
-    injection σ.uniqueIDs l₂ l₂' with _ _ hr hj
+    injection σ.uniqueIDs l₂ l₂' with hr _ _ hj
     rw [←hr] at hu₂
     have hi' := hi hu₂
     rw [hi', ←hn₂'] at hn₂
@@ -178,7 +178,7 @@ theorem Update.compose {σ σ₁ σ₂ : Reactor} {cmp : Cmp} {i : ID} {u₁ u�
   case nest.nest σ σ₁ j₁ rtr₁₁ rtr₁₂ he₁ hn₁₁ hn₁₂ hu₁ hi j₂ rtr₂₁ rtr₂₂ hu₂ hn₂₁ hn₂₂ he₂ =>
     let l₁ := Lineage.nest hu₁.preserves_lineage_to_target.some hn₁₂
     let l₂ := Lineage.nest hu₂.requires_lineage_to_target.some hn₂₁
-    injection σ₁.uniqueIDs l₁ l₂ with _ _ hr hj
+    injection σ₁.uniqueIDs l₁ l₂ with hr _ _ hj
     rw [hj] at hn₁₁ he₁
     rw [hr] at hi
     exact Update.nest (he₁.trans he₂) hn₁₁ hn₂₂ (hi hu₂)
@@ -215,12 +215,12 @@ theorem Update.preserves_ne_cmp_or_id {cmp} {f : cmp.type → cmp.type} :
 theorem Update.preserves_Equiv {cmp} {u : cmp.type → cmp.type → Prop} : (σ₁ -[cmp;i u]→ σ₂) → (cmp ≠ .rtr) → σ₁ ≈ σ₂ := by
   sorry
 
-structure Mutation.rtrRel (cmp : Cmp) (cmpRel : (ID ▸ cmp.type) → (ID ▸ cmp.type) → Prop) (σ₁ σ₂ : Reactor) : Prop where
+structure Mutation.rtrRel (cmp : Cmp) (cmpRel : (ID ⇉ cmp.type) → (ID ⇉ cmp.type) → Prop) (σ₁ σ₂ : Reactor) : Prop where
   eqCmps : ∀ cmp', (cmp' ≠ cmp) → σ₁.cmp? cmp' = σ₂.cmp? cmp'
   mutate : cmpRel (σ₁.cmp? cmp) (σ₂.cmp? cmp)
 
 open Mutation in
-inductive Mutation (σ₁ σ₂ : Reactor) (cmp : Cmp) (cmpRel : (ID ▸ cmp.type) → (ID ▸ cmp.type) → Prop) : Rooted ID → Prop
+inductive Mutation (σ₁ σ₂ : Reactor) (cmp : Cmp) (cmpRel : (ID ⇉ cmp.type) → (ID ⇉ cmp.type) → Prop) : Rooted ID → Prop
   | root : (rtrRel cmp cmpRel) σ₁ σ₂ → Mutation σ₁ σ₂ cmp cmpRel ⊤ 
   | nest {i} : σ₁ -[Cmp.rtr;i (rtrRel cmp cmpRel)]→ σ₂ → Mutation σ₁ σ₂ cmp cmpRel (Rooted.nest i) 
 

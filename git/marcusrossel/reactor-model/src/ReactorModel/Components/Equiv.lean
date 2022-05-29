@@ -49,12 +49,25 @@ theorem top' : (σ₁ ≈ σ₂) → (σ₁.ids = σ₂.ids) := by
         exact ⟨_, obj?_nest hm.symm h'⟩
     )
 
-theorem nest' {i : ID} : 
+theorem nest' : 
   (σ₁ ≈ σ₂) → (σ₁.obj? .rtr i = some rtr₁) → (σ₂.obj? .rtr i = some rtr₂) → (rtr₁ ≈ rtr₂) := by
   intro he ho₁ ho₂
   induction he
   case intro hi =>
     sorry
+
+theorem con?_id_eq : 
+  (σ₁ ≈ σ₂) → (σ₁.con? cmp i = some c₁) → (σ₂.con? cmp i = some c₂) → (c₁.id = c₂.id) :=
+  sorry
+
+theorem con?_obj_equiv :
+  (σ₁ ≈ σ₂) → (σ₁.con? cmp i = some c₁) → (σ₂.con? cmp i = some c₂) → (c₁.obj ≈ c₂.obj) := by
+  intro he hc₁ hc₂
+  have h₁ := con?_to_rtr_obj? hc₁
+  have h₂ := con?_to_rtr_obj? hc₂
+  have := con?_to_obj?_and_cmp? hc₁
+  rw [he.con?_id_eq hc₁ hc₂] at h₁
+  exact he.nest' h₁ h₂
 
 theorem obj?_iff {i : ID} : 
   (σ₁ ≈ σ₂) → ((∃ o₁, σ₁.obj? cmp i = some o₁) ↔ (∃ o₂, σ₂.obj? cmp i = some o₂)) := by 
@@ -86,21 +99,24 @@ protected theorem trans : (σ₁ ≈ σ₂) → (σ₂ ≈ σ₃) → (σ₁ ≈
     sorry
 
 -- For equivalent reactors, obj?-equality propagates to nested reactors.
-theorem eq_obj?_nest {i j : ID} :
+theorem eq_obj?_nest {i : ID} :
   (σ₁ ≈ σ₂) → (σ₁.obj? cmp i = σ₂.obj? cmp i) → 
   (σ₁.obj? .rtr j = some rtr₁) → (σ₂.obj? .rtr j = some rtr₂) → 
   rtr₁.obj? cmp i = rtr₂.obj? cmp i := by
   intro he ho hr₁ hr₂ 
-  have he' := he.nest' hr₁ hr₂
-  cases hc : σ₁.obj? cmp i <;> rw [hc] at ho
-  case none => rw [obj?_not_sub hr₁ hc, obj?_not_sub hr₂ ho.symm]
-  case some =>
-    cases obj?_decomposition hc
-    case inl hc => 
-      have ⟨_, hc'⟩ := (cmp?_iff he obj?_self obj?_self).mp ⟨_, hc⟩
-      rw [obj?_unique hc hr₁, obj?_unique hc' hr₂]
-    case inr _ _ =>
-      sorry
+  cases j
+  case root => simp at hr₁ hr₂; simp [←hr₁, ←hr₂, ho]
+  case nest =>
+    have he' := he.nest' hr₁ hr₂
+    cases hc : σ₁.obj? cmp i <;> rw [hc] at ho
+    case none => rw [obj?_not_sub hr₁ hc, obj?_not_sub hr₂ ho.symm]
+    case some =>
+      cases obj?_decomposition hc
+      case inl hc => 
+        have ⟨_, hc'⟩ := (cmp?_iff he obj?_self obj?_self).mp ⟨_, hc⟩
+        rw [obj?_unique hc hr₁, obj?_unique hc' hr₂]
+      case inr _ _ =>
+        sorry
 
 theorem obj?_ext :
   (σ₁ ≈ σ₂) → (∀ i ∈ (σ₁.cmp? cmp).ids, σ₁.obj? cmp i = σ₂.obj? cmp i) → (σ₁.cmp? cmp = σ₂.cmp? cmp) := by
@@ -113,7 +129,7 @@ theorem obj?_ext :
     have hs := Reactor.cmp?_to_obj? ho
     first | rw [h hm] at hs   | rw [←h hm] at hs
     first | rw [he.top] at hm | rw [←he.top] at hm
-    exact Reactor.obj?_and_mem_ids_to_cmp? hs hm
+    exact Reactor.obj?_and_local_mem_to_cmp? hs hm
   )
 
 end Equiv
