@@ -82,6 +82,12 @@ example (as bs cs : List α) : (as ++ bs) ++ cs = as ++ (bs ++ cs) := by
                                                    --^ $/lean/plainGoal
                                                     --^ $/lean/plainGoal
 
+example : True := (by exact True.intro)
+                                    --^ $/lean/plainGoal
+
+example : True := (by exact True.intro )
+                                     --^ $/lean/plainGoal
+
 example : False := by
---
+-- EOF test
 --^ $/lean/plainGoal
