@@ -1,5 +1,6 @@
 import GMLAlgebra.Basic
 import GMLAlgebra.Semigroup
+import GMLAlgebra.Category
 
 namespace Algebra
 variable {α} (s : MonoidSig α)
@@ -21,6 +22,11 @@ variable {s} [self : Monoid s]
 
 instance : OpLeftId (no_index s.op) (no_index s.id) := ⟨Monoid.op_left_id⟩
 instance : OpRightId (no_index s.op) (no_index s.id) := ⟨Monoid.op_right_id⟩
+
+instance : Category (no_index s.toCategorySig) where
+  toSemicategory := Semicategory.infer _
+  dop_left_id _ _ := op_left_id s.op
+  dop_right_id _ _ := op_right_id s.op
 
 end Monoid
 
@@ -54,6 +60,16 @@ protected def CancelMonoid.infer [OpAssoc s.op] [OpLeftId s.op s.id] [OpRightId 
   op_right_id := op_right_id _
   op_left_cancel := op_left_cancel _
   op_right_cancel := op_right_cancel _
+
+namespace CancelMonoid
+variable {s} [self : CancelMonoid s]
+
+instance : CancelCategory (no_index s.toCategorySig) where
+  toCategory := Category.infer _
+  dop_left_cancel _ _ _ := op_left_cancel s.op
+  dop_right_cancel _ _ _ := op_right_cancel s.op
+
+end CancelMonoid
 
 class CancelCommMonoid extends CommMonoid s, CancelCommSemigroup (no_index s.toSemigroupSig) : Prop
 

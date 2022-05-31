@@ -175,6 +175,23 @@ def inv_id {id} [self : InvId inv id] := self.inv_id
 
 end Inv
 
+section DInv
+variable {α} {β : α → α → Sort _} (inv : {{a b : α}} → β a b → β b a) (op : outParam ({{a b c : α}} → β b c → β a b → β a c)) (id : outParam ({a : α} → β a a))
+
+class DInvOp : Prop where
+  protected dinv_op {{a b c}} (x : β a b) (y : β c a) : inv (op x y) = op (inv y) (inv x)
+def dinv_op {op} [self : DInvOp inv op] := self.dinv_op
+
+class DInvInvol : Prop where
+  protected dinv_invol {{a b}} (x : β a b) : inv (inv x) = x
+def dinv_invol [self : DInvInvol inv] := self.dinv_invol
+
+class DInvId : Prop where
+  protected dinv_id {{a}} : inv (id : β a a) = id
+def dinv_id {id : {a : α} → β a a} [self : DInvId inv id] := self.dinv_id
+
+end DInv
+
 section AddMul
 variable (α)
   [HAdd α α α] [Neg α] [OfNat α (nat_lit 0)]

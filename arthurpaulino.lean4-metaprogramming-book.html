@@ -28,7 +28,7 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">A Lean 4 Metaprogramming Book</h3>
-<p dir="auto">Authors: Arthur Paulino, Edward Ayers, Henrik Böving, Jannis Limperg, Siddhartha Gadgil, Siddharth Bhat</p>
+<p dir="auto">Authors: Arthur Paulino, Damiano Testa, Edward Ayers, Henrik Böving, Jannis Limperg, Siddhartha Gadgil, Siddharth Bhat</p>
 <ul dir="auto">
 <li>Main
 <ol dir="auto">
@@ -40,6 +40,7 @@
 <li><a href="md/main/elaboration.md">Elaboration</a></li>
 <li><a href="md/main/dsls.md">DSLs</a></li>
 <li><a href="md/main/tactics.md">Tactics</a></li>
+<li><a href="md/main/cheat-sheet.md">Cheat sheet</a></li>
 </ol>
 </li>
 <li>Extra
@@ -59,10 +60,12 @@
 <a href="https://github.com/arthurpaulino/lean2md">lean2md</a>. Thus, if you're going to
 write or fix content for the book, please do so in the original Lean files
 inside the <a href="lean">lean</a> directory.</p>
-<p dir="auto">To build the markdown files, please run <code>lake script run build</code></p>
 <p dir="auto"><strong>Important</strong>: since <code>lean2md</code> is so simple, please avoid using comment sections
 in Lean code blocks with <code>/- ... -/</code>. If you want to insert commentaries, do so
 with double dashes <code>--</code>.</p>
+<p dir="auto">This is not required, but if you want to build the markdown files, you can do so
+by running <code>lake script run build</code>. It requires having Python installed, as well
+as the <code>lean2md</code> package.</p>
 </article></div></main>
 </body>
 </html>

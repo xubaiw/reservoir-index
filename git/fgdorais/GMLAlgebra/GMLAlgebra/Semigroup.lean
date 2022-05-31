@@ -1,4 +1,5 @@
 import GMLAlgebra.Basic
+import GMLAlgebra.Semicategory
 
 namespace Algebra
 variable {α} (s : SemigroupSig α)
@@ -15,6 +16,9 @@ namespace Semigroup
 variable {s} [self : Semigroup s]
 
 instance : OpAssoc (no_index s.op) := ⟨Semigroup.op_assoc⟩
+
+instance : Semicategory (no_index s.toSemicategorySig) where
+  dop_assoc _ _ _ _ := op_assoc s.op
 
 end Semigroup
 
@@ -64,6 +68,11 @@ variable {s} [self : CancelSemigroup s]
 
 instance : OpLeftCancel (no_index s.op) := ⟨CancelSemigroup.op_left_cancel⟩
 instance : OpRightCancel (no_index s.op) := ⟨CancelSemigroup.op_right_cancel⟩
+
+instance : CancelSemicategory (no_index s.toSemicategorySig) where
+  toSemicategory := Semicategory.infer _
+  dop_left_cancel _ _ _ := op_left_cancel s.op
+  dop_right_cancel _ _ _ := op_right_cancel s.op
 
 end CancelSemigroup
 

@@ -1,6 +1,6 @@
 import GMLAlgebra.Basic
 import GMLAlgebra.Monoid
-import GMLAlgebra.Semigroup
+import GMLAlgebra.Groupoid
 
 namespace Algebra
 variable {α} (s : GroupSig α)
@@ -24,63 +24,24 @@ variable {s} [self : Group s]
 local instance : OpRightId (no_index s.op) (no_index s.id) := ⟨Group.op_right_id⟩
 instance : OpRightInv (no_index s.op) (no_index s.inv) (no_index s.id) := ⟨Group.op_right_inv⟩
 
-protected theorem op_right_cancel (x) {y z} (h : y ⋆ x = z ⋆ x) : y = z := calc
-  _ = y ⋆ e := by rw [op_right_id (.⋆.) y]
-  _ = y ⋆ (x ⋆ x⁻¹) := by rw [op_right_inv (.⋆.) x]
-  _ = (y ⋆ x) ⋆ x⁻¹ := by rw [op_assoc (.⋆.) y x x⁻¹]
-  _ = (z ⋆ x) ⋆ x⁻¹ := by rw [h]
-  _ = z ⋆ (x ⋆ x⁻¹) := by rw [op_assoc (.⋆.) z x x⁻¹]
-  _ = z ⋆ e := by rw [op_right_inv (.⋆.) x]
-  _ = z := by rw [op_right_id (.⋆.) z]
-local instance : OpRightCancel (no_index s.op) := ⟨Group.op_right_cancel⟩
+instance : Groupoid (no_index s.toGroupoidSig) where
+  dop_assoc _ _ _ _ := op_assoc s.op
+  dop_right_id _ _ := op_right_id s.op
+  dop_right_inv _ _ := op_right_inv s.op
 
-protected theorem op_left_id (x) : e ⋆ x = x :=
-  op_right_cancel (.⋆.) x⁻¹ $ calc
-  _ = e ⋆ (x ⋆ x⁻¹) := by rw [←op_assoc (.⋆.) e x x⁻¹]
-  _ = e ⋆ e := by rw [op_right_inv (.⋆.) x]
-  _ = e := by rw [op_right_id (.⋆.) e]
-  _ = x ⋆ x⁻¹ := by rw [op_right_inv (.⋆.) x]
-local instance : OpLeftId (no_index s.op) (no_index s.id) := ⟨Group.op_left_id⟩
+local instance : OpRightCancel (no_index s.op) := ⟨dop_right_cancel s.toGroupoidSig.op (a:=()) (b:=()) (c:=())⟩
 
-protected theorem op_left_inv (x) : x⁻¹ ⋆ x = e :=
-  op_right_cancel (.⋆.) x⁻¹ $ calc
-  _ = x⁻¹ ⋆ (x ⋆ x⁻¹) := by rw [←op_assoc (.⋆.) x⁻¹ x x⁻¹]
-  _ = x⁻¹ ⋆ e := by rw [op_right_inv (.⋆.) x]
-  _ = x⁻¹ := by rw [op_right_id (.⋆.) x⁻¹]
-  _ = e ⋆ x⁻¹ := by rw [op_left_id (.⋆.) x⁻¹]
-instance : OpLeftInv (no_index s.op) (no_index s.inv) (no_index s.id) := ⟨Group.op_left_inv⟩
+local instance : OpLeftId (no_index s.op) (no_index s.id) := ⟨dop_left_id s.toGroupoidSig.op (a:=()) (b:=())⟩
 
-protected theorem op_left_cancel (x) {y z} (h : x ⋆ y = x ⋆ z) : y = z := calc
-  _ = e ⋆ y := by rw [op_left_id (.⋆.) y]
-  _ = (x⁻¹ ⋆ x) ⋆ y := by rw [op_left_inv (.⋆.) x]
-  _ = x⁻¹ ⋆ (x ⋆ y) := by rw [op_assoc (.⋆.) x⁻¹ x y]
-  _ = x⁻¹ ⋆ (x ⋆ z) := by rw [h]
-  _ = (x⁻¹ ⋆ x) ⋆ z := by rw [op_assoc (.⋆.) x⁻¹ x z]
-  _ = e ⋆ z := by rw [op_left_inv (.⋆.) x]
-  _ = z := by rw [op_left_id (.⋆.) z]
-local instance : OpLeftCancel (no_index s.op) := ⟨Group.op_left_cancel⟩
+instance : OpLeftInv (no_index s.op) (no_index s.inv) (no_index s.id) := ⟨dop_left_inv s.toGroupoidSig.op (a:=()) (b:=())⟩
 
-protected theorem inv_op (x y) : (x ⋆ y)⁻¹ = y⁻¹ ⋆ x⁻¹ :=
-  op_right_cancel (.⋆.) (x ⋆ y) $ calc
-  _ = e := by rw [←op_left_inv (.⋆.) (x ⋆ y)]
-  _ = y⁻¹ ⋆ y := by rw [op_left_inv (.⋆.) y]
-  _ = y⁻¹ ⋆ (e ⋆ y) := by rw [op_left_id (.⋆.) y]
-  _ = y⁻¹ ⋆ (x⁻¹ ⋆ x) ⋆ y := by rw [op_left_inv (.⋆.) x]
-  _ = y⁻¹ ⋆ x⁻¹ ⋆ (x ⋆ y) := by rw [op_assoc (.⋆.) x⁻¹ x y]
-  _ = (y⁻¹ ⋆ x⁻¹) ⋆ (x ⋆ y) := by rw [op_assoc (.⋆.) y⁻¹ x⁻¹ (x ⋆ y)]
-instance : InvOp (no_index s.inv) (no_index s.op) := ⟨Group.inv_op⟩
+local instance : OpLeftCancel (no_index s.op) := ⟨dop_left_cancel s.toCategorySig.op (a:=()) (b:=()) (c:=())⟩
 
-protected theorem inv_invol (x) : x⁻¹⁻¹ = x :=
-  op_right_cancel (.⋆.) x⁻¹ $ calc
-  _ = e := by rw [←op_left_inv (.⋆.) x⁻¹]
-  _ = x ⋆ x⁻¹ := by rw [op_right_inv (.⋆.) x]
-instance : InvInvol (no_index s.inv) := ⟨Group.inv_invol⟩
+instance : InvOp (no_index s.inv) (no_index s.op) := ⟨dinv_op s.toGroupoidSig.inv (a:=()) (b:=()) (c:=())⟩
 
-protected theorem inv_id : e⁻¹ = e :=
-  op_right_cancel (.⋆.) e $ show e⁻¹ ⋆ e = e ⋆ e from calc
-  _ = e := by rw [op_left_inv (.⋆.) e]
-  _ = e ⋆ e := by rw [op_right_id (.⋆.) e]
-instance : InvId (no_index s.inv) (no_index s.id) := ⟨Group.inv_id⟩
+instance : InvInvol (no_index s.inv) := ⟨dinv_invol s.toGroupoidSig.inv (a:=()) (b:=())⟩
+
+instance : InvId (no_index s.inv) (no_index s.id) := ⟨dinv_id s.toGroupoidSig.inv (a:=())⟩
 
 instance toCancelMonoid : CancelMonoid (no_index s.toMonoidSig) := CancelMonoid.infer _
 

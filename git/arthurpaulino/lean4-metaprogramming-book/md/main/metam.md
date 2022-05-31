@@ -48,9 +48,9 @@ def sumExprM (n m : Nat) : MetaM Expr := do
 ```
 
 We next construct a λ-expression for the function `double : Nat → Nat` given
-by `double n = n + n`. To construct such an expression, a free variable `n` has
-to be introduced, the expression defined in terms of this variable, and the
-λ-expression should be constructed. 
+by `double n = n + n`. To construct such an expression, we introduce a free
+variable `n`, we define an expression in terms of this variable, and we construct
+the λ-expression.
 
 The variable is introduced by passing the code using it as a _continuation_ to 
 `withLocalDecl`. The arguments of `withLocalDecl` are:
@@ -109,7 +109,7 @@ A special case of Π-types are function types `A → B`. These can be constructe
 using the function `mkArrow`. Another very useful meta-level function is `mkEq`,
 which constructs equalities.
 
-We illustrate all these, as well as the construction of a λ-expressions, by
+We illustrate all these, as well as the construction of a λ-expression, by
 constructing the proposition `∀ n: Nat, f n = f (n + 1)` as a function of `f`.
 Formally this is `λ f, ∀ n, f n = f (n + 1)`. We break this into many steps to
 illustrate the different ingredients.
@@ -232,7 +232,7 @@ Expr.lam : Name → Expr → Expr → Data → Expr
 
 The first `Expr` is the type of the function's input and the second is its body.
 Then we ask ourselves: how do we build a function with multiple input variables?
-Well, e use the same constructor multiple times, one for each input variable.
+Well, we use the same constructor multiple times, one for each input variable.
 
 As an example, let's see an approximation of how we'd build the function
 `fun (x : Nat) (y : Nat) => x + y`:

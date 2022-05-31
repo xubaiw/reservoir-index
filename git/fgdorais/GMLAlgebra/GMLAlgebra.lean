@@ -1,11 +1,13 @@
 import GMLAlgebra.Basic
 import GMLAlgebra.Category
 import GMLAlgebra.Group
+import GMLAlgebra.Groupoid
 import GMLAlgebra.Hom
 import GMLAlgebra.Identities
 import GMLAlgebra.Monoid
 import GMLAlgebra.Rig
 import GMLAlgebra.Ring
+import GMLAlgebra.Semicategory
 import GMLAlgebra.Semigroup
 import GMLAlgebra.Semiring
 import GMLAlgebra.Signatures

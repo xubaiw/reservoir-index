@@ -29,6 +29,10 @@ abbrev isPort : Change → Bool
   | port .. => true
   | _ => false
 
+abbrev isState : Change → Bool 
+  | state .. => true
+  | _ => false
+
 abbrev isAction : Change → Bool 
   | action .. => true
   | _ => false
@@ -44,6 +48,33 @@ def stateValue? (t : ID) : Change → Option Value
 def actionValue? (t : ID) (tm : Time) : Change → Option Value
   | action t' tm' v  => if t' = t ∧ tm' = tm then some v else none
   | _ => none
+
+theorem stateValue?_some {c : Change} : 
+  (c.stateValue? t = some v) → (c = .state t v) := by
+  intro h
+  cases c 
+  case state t v =>
+    simp [stateValue?] at h
+    split at h <;> simp_all      
+  all_goals simp [stateValue?] at *
+
+theorem isPort_iff_portValue?_eq_some {c : Change} :
+  c.isPort ↔ (∃ t v, c.portValue? t = some v) := by
+  constructor
+  case mp =>
+    cases c <;> simp [isPort, portValue?]
+    case port t v => exists t, v; simp
+  case mpr =>
+    cases c <;> simp [portValue?]
+
+theorem isState_iff_stateValue?_eq_some {c : Change} :
+  c.isState ↔ (∃ t v, c.stateValue? t = some v) := by
+  constructor
+  case mp =>
+    cases c <;> simp [isState, stateValue?]
+    case state t v => exists t, v; simp
+  case mpr =>
+    cases c <;> simp [stateValue?]
 
 end 
 
