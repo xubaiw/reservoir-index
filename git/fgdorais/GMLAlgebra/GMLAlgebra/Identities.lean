@@ -73,7 +73,6 @@ def op_left_comm [self : OpLeftComm op] := self.op_left_comm
 
 class OpRightComm : Prop where
   protected op_right_comm (x y z) : (x ⋆ y) ⋆ z = (x ⋆ z) ⋆ y
-export OpRightComm (op_right_comm)
 def op_right_comm [self : OpRightComm op] := self.op_right_comm
 
 class OpCrossComm : Prop where
@@ -166,14 +165,20 @@ class InvHom : Prop where
   protected inv_hom (x y) : inv (op x y) = op (inv x) (inv y)
 def inv_hom {op} [self : InvHom inv op] := self.inv_hom
 
+class InvInvol : Prop where
+  protected inv_invol (x) : inv (inv x) = x
+def inv_invol [self : InvInvol inv] := self.inv_invol
+
 class InvId : Prop where
   protected inv_id : inv id = id
 def inv_id {id} [self : InvId inv id] := self.inv_id
 
 end Inv
 
-section Add
-variable (α) [HAdd α α α] [Neg α] [OfNat α 0]
+section AddMul
+variable (α)
+  [HAdd α α α] [Neg α] [OfNat α (nat_lit 0)]
+  [HMul α α α] [Inv α] [OfNat α (nat_lit 1)]
 
 abbrev add_assoc [self : OpAssoc (.+.:α→α→α)] := self.op_assoc
 abbrev add_comm [self : OpComm (.+.:α→α→α)] := self.op_comm
@@ -186,13 +191,8 @@ abbrev add_neg_left [self : OpLeftInv (.+.:α→α→α) (-.) 0] := self.op_left
 abbrev add_neg_right [self : OpRightInv (.+.:α→α→α) (-.) 0] := self.op_right_inv
 
 abbrev neg_add [self : InvHom (-.:α→α) (.+.)] := self.inv_hom
-abbrev neg_neg [self : FnInvol (-.:α→α)] := self.fn_invol
+abbrev neg_neg [self : InvInvol (-.:α→α)] := self.inv_invol
 abbrev neg_zero [self : InvId (-.:α→α) 0] := self.inv_id
-
-end Add
-
-section Mul
-variable (α) [HMul α α α] [HAdd α α α] [Inv α] [OfNat α 1] [OfNat α 0]
 
 abbrev mul_assoc [self : OpAssoc (.*.:α→α→α)] := self.op_assoc
 abbrev mul_comm [self : OpComm (.*.:α→α→α)] := self.op_comm
@@ -209,9 +209,9 @@ abbrev mul_zero_left [self : OpLeftNil (.*.:α→α→α) 0] := self.op_left_nil
 abbrev mul_zero_right [self : OpRightNil (.*.:α→α→α) 0] := self.op_right_nil
 
 abbrev inv_mul [self : InvOp (.⁻¹:α→α) (.*.)] := self.inv_op
-abbrev inv_inv [self : FnInvol (.⁻¹:α→α)] := self.fn_invol
+abbrev inv_inv [self : InvInvol (.⁻¹:α→α)] := self.inv_invol
 abbrev inv_one [self : InvId (.⁻¹:α→α) 1] := self.inv_id
 
-end Mul
+end AddMul
 
 end Algebra

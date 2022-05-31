@@ -70,11 +70,11 @@ protected theorem inv_op (x y) : (x ⋆ y)⁻¹ = y⁻¹ ⋆ x⁻¹ :=
   _ = (y⁻¹ ⋆ x⁻¹) ⋆ (x ⋆ y) := by rw [op_assoc (.⋆.) y⁻¹ x⁻¹ (x ⋆ y)]
 instance : InvOp (no_index s.inv) (no_index s.op) := ⟨Group.inv_op⟩
 
-protected theorem inv_inv (x) : x⁻¹⁻¹ = x :=
+protected theorem inv_invol (x) : x⁻¹⁻¹ = x :=
   op_right_cancel (.⋆.) x⁻¹ $ calc
   _ = e := by rw [←op_left_inv (.⋆.) x⁻¹]
   _ = x ⋆ x⁻¹ := by rw [op_right_inv (.⋆.) x]
-instance : FnInvol (no_index s.inv) := ⟨Group.inv_inv⟩
+instance : InvInvol (no_index s.inv) := ⟨Group.inv_invol⟩
 
 protected theorem inv_id : e⁻¹ = e :=
   op_right_cancel (.⋆.) e $ show e⁻¹ ⋆ e = e ⋆ e from calc

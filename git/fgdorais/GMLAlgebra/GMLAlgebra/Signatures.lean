@@ -18,93 +18,95 @@ structure SemiringSig (α) where
 def SemiringSig.toAddSemigroupSig {α} (s : SemiringSig α) : SemigroupSig α where
   op := s.add
 
+unif_hint {α} (s : SemiringSig α) (t : SemigroupSig α) where
+  t =?= s.toAddSemigroupSig ⊢ t.op =?= s.add
+
 def SemiringSig.toMulSemigroupSig {α} (s : SemiringSig α) : SemigroupSig α where
   op := s.mul
+
+unif_hint {α} (s : SemiringSig α) (t : SemigroupSig α) where
+  t =?= s.toMulSemigroupSig ⊢ t.op =?= s.mul
 
 structure RigSig (α) extends SemiringSig α where
   zero : α
 
 def RigSig.toAddMonoidSig {α} (s : RigSig α) : MonoidSig α where
-  toSemigroupSig := s.toSemiringSig.toAddSemigroupSig
+  toSemigroupSig := s.toAddSemigroupSig
   id := s.zero
 
-unif_hint {α} (s : SemigroupSig α) (t : RigSig α) where
-  s =?= t.toAddMonoidSig.toSemigroupSig ⊢ s =?= t.toSemiringSig.toAddSemigroupSig
+unif_hint {α} (s : RigSig α) (t : MonoidSig α) where
+  t =?= s.toAddMonoidSig ⊢ t.toSemigroupSig =?= s.toAddSemigroupSig
+
+unif_hint {α} (s : RigSig α) (t : MonoidSig α) where
+  t =?= s.toAddMonoidSig ⊢ t.id =?= s.zero
 
 structure RingSig (α) extends RigSig α where
   neg : α → α
 
 def RingSig.toAddGroupSig {α} (s : RingSig α) : GroupSig α where
-  toMonoidSig := s.toRigSig.toAddMonoidSig
+  toMonoidSig := s.toAddMonoidSig
   inv := s.neg
 
-unif_hint {α} (s : MonoidSig α) (t : RingSig α) where
-  s =?= t.toAddGroupSig.toMonoidSig ⊢ s =?= t.toRigSig.toAddMonoidSig
+unif_hint {α} (s : RingSig α) (t : GroupSig α) where
+  t =?= s.toAddGroupSig ⊢ t.toMonoidSig =?= s.toAddMonoidSig
+
+unif_hint {α} (s : RingSig α) (t : GroupSig α) where
+  t =?= s.toAddGroupSig ⊢ t.inv =?= s.neg
 
 structure UnitalSemiringSig (α) extends SemiringSig α where
   one : α
 
 def UnitalSemiringSig.toMulMonoidSig {α} (s : UnitalSemiringSig α) : MonoidSig α where
-  toSemigroupSig := s.toSemiringSig.toMulSemigroupSig
+  toSemigroupSig := s.toMulSemigroupSig
   id := s.one
 
-unif_hint {α} (s : SemigroupSig α) (t : UnitalSemiringSig α) where
-  s =?= t.toMulMonoidSig.toSemigroupSig ⊢ s =?= t.toSemiringSig.toMulSemigroupSig
+unif_hint {α} (s : UnitalSemiringSig α) (t : MonoidSig α) where
+  t =?= s.toMulMonoidSig ⊢ t.toSemigroupSig =?= s.toMulSemigroupSig
 
-structure UnitalRigSig (α) extends RigSig α, UnitalSemiringSig α
+unif_hint {α} (s : UnitalSemiringSig α) (t : MonoidSig α) where
+  t =?= s.toMulMonoidSig ⊢ t.id =?= s.one
 
-structure UnitalRingSig (α) extends RingSig α, UnitalRigSig α
+structure UnitalRigSig (α) extends RigSig α where
+  one : α
 
-unif_hint {α} (s : SemigroupSig α) (t : MonoidSig α) where
-  s =?= t.toSemigroupSig ⊢ s.op =?= t.op
+def UnitalRigSig.toUnitalSemiringSig {α} (s : UnitalRigSig α) : UnitalSemiringSig α where
+  toSemiringSig := s.toSemiringSig
+  one := s.one
 
-unif_hint {α} (s : MonoidSig α) (t : GroupSig α) where
-  s =?= t.toMonoidSig ⊢ s.op =?= t.op
+unif_hint {α} (s : UnitalRigSig α) (t : UnitalSemiringSig α) where
+  t =?= s.toUnitalSemiringSig ⊢ t.toSemiringSig =?= s.toSemiringSig
 
-unif_hint {α} (s : SemigroupSig α) (t : GroupSig α) where
-  s =?= t.toMonoidSig.toSemigroupSig ⊢ s.op =?= t.op
+unif_hint {α} (s : UnitalRigSig α) (t : UnitalSemiringSig α) where
+  t =?= s.toUnitalSemiringSig ⊢ t.one =?= s.one
 
-unif_hint {α} (s : MonoidSig α) (t : GroupSig α) where
-  s =?= t.toMonoidSig ⊢ s.id =?= t.id
+structure UnitalRingSig (α) extends RingSig α where
+  one : α
 
-unif_hint {α} (s : SemigroupSig α) (t : SemiringSig α) where
-  s =?= t.toAddSemigroupSig ⊢ s.op =?= t.add
+def UnitalRingSig.toUnitalRigSig {α} (s : UnitalRingSig α) : UnitalRigSig α where
+  toRigSig := s.toRigSig
+  one := s.one
 
-unif_hint {α} (s : SemigroupSig α) (t : SemiringSig α) where
-  s =?= t.toMulSemigroupSig ⊢ s.op =?= t.mul
+unif_hint {α} (s : UnitalRingSig α) (t : UnitalRigSig α) where
+  t =?= s.toUnitalRigSig ⊢ t.toRigSig =?= s.toRigSig
 
-unif_hint {α} (s : MonoidSig α) (t : UnitalSemiringSig α) where
-  s =?= t.toMulMonoidSig ⊢ s.op =?= t.mul
+unif_hint {α} (s : UnitalRingSig α) (t : UnitalRigSig α) where
+  t =?= s.toUnitalRigSig ⊢ t.one =?= s.one
 
-unif_hint {α} (s : MonoidSig α) (t : UnitalSemiringSig α) where
-  s =?= t.toMulMonoidSig ⊢ s.id =?= t.one
+abbrev UnitalRingSig.toUnitalSemiringSig {α} (s : UnitalRingSig α) := s.toUnitalRigSig.toUnitalSemiringSig
 
-unif_hint {α} (s : MonoidSig α) (t : RigSig α) where
-  s =?= t.toAddMonoidSig ⊢ s.op =?= t.add
+unif_hint {α} (s : UnitalRingSig α) (t : UnitalSemiringSig α) where
+  t =?= s.toUnitalSemiringSig ⊢ t.toSemiringSig =?= s.toSemiringSig
 
-unif_hint {α} (s : MonoidSig α) (t : RigSig α) where
-  s =?= t.toAddMonoidSig ⊢ s.id =?= t.zero
+unif_hint {α} (s : UnitalRingSig α) (t : UnitalSemiringSig α) where
+  t =?= s.toUnitalSemiringSig ⊢ t.one =?= s.one
 
-unif_hint {α} (s : MonoidSig α) (t : UnitalRigSig α) where
-  s =?= t.toUnitalSemiringSig.toMulMonoidSig ⊢ s.op =?= t.mul
+abbrev UnitalRingSig.toMulMonoidSig {α} (s : UnitalRingSig α) := s.toUnitalSemiringSig.toMulMonoidSig
 
-unif_hint {α} (s : MonoidSig α) (t : UnitalRigSig α) where
-  s =?= t.toUnitalSemiringSig.toMulMonoidSig ⊢ s.id =?= t.one
+unif_hint {α} (s : UnitalRingSig α) (t : MonoidSig α) where
+  t =?= s.toMulMonoidSig ⊢ t.toSemigroupSig =?= s.toMulSemigroupSig
 
-unif_hint {α} (s : GroupSig α) (t : RingSig α) where
-  s =?= t.toAddGroupSig ⊢ s.op =?= t.add
-
-unif_hint {α} (s : GroupSig α) (t : RingSig α) where
-  s =?= t.toAddGroupSig ⊢ s.inv =?= t.neg
-
-unif_hint {α} (s : GroupSig α) (t : RingSig α) where
-  s =?= t.toAddGroupSig ⊢ s.id =?= t.zero
-
-unif_hint {α} (s : MonoidSig α) (t : UnitalRingSig α) where
-  s =?= t.toUnitalRigSig.toUnitalSemiringSig.toMulMonoidSig ⊢ s.op =?= t.mul
-
-unif_hint {α} (s : MonoidSig α) (t : UnitalRingSig α) where
-  s =?= t.toUnitalRigSig.toUnitalSemiringSig.toMulMonoidSig ⊢ s.id =?= t.one
+unif_hint {α} (s : UnitalRingSig α) (t : MonoidSig α) where
+  t =?= s.toMulMonoidSig ⊢ t.id =?= s.one
 
 structure SemicategorySig {α} (β : α → α → Sort _) where
   op {{a b c}} : β b c → β a b → β a c
@@ -112,40 +114,59 @@ structure SemicategorySig {α} (β : α → α → Sort _) where
 def SemicategorySig.toSemigroupSig {α} {β : α → α → Sort _} (s : SemicategorySig β) (a : α) : SemigroupSig (β a a) where
   op := s.op (a:=a) (b:=a) (c:=a)
 
+unif_hint {α} {β : α → α → Sort _} {a : α} (s : SemicategorySig β) (t : SemigroupSig (β a a)) where
+  t =?= s.toSemigroupSig a ⊢ t.op =?= s.op (a:=a) (b:=a) (c:=a)
+
 structure CategorySig {α} (β : α → α → Sort _) extends SemicategorySig β where
   id {a} : β a a
 
 def CategorySig.toMonoidSig {α} {β : α → α → Sort _} (s : CategorySig β) (a : α) : MonoidSig (β a a) where
-  op := s.op (a:=a) (b:=a) (c:=a)
+  toSemigroupSig := s.toSemigroupSig a
   id := s.id (a:=a)
 
-unif_hint {α} {β : α → α → Sort _} (a : α) (s : SemicategorySig β) (t : CategorySig β) where
-  s =?= t.toSemicategorySig ⊢ s.toSemigroupSig a =?= (t.toMonoidSig a).toSemigroupSig
+unif_hint {α} {β : α → α → Sort _} {a : α} (s : CategorySig β) (t : MonoidSig (β a a)) where
+  t =?= s.toMonoidSig a ⊢ t.toSemigroupSig =?= s.toSemigroupSig a
+
+unif_hint {α} {β : α → α → Sort _} {a : α} (s : CategorySig β) (t : MonoidSig (β a a)) where
+  t =?= s.toMonoidSig a ⊢ t.id =?= s.id (a:=a)
 
 structure GroupoidSig {α} (β : α → α → Sort _) extends CategorySig β where
   inv {{a b}} : β a b → β b a
 
 def GroupoidSig.toGroupSig {α} {β : α → α → Sort _} (s : GroupoidSig β) (a : α) : GroupSig (β a a) where
-  op := s.op (a:=a) (b:=a) (c:=a)
+  toMonoidSig := s.toMonoidSig a
   inv := s.inv (a:=a) (b:=a)
-  id := s.id (a:=a)
 
-unif_hint {α} {β : α → α → Sort _} (a : α) (s : SemicategorySig β) (t : GroupoidSig β) where
-  s =?= t.toSemicategorySig ⊢ s.toSemigroupSig a =?= (t.toGroupSig a).toSemigroupSig
+unif_hint {α} {β : α → α → Sort _} {a : α} (s : GroupoidSig β) (t : GroupSig (β a a)) where
+  t =?= s.toGroupSig a ⊢ t.toMonoidSig =?= s.toMonoidSig a
 
-unif_hint {α} {β : α → α → Sort _} (a : α) (s : CategorySig β) (t : GroupoidSig β) where
-  s =?= t.toCategorySig ⊢ s.toMonoidSig a =?= (t.toGroupSig a).toMonoidSig
+unif_hint {α} {β : α → α → Sort _} {a : α} (s : GroupoidSig β) (t : GroupSig (β a a)) where
+  t =?= s.toGroupSig a ⊢ t.inv =?= s.inv (a:=a) (b:=a)
 
-def SemigroupSig.toSemicategorySig {α} (s : SemigroupSig α) : SemicategorySig (λ _ _ : Unit => α) where
+def SemigroupSig.toSemicategorySig {α} (s : SemigroupSig α) : SemicategorySig fun _ _ : Unit => α where
   op _ _ _ := s.op
 
-def MonoidSig.toCategorySig {α} (s : MonoidSig α) : CategorySig (λ _ _ : Unit => α) where
-  op _ _ _ := s.op
+unif_hint {α} (s : SemigroupSig α) (t : SemicategorySig fun _  _ : Unit => α) where
+  t =?= s.toSemicategorySig ⊢ t.op (a:=()) (b:=()) (c:=()) =?= s.op
+
+def MonoidSig.toCategorySig {α} (s : MonoidSig α) : CategorySig fun _ _ : Unit => α where
+  toSemicategorySig := s.toSemicategorySig
   id := s.id
 
-def GroupSig.toGroupoidSig {α} (s : GroupSig α) : GroupoidSig (λ _ _ : Unit => α) where
-  op _ _ _ := s.op
+unif_hint {α} (s : MonoidSig α) (t : CategorySig fun _  _ : Unit => α) where
+  t =?= s.toCategorySig ⊢ t.toSemicategorySig =?= s.toSemicategorySig
+
+unif_hint {α} (s : MonoidSig α) (t : CategorySig fun _  _ : Unit => α) where
+  t =?= s.toCategorySig ⊢ t.id (a:=()) =?= s.id
+
+def GroupSig.toGroupoidSig {α} (s : GroupSig α) : GroupoidSig fun _ _ : Unit => α where
+  toCategorySig := s.toCategorySig
   inv _ _ := s.inv
-  id := s.id
+
+unif_hint {α} (s : GroupSig α) (t : GroupoidSig fun _  _ : Unit => α) where
+  t =?= s.toGroupoidSig ⊢ t.toCategorySig =?= s.toCategorySig
+
+unif_hint {α} (s : GroupSig α) (t : GroupoidSig fun _  _ : Unit => α) where
+  t =?= s.toGroupoidSig ⊢ t.inv (a:=()) (b:=()) =?= s.inv
 
 end Algebra
