@@ -1,6 +1,4 @@
-import Lean
-
-/-!
+/-
 # Introduction
 
 ## What's the goal of this book?
@@ -62,7 +60,11 @@ Suppose we want to build a helper command `#assertType` which tells whether a
 given term is of a certain type. The usage will be:
 
 `#assertType <term> : <type>`
+
+Let's see the code:
 -/
+
+import Lean
 
 elab "#assertType " termStx:term " : " typeStx:term : command =>
   open Lean.Elab Command Term in
@@ -162,6 +164,8 @@ name and postpones the need for its proof to the very end. It's going to be
 called `suppose` and is used like this:
 
 `suppose <name> : <type>`
+
+So let's see the code:
 -/
 
 open Lean Meta Elab Tactic Term in
@@ -191,4 +195,23 @@ the proof of `t`, which we can introduce to the context using `intro1P` and
 To require the proof of the new hypothesis as a goal, we call `replaceMainGoal`
 passing a list with `p.mvarId!` in the head. And then we can use the
 `rotate_left` tactic to move the recently added top goal to the bottom.
+
+## Printing Messages
+
+In the `#assertType` example, we used `logInfo` to make our command print
+something. If, instead, we just want to perform a quick debug, we can use
+`dbg_trace`.
+
+They behave a bit differently though, as we can see below:
 -/
+
+elab "traces" : tactic => do
+  let array := List.replicate 2 (List.range 3)
+  Lean.Elab.logInfo m!"logInfo: {array}"
+  dbg_trace f!"dbg_trace: {array}"
+
+example : True := by -- `example` is underlined in blue, outputting:
+                     -- dbg_trace: [[0, 1, 2], [0, 1, 2]]
+  traces -- now `traces` is underlined in blue, outputting
+         -- logInfo: [[0, 1, 2], [0, 1, 2]]
+  trivial
