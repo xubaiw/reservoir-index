@@ -122,11 +122,61 @@ your project and then:</p>
 <ol dir="auto">
 <li>Add Lean files similar to the <code>Tests.lean</code> example above</li>
 <li>Compile the LSpec binary with <code>lake compile LSpec</code></li>
-<li>Run the binary with <code>./lean_packages/LSpec/build/bin/lspec</code>, which searches
-for and runs Lean files inside <code>Tests</code> recursively (yes, you can add folders
-inside <code>Tests</code> and create your own file structure)</li>
+<li>Run the binary with <code>./lean_packages/LSpec/build/bin/lspec</code></li>
 </ol>
-<p dir="auto">Note: this flow can be automated with CI flows.</p>
+<p dir="auto">The <code>lspec</code> binary triggers a <code>lake build</code> automatically, which takes care of
+interactive tests created with the <code>#lspec</code> command.</p>
+<p dir="auto">After building your package, the <code>lspec</code> binary searches for and runs Lean files
+inside <code>Tests</code> recursively (yes, you can add folders inside <code>Tests</code> and create
+your own file structure).</p>
+<p dir="auto">For this to work, all of your Lean files used in the tests must be built when
+<code>lake build</code> is called.</p>
+<h4 dir="auto">Using LSpec on CI</h4>
+<p dir="auto">To integrate LSpec to GitHub workflows, create the file
+<code>.github/workflows/lspec.yml</code> with the content:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="name: "LSpec CI"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: install elan
+        run: |
+          set -o pipefail
+          curl -sSfL https://github.com/leanprover/elan/releases/download/v1.3.1/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+      - uses: actions/checkout@v2
+      - name: build LSpec
+        run: lake build LSpec
+      - name: run LSpec
+        run: ./lean_packages/LSpec/build/bin/lspec"><pre><span class="pl-ent">name</span>: <span class="pl-s"><span class="pl-pds">"</span>LSpec CI<span class="pl-pds">"</span></span>
+<span class="pl-ent">on</span>:
+  <span class="pl-ent">pull_request</span>:
+  <span class="pl-ent">push</span>:
+    <span class="pl-ent">branches</span>:
+      - <span class="pl-s">main</span>
+<span class="pl-ent">jobs</span>:
+  <span class="pl-ent">build</span>:
+    <span class="pl-ent">name</span>: <span class="pl-s">Build</span>
+    <span class="pl-ent">runs-on</span>: <span class="pl-s">ubuntu-latest</span>
+    <span class="pl-ent">steps</span>:
+      - <span class="pl-ent">name</span>: <span class="pl-s">install elan</span>
+        <span class="pl-ent">run</span>: <span class="pl-s">|</span>
+<span class="pl-s">          set -o pipefail</span>
+<span class="pl-s">          curl -sSfL https://github.com/leanprover/elan/releases/download/v1.3.1/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz</span>
+<span class="pl-s">          ./elan-init -y --default-toolchain none</span>
+<span class="pl-s">          echo "$HOME/.elan/bin" >> $GITHUB_PATH</span>
+<span class="pl-s"></span>      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v2</span>
+      - <span class="pl-ent">name</span>: <span class="pl-s">build LSpec</span>
+        <span class="pl-ent">run</span>: <span class="pl-s">lake build LSpec</span>
+      - <span class="pl-ent">name</span>: <span class="pl-s">run LSpec</span>
+        <span class="pl-ent">run</span>: <span class="pl-s">./lean_packages/LSpec/build/bin/lspec</span></pre></div>
 </article></div></main>
 </body>
 </html>

@@ -79,17 +79,13 @@ Hello, world!
 <h4 dir="auto">Adding Dependencies</h4>
 <p dir="auto">Lake packages can also have dependencies. Dependencies are other Lake packages the current package needs in order to function. To define a dependency, add an entry to the <code>dependencies</code> field of the package configuration. Each entry includes the name of the package and where to find it. Dependencies can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. When sourcing from a Git repository, specify the revision of the package to clone, which can be a commit hash, branch, or tag.</p>
 <p dir="auto">For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello {
-  dependencies := #[{
-    name := `mathlib
-    src := Source.git "https://github.com/leanprover-community/mathlib4.git" "master"
-  }]
-}"><pre>package hello {
-  dependencies := #[{
-    name := <span class="pl-en">`mathlib</span>
-    src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
-  }]
-}</pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git"@"master"
+
+package hello"><pre>require mathlib <span class="pl-k">from</span> git
+  <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
+
+package hello</pre></div>
 <p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it. Information on the specific revision cloned will then be saved to <code>manifest.json</code> in <code>lean_packages</code> to enable reproducibility. To update <code>mathlib</code> after this, you will need to run <code>lake update</code> -- other commands do not update resolved dependencies.</p>
 <p dir="auto">Further examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
 <h4 dir="auto">Package Configuration Options</h4>
