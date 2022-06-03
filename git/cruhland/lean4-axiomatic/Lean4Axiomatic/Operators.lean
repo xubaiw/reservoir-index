@@ -34,7 +34,7 @@ The `· ≄ ·` operator, the negation of `TildeDash.tildeDash`.
 **Class parameters**
 - `TildeDash α`: provides the operation that is being negated.
 -/
-def tildeDashNot {α : Sort u} [TildeDash α] (x y : α) : Prop :=
+abbrev tildeDashNot {α : Sort u} [TildeDash α] (x y : α) : Prop :=
   ¬ (x ≃ y)
 
 infix:50 " ≄ " => tildeDashNot

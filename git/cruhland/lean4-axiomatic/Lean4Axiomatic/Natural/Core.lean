@@ -1,9 +1,6 @@
 import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Eqv
 
 namespace Lean4Axiomatic.Natural
-
-open Relation (EqvOp?)
 
 /-!
 # Fundamental definitions and properties of natural numbers
@@ -16,7 +13,7 @@ Defines the primitive building blocks of all natural numbers.
 
 Provides the first two Peano axioms; see `Axioms.Base` for the rest.
 -/
-class Constructors (ℕ : Type) where
+class Constructors (ℕ : Type) :=
   /--
   **Peano axiom 1**: `zero` is a natural number.
 
@@ -41,14 +38,14 @@ class Constructors (ℕ : Type) where
 export Constructors (zero step)
 
 /-- Definitions pertaining to equality of natural number values. -/
-class Equality (ℕ : Type) where
+class Equality (ℕ : Type) :=
   /-- Natural numbers have a decidable equality relation. -/
-  eqvOp? : EqvOp? ℕ
+  eqvOp? : Relation.Equivalence.EqvOp? ℕ
 
 attribute [instance] Equality.eqvOp?
 
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
-class Literals (ℕ : Type) [Constructors ℕ] [Equality ℕ] where
+class Literals (ℕ : Type) [Constructors ℕ] [Equality ℕ] :=
   /--
   Enables representation of natural numbers by numeric literals.
 
@@ -80,7 +77,7 @@ attribute [instance default+1] Literals.literal
 Packages together the basic properties of natural numbers, to reduce the amount
 of class references needed for more advanced properties.
 -/
-class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ, Literals ℕ where
+class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ, Literals ℕ :=
   /--
   The `step` function preserves equality of natural numbers; if two natural
   numbers are equal, they are still equal after `step` is applied to both.
@@ -93,7 +90,7 @@ attribute [instance] Core.step_substitutive
 Provides the remaining Peano axioms for natural numbers (see `Constructors`
 for the first two).
 -/
-class Axioms.Base (ℕ : Type) [Core ℕ] where
+class Axioms.Base (ℕ : Type) [Core ℕ] :=
   /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
   step_neq_zero {n : ℕ} : step n ≄ 0
 
@@ -117,7 +114,7 @@ class Axioms.Base (ℕ : Type) [Core ℕ] where
 attribute [instance] Axioms.Base.step_injective
 
 /-- Properties that follow from those provided in `Axioms.Base`. -/
-class Axioms.Derived (ℕ : Type) [Core ℕ] extends Axioms.Base ℕ where
+class Axioms.Derived (ℕ : Type) [Core ℕ] extends Axioms.Base ℕ :=
   /--
   Equivalent to `Axioms.Base.ind` but with a more convenient argument order
   when using the `apply` tactic.

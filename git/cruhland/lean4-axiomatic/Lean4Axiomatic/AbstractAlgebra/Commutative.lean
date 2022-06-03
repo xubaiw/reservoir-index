@@ -1,8 +1,8 @@
-import Lean4Axiomatic.Eqv
+import Lean4Axiomatic.Relation.Equivalence
 
-open Relation (EqvOp)
+namespace Lean4Axiomatic.AA
 
-namespace AA
+open Relation.Equivalence (EqvOp)
 
 /--
 Class for types and operations that satisfy the commutative property.
@@ -30,8 +30,8 @@ class Commutative {α : Sort u} {β : Sort v} [EqvOp β] (f : α → α → β) 
   - see `Commutative` for the class parameters.
   - `x` and `y`: the operands of `f`.
   -/
-comm {x y : α} : f x y ≃ f y x
+  comm {x y : α} : f x y ≃ f y x
 
 export Commutative (comm)
 
-end AA
+end Lean4Axiomatic.AA

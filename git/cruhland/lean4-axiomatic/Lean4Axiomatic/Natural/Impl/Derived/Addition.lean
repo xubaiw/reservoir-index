@@ -1,7 +1,6 @@
 import Lean4Axiomatic.Natural.Addition
 
-namespace Lean4Axiomatic
-namespace Natural
+namespace Lean4Axiomatic.Natural
 
 namespace Derived
 
@@ -15,49 +14,49 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
   case zero =>
     show 0 + 0 ≃ 0
     calc
-      _ ≃ 0 + (0 : ℕ) := Eqv.refl
-      _ ≃ 0           := Addition.zero_add
+      0 + (0 : ℕ) ≃ _ := Addition.zero_add
+      0           ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + 0 ≃ n)
     show step n + 0 ≃ step n
     calc
-      _ ≃ step n + 0   := Eqv.refl
-      _ ≃ step (n + 0) := Addition.step_add
-      _ ≃ step n       := AA.subst₁ ih
+      step n + 0   ≃ _ := Addition.step_add
+      step (n + 0) ≃ _ := AA.subst₁ ih
+      step n       ≃ _ := Rel.refl
 
 theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
   apply Axioms.ind_on (motive := λ n => n + step m ≃ step (n + m)) n
   case zero =>
     show 0 + step m ≃ step (0 + m)
     calc
-      _ ≃ 0 + step m   := Eqv.refl
-      _ ≃ step m       := Addition.zero_add
-      _ ≃ step (0 + m) := AA.subst₁ (Eqv.symm Addition.zero_add)
+      0 + step m   ≃ _ := Addition.zero_add
+      step m       ≃ _ := AA.subst₁ (Rel.symm Addition.zero_add)
+      step (0 + m) ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + step m ≃ step (n + m))
     show step n + step m ≃ step (step n + m)
     calc
-      _ ≃ step n + step m     := Eqv.refl
-      _ ≃ step (n + step m)   := Addition.step_add
-      _ ≃ step (step (n + m)) := AA.subst₁ ih
-      _ ≃ step (step n + m)   := AA.subst₁ (Eqv.symm Addition.step_add)
+      step n + step m     ≃ _ := Addition.step_add
+      step (n + step m)   ≃ _ := AA.subst₁ ih
+      step (step (n + m)) ≃ _ := AA.subst₁ (Rel.symm Addition.step_add)
+      step (step n + m)   ≃ _ := Rel.refl
 
 theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
   apply Axioms.ind_on (motive := λ n => n + m ≃ m + n) n
   case zero =>
     show 0 + m ≃ m + 0
     calc
-      _ ≃ 0 + m := Eqv.refl
-      _ ≃ m     := Addition.zero_add
-      _ ≃ m + 0 := Eqv.symm add_zero
+      0 + m ≃ _ := Addition.zero_add
+      m     ≃ _ := Rel.symm add_zero
+      m + 0 ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + m ≃ m + n)
     show step n + m ≃ m + step n
     calc
-      _ ≃ step n + m   := Eqv.refl
-      _ ≃ step (n + m) := Addition.step_add
-      _ ≃ step (m + n) := AA.subst₁ ih
-      _ ≃ m + step n   := Eqv.symm add_step
+      step n + m   ≃ _ := Addition.step_add
+      step (n + m) ≃ _ := AA.subst₁ ih
+      step (m + n) ≃ _ := Rel.symm add_step
+      m + step n   ≃ _ := Rel.refl
 
 instance add_commutative : AA.Commutative (α := ℕ) (· + ·) where
   comm := add_comm
@@ -71,13 +70,13 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
     case zero =>
       intro (_ : 0 ≃ (0 : ℕ))
       show 0 + m ≃ 0 + m
-      exact Eqv.refl
+      exact Rel.refl
     case step =>
       intro n₂ (_ : 0 ≃ step n₂)
       show 0 + m ≃ step n₂ + m
       apply False.elim
       show False
-      exact Axioms.step_neq_zero (Eqv.symm ‹0 ≃ step n₂›)
+      exact Axioms.step_neq_zero (Rel.symm ‹0 ≃ step n₂›)
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ + m ≃ y + m) n₂
     show step n₁ ≃ n₂ → step n₁ + m ≃ n₂ + m
@@ -93,13 +92,13 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
       show step n₁ + m ≃ step n₂ + m
       have : n₁ ≃ n₂ := AA.inject ‹step n₁ ≃ step n₂›
       calc
-        _ ≃ step n₁ + m   := Eqv.refl
-        _ ≃ step (n₁ + m) := Addition.step_add
-        _ ≃ step (n₂ + m) := AA.subst₁ (ih _ ‹n₁ ≃ n₂›)
-        _ ≃ step n₂ + m   := Eqv.symm Addition.step_add
+        step n₁ + m   ≃ _ := Addition.step_add
+        step (n₁ + m) ≃ _ := AA.subst₁ (ih _ ‹n₁ ≃ n₂›)
+        step (n₂ + m) ≃ _ := Rel.symm Addition.step_add
+        step n₂ + m   ≃ _ := Rel.refl
 
 def add_substL
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
   subst₂ := λ (_ : True) => subst_add
 
 instance add_substitutive
@@ -109,10 +108,10 @@ instance add_substitutive
 
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by
   calc
-    _ ≃ n + 1        := Eqv.refl
-    _ ≃ n + step 0   := AA.substR Literals.literal_step
-    _ ≃ step (n + 0) := add_step
-    _ ≃ step n       := AA.subst₁ add_zero
+    n + 1        ≃ _ := AA.substR Literals.literal_step
+    n + step 0   ≃ _ := add_step
+    step (n + 0) ≃ _ := AA.subst₁ add_zero
+    step n       ≃ _ := Rel.refl
 
 /--
 The grouping of the terms in a sum doesn't matter.
@@ -130,18 +129,18 @@ def add_associative : AA.Associative (α := ℕ) (· + ·) := by
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
     calc
-      _ ≃ (0 + m) + k := Eqv.refl
-      _ ≃ m + k       := AA.substL Addition.zero_add
-      _ ≃ 0 + (m + k) := Eqv.symm (Addition.zero_add)
+      (0 + m) + k ≃ _ := AA.substL Addition.zero_add
+      m + k       ≃ _ := Rel.symm Addition.zero_add
+      0 + (m + k) ≃ _ := Rel.refl
   case step =>
     intro n (ih : (n + m) + k ≃ n + (m + k))
     show (step n + m) + k ≃ step n + (m + k)
     calc
-      _ ≃ (step n + m) + k   := Eqv.refl
-      _ ≃ step (n + m) + k   := AA.substL Addition.step_add
-      _ ≃ step ((n + m) + k) := Addition.step_add
-      _ ≃ step (n + (m + k)) := AA.subst₁ ih
-      _ ≃ step n + (m + k)   := Eqv.symm Addition.step_add
+      (step n + m) + k   ≃ _ := AA.substL Addition.step_add
+      step (n + m) + k   ≃ _ := Addition.step_add
+      step ((n + m) + k) ≃ _ := AA.subst₁ ih
+      step (n + (m + k)) ≃ _ := Rel.symm Addition.step_add
+      step n + (m + k)   ≃ _ := Rel.refl
 
 /--
 The right-hand sides of two equal sums are equal if their left-hand sides are.
@@ -155,10 +154,10 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
     intro (_ : 0 + m ≃ 0 + k)
     show m ≃ k
     calc
-      _ ≃ m     := Eqv.refl
-      _ ≃ 0 + m := Eqv.symm Addition.zero_add
-      _ ≃ 0 + k := ‹0 + m ≃ 0 + k›
-      _ ≃ k     := Addition.zero_add
+      m     ≃ _ := Rel.symm Addition.zero_add
+      0 + m ≃ _ := ‹0 + m ≃ 0 + k›
+      0 + k ≃ _ := Addition.zero_add
+      k     ≃ _ := Rel.refl
   case step =>
     intro n (ih : n + m ≃ n + k → m ≃ k) (_ : step n + m ≃ step n + k)
     show m ≃ k
@@ -167,13 +166,13 @@ theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
     apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
     show step (n + m) ≃ step (n + k)
     calc
-      _ ≃ step (n + m) := Eqv.refl
-      _ ≃ step n + m   := Eqv.symm Addition.step_add
-      _ ≃ step n + k   := ‹step n + m ≃ step n + k›
-      _ ≃ step (n + k) := Addition.step_add
+      step (n + m) ≃ _ := Rel.symm Addition.step_add
+      step n + m   ≃ _ := ‹step n + m ≃ step n + k›
+      step n + k   ≃ _ := Addition.step_add
+      step (n + k) ≃ _ := Rel.refl
 
 def add_cancelL
-    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+    : AA.CancellativeOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
   cancel := λ (_ : True) => cancel_add
 }
 
@@ -188,15 +187,15 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
   case zero =>
     intro (_ : 0 + m ≃ 0)
     show 0 ≃ 0 ∧ m ≃ 0
-    have : m ≃ 0 := Eqv.trans (Eqv.symm Addition.zero_add) ‹0 + m ≃ 0›
-    exact ⟨Eqv.refl, ‹m ≃ 0›⟩
+    have : m ≃ 0 := Rel.trans (Rel.symm Addition.zero_add) ‹0 + m ≃ 0›
+    exact And.intro Rel.refl ‹m ≃ 0›
   case step =>
     intro n (_ : step n + m ≃ 0)
     show step n ≃ 0 ∧ m ≃ 0
     apply False.elim
     show False
     have : step (n + m) ≃ 0 :=
-      Eqv.trans (Eqv.symm Addition.step_add) ‹step n + m ≃ 0›
+      Rel.trans (Rel.symm Addition.step_add) ‹step n + m ≃ 0›
     exact Axioms.step_neq_zero ‹step (n + m) ≃ 0›
 
 instance addition_derived : Addition.Derived ℕ where
@@ -211,5 +210,4 @@ instance addition_derived : Addition.Derived ℕ where
 
 end Derived
 
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural

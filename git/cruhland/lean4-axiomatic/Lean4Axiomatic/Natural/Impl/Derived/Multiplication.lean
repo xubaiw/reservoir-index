@@ -44,7 +44,7 @@ theorem mul_zero {n : ℕ} : n * 0 ≃ 0 := by
       step n * 0 ≃ _ := Base.step_mul
       n * 0 + 0  ≃ _ := AA.substL ih
       0 + 0      ≃ _ := Addition.zero_add
-      0          ≃ _ := Eqv.refl
+      0          ≃ _ := Rel.refl
 
 /--
 Take a product and increment the right-hand factor. This gives the same result
@@ -64,9 +64,9 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
     show 0 * step m ≃ 0 * m + 0
     calc
       0 * step m ≃ _ := Base.zero_mul
-      0          ≃ _ := Eqv.symm Addition.zero_add
-      0 + 0      ≃ _ := Eqv.symm (AA.substL Base.zero_mul)
-      0 * m + 0  ≃ _ := Eqv.refl
+      0          ≃ _ := Rel.symm Addition.zero_add
+      0 + 0      ≃ _ := AA.substL (Rel.symm Base.zero_mul)
+      0 * m + 0  ≃ _ := Rel.refl
   case step =>
     intro n (ih : n * step m ≃ n * m + n)
     show step n * step m ≃ step n * m + step n
@@ -82,13 +82,13 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       step (n * m + (n + m))
     ≃ _ := AA.subst₁ (AA.substR AA.comm)
       step (n * m + (m + n))
-    ≃ _ := Eqv.symm (AA.subst₁ AA.assoc)
+    ≃ _ := AA.subst₁ (Rel.symm AA.assoc)
       step ((n * m + m) + n)
-    ≃ _ := Eqv.symm (AA.subst₁ (AA.substL Base.step_mul))
+    ≃ _ := AA.subst₁ (AA.substL (Rel.symm Base.step_mul))
       step (step n * m + n)
-    ≃ _ := Eqv.symm Addition.add_step
+    ≃ _ := Rel.symm Addition.add_step
       step n * m + step n
-    ≃ _ := Eqv.refl
+    ≃ _ := Rel.refl
 
 /--
 The order of the factors in a product doesn't matter.
@@ -101,16 +101,16 @@ theorem mul_comm {n m : ℕ} : n * m ≃ m * n := by
     show 0 * m ≃ m * 0
     calc
       0 * m ≃ _ := Base.zero_mul
-      0     ≃ _ := Eqv.symm mul_zero
-      m * 0 ≃ _ := Eqv.refl
+      0     ≃ _ := Rel.symm mul_zero
+      m * 0 ≃ _ := Rel.refl
   case step =>
     intro n (ih : n * m ≃ m * n)
     show step n * m ≃ m * step n
     calc
       step n * m ≃ _ := Base.step_mul
       n * m + m  ≃ _ := AA.substL ih
-      m * n + m  ≃ _ := Eqv.symm mul_step
-      m * step n ≃ _ := Eqv.refl
+      m * n + m  ≃ _ := Rel.symm mul_step
+      m * step n ≃ _ := Rel.refl
 
 instance mul_commutative : AA.Commutative (α := ℕ) (· * ·) where
   comm := mul_comm
@@ -129,12 +129,12 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
     case zero =>
       intro (_ : 0 ≃ (0 : ℕ))
       show 0 * m ≃ 0 * m
-      exact Eqv.refl
+      exact Rel.refl
     case step =>
       intro n₂ (_ : 0 ≃ step n₂)
       apply False.elim
       show False
-      exact absurd (Eqv.symm ‹0 ≃ step n₂›) Axioms.step_neq_zero
+      exact absurd (Rel.symm ‹0 ≃ step n₂›) Axioms.step_neq_zero
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ * m ≃ y * m) n₂
     show step n₁ ≃ n₂ → step n₁ * m ≃ n₂ * m
@@ -152,11 +152,11 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
       calc
         step n₁ * m  ≃ _ := Base.step_mul
         (n₁ * m) + m ≃ _ := AA.substL ‹n₁ * m ≃ n₂ * m›
-        (n₂ * m) + m ≃ _ := Eqv.symm Base.step_mul
-        step n₂ * m  ≃ _ := Eqv.refl
+        (n₂ * m) + m ≃ _ := Rel.symm Base.step_mul
+        step n₂ * m  ≃ _ := Rel.refl
 
 def mul_substL_eq
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·) where
   subst₂ := λ (_ : True) => subst_mul_eq
 
 instance mul_substitutive_eq
@@ -180,16 +180,16 @@ theorem zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := 
     case zero =>
       intro (_ : 0 * m ≃ 0)
       show 0 ≃ 0 ∨ m ≃ 0
-      exact Or.inl Eqv.refl
+      exact Or.inl Rel.refl
     case step =>
       intro n (_ : step n * m ≃ 0)
       show step n ≃ 0 ∨ m ≃ 0
       apply Or.inr
       show m ≃ 0
       have : n * m + m ≃ 0 := calc
-        n * m + m ≃ _ := Eqv.symm Base.step_mul
+        n * m + m  ≃ _ := Rel.symm Base.step_mul
         step n * m ≃ _ := ‹step n * m ≃ 0›
-        0 ≃ _ := Eqv.refl
+        0          ≃ _ := Rel.refl
       have ⟨_, (_ : m ≃ 0)⟩ := Addition.zero_sum_split ‹n * m + m ≃ 0›
       exact ‹m ≃ 0›
   · intro (_ : n ≃ 0 ∨ m ≃ 0)
@@ -200,13 +200,13 @@ theorem zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := 
       calc
         n * m ≃ _ := AA.substL ‹n ≃ 0›
         0 * m ≃ _ := Base.zero_mul
-        0     ≃ _ := Eqv.refl
+        0     ≃ _ := Rel.refl
     · intro (_ : m ≃ 0)
       show n * m ≃ 0
       calc
         n * m ≃ _ := AA.substR ‹m ≃ 0›
         n * 0 ≃ _ := Derived.mul_zero
-        0     ≃ _ := Eqv.refl
+        0     ≃ _ := Rel.refl
 
 /--
 The product of positive natural numbers is positive.
@@ -247,10 +247,10 @@ theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
     show 0 * (m + k) ≃ 0 * m + 0 * k
     calc
       0 * (m + k)   ≃ _ := Base.zero_mul
-      0             ≃ _ := Eqv.symm Addition.zero_add
-      0 + 0         ≃ _ := Eqv.symm (AA.substL Base.zero_mul)
-      0 * m + 0     ≃ _ := Eqv.symm (AA.substR Base.zero_mul)
-      0 * m + 0 * k ≃ _ := Eqv.refl
+      0             ≃ _ := Rel.symm Addition.zero_add
+      0 + 0         ≃ _ := AA.substL (Rel.symm Base.zero_mul)
+      0 * m + 0     ≃ _ := AA.substR (Rel.symm Base.zero_mul)
+      0 * m + 0 * k ≃ _ := Rel.refl
   case step =>
     intro n (ih : n * (m + k) ≃ n * m + n * k)
     show step n * (m + k) ≃ step n * m + step n * k
@@ -258,15 +258,15 @@ theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
       step n * (m + k)          ≃ _ := Base.step_mul
       n * (m + k) + (m + k)     ≃ _ := AA.substL ih
       n * m + n * k + (m + k)   ≃ _ := AA.assoc
-      n * m + (n * k + (m + k)) ≃ _ := Eqv.symm (AA.substR AA.assoc)
+      n * m + (n * k + (m + k)) ≃ _ := AA.substR (Rel.symm AA.assoc)
       n * m + ((n * k + m) + k) ≃ _ := AA.substR (AA.substL AA.comm)
       n * m + ((m + n * k) + k) ≃ _ := AA.substR AA.assoc
-      n * m + (m + (n * k + k)) ≃ _ := Eqv.symm AA.assoc
-      (n * m + m) + (n * k + k) ≃ _ := Eqv.symm (AA.substL Base.step_mul)
-      step n * m + (n * k + k)  ≃ _ := Eqv.symm (AA.substR Base.step_mul)
-      step n * m + step n * k   ≃ _ := Eqv.refl
+      n * m + (m + (n * k + k)) ≃ _ := Rel.symm AA.assoc
+      (n * m + m) + (n * k + k) ≃ _ := AA.substL (Rel.symm Base.step_mul)
+      step n * m + (n * k + k)  ≃ _ := AA.substR (Rel.symm Base.step_mul)
+      step n * m + step n * k   ≃ _ := Rel.refl
 
-def mul_distributiveL : AA.DistributiveOn AA.Hand.L (α := ℕ) (· * ·) (· + ·) :=
+def mul_distributiveL : AA.DistributiveOn Hand.L (α := ℕ) (· * ·) (· + ·) :=
   AA.DistributiveOn.mk mul_distribL_add
 
 instance mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·) where
@@ -291,8 +291,8 @@ def mul_associative : AA.Associative (α := ℕ) (· * ·) := by
     calc
       (0 * m) * k ≃ _ := AA.substL Base.zero_mul
       0 * k       ≃ _ := Base.zero_mul
-      0           ≃ _ := Eqv.symm Base.zero_mul
-      0 * (m * k) ≃ _ := Eqv.refl
+      0           ≃ _ := Rel.symm Base.zero_mul
+      0 * (m * k) ≃ _ := Rel.refl
   case step =>
     intro n (ih : (n * m) * k ≃ n * (m * k))
     show (step n * m) * k ≃ step n * (m * k)
@@ -300,8 +300,8 @@ def mul_associative : AA.Associative (α := ℕ) (· * ·) := by
       (step n * m) * k    ≃ _ := AA.substL Base.step_mul
       (n * m + m) * k     ≃ _ := AA.distribR
       (n * m) * k + m * k ≃ _ := AA.substL ih
-      n * (m * k) + m * k ≃ _ := Eqv.symm Base.step_mul
-      step n * (m * k)    ≃ _ := Eqv.refl
+      n * (m * k) + m * k ≃ _ := Rel.symm Base.step_mul
+      step n * (m * k)    ≃ _ := Rel.refl
 
 /--
 Multiplication on the right by a positive natural number preserves the strict
@@ -320,13 +320,13 @@ theorem subst_mul_lt
   have : n₂ * m ≃ n₁ * m + d * m := calc
     n₂ * m         ≃ _ := AA.substL ‹n₂ ≃ n₁ + d›
     (n₁ + d) * m   ≃ _ := AA.distribR
-    n₁ * m + d * m ≃ _ := Eqv.refl
+    n₁ * m + d * m ≃ _ := Rel.refl
   have : Positive (d * m) := Derived.mul_positive ‹Positive d› ‹Positive m›
   exact Order.lt_defn_add.mpr
     ⟨d * m, ‹Positive (d * m)›, ‹n₂ * m ≃ n₁ * m + d * m›⟩
 
 def mul_substL_lt
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· * ·) Positive (· < ·) (· < ·)
     where
   subst₂ := subst_mul_lt
 
@@ -344,7 +344,8 @@ preserve their ordering (by `mul_substitutive_lt`), contradicting the hypothesis
 that the products are equal. Thus the right-hand factors must be equal.
 -/
 def mul_cancelL
-    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·) := by
+    : AA.CancellativeOn Hand.L (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
+    := by
   apply AA.CancellativeOn.mk
   intro x y₁ y₂ (_ : x ≄ 0) (_ : x * y₁ ≃ x * y₂)
   show y₁ ≃ y₂

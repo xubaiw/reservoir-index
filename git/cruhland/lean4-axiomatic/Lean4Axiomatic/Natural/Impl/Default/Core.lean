@@ -25,8 +25,8 @@ instance ofNat {n : Nat} : OfNat ℕ n where
 
 instance literals [Equality ℕ] : Literals ℕ where
   literal := ofNat
-  literal_zero := Eqv.refl
-  literal_step := Eqv.refl
+  literal_zero := Rel.refl
+  literal_step := Rel.refl
 
 end Default
 

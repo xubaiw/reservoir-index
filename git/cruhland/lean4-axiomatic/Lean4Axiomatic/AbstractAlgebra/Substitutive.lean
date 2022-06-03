@@ -1,10 +1,9 @@
 import Lean4Axiomatic.AbstractAlgebra.Commutative
 import Lean4Axiomatic.AbstractAlgebra.Core
-import Lean4Axiomatic.Eqv
 
-namespace AA
+namespace Lean4Axiomatic.AA
 
-open Relation (EqvOp Swap Trans)
+open Relation.Equivalence (EqvOp)
 
 /-!
 # (Generalized) substitution and related properties
@@ -250,35 +249,39 @@ instance iff_substitutive : Substitutive₂ (· → ·) tc (· ↔ ·) (· → �
 
 /--
 Convenience definition that converts instances of `Commutative` into instances
-of `Swap`.
+of `Swappable`.
 
-The `Swap` class is a generalization of the commutative and symmetric
+The `Swappable` class is a generalization of the commutative and symmetric
 properties, and is used in very abstract, general definitions. This instance
 makes it easy for those definitions to apply to commutative functions.
 
 **Named parameters**
 - `α`: the argument type of the commutative function `f`.
 - `β`: the result type of the commutative function `f`.
-- `f`: the commutative function to produce a `Swap` instance for.
-- `rel`: the binary relation that connects the two sides of the `Swap`.
+- `f`: the commutative function to produce a `Swappable` instance for.
+- `R`: the binary relation that connects the two sides of the `swap` operation.
 
 **Class parameters**
-- `EqvOp β`: required by `Commutative f`.
-- `Commutative f`: the property to translate into a `Swap` instance.
-- `Relation.Refl rel`: necessary to provide a starting point for substitution.
-- `SubstitutitveOn Hand.R rel tc (· ≃ ·) (· → ·)`: necessary for transfering
-  commutativity from `EqvOp β` to `rel`.
+- `EqvOp β`:
+    required by `Commutative f`.
+- `Commutative f`:
+    the property to translate into a `Swappable` instance.
+- `Relation.Reflexive R`:
+    provides a starting point for substitution.
+- `SubstitutitveOn Hand.R R tc (· ≃ ·) (· → ·)`:
+    necessary for transfering commutativity from `EqvOp β` to `R`.
 -/
-instance
-    {α : Type u} {β : Type v} {f : α → α → β} {rel : β → β → Prop}
-    [EqvOp β] [Commutative f] [Relation.Refl rel]
-    [inst : SubstitutiveOn Hand.R rel tc (· ≃ ·) (· → ·)]
-    : Swap f rel where
+instance swappable_from_commutative
+    {α : Type u} {β : Type v} {f : α → α → β} {R : β → β → Prop}
+    [EqvOp β] [inst : SubstitutiveOn Hand.R R tc (· ≃ ·) (· → ·)]
+    [Relation.Reflexive R] [Commutative f] : Fn.Swappable f R
+    := {
   swap := by
     intro x y
-    show rel (f x y) (f y x)
-    have : rel (f x y) (f x y) := Eqv.refl
-    exact substR (self := inst) comm ‹rel (f x y) (f x y)›
+    show R (f x y) (f y x)
+    have : R (f x y) (f x y) := Rel.refl
+    exact substR (self := inst) comm ‹R (f x y) (f x y)›
+}
 
 /--
 Derives the right-handed binary generalized substitution property from its
@@ -303,7 +306,7 @@ both invocations of `f`.
 - `rS`: how an invocation of `f` is related to its swapped-argument version.
 
 **Class parameters**
-- `Swap f rS`:
+- `Fn.Swappable f rS`:
     The arguments of `f` need to be swappable to go from left-handed to right-
     handed substitution.
 - `Substitutive₂ rβ tc rS (· → ·)`:
@@ -311,20 +314,20 @@ both invocations of `f`.
     relation `rβ`, to be converted into the right-handed result. Both the left
     and right sides of `rβ` are invocations of `f`, and can be replaced by
     their swapped-argument versions due to how `rS` is used here and in
-    `Swap f rS`.
+    `Fn.Swappable f rS`.
 -/
 def substR_from_substL_swap
     {α : Sort u} {β : Sort v}
     {f : α → α → β} {C : α → Prop} {rα : α → α → Prop} {rβ rS : β → β → Prop}
-    [Swap f rS] [Substitutive₂ rβ tc rS (· → ·)]
+    [Fn.Swappable f rS] [Substitutive₂ rβ tc rS (· → ·)]
     : SubstitutiveOn Hand.L f C rα rβ → SubstitutiveOn Hand.R f C rα rβ := by
   intro _ -- Make left-substitution available for instance search
   apply SubstitutiveOn.mk
   intro x₁ x₂ y (_ : C y) (_ : rα x₁ x₂)
   show rβ (f y x₁) (f y x₂)
   have : rβ (f x₁ y) (f x₂ y) := AA.substLC ‹C y› ‹rα x₁ x₂›
-  have : rβ (f y x₁) (f x₂ y) := AA.substL (rβ := (· → ·)) Swap.swap this
-  have : rβ (f y x₁) (f y x₂) := AA.substR (rβ := (· → ·)) Swap.swap this
+  have : rβ (f y x₁) (f x₂ y) := AA.substL (rβ := (· → ·)) Fn.swap this
+  have : rβ (f y x₁) (f y x₂) := AA.substR (rβ := (· → ·)) Fn.swap this
   exact this
 
 /--
@@ -345,7 +348,7 @@ def eqv_substL
   constructor
   intro x₁ x₂ y _ (_ : x₁ ≃ x₂) (_ : x₁ ≃ y)
   show x₂ ≃ y
-  exact Eqv.trans (Eqv.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
+  exact Rel.trans (Rel.symm ‹x₁ ≃ x₂›) ‹x₁ ≃ y›
 
 /--
 Equivalence respects the binary generalized substitution property.
@@ -387,7 +390,7 @@ def neq_substL
   show False
   apply ‹x₁ ≄ y›
   show x₁ ≃ y
-  exact Eqv.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
+  exact Rel.trans ‹x₁ ≃ x₂› ‹x₂ ≃ y›
 
 /--
 Negated equivalence respects the binary generalized substitution property.
@@ -566,4 +569,4 @@ def cancelR_from_cancelL
     AA.substR (rβ := (· → ·)) AA.comm ‹rβ (f x y₁) (f y₂ x)›
   exact AA.cancelLC ‹C x› ‹rβ (f x y₁) (f x y₂)›
 
-end AA
+end Lean4Axiomatic.AA

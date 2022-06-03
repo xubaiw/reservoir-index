@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Eqv
+import Lean4Axiomatic.Relation.Equivalence
 
 /-!
 # Fundamental definitions and properties of integers
@@ -14,7 +14,7 @@ Definitions pertaining to equality of integer values.
 -/
 class Equality (ℤ : Type) :=
   /-- The equality relation on integers, expressed with the syntax `a ≃ b`. -/
-  eqvOp : Relation.EqvOp ℤ
+  eqvOp : Relation.Equivalence.EqvOp ℤ
 
 attribute [instance] Equality.eqvOp
 

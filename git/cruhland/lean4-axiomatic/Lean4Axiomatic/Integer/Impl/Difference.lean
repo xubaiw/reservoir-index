@@ -68,7 +68,7 @@ the equality is trivial.
 theorem refl {a : Difference ℕ} : a ≃ a := by
   revert a; intro (a₁——a₂)
   show a₁ + a₂ ≃ a₁ + a₂
-  exact Eqv.refl
+  exact Rel.refl
 
 /--
 The equivalence relation on differences is symmetric.
@@ -80,7 +80,7 @@ theorem symm {a b : Difference ℕ} : a ≃ b → b ≃ a := by
   revert a; intro (a₁——a₂); revert b; intro (b₁——b₂)
   intro (_ : a₁ + b₂ ≃ b₁ + a₂)
   show b₁ + a₂ ≃ a₁ + b₂
-  exact Eqv.symm ‹a₁ + b₂ ≃ b₁ + a₂›
+  exact Rel.symm ‹a₁ + b₂ ≃ b₁ + a₂›
 
 /--
 The equivalence relation on differences is transitive.
@@ -103,10 +103,10 @@ theorem trans {a b c : Difference ℕ} : a ≃ b → b ≃ c → a ≃ c := by
     (a₂ + b₁) + (b₁ + c₂) ≃ _ := AA.substR ‹b₁ + c₂ ≃ c₁ + b₂›
     (a₂ + b₁) + (c₁ + b₂) ≃ _ := AA.comm
     (c₁ + b₂) + (a₂ + b₁) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (c₁ + a₂) + (b₂ + b₁) ≃ _ := Eqv.refl
+    (c₁ + a₂) + (b₂ + b₁) ≃ _ := Rel.refl
   exact AA.cancelR ‹(a₁ + c₂) + (b₂ + b₁) ≃ (c₁ + a₂) + (b₂ + b₁)›
 
-def eqvOp : Relation.EqvOp (Difference ℕ) := {
+def eqvOp : Relation.Equivalence.EqvOp (Difference ℕ) := {
   toTildeDash := tildeDash
   refl := refl
   symm := symm

@@ -1,21 +1,12 @@
-namespace AA
+import Lean4Axiomatic.Hand
+
+namespace Lean4Axiomatic.AA
 
 /-!
 # Core definitions
 
 These are used frequently by other abstract algebra definitions.
 -/
-
-/--
-Handedness: either left-handed or right-handed.
-
-This is used by algebra concepts that can be defined for a particular side of a
-binary operator. For example, the concept of a left inverse (`a⁻¹ * a ≃ 1`) vs.
-a right inverse (`a * a⁻¹ ≃ 1`).
--/
-inductive Hand where
-| /-- Left hand.  -/ L
-| /-- Right hand. -/ R
 
 /--
 Defines a convention for which side of a binary operator its first argument is
@@ -44,4 +35,4 @@ as possible, to reduce clutter. See usages of `Substitutive₂` for examples.
 -/
 abbrev tc {α : Sort u} : α → Prop := λ _ => True
 
-end AA
+end Lean4Axiomatic.AA

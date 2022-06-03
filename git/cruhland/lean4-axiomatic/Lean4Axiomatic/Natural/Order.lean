@@ -12,7 +12,7 @@ Definition of the _less than or equal to_ and _less than_ relations.
 
 All other properties of ordering on natural numbers can be derived from this.
 -/
-class Order.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] where
+class Order.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℕ
 
@@ -38,8 +38,10 @@ attribute [instance default+1] Order.Base.leOp
 attribute [instance default+1] Order.Base.ltOp
 
 /-- Properties that follow from those provided in `Order.Base`. -/
-class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
-    extends Order.Base ℕ where
+class Order.Derived
+    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
+    extends Order.Base ℕ
+    :=
   /--
   The _less than or equal to_ relation is preserved when both sides are
   incremented.
@@ -59,13 +61,13 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   le_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·)
 
   /-- All natural numbers are _less than or equal to_ themselves. -/
-  le_reflexive : Relation.Refl (α := ℕ) (· ≤ ·)
+  le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·)
 
   /--
   The _less than or equal to_ relation can be extended through intermediate
   values.
   -/
-  le_transitive : Relation.Trans (α := ℕ) (· ≤ ·)
+  le_transitive : Relation.Transitive (α := ℕ) (· ≤ ·)
 
   /-- Two natural numbers `n` and `m` are equal if `n ≤ m` and `m ≤ n`. -/
   le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m
@@ -101,7 +103,7 @@ class Order.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
   lt_substitutive_eqv : AA.Substitutive₂ (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·)
 
   /-- The _less than_ relation can be extended through intermediate values. -/
-  lt_transitive : Relation.Trans (α := ℕ) (· < ·)
+  lt_transitive : Relation.Transitive (α := ℕ) (· < ·)
 
   /-- No natural number is less than zero. -/
   lt_zero {n : ℕ} : n ≮ 0

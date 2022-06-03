@@ -22,9 +22,9 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
   exists d
   show step n₁ + d ≃ step n₂
   calc
-    _ ≃ step n₁ + d := Eqv.refl
-    _ ≃ step (n₁ + d) := Addition.step_add
-    _ ≃ step n₂ := AA.subst₁ ‹n₁ + d ≃ n₂›
+    step n₁ + d   ≃ _ := Addition.step_add
+    step (n₁ + d) ≃ _ := AA.subst₁ ‹n₁ + d ≃ n₂›
+    step n₂       ≃ _ := Rel.refl
 
 instance le_substitutive_step
     : AA.Substitutive₁ (α := ℕ) step (· ≤ ·) (· ≤ ·) where
@@ -39,9 +39,9 @@ theorem le_inject_step {n₁ n₂ : ℕ} : step n₁ ≤ step n₂ → n₁ ≤ 
   exists d
   show n₁ + d ≃ n₂
   have : step (n₁ + d) ≃ step n₂ := calc
-    _ ≃ step (n₁ + d) := Eqv.refl
-    _ ≃ step n₁ + d := Eqv.symm Addition.step_add
-    _ ≃ step n₂ := ‹step n₁ + d ≃ step n₂›
+    step (n₁ + d) ≃ _ := Rel.symm Addition.step_add
+    step n₁ + d   ≃ _ := ‹step n₁ + d ≃ step n₂›
+    step n₂       ≃ _ := Rel.refl
   exact AA.inject ‹step (n₁ + d) ≃ step n₂›
 
 instance le_injective_step : AA.Injective (α := ℕ) step (· ≤ ·) (· ≤ ·) where
@@ -55,12 +55,12 @@ theorem le_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ ≤ m → n₂
   exists d
   show n₂ + d ≃ m
   calc
-    _ ≃ n₂ + d := Eqv.refl
-    _ ≃ n₁ + d := Eqv.symm (AA.substL ‹n₁ ≃ n₂›)
-    _ ≃ m      := ‹n₁ + d ≃ m›
+    n₂ + d ≃ _ := Rel.symm (AA.substL ‹n₁ ≃ n₂›)
+    n₁ + d ≃ _ := ‹n₁ + d ≃ m›
+    m      ≃ _ := Rel.refl
 
 instance le_substL_eqv
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
   subst₂ := λ (_ : True) => le_subst_eqv
 
 theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n ≤ m₂ := by
@@ -70,10 +70,10 @@ theorem le_eqv_subst {n m₁ m₂ : ℕ} : m₁ ≃ m₂ → n ≤ m₁ → n �
   apply Order.Base.le_defn.mpr
   exists d
   show n + d ≃ m₂
-  exact Eqv.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
+  exact Rel.trans ‹n + d ≃ m₁› ‹m₁ ≃ m₂›
 
 instance le_substR_eqv
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn Hand.R (α := ℕ) (· ≤ ·) AA.tc (· ≃ ·) (· → ·) where
   subst₂ := λ (_ : True) => le_eqv_subst
 
 instance le_substitutive_eqv
@@ -87,7 +87,7 @@ theorem le_refl {n : ℕ} : n ≤ n := by
   show n + 0 ≃ n
   exact Addition.add_zero
 
-instance le_reflexive : Relation.Refl (α := ℕ) (· ≤ ·) where
+instance le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·) where
   refl := le_refl
 
 theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m := by
@@ -95,15 +95,15 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
   show n ≤ m ∨ n ≃ step m
   have ⟨d, (_ : n + d ≃ step m)⟩ := Order.Base.le_defn.mp ‹n ≤ step m›
   let motive := λ x => d ≃ x → n ≤ m ∨ n ≃ step m
-  apply (Axioms.cases_on (motive := motive) d · · Eqv.refl)
+  apply (Axioms.cases_on (motive := motive) d · · Rel.refl)
   · intro (_ : d ≃ 0)
     apply Or.inr
     show n ≃ step m
     calc
-      _ ≃ n      := Eqv.refl
-      _ ≃ n + 0  := Eqv.symm Addition.add_zero
-      _ ≃ n + d  := Eqv.symm (AA.substR ‹d ≃ 0›)
-      _ ≃ step m := ‹n + d ≃ step m›
+      n      ≃ _ := Rel.symm Addition.add_zero
+      n + 0  ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+      n + d  ≃ _ := ‹n + d ≃ step m›
+      step m ≃ _ := Rel.refl
   · intro e (_ : d ≃ step e)
     apply Or.inl
     show n ≤ m
@@ -113,10 +113,10 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
     show step (n + e) ≃ step m
     calc
-      _ ≃ step (n + e) := Eqv.refl
-      _ ≃ n + step e   := Eqv.symm Addition.add_step
-      _ ≃ n + d        := Eqv.symm (AA.substR ‹d ≃ step e›)
-      _ ≃ step m       := ‹n + d ≃ step m›
+      step (n + e) ≃ _ := Rel.symm Addition.add_step
+      n + step e   ≃ _ := AA.substR (Rel.symm ‹d ≃ step e›)
+      n + d        ≃ _ := ‹n + d ≃ step m›
+      step m       ≃ _ := Rel.refl
 
 theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   intro (_ : n ≤ m)
@@ -126,9 +126,9 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   exists step d
   show n + step d ≃ step m
   calc
-    _ ≃ n + step d   := Eqv.refl
-    _ ≃ step (n + d) := Addition.add_step
-    _ ≃ step m       := AA.subst₁ ‹n + d ≃ m›
+    n + step d   ≃ _ := Addition.add_step
+    step (n + d) ≃ _ := AA.subst₁ ‹n + d ≃ m›
+    step m       ≃ _ := Rel.refl
 
 theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
   intro (_ : n ≤ m)
@@ -142,10 +142,10 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     exists d + e
     show n + (d + e) ≃ 0
     calc
-      _ ≃ n + (d + e) := Eqv.refl
-      _ ≃ (n + d) + e := Eqv.symm AA.assoc
-      _ ≃ m + e       := AA.substL ‹n + d ≃ m›
-      _ ≃ 0           := ‹m + e ≃ 0›
+      n + (d + e) ≃ _ := Rel.symm AA.assoc
+      (n + d) + e ≃ _ := AA.substL ‹n + d ≃ m›
+      m + e       ≃ _ := ‹m + e ≃ 0›
+      0           ≃ _ := Rel.refl
   case step =>
     intro k (ih : m ≤ k → n ≤ k) (_ : m ≤ step k)
     show n ≤ step k
@@ -155,7 +155,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     | Or.inr (_ : m ≃ step k) =>
       exact AA.substR (rβ := (· → ·)) ‹m ≃ step k› ‹n ≤ m›
 
-instance le_transitive : Relation.Trans (α := ℕ) (· ≤ ·) where
+instance le_transitive : Relation.Transitive (α := ℕ) (· ≤ ·) where
   trans := le_trans
 
 theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ + m := by
@@ -166,18 +166,18 @@ theorem le_subst_add {n₁ n₂ m : ℕ} : n₁ ≤ n₂ → n₁ + m ≤ n₂ +
   exists d
   show (n₁ + m) + d ≃ n₂ + m
   calc
-    _ ≃ (n₁ + m) + d := Eqv.refl
-    _ ≃ n₁ + (m + d) := AA.assoc
-    _ ≃ n₁ + (d + m) := AA.substR AA.comm
-    _ ≃ (n₁ + d) + m := Eqv.symm AA.assoc
-    _ ≃ n₂ + m       := AA.substL ‹n₁ + d ≃ n₂›
+    (n₁ + m) + d ≃ _ := AA.assoc
+    n₁ + (m + d) ≃ _ := AA.substR AA.comm
+    n₁ + (d + m) ≃ _ := Rel.symm AA.assoc
+    (n₁ + d) + m ≃ _ := AA.substL ‹n₁ + d ≃ n₂›
+    n₂ + m       ≃ _ := Rel.refl
 
 instance le_substL_add
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
   subst₂ := λ (_ : True) => le_subst_add
 
 instance le_substR_add
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) :=
+    : AA.SubstitutiveOn Hand.R (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) :=
   AA.substR_from_substL_swap (rS := (· ≃ ·)) le_substL_add
 
 instance le_substitutive_add
@@ -194,13 +194,13 @@ theorem le_cancel_add {n m₁ m₂ : ℕ} : n + m₁ ≤ n + m₂ → m₁ ≤ m
   exists d
   show m₁ + d ≃ m₂
   have : n + (m₁ + d) ≃ n + m₂ := calc
-    _ ≃ n + (m₁ + d) := Eqv.refl
-    _ ≃ (n + m₁) + d := Eqv.symm AA.assoc
-    _ ≃ n + m₂       := ‹(n + m₁) + d ≃ n + m₂›
+    n + (m₁ + d) ≃ _ := Rel.symm AA.assoc
+    (n + m₁) + d ≃ _ := ‹(n + m₁) + d ≃ n + m₂›
+    n + m₂       ≃ _ := Rel.refl
   exact AA.cancelL ‹n + (m₁ + d) ≃ n + m₂›
 
 def le_cancelL_add
-    : AA.CancellativeOn AA.Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
+    : AA.CancellativeOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≤ ·) (· ≤ ·) where
   cancel := λ (_ : True) => le_cancel_add
 
 instance le_cancellative_add
@@ -214,18 +214,18 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
   have ⟨d₁, (_ : n + d₁ ≃ m)⟩ := Order.Base.le_defn.mp ‹n ≤ m›
   have ⟨d₂, (_ : m + d₂ ≃ n)⟩ := Order.Base.le_defn.mp ‹m ≤ n›
   have : n + (d₁ + d₂) ≃ n + 0 := calc
-    _ ≃ n + (d₁ + d₂) := Eqv.refl
-    _ ≃ (n + d₁) + d₂ := Eqv.symm AA.assoc
-    _ ≃ m + d₂        := AA.substL ‹n + d₁ ≃ m›
-    _ ≃ n             := ‹m + d₂ ≃ n›
-    _ ≃ n + 0         := Eqv.symm Addition.add_zero
+    n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
+    (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
+    m + d₂        ≃ _ := ‹m + d₂ ≃ n›
+    n             ≃ _ := Rel.symm Addition.add_zero
+    n + 0         ≃ _ := Rel.refl
   have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
   have ⟨(_ : d₁ ≃ 0), _⟩ := Addition.zero_sum_split ‹d₁ + d₂ ≃ 0›
   calc
-    _ ≃ n      := Eqv.refl
-    _ ≃ n + 0  := Eqv.symm Addition.add_zero
-    _ ≃ n + d₁ := Eqv.symm (AA.substR ‹d₁ ≃ 0›)
-    _ ≃ m      := ‹n + d₁ ≃ m›
+    n      ≃ _ := Rel.symm Addition.add_zero
+    n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
+    n + d₁ ≃ _ := ‹n + d₁ ≃ m›
+    m      ≃ _ := Rel.refl
 
 theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ < m := by
   intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
@@ -237,7 +237,7 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
 instance lt_substL_eqv
-    : AA.SubstitutiveOn AA.Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
   subst₂ := λ (_ : True) => lt_subst_eqv
 
 theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n₂ := by
@@ -250,7 +250,7 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
 instance lt_substR_eqv
-    : AA.SubstitutiveOn AA.Hand.R (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
+    : AA.SubstitutiveOn Hand.R (α := ℕ) (· < ·) AA.tc (· ≃ ·) (· → ·) where
   subst₂ := λ (_ : True) => lt_eqv_subst
 
 instance lt_substitutive_eqv
@@ -268,7 +268,7 @@ theorem lt_step {n : ℕ} : n < step n := by
     show n + 1 ≃ step n
     exact Addition.add_one_step
   · show n ≄ step n
-    exact Eqv.symm Axioms.Derived.step_neq
+    exact Rel.symm Axioms.Derived.step_neq
 
 theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
   apply Iff.intro
@@ -282,10 +282,10 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
       apply ‹n ≄ m›
       show n ≃ m
       calc
-        _ ≃ n     := Eqv.refl
-        _ ≃ n + 0 := Eqv.symm Addition.add_zero
-        _ ≃ n + d := Eqv.symm (AA.substR ‹d ≃ 0›)
-        _ ≃ m     := ‹n + d ≃ m›
+        n     ≃ _ := Rel.symm Addition.add_zero
+        n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
+        n + d ≃ _ := ‹n + d ≃ m›
+        m     ≃ _ := Rel.refl
     have : Sign.Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
     have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Sign.Positive d›
     show step n ≤ m
@@ -293,29 +293,29 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     exists d'
     show step n + d' ≃ m
     calc
-      _ ≃ step n + d'   := Eqv.refl
-      _ ≃ step (n + d') := Addition.step_add
-      _ ≃ n + step d'   := Eqv.symm Addition.add_step
-      _ ≃ n + d         := AA.substR ‹step d' ≃ d›
-      _ ≃ m             := ‹n + d ≃ m›
+      step n + d'   ≃ _ := Addition.step_add
+      step (n + d') ≃ _ := Rel.symm Addition.add_step
+      n + step d'   ≃ _ := AA.substR ‹step d' ≃ d›
+      n + d         ≃ _ := ‹n + d ≃ m›
+      m             ≃ _ := Rel.refl
   · intro (_ : step n ≤ m)
     show n < m
     have ⟨d, (_ : step n + d ≃ m)⟩ := Order.Base.le_defn.mp ‹step n ≤ m›
     have : n + step d ≃ m := calc
-      _ ≃ n + step d   := Eqv.refl
-      _ ≃ step (n + d) := Addition.add_step
-      _ ≃ step n + d   := Eqv.symm Addition.step_add
-      _ ≃ m            := ‹step n + d ≃ m›
+      n + step d   ≃ _ := Addition.add_step
+      step (n + d) ≃ _ := Rel.symm Addition.step_add
+      step n + d   ≃ _ := ‹step n + d ≃ m›
+      m            ≃ _ := Rel.refl
     have : ∃ d, n + d ≃ m := ⟨step d, ‹n + step d ≃ m›⟩
     have : n ≤ m := Order.Base.le_defn.mpr ‹∃ d, n + d ≃ m›
     have : n ≄ m := by
       intro (_ : n ≃ m)
       show False
       have : n + step d ≃ n + 0 := calc
-        _ ≃ n + step d := Eqv.refl
-        _ ≃ m := ‹n + step d ≃ m›
-        _ ≃ n := Eqv.symm ‹n ≃ m›
-        _ ≃ n + 0 := Eqv.symm Addition.add_zero
+        n + step d ≃ _ := ‹n + step d ≃ m›
+        m          ≃ _ := Rel.symm ‹n ≃ m›
+        n          ≃ _ := Rel.symm Addition.add_zero
+        n + 0      ≃ _ := Rel.refl
       have : step d ≃ 0 := AA.cancelL ‹n + step d ≃ n + 0›
       exact absurd this Axioms.step_neq_zero
     show n < m
@@ -344,10 +344,10 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n +
       exact Axioms.step_neq_zero
     · show m ≃ n + step k
       calc
-        _ ≃ m            := Eqv.refl
-        _ ≃ step n + k   := Eqv.symm ‹step n + k ≃ m›
-        _ ≃ step (n + k) := Addition.step_add
-        _ ≃ n + step k   := Eqv.symm Addition.add_step
+        m            ≃ _ := Rel.symm ‹step n + k ≃ m›
+        step n + k   ≃ _ := Addition.step_add
+        step (n + k) ≃ _ := Rel.symm Addition.add_step
+        n + step k   ≃ _ := Rel.refl
   · intro ⟨k, (_ : Sign.Positive k), (_ : m ≃ n + k)⟩
     show n < m
     apply Derived.lt_step_le.mpr
@@ -358,11 +358,11 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n +
     exists k'
     show step n + k' ≃ m
     calc
-      _ ≃ step n + k'   := Eqv.refl
-      _ ≃ step (n + k') := Addition.step_add
-      _ ≃ n + step k'   := Eqv.symm Addition.add_step
-      _ ≃ n + k         := AA.substR ‹step k' ≃ k›
-      _ ≃ m             := Eqv.symm ‹m ≃ n + k›
+      step n + k'   ≃ _ := Addition.step_add
+      step (n + k') ≃ _ := Rel.symm Addition.add_step
+      n + step k'   ≃ _ := AA.substR ‹step k' ≃ k›
+      n + k         ≃ _ := Rel.symm ‹m ≃ n + k›
+      m             ≃ _ := Rel.refl
 
 theorem lt_zero {n : ℕ} : n ≮ 0 := by
   intro (_ : n < 0)
@@ -370,9 +370,9 @@ theorem lt_zero {n : ℕ} : n ≮ 0 := by
   have : step n ≤ 0 := lt_step_le.mp ‹n < 0›
   have ⟨d, (_ : step n + d ≃ 0)⟩ := Order.Base.le_defn.mp ‹step n ≤ 0›
   have : step (n + d) ≃ 0 := calc
-    _ ≃ step (n + d) := Eqv.refl
-    _ ≃ step n + d   := Eqv.symm Addition.step_add
-    _ ≃ 0            := ‹step n + d ≃ 0›
+    step (n + d) ≃ _ := Rel.symm Addition.step_add
+    step n + d   ≃ _ := ‹step n + d ≃ 0›
+    0            ≃ _ := Rel.refl
   exact absurd ‹step (n + d) ≃ 0› Axioms.step_neq_zero
 
 /--
@@ -393,19 +393,19 @@ theorem lt_zero_pos {n : ℕ} : Sign.Positive n ↔ 0 < n := by
     · show Sign.Positive n
       exact ‹Sign.Positive n›
     · show n ≃ 0 + n
-      exact Eqv.symm Addition.zero_add
+      exact Rel.symm Addition.zero_add
   · intro (_ : 0 < n)
     show Sign.Positive n
     have ⟨k, ⟨(_ : Sign.Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
       Derived.lt_defn_add.mp ‹0 < n›
-    have : k ≃ n := Eqv.symm (Eqv.trans ‹n ≃ 0 + k› Addition.zero_add)
+    have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› Addition.zero_add)
     have pos_k := ‹Sign.Positive k›
     exact AA.subst₁ (f := Sign.Positive) (rβ := (· → ·)) ‹k ≃ n› pos_k
 
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)
   show n ≤ m
-  have : n ≤ n := Eqv.refl
+  have : n ≤ n := Rel.refl
   exact AA.substR (rβ := (· → ·)) ‹n ≃ m› ‹n ≤ n›
 
 theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
@@ -425,9 +425,9 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
     apply Or.inr
     show n ≃ m
     calc
-      _ ≃ n     := Eqv.refl
-      _ ≃ n + 0 := Eqv.symm Addition.add_zero
-      _ ≃ m     := ‹n + 0 ≃ m›
+      n     ≃ _ := Rel.symm Addition.add_zero
+      n + 0 ≃ _ := ‹n + 0 ≃ m›
+      m     ≃ _ := Rel.refl
   case step =>
     intro d (_ : n + step d ≃ m)
     apply Or.inl
@@ -438,10 +438,10 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
     exists d
     show step n + d ≃ m
     calc
-      _ ≃ step n + d   := Eqv.refl
-      _ ≃ step (n + d) := Addition.step_add
-      _ ≃ n + step d   := Eqv.symm Addition.add_step
-      _ ≃ m            := ‹n + step d ≃ m›
+      step n + d   ≃ _ := Addition.step_add
+      step (n + d) ≃ _ := Rel.symm Addition.add_step
+      n + step d   ≃ _ := ‹n + step d ≃ m›
+      m            ≃ _ := Rel.refl
 
 theorem lt_split {n m : ℕ} : n < step m → n < m ∨ n ≃ m := by
   intro (_ : n < step m)
@@ -456,12 +456,12 @@ theorem lt_trans {n m k : ℕ} : n < m → m < k → n < k := by
   apply lt_step_le.mpr
   show step n ≤ k
   calc
-    _ ≤ step n := Eqv.refl
-    _ ≤ m      := lt_step_le.mp ‹n < m›
-    _ ≤ step m := le_from_lt lt_step
-    _ ≤ k      := lt_step_le.mp ‹m < k›
+    step n ≤ _ := lt_step_le.mp ‹n < m›
+    m      ≤ _ := le_from_lt lt_step
+    step m ≤ _ := lt_step_le.mp ‹m < k›
+    k      ≤ _ := Rel.refl
 
-instance lt_transitive : Relation.Trans (α := ℕ) (· < ·) where
+instance lt_transitive : Relation.Transitive (α := ℕ) (· < ·) where
   trans := lt_trans
 
 theorem trichotomy (n m : ℕ)
@@ -477,7 +477,7 @@ theorem trichotomy (n m : ℕ)
       case zero =>
         apply AA.OneOfThree.second
         show 0 ≃ 0
-        exact Eqv.refl
+        exact Rel.refl
       case step =>
         intro m
         apply AA.OneOfThree.first
@@ -489,7 +489,7 @@ theorem trichotomy (n m : ℕ)
           exists step m
           exact Addition.zero_add
         · show 0 ≄ step m
-          exact Eqv.symm Axioms.step_neq_zero
+          exact Rel.symm Axioms.step_neq_zero
     case step =>
       intro n (ih : AA.OneOfThree (n < m) (n ≃ m) (n > m))
       show AA.OneOfThree (step n < m) (step n ≃ m) (step n > m)
@@ -501,7 +501,7 @@ theorem trichotomy (n m : ℕ)
         | Or.inl (_ : step n < m) => exact AA.OneOfThree.first ‹step n < m›
         | Or.inr (_ : step n ≃ m) => exact AA.OneOfThree.second ‹step n ≃ m›
       | AA.OneOfThree.second (_ : n ≃ m) =>
-        have : m ≃ n := Eqv.symm ‹n ≃ m›
+        have : m ≃ n := Rel.symm ‹n ≃ m›
         have : m ≤ n := le_from_eqv ‹m ≃ n›
         have : step m ≤ step n := AA.subst₁ ‹m ≤ n›
         have : m < step n := lt_step_le.mpr ‹step m ≤ step n›
@@ -510,7 +510,7 @@ theorem trichotomy (n m : ℕ)
       | AA.OneOfThree.third (_ : n > m) =>
         apply AA.OneOfThree.third
         show m < step n
-        exact Eqv.trans ‹m < n› lt_step
+        exact Rel.trans ‹m < n› lt_step
   case atMostOne =>
     show ¬ AA.TwoOfThree (n < m) (n ≃ m) (n > m)
     intro
@@ -527,7 +527,7 @@ theorem trichotomy (n m : ℕ)
     | AA.TwoOfThree.twoAndThree (_ : n ≃ m) (_ : n > m) =>
       show False
       have ⟨_, (_ : m ≄ n)⟩ := Order.Base.lt_defn.mp ‹n > m›
-      exact absurd ‹n ≃ m› (Eqv.symm ‹m ≄ n›)
+      exact absurd ‹n ≃ m› (Rel.symm ‹m ≄ n›)
 
 instance order_derived : Order.Derived ℕ where
   le_substitutive_step := le_substitutive_step

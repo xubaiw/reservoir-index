@@ -35,12 +35,12 @@ theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
     have : 0 ≄ 0 := Sign.Base.positive_defn.mp ‹Positive (0 : ℕ)›
     apply this
     show 0 ≃ 0
-    exact Eqv.refl
+    exact Rel.refl
   case step =>
     intro n (_ : Positive (step n))
     exists n
     show step n ≃ step n
-    exact Eqv.refl
+    exact Rel.refl
 
 theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   intro (_ : Positive n)
@@ -48,12 +48,12 @@ theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   apply Axioms.cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
-    apply AA.subst₁ (rβ := (· → ·)) (Eqv.symm Addition.add_zero)
+    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm Addition.add_zero)
     exact ‹Positive n›
   case step =>
     intro m
     show Positive (n + step m)
-    apply AA.subst₁ (rβ := (· → ·)) (Eqv.symm Addition.add_step)
+    apply AA.subst₁ (rβ := (· → ·)) (Rel.symm Addition.add_step)
     show Positive (step (n + m))
     apply Sign.Base.positive_defn.mpr
     show step (n + m) ≄ 0

@@ -1,9 +1,8 @@
 import Lean4Axiomatic.AbstractAlgebra.Substitutive
-import Lean4Axiomatic.Eqv
 
-open Relation (EqvOp)
+namespace Lean4Axiomatic.AA
 
-namespace AA
+open Relation.Equivalence (EqvOp)
 
 /--
 Class for types and operations that satisfy the associative property.
@@ -126,7 +125,7 @@ def distributiveR_from_distributiveL
     f x (g y z)       ≃ _ := AA.distribL
     g (f x y) (f x z) ≃ _ := AA.substL AA.comm
     g (f y x) (f x z) ≃ _ := AA.substR AA.comm
-    g (f y x) (f z x) ≃ _ := Eqv.refl
+    g (f y x) (f z x) ≃ _ := Rel.refl
 
 inductive OneOfThree (α β γ : Prop) : Prop where
 | first  (a : α)
@@ -163,10 +162,10 @@ theorem expr_xxfxxff_lr_swap_rl
     [Associative f] [Commutative f] [Substitutive₂ f tc (· ≃ ·) (· ≃ ·)]
     : f (f a b) (f c d) ≃ f (f a c) (f b d) := calc
   f (f a b) (f c d) ≃ _ := AA.assoc
-  f a (f b (f c d)) ≃ _ := Eqv.symm (AA.substR AA.assoc)
+  f a (f b (f c d)) ≃ _ := AA.substR (Rel.symm AA.assoc)
   f a (f (f b c) d) ≃ _ := AA.substR (AA.substL AA.comm)
   f a (f (f c b) d) ≃ _ := AA.substR AA.assoc
-  f a (f c (f b d)) ≃ _ := Eqv.symm AA.assoc
-  f (f a c) (f b d) ≃ _ := Eqv.refl
+  f a (f c (f b d)) ≃ _ := Rel.symm AA.assoc
+  f (f a c) (f b d) ≃ _ := Rel.refl
 
-end AA
+end Lean4Axiomatic.AA
