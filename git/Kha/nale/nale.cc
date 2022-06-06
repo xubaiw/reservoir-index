@@ -100,14 +100,10 @@ struct NaleInputScheme : InputScheme
         Path tmpDir = createTempDir();
         AutoDelete delTmpDir(tmpDir, true);
 
-        //RunOptions cpOpts(
-        //    "cp",
-        //    { "-r", tree.actualPath, tmpDir }
-        //);
-        //cpOpts.searchPath = true;
-        //runProgram(cpOpts);
+        runProgram2({ .program = "cp", .searchPath = true, .args = { "-r", tree.actualPath + "/.", tmpDir } });
         //copyPath(tree.actualPath, tmpDir);
-        std::filesystem::copy(tree.actualPath, tmpDir);
+        //std::filesystem::remove(tmpDir);
+        //std::filesystem::copy(tree.actualPath, tmpDir, std::filesystem::copy_options::recursive);
 
         if (chmod(tmpDir.c_str(), 0777) == -1)
             throw SysError("changing permissions on '%1%'", tmpDir);
@@ -126,19 +122,21 @@ struct NaleInputScheme : InputScheme
         auto flakeContents = format(R"({
   inputs.lean.url = github:%1%;
   inputs.lake2nix.url = @lake2nix-url@;
-  inputs.lake2nix.inputs.lean.follows = "lean";
-  inputs.lake2nix.inputs.lake.inputs.flake-utils.follows = "lean/flake-utils";  # why
+  #inputs.lake2nix.inputs.lean.follows = "lean";
+  #inputs.lake2nix.inputs.flake-utils.follows = "lean/flake-utils";  # why
+  #inputs.lake2nix.inputs.lake.inputs.flake-utils.follows = "lean/flake-utils";  # why
 
-  outputs = { self, lake2nix, ... }: lake2nix.lib.lakeRepo2flake ./.;
+  outputs = { self, lake2nix, lean, ... }: lake2nix.lib.lakeRepo2flake { src = ./.; leanPkgs = lean.packages; };
 })") % leanVersion;
         writeFile(tmpDir + "/flake.nix", flakeContents.str());
         //nix::flake::lockFlake(EvalState(searchPath, store), parseFlakeRef(".", tmpDir), {});
         auto self_path = readLink("/proc/self/exe");
-        runProgram(self_path, false, {"flake", "lock", tmpDir});
+        runProgram(self_path, false, {"--quiet", "flake", "lock", tmpDir});
 
         auto storePath = store->addToStore("source.nale", tmpDir, FileIngestionMethod::Recursive, htSHA256, defaultPathFilter);
         input2.attrs["nested_type"] = input2.attrs["type"];
         input2.attrs["type"] = "nale";
+        input2.attrs.erase("narHash");
         return std::make_pair(storePath, input2);
     };
 };
