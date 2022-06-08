@@ -276,7 +276,7 @@ end ParserState
 def ParserFn := ParserContext → ParserState → ParserState
 
 instance : Inhabited ParserFn where
-  default := fun ctx s => s
+  default := fun _ s => s
 
 inductive FirstTokens where
   | epsilon   : FirstTokens
@@ -345,7 +345,7 @@ def dbgTraceState (label : String) (p : Parser) : Parser where
 @[noinline] def epsilonInfo : ParserInfo :=
   { firstTokens := FirstTokens.epsilon }
 
-@[inline] def checkStackTopFn (p : Syntax → Bool) (msg : String) : ParserFn := fun c s =>
+@[inline] def checkStackTopFn (p : Syntax → Bool) (msg : String) : ParserFn := fun _ s =>
   if p s.stxStack.back then s
   else s.mkUnexpectedError msg
 
@@ -427,7 +427,7 @@ def checkPrecFn (prec : Nat) : ParserFn := fun c s =>
 }
 
 /- Succeeds if `c.lhsPrec >= prec` -/
-def checkLhsPrecFn (prec : Nat) : ParserFn := fun c s =>
+def checkLhsPrecFn (prec : Nat) : ParserFn := fun _ s =>
   if s.lhsPrec >= prec then s
   else s.mkUnexpectedError "unexpected token at this precedence level; consider parenthesizing the term"
 
@@ -436,7 +436,7 @@ def checkLhsPrecFn (prec : Nat) : ParserFn := fun c s =>
   fn   := checkLhsPrecFn prec
 }
 
-def setLhsPrecFn (prec : Nat) : ParserFn := fun c s =>
+def setLhsPrecFn (prec : Nat) : ParserFn := fun _ s =>
   if s.hasError then s
   else { s with lhsPrec := prec }
 
@@ -748,7 +748,6 @@ partial def whitespace : ParserFn := fun c s =>
       if curr == '-' then andthenFn (takeUntilFn (fun c => c = '\n')) whitespace c (s.next input i)
       else s
     else if curr == '/' then
-      let startPos := i
       let i        := input.next i
       let curr     := input.get i
       if curr == '-' then
@@ -1059,7 +1058,7 @@ private def tokenFnAux : ParserFn := fun c s =>
 private def updateCache (startPos : String.Pos) (s : ParserState) : ParserState :=
   -- do not cache token parsing errors, which are rare and usually fatal and thus not worth an extra field in `TokenCache`
   match s with
-  | ⟨stack, lhsPrec, pos, cache, none⟩ =>
+  | ⟨stack, lhsPrec, pos, _,     none⟩ =>
     if stack.size == 0 then s
     else
       let tk := stack.back
@@ -1083,7 +1082,7 @@ def peekTokenAux (c : ParserContext) (s : ParserState) : ParserState × Except P
   let iniSz  := s.stackSize
   let iniPos := s.pos
   let s      := tokenFn [] c s
-  if let some e := s.errorMsg then (s.restore iniSz iniPos, Except.error s)
+  if let some _ := s.errorMsg then (s.restore iniSz iniPos, Except.error s)
   else
     let stx := s.stxStack.back
     (s.restore iniSz iniPos, Except.ok stx)
@@ -1189,7 +1188,7 @@ def checkTailWs (prev : Syntax) : Bool :=
   | SourceInfo.original _ _ trailing _ => trailing.stopPos > trailing.startPos
   | _                                  => false
 
-def checkWsBeforeFn (errorMsg : String) : ParserFn := fun c s =>
+def checkWsBeforeFn (errorMsg : String) : ParserFn := fun _ s =>
   let prev := s.stxStack.back
   if checkTailWs prev then s else s.mkError errorMsg
 
@@ -1203,7 +1202,7 @@ def checkTailLinebreak (prev : Syntax) : Bool :=
   | SourceInfo.original _ _ trailing _ => trailing.contains '\n'
   | _ => false
 
-def checkLinebreakBeforeFn (errorMsg : String) : ParserFn := fun c s =>
+def checkLinebreakBeforeFn (errorMsg : String) : ParserFn := fun _ s =>
   let prev := s.stxStack.back
   if checkTailLinebreak prev then s else s.mkError errorMsg
 
@@ -1217,7 +1216,7 @@ private def pickNonNone (stack : Array Syntax) : Syntax :=
   | none => Syntax.missing
   | some stx => stx
 
-def checkNoWsBeforeFn (errorMsg : String) : ParserFn := fun c s =>
+def checkNoWsBeforeFn (errorMsg : String) : ParserFn := fun _ s =>
   let prev := pickNonNone s.stxStack
   if checkTailNoWs prev then s else s.mkError errorMsg
 
@@ -1487,25 +1486,23 @@ def anyOfFn : List Parser → ParserFn
   { fn := checkLineEqFn errorMsg }
 
 @[inline] def withPosition (p : Parser) : Parser := {
-  info := p.info,
+  info := p.info
   fn   := fun c s =>
     p.fn { c with savedPos? := s.pos } s
 }
 
 @[inline] def withoutPosition (p : Parser) : Parser := {
-  info := p.info,
-  fn   := fun c s =>
-    let pos := c.fileMap.toPosition s.pos
-    p.fn { c with savedPos? := none } s
+  info := p.info
+  fn   := fun c s => p.fn { c with savedPos? := none } s
 }
 
 @[inline] def withForbidden (tk : Token) (p : Parser) : Parser := {
-  info := p.info,
+  info := p.info
   fn   := fun c s => p.fn { c with forbiddenTk? := tk } s
 }
 
 @[inline] def withoutForbidden (p : Parser) : Parser := {
-  info := p.info,
+  info := p.info
   fn   := fun c s => p.fn { c with forbiddenTk? := none } s
 }
 
@@ -1668,7 +1665,7 @@ def setExpected (expected : List String) (p : Parser) : Parser :=
   { fn := setExpectedFn expected p.fn, info := p.info }
 
 def pushNone : Parser :=
-  { fn := fun c s => s.pushSyntax mkNullNode }
+  { fn := fun _ s => s.pushSyntax mkNullNode }
 
 -- We support three kinds of antiquotations: `$id`, `$_`, and `$(t)`, where `id` is a term identifier and `t` is a term.
 def antiquotNestedExpr : Parser := node `antiquotNestedExpr (symbolNoAntiquot "(" >> decQuotDepth termParser >> symbolNoAntiquot ")")
@@ -1863,8 +1860,6 @@ partial def trailingLoop (tables : PrattParsingTables) (c : ParserContext) (s : 
   It should not be added to the regular leading parsers because it would heavily
   overlap with antiquotation parsers nested inside them. -/
 @[inline] def prattParser (kind : Name) (tables : PrattParsingTables) (behavior : LeadingIdentBehavior) (antiquotParser : ParserFn) : ParserFn := fun c s =>
-  let iniSz  := s.stackSize
-  let iniPos := s.pos
   let s := leadingParser kind tables behavior antiquotParser c s
   if s.hasError then
     s
@@ -1888,7 +1883,7 @@ def fieldIdxFn : ParserFn := fun c s =>
   }
 
 @[inline] def skip : Parser := {
-  fn   := fun c s => s,
+  fn   := fun _ s => s,
   info := epsilonInfo
 }
 

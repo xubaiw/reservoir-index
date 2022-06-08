@@ -12,10 +12,10 @@ namespace Lean.Elab.Deriving.DecEq
 open Lean.Parser.Term
 open Meta
 
-def mkDecEqHeader (ctx : Context) (indVal : InductiveVal) : TermElabM Header := do
-  mkHeader ctx `DecidableEq 2 indVal
+def mkDecEqHeader (indVal : InductiveVal) : TermElabM Header := do
+  mkHeader `DecidableEq 2 indVal
 
-def mkMatch (ctx : Context) (header : Header) (indVal : InductiveVal) (auxFunName : Name) (argNames : Array Name) : TermElabM Syntax := do
+def mkMatch (header : Header) (indVal : InductiveVal) (auxFunName : Name) : TermElabM Syntax := do
   let discrs ← mkDiscrs header indVal
   let alts ← mkAlts
   `(match $[$discrs],* with $alts:matchAlt*)
@@ -45,7 +45,7 @@ where
       for ctorName₂ in indVal.ctors do
         let mut patterns := #[]
         -- add `_` pattern for indices
-        for i in [:indVal.numIndices] do
+        for _ in [:indVal.numIndices] do
           patterns := patterns.push (← `(_))
         if ctorName₁ == ctorName₂ then
           let alt ← forallTelescopeReducing ctorInfo.type fun xs type => do
@@ -54,7 +54,7 @@ where
             let mut ctorArgs1 := #[]
             let mut ctorArgs2 := #[]
             -- add `_` for inductive parameters, they are inaccessible
-            for i in [:indVal.numParams] do
+            for _ in [:indVal.numParams] do
               ctorArgs1 := ctorArgs1.push (← `(_))
               ctorArgs2 := ctorArgs2.push (← `(_))
             let mut todo := #[]
@@ -86,8 +86,8 @@ where
 def mkAuxFunction (ctx : Context) : TermElabM Syntax := do
   let auxFunName := ctx.auxFunNames[0]
   let indVal     :=ctx.typeInfos[0]
-  let header     ← mkDecEqHeader ctx indVal
-  let mut body   ← mkMatch ctx header indVal auxFunName header.argNames
+  let header     ← mkDecEqHeader indVal
+  let mut body   ← mkMatch header indVal auxFunName
   let binders    := header.binders
   let type       ← `(Decidable ($(mkIdent header.targetNames[0]) = $(mkIdent header.targetNames[1])))
   `(private def $(mkIdent auxFunName):ident $binders:explicitBinder* : $type:term := $body:term)
@@ -163,7 +163,6 @@ def mkDecEqEnum (declName : Name) : CommandElabM Unit := do
   liftTermElabM none <| mkEnumOfNatThm declName
   let ofNatIdent  := mkIdent (Name.mkStr declName "ofNat")
   let auxThmIdent := mkIdent (Name.mkStr declName "ofNat_toCtorIdx")
-  let indVal ← getConstInfoInduct declName
   let cmd ← `(
     instance : DecidableEq $(mkIdent declName) :=
       fun x y =>

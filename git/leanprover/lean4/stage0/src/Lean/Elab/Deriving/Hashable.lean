@@ -12,10 +12,10 @@ open Command
 open Lean.Parser.Term
 open Meta
 
-def mkHashableHeader (ctx : Context) (indVal : InductiveVal) : TermElabM Header := do
-  mkHeader ctx `Hashable 1 indVal
+def mkHashableHeader (indVal : InductiveVal) : TermElabM Header := do
+  mkHeader `Hashable 1 indVal
 
-def mkMatch (ctx : Context) (header : Header) (indVal : InductiveVal) (auxFuncIdx : Nat) : TermElabM Syntax := do
+def mkMatch (ctx : Context) (header : Header) (indVal : InductiveVal) : TermElabM Syntax := do
   let discrs ← mkDiscrs header indVal
   let alts ← mkAlts
   `(match $[$discrs],* with $alts:matchAlt*)
@@ -27,16 +27,15 @@ where
     let allIndVals := indVal.all.toArray
     for ctorName in indVal.ctors do
       let ctorInfo ← getConstInfoCtor ctorName
-      let alt ← forallTelescopeReducing ctorInfo.type fun xs type => do
-        let type ← Core.betaReduce type -- we 'beta-reduce' to eliminate "artificial" dependencies
+      let alt ← forallTelescopeReducing ctorInfo.type fun xs _ => do
         let mut patterns := #[]
         -- add `_` pattern for indices
-        for i in [:indVal.numIndices] do
+        for _ in [:indVal.numIndices] do
           patterns := patterns.push (← `(_))
         let mut ctorArgs := #[]
         let mut rhs ← `($(quote ctorIdx))
         -- add `_` for inductive parameters, they are inaccessible
-        for i in [:indVal.numParams] do
+        for _ in [:indVal.numParams] do
           ctorArgs := ctorArgs.push (← `(_))
         for i in [:ctorInfo.numFields] do
           let x := xs[indVal.numParams + i]
@@ -58,8 +57,8 @@ where
 def mkAuxFunction (ctx : Context) (i : Nat) : TermElabM Syntax := do
   let auxFunName := ctx.auxFunNames[i]
   let indVal     := ctx.typeInfos[i]
-  let header     ← mkHashableHeader ctx indVal
-  let body       ← mkMatch ctx header indVal i
+  let header     ← mkHashableHeader indVal
+  let body       ← mkMatch ctx header indVal
   let binders    := header.binders
   if ctx.usePartial then
     -- TODO(Dany): Get rid of this code branch altogether once we have well-founded recursion

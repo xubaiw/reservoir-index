@@ -106,7 +106,7 @@ def getRoot : Name → Name
 @[export lean_is_inaccessible_user_name]
 def isInaccessibleUserName : Name → Bool
   | Name.str _ s _   => s.contains '✝' || s == "_inaccessible"
-  | Name.num p idx _ => isInaccessibleUserName p
+  | Name.num p _   _ => isInaccessibleUserName p
   | _                => false
 
 def escapePart (s : String) : Option String :=
@@ -250,7 +250,7 @@ partial def getTailInfo? : Syntax → Option SourceInfo
   | ident info .. => info
   | node SourceInfo.none _ args =>
       args.findSomeRev? getTailInfo?
-  | node info _ args => info
+  | node info _ _    => info
   | _             => none
 
 def getTailInfo (stx : Syntax) : SourceInfo :=
@@ -291,7 +291,7 @@ partial def setTailInfoAux (info : SourceInfo) : Syntax → Option Syntax
     match updateLast args (setTailInfoAux info) args.size with
     | some args => some <| node info k args
     | none      => none
-  | stx                    => none
+  | _                      => none
 
 def setTailInfo (stx : Syntax) (info : SourceInfo) : Syntax :=
   match setTailInfoAux info stx with
@@ -300,8 +300,8 @@ def setTailInfo (stx : Syntax) (info : SourceInfo) : Syntax :=
 
 def unsetTrailing (stx : Syntax) : Syntax :=
   match stx.getTailInfo with
-  | SourceInfo.original lead pos trail endPos => stx.setTailInfo (SourceInfo.original lead pos "".toSubstring endPos)
-  | _                                         => stx
+  | SourceInfo.original lead pos _ endPos => stx.setTailInfo (SourceInfo.original lead pos "".toSubstring endPos)
+  | _                                     => stx
 
 @[specialize] private partial def updateFirst {α} [Inhabited α] (a : Array α) (f : α → Option α) (i : Nat) : Option (Array α) :=
   if h : i < a.size then
@@ -318,8 +318,8 @@ partial def setHeadInfoAux (info : SourceInfo) : Syntax → Option Syntax
   | node i k args          =>
     match updateFirst args (setHeadInfoAux info) 0 with
     | some args => some <| node i k args
-    | noxne     => none
-  | stx                    => none
+    | _         => none
+  | _                      => none
 
 def setHeadInfo (stx : Syntax) (info : SourceInfo) : Syntax :=
   match setHeadInfoAux info stx with
@@ -337,8 +337,8 @@ partial def getHead? : Syntax → Option Syntax
   | stx@(atom info ..)  => info.getPos?.map fun _ => stx
   | stx@(ident info ..) => info.getPos?.map fun _ => stx
   | node SourceInfo.none _ args => args.findSome? getHead?
-  | stx@(node info _ _) => stx
-  | _                => none
+  | stx@(node ..) => stx
+  | _ => none
 
 def copyHeadTailInfoFrom (target source : Syntax) : Syntax :=
   target.setHeadInfo source.getHeadInfo |>.setTailInfo source.getTailInfo
@@ -787,7 +787,7 @@ private def getEscapedNameParts? (acc : List String) : Name → Option (List Str
   | Name.str n s _ => do
     let s ← Name.escapePart s
     getEscapedNameParts? (s::acc) n
-  | Name.num n i _ => none
+  | Name.num _ _ _ => none
 
 private def quoteNameMk : Name → Syntax
   | Name.anonymous => mkCIdent ``Name.anonymous
@@ -921,6 +921,7 @@ instance (sep) : CoeTail (SepArray sep) (Array Syntax) where
 
 end Lean.Syntax.SepArray
 
+set_option linter.unusedVariables.funArgs false in
 /--
   Gadget for automatic parameter support. This is similar to the `optParam` gadget, but it uses
   the given tactic.
@@ -975,7 +976,6 @@ def expandInterpolatedStrChunks (chunks : Array Syntax) (mkAppend : Syntax → S
   return result
 
 def expandInterpolatedStr (interpStr : Syntax) (type : Syntax) (toTypeFn : Syntax) : MacroM Syntax := do
-  let ref := interpStr
   let r ← expandInterpolatedStrChunks interpStr.getArgs (fun a b => `($a ++ $b)) (fun a => `($toTypeFn $a))
   `(($r : $type))
 

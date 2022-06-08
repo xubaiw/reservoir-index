@@ -183,7 +183,7 @@ private def elabAndAddNewArg (argName : Name) (arg : Arg) : M Unit := do
 
 /- Return true if the given type contains `OptParam` or `AutoParams` -/
 private def hasOptAutoParams (type : Expr) : M Bool := do
-  forallTelescopeReducing type fun xs type =>
+  forallTelescopeReducing type fun xs _ =>
     xs.anyM fun x => do
       let xType ← inferType x
       return xType.getOptParamDefault?.isSome || xType.getAutoParamTactic?.isSome
@@ -466,7 +466,6 @@ mutual
 
   /- Elaborate function application arguments. -/
   partial def main : M Expr := do
-    let s ← get
     let fType ← normalizeFunType
     if fType.isForall then
       let binderName := fType.bindingName!
@@ -614,7 +613,7 @@ private def resolveLValAux (e : Expr) (eType : Expr) (lval : LVal) : TermElabM L
       throwUnknownConstant (e.constName! ++ suffix)
     else
       throwInvalidFieldNotation e eType
-  | _, LVal.getOp _ idx => throwInvalidFieldNotation e eType
+  | _, LVal.getOp _ _   => throwInvalidFieldNotation e eType
   | _, _ => throwInvalidFieldNotation e eType
 
 /- whnfCore + implicit consumption.
@@ -622,7 +621,7 @@ private def resolveLValAux (e : Expr) (eType : Expr) (lval : LVal) : TermElabM L
 private partial def consumeImplicits (stx : Syntax) (e eType : Expr) (hasArgs : Bool) : TermElabM (Expr × Expr) := do
   let eType ← whnfCore eType
   match eType with
-  | Expr.forallE n d b c =>
+  | Expr.forallE _ d b c =>
     if c.binderInfo.isImplicit || (hasArgs && c.binderInfo.isStrictImplicit) then
       let mvar ← mkFreshExprMVar d
       registerMVarErrorHoleInfo mvar.mvarId! stx
@@ -883,7 +882,7 @@ private partial def elabAppFn (f : Syntax) (lvals : List LVal) (namedArgs : Arra
     | `($(e).$field:ident) => elabFieldName e field
     | `($e |>.$field:ident) => elabFieldName e field
     | `($e[%$bracket $idx]) => elabAppFn e (LVal.getOp bracket idx :: lvals) namedArgs args expectedType? explicit ellipsis overloaded acc
-    | `($id:ident@$t:term) =>
+    | `($_:ident@$_:term) =>
       throwError "unexpected occurrence of named pattern"
     | `($id:ident) => do
       elabAppFnId id [] lvals namedArgs args expectedType? explicit ellipsis overloaded acc
@@ -892,9 +891,9 @@ private partial def elabAppFn (f : Syntax) (lvals : List LVal) (namedArgs : Arra
       elabAppFnId id us lvals namedArgs args expectedType? explicit ellipsis overloaded acc
     | `(@$id:ident) =>
       elabAppFn id lvals namedArgs args expectedType? (explicit := true) ellipsis overloaded acc
-    | `(@$id:ident.{$us,*}) =>
+    | `(@$_:ident.{$_us,*}) =>
       elabAppFn (f.getArg 1) lvals namedArgs args expectedType? (explicit := true) ellipsis overloaded acc
-    | `(@$t)     => throwUnsupportedSyntax -- invalid occurrence of `@`
+    | `(@$_)     => throwUnsupportedSyntax -- invalid occurrence of `@`
     | `(_)       => throwError "placeholders '_' cannot be used where a function is expected"
     | `(.$id:ident) =>
         let fConst ← mkConst (← resolveDotName id expectedType?)
@@ -1023,11 +1022,11 @@ private def elabAtom : TermElab := fun stx expectedType? => do
 `@e` for any term `e` also disables the insertion of implicit lambdas at this position. -/
 @[builtinTermElab explicit] def elabExplicit : TermElab := fun stx expectedType? =>
   match stx with
-  | `(@$id:ident)         => elabAtom stx expectedType?  -- Recall that `elabApp` also has support for `@`
-  | `(@$id:ident.{$us,*}) => elabAtom stx expectedType?
-  | `(@($t))              => elabTerm t expectedType? (implicitLambda := false)    -- `@` is being used just to disable implicit lambdas
-  | `(@$t)                => elabTerm t expectedType? (implicitLambda := false)   -- `@` is being used just to disable implicit lambdas
-  | _                     => throwUnsupportedSyntax
+  | `(@$_:ident)         => elabAtom stx expectedType?  -- Recall that `elabApp` also has support for `@`
+  | `(@$_:ident.{$_us,*}) => elabAtom stx expectedType?
+  | `(@($t))             => elabTerm t expectedType? (implicitLambda := false)    -- `@` is being used just to disable implicit lambdas
+  | `(@$t)               => elabTerm t expectedType? (implicitLambda := false)   -- `@` is being used just to disable implicit lambdas
+  | _                    => throwUnsupportedSyntax
 
 @[builtinTermElab choice] def elabChoice : TermElab := elabAtom
 @[builtinTermElab proj] def elabProj : TermElab := elabAtom

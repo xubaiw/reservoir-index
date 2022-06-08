@@ -203,7 +203,7 @@ partial def ensureExtensionsArraySize (env : Environment) : IO Environment := do
 where
   loop (i : Nat) (env : Environment) : IO Environment := do
     let envExtensions ← envExtensionsRef.get
-    if h : i < envExtensions.size then
+    if i < envExtensions.size then
       let s ← envExtensions[i].mkInitial
       let env := { env with extensions := env.extensions.push s }
       loop (i + 1) env
@@ -453,7 +453,7 @@ def TagDeclarationExtension := SimplePersistentEnvExtension Name NameSet
 def mkTagDeclarationExtension (name : Name) : IO TagDeclarationExtension :=
   registerSimplePersistentEnvExtension {
     name          := name,
-    addImportedFn := fun as => {},
+    addImportedFn := fun _ => {},
     addEntryFn    := fun s n => s.insert n,
     toArrayFn     := fun es => es.toArray.qsort Name.quickLt
   }
@@ -482,7 +482,7 @@ def MapDeclarationExtension (α : Type) := SimplePersistentEnvExtension (Name ×
 def mkMapDeclarationExtension [Inhabited α] (name : Name) : IO (MapDeclarationExtension α) :=
   registerSimplePersistentEnvExtension {
     name          := name,
-    addImportedFn := fun as => {},
+    addImportedFn := fun _ => {},
     addEntryFn    := fun s n => s.insert n.1 n.2 ,
     toArrayFn     := fun es => es.toArray.qsort (fun a b => Name.quickLt a.1 b.1)
   }
@@ -592,7 +592,7 @@ where
   loop (i : Nat) (env : Environment) : IO Environment := do
     -- Recall that the size of the array stored `persistentEnvExtensionRef` may increase when we import user-defined environment extensions.
     let pExtDescrs ← persistentEnvExtensionsRef.get
-    if h : i < pExtDescrs.size then
+    if i < pExtDescrs.size then
       let extDescr := pExtDescrs[i]
       let s := extDescr.toEnvExtension.getState env
       let prevSize := (← persistentEnvExtensionsRef.get).size

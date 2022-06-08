@@ -129,12 +129,12 @@ structure Header where
   targetNames : Array Name
   targetType  : Syntax
 
-def mkHeader (ctx : Context) (className : Name) (arity : Nat) (indVal : InductiveVal) : TermElabM Header := do
+def mkHeader (className : Name) (arity : Nat) (indVal : InductiveVal) : TermElabM Header := do
   let argNames      ← mkInductArgNames indVal
   let binders       ← mkImplicitBinders argNames
   let targetType    ← mkInductiveApp indVal argNames
   let mut targetNames := #[]
-  for i in [:arity] do
+  for _ in [:arity] do
     targetNames := targetNames.push (← mkFreshUserName `x)
   let binders      := binders ++ (← mkInstImplicitBinders className indVal argNames)
   let binders      := binders ++ (← targetNames.mapM fun targetName => `(explicitBinderF| ($(mkIdent targetName) : $targetType)))

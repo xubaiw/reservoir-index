@@ -20,15 +20,15 @@ private def ensureValidNamespace (name : Name) : MacroM Unit := do
     if s == "_root_" then
       Macro.throwError s!"invalid namespace '{name}', '_root_' is a reserved namespace"
     ensureValidNamespace p
-  | Name.num p .. => Macro.throwError s!"invalid namespace '{name}', it must not contain numeric parts"
+  | Name.num _ .. => Macro.throwError s!"invalid namespace '{name}', it must not contain numeric parts"
   | Name.anonymous => pure ()
 
 /- Auxiliary function for `expandDeclNamespace?` -/
 private def expandDeclIdNamespace? (declId : Syntax) : MacroM (Option (Name × Syntax)) := do
-  let (id, optUnivDeclStx) := expandDeclIdCore declId
+  let (id, _) := expandDeclIdCore declId
   let scpView := extractMacroScopes id
   match scpView.name with
-  | Name.str Name.anonymous s _ => return none
+  | Name.str Name.anonymous _ _ => return none
   | Name.str pre s _            =>
     ensureValidNamespace pre
     let nameNew := { scpView with name := Name.mkSimple s }.review
@@ -73,7 +73,7 @@ def elabAxiom (modifiers : Modifiers) (stx : Syntax) : CommandElabM Unit := do
   let declId             := stx[1]
   let (binders, typeStx) := expandDeclSig stx[2]
   let scopeLevelNames ← getLevelNames
-  let ⟨name, declName, allUserLevelNames⟩ ← expandDeclId declId modifiers
+  let ⟨_, declName, allUserLevelNames⟩ ← expandDeclId declId modifiers
   addDeclarationRanges declName stx
   runTermElabM declName fun vars => Term.withLevelNames allUserLevelNames $ Term.elabBinders binders.getArgs fun xs => do
     Term.applyAttributesAt declName modifiers.attrs AttributeApplicationTime.beforeElaboration

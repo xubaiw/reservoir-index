@@ -4,10 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner, Sebastian Ullrich, Mac Malone
 -/
 import Std.Data.HashMap
+import Lake.Util.String
 import Lake.Build.TargetTypes
 import Lake.Config.Glob
 import Lake.Config.Opaque
 import Lake.Config.WorkspaceConfig
+import Lake.Config.Targets
 import Lake.Config.Dependency
 import Lake.Config.Script
 
@@ -39,29 +41,19 @@ def defaultIrDir : FilePath := "ir"
 def defaultBinRoot : Name := `Main
 
 --------------------------------------------------------------------------------
--- # Auxiliary Definitions and Helpers
+-- # PackageFacet
 --------------------------------------------------------------------------------
 
 /- A buildable component of a `Package`. -/
 inductive PackageFacet
-| /-- The package's binary. -/ bin
+| /-- The package's binary executable. -/ exe
+| /-- The package's binary executable. **DEPRECATED:** Use `exe` instead. -/ bin
 | /-- The package's static library. -/ staticLib
 | /-- The package's shared library. -/ sharedLib
-| /-- The package's `.olean` files. -/ oleans
+| /-- The package's lean library (e.g. `olean` / `ilean` files). -/ leanLib
+| /-- The package's `.olean` files. **DEPRECATED:** Use `leanLib` instead. -/ oleans
 deriving BEq, DecidableEq, Repr
 instance : Inhabited PackageFacet := ⟨PackageFacet.bin⟩
-
-/-- Converts a snake case, kebab case, or lower camel case `String` to upper camel case. -/
-def toUpperCamelCaseString (str : String) : String :=
-  let parts := str.split fun chr => chr == '_' || chr == '-'
-  String.join <| parts.map (·.capitalize)
-
-/-- Converts a snake case, kebab case, or lower camel case `Name` to upper camel case. -/
-def toUpperCamelCase (name : Name) : Name :=
-  if let Name.str p s _ := name then
-    Name.mkStr (toUpperCamelCase p) <| toUpperCamelCaseString s
-  else
-    name
 
 --------------------------------------------------------------------------------
 -- # PackageConfig
@@ -89,10 +81,10 @@ structure PackageConfig extends WorkspaceConfig where
 
   /--
   The `PackageFacet` to build on a bare `lake build` of the package.
-  Can be one of `bin`, `staticLib`, `sharedLib`, or `oleans`. Defaults to `bin`.
-  See `lake help build` for more info on build facets.
+  Can be one of `exe` (or `bin`), `staticLib`, `sharedLib`, or `oleans`.
+  Defaults to `exe`. See `lake help build` for more info on build facets.
   -/
-  defaultFacet : PackageFacet := PackageFacet.bin
+  defaultFacet : PackageFacet := PackageFacet.exe
 
   /--
   Additional arguments to pass to the Lean language server
@@ -190,7 +182,7 @@ structure PackageConfig extends WorkspaceConfig where
   Defaults to `defaultBinRoot` (i.e., `Main`).
 
   The root is built by recursively building its
-  local imports (i.e., fellow modules of the package).
+  local imports (i.e., fellow modules of the workspace).
 
   This setting is most useful for packages that are distributing both a
   library and a binary (like Lake itself). In such cases, it is common for
@@ -225,7 +217,30 @@ structure PackageConfig extends WorkspaceConfig where
   -/
   moreLinkArgs : Array String := #[]
 
+  /-- Additional library targets for the package. -/
+  libConfigs : NameMap LeanLibConfig := {}
+
+  /-- Additional binary executable targets for the package. -/
+  exeConfigs : NameMap LeanExeConfig := {}
+
 deriving Inhabited
+
+namespace PackageConfig
+
+/-- The configuration of the package's library. -/
+def toLeanLibConfig (self : PackageConfig) : LeanLibConfig where
+  name := self.libName
+  roots := self.libRoots
+  globs := self.libGlobs
+
+/-- The configuration of the package's binary executable. -/
+def toLeanExeConfig (self : PackageConfig) : LeanExeConfig where
+  root := self.binRoot
+  name := self.binName
+  supportInterpreter := self.supportInterpreter
+  moreLinkArgs := self.moreLinkArgs
+
+end PackageConfig
 
 --------------------------------------------------------------------------------
 -- # Package
@@ -297,9 +312,25 @@ def extraDepTarget (self : Package) : OpaqueTarget :=
 def defaultFacet (self : Package) : PackageFacet :=
    self.config.defaultFacet
 
+/-- The package's `libConfigs` configuration. -/
+def libConfigs (self : Package) : NameMap LeanLibConfig :=
+  self.config.libConfigs
+
+/-- Get the package's library configuration with the given name. -/
+def findLib? (self : Package) (name : Name) : Option LeanLibConfig :=
+  self.libConfigs.find? name
+
+/-- The package's `exeConfigs` configuration. -/
+def exeConfigs (self : Package) : NameMap LeanExeConfig :=
+  self.config.exeConfigs
+
+/-- Get the package's executable configuration with the given name. -/
+def findExe? (self : Package) (name : Name) : Option LeanExeConfig :=
+  self.exeConfigs.find? name
+
 /-- The package's `moreServerArgs` configuration. -/
 def moreServerArgs (self : Package) : Array String :=
-   self.config.moreServerArgs
+  self.config.moreServerArgs
 
 /-- The package's `dir` joined with its `srcDir` configuration. -/
 def srcDir (self : Package) : FilePath :=
@@ -337,26 +368,6 @@ def modToIlean (mod : Name) (self : Package) : FilePath :=
 def modToTraceFile (mod : Name) (self : Package) : FilePath :=
   Lean.modToFilePath self.oleanDir mod "trace"
 
-/-- The package's `libRoots` configuration. -/
-def libRoots (self : Package) : Array Name :=
-  self.config.libRoots
-
-/-- The package's `libGlobs` configuration. -/
-def libGlobs (self : Package) : Array Glob :=
-  self.config.libGlobs
-
-/-- Whether the given module is considered local to the package. -/
-def isLocalModule (mod : Name) (self : Package) : Bool :=
-  self.libRoots.any (fun root => root.isPrefixOf mod) ||
-  self.libGlobs.any (fun glob => glob.matches mod)
-
-/-- Get an `Array` of the package's module. -/
-def getModuleArray (self : Package) : IO (Array Name) := do
-  let mut mods := #[]
-  for glob in self.libGlobs do
-    mods ← glob.pushModules self.srcDir mods
-  return mods
-
 /- `-O3`, `-DNDEBUG`, and `moreLeancArgs` -/
 def moreLeancArgs (self : Package) : Array String :=
   #["-O3", "-DNDEBUG"] ++ self.config.moreLeancArgs
@@ -385,68 +396,34 @@ def modToO (mod : Name) (self : Package) : FilePath :=
 def libDir (self : Package) : FilePath :=
   self.buildDir / self.config.libDir
 
-/-- The package's `libName` configuration. -/
-def libName (self : Package) : FilePath :=
-  self.config.libName
-
-/-- The file name of package's static library (i.e., `lib{libName}.a`) -/
-def staticLibFileName (self : Package) : FilePath :=
-  s!"lib{self.libName}.a"
-
-/-- The path to the package's static library. -/
-def staticLibFile (self : Package) : FilePath :=
-  self.libDir / self.staticLibFileName
-
-/-- The package's `libName` configuration. -/
-def self.sharedLibName (self : Package) : FilePath :=
-  self.config.libName
-
-/-- The file name of package's shared library. -/
-def sharedLibFileName (self : Package) : FilePath :=
-  s!"{self.libName}.{sharedLibExt}"
-
-/-- The path to the package's shared library. -/
-def sharedLibFile (self : Package) : FilePath :=
-  self.libDir / self.sharedLibFileName
-
-/-- The package's `binRoot` configuration. -/
-def binRoot (self : Package) : Name :=
-  self.config.binRoot
-
 /-- The package's `buildDir` joined with its `binDir` configuration. -/
 def binDir (self : Package) : FilePath :=
   self.buildDir / self.config.binDir
-
-/-- The package's `binName` configuration. -/
-def binName (self : Package) : FilePath :=
-  self.config.binName
-
-/--
-The file name of package's binary executable
-(i.e., `binName` plus the platform's `exeExtension`).
--/
-def binFileName (self : Package) : FilePath :=
-  FilePath.withExtension self.binName FilePath.exeExtension
-
-/-- The path to the package's executable. -/
-def binFile (self : Package) : FilePath :=
-  self.binDir / self.binFileName
 
 /-- The package's `moreLibTargets` configuration. -/
 def moreLibTargets (self : Package) : Array FileTarget :=
   self.config.moreLibTargets
 
-/-- The package's `supportInterpreter` configuration. -/
-def supportInterpreter (self : Package) : Bool :=
-  self.config.supportInterpreter
+/-- The library configuration built into the package configuration. -/
+def builtinLibConfig (self : Package) : LeanLibConfig :=
+  self.config.toLeanLibConfig
 
-/-- `-rdynamic` (if non-Windows and `supportInterpreter`) plus `moreLinkArgs` -/
-def moreLinkArgs (self : Package) : Array String :=
-  if self.supportInterpreter && !Platform.isWindows then
-    #["-rdynamic"] ++ self.config.moreLinkArgs
-  else
-    self.config.moreLinkArgs
+/-- The binary executable configuration built into the package configuration. -/
+def builtinExeConfig (self : Package) : LeanExeConfig :=
+  self.config.toLeanExeConfig
 
-/-- Whether the given module is in the package. -/
+/-- Get an `Array` of the package's modules. -/
+def getModuleArray (self : Package) : IO (Array Name) :=
+  self.builtinLibConfig.getModuleArray self.srcDir
+
+/-- Whether the given module is considered local to the package. -/
+def isLocalModule (mod : Name) (self : Package) : Bool :=
+  self.libConfigs.any (fun _ lib => lib.isLocalModule mod) ||
+  self.builtinLibConfig.isLocalModule mod
+
+/-- Whether the given module is in the package (i.e., can build it). -/
 def hasModule (mod : Name) (self : Package) : Bool :=
-  self.binRoot == mod || self.libGlobs.any fun glob => glob.matches mod
+  self.libConfigs.any (fun _ lib => lib.hasModule mod) ||
+  self.exeConfigs.any (fun _ exe => exe.root == mod) ||
+  self.builtinLibConfig.hasModule mod ||
+  self.config.binRoot == mod

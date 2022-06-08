@@ -22,7 +22,7 @@ def substCore (mvarId : MVarId) (hFVarId : FVarId) (symm := false) (fvarSubst : 
     let hLocalDecl ← getLocalDecl hFVarId
     match (← matchEq? hLocalDecl.type) with
     | none => throwTacticEx `subst mvarId "argument must be an equality proof"
-    | some (α, lhs, rhs) => do
+    | some (_, lhs, rhs) => do
       let a ← instantiateMVars <| if symm then rhs else lhs
       let b ← instantiateMVars <| if symm then lhs else rhs
       match a with
@@ -32,7 +32,6 @@ def substCore (mvarId : MVarId) (hFVarId : FVarId) (symm := false) (fvarSubst : 
         let mctx ← getMCtx
         if mctx.exprDependsOn b aFVarId then
           throwTacticEx `subst mvarId m!"'{a}' occurs at{indentExpr b}"
-        let aLocalDecl ← getLocalDecl aFVarId
         let (vars, mvarId) ← revert mvarId #[aFVarId, hFVarId] true
         trace[Meta.Tactic.subst] "after revert {MessageData.ofGoal mvarId}"
         let (twoVars, mvarId) ← introNP mvarId 2
@@ -64,7 +63,7 @@ def substCore (mvarId : MVarId) (hFVarId : FVarId) (symm := false) (fvarSubst : 
             let hLocalDecl ← getLocalDecl hFVarId
             match (← matchEq? hLocalDecl.type) with
             | none => unreachable!
-            | some (α, lhs, rhs) => do
+            | some (_, lhs, rhs) => do
               let b        ← instantiateMVars <| if symm then lhs else rhs
               let mctx     ← getMCtx
               let depElim := mctx.exprDependsOn mvarDecl.type hFVarId
@@ -145,9 +144,9 @@ partial def subst (mvarId : MVarId) (h : FVarId) : MetaM MVarId :=
   withMVarContext mvarId do
     let localDecl ← getLocalDecl h
     match (← matchEq? localDecl.type) with
-    | some (α, lhs, rhs) => substEq mvarId h
+    | some _ => substEq mvarId h
     | none => match (← matchHEq? localDecl.type) with
-      | some (_, lhs, _, rhs) =>
+      | some _ =>
         let (h', mvarId') ← heqToEq mvarId h
         if mvarId == mvarId' then
           findEq mvarId h
@@ -192,7 +191,7 @@ where
          return none
        else
          match (← matchEq? localDecl.type) with
-         | some (α, lhs, rhs) =>
+         | some (_, lhs, rhs) =>
            let lhs ← instantiateMVars lhs
            let rhs ← instantiateMVars rhs
            if rhs.isFVar && rhs.fvarId! == h && !mctx.exprDependsOn lhs h then

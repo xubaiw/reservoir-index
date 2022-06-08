@@ -11,10 +11,10 @@ namespace Lean.Elab.Deriving.Ord
 open Lean.Parser.Term
 open Meta
 
-def mkOrdHeader (ctx : Context) (indVal : InductiveVal) : TermElabM Header := do
-  mkHeader ctx `Ord 2 indVal
+def mkOrdHeader (indVal : InductiveVal) : TermElabM Header := do
+  mkHeader `Ord 2 indVal
 
-def mkMatch (ctx : Context) (header : Header) (indVal : InductiveVal) (auxFunName : Name) : TermElabM Syntax := do
+def mkMatch (header : Header) (indVal : InductiveVal) : TermElabM Syntax := do
   let discrs ← mkDiscrs header indVal
   let alts ← mkAlts
   `(match $[$discrs],* with $alts:matchAlt*)
@@ -27,14 +27,14 @@ where
         let type ← Core.betaReduce type -- we 'beta-reduce' to eliminate "artificial" dependencies
         let mut indPatterns := #[]
         -- add `_` pattern for indices
-        for i in [:indVal.numIndices] do
+        for _ in [:indVal.numIndices] do
           indPatterns := indPatterns.push (← `(_))
         let mut ctorArgs1 := #[]
         let mut ctorArgs2 := #[]
         -- construct RHS top-down as continuation over the remaining comparison
         let mut rhsCont : Syntax → TermElabM Syntax := fun rhs => pure rhs
         -- add `_` for inductive parameters, they are inaccessible
-        for i in [:indVal.numParams] do
+        for _ in [:indVal.numParams] do
           ctorArgs1 := ctorArgs1.push (← `(_))
           ctorArgs2 := ctorArgs2.push (← `(_))
         for i in [:ctorInfo.numFields] do
@@ -67,8 +67,8 @@ where
 def mkAuxFunction (ctx : Context) (i : Nat) : TermElabM Syntax := do
   let auxFunName := ctx.auxFunNames[i]
   let indVal     := ctx.typeInfos[i]
-  let header     ← mkOrdHeader ctx indVal
-  let mut body   ← mkMatch ctx header indVal auxFunName
+  let header     ← mkOrdHeader indVal
+  let mut body   ← mkMatch header indVal
   if ctx.usePartial || indVal.isRec then
     let letDecls ← mkLocalInstanceLetDecls ctx `Ord header.argNames
     body ← mkLet letDecls body

@@ -75,7 +75,7 @@ where
   unresolveNameCore (n : Name) : DelabM (Option Name) := do
     let mut revComponents := n.components'
     let mut candidate := Name.anonymous
-    for i in [:revComponents.length] do
+    for _ in [:revComponents.length] do
       match revComponents with
       | [] => return none
       | cmpt::rest => candidate := cmpt ++ candidate; revComponents := rest
@@ -87,7 +87,6 @@ where
 -- NOTE: not a registered delaborator, as `const` is never called (see [delab] description)
 def delabConst : Delab := do
   let Expr.const c₀ ls _ ← getExpr | unreachable!
-  let ctx ← read
   let c₀ := if (← getPPOption getPPPrivateNames) then c₀ else (privateToUserName? c₀).getD c₀
 
   let mut c ← unresolveNameGlobal c₀
@@ -211,11 +210,10 @@ def unexpandRegularApp (stx : Syntax) : Delab := do
 -- abbrev coeFun {α : Sort u} {γ : α → Sort v} (a : α) [CoeFun α γ] : γ a
 def unexpandCoe (stx : Syntax) : Delab := whenPPOption getPPCoercions do
   if not (isCoe (← getExpr)) then failure
-  let e ← getExpr
   match stx with
-  | `($fn $arg)   => return arg
-  | `($fn $args*) => `($(args.get! 0) $(args.eraseIdx 0)*)
-  | _             => failure
+  | `($_ $arg)   => return arg
+  | `($_ $args*) => `($(args.get! 0) $(args.eraseIdx 0)*)
+  | _            => failure
 
 def unexpandStructureInstance (stx : Syntax) : Delab := whenPPOption getPPStructureInstances do
   let env ← getEnv
@@ -442,7 +440,7 @@ def delabAppMatch : Delab := whenPPOption getPPNotation <| whenPPOption getPPMat
 def delabLetFun : Delab := do
   let stxV ← withAppArg delab
   withAppFn do
-    let Expr.lam n t b _ ← getExpr | unreachable!
+    let Expr.lam n _ b _ ← getExpr | unreachable!
     let n ← getUnusedName n b
     let stxB ← withBindingBody n delab
     if ← getPPOption getPPLetVarTypes <||> getPPOption getPPAnalysisLetVarType then
@@ -521,7 +519,6 @@ def delabLam : Delab :=
     let e ← getExpr
     let stxT ← withBindingDomain delab
     let ppTypes ← getPPOption getPPFunBinderTypes
-    let expl ← getPPOption getPPExplicit
     let usedDownstream := curNames.any (fun n => hasIdent n.getId stxBody)
 
     -- leave lambda implicit if possible

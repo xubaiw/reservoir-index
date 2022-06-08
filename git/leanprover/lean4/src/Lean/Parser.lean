@@ -102,15 +102,15 @@ unsafe def interpretParserDescr : ParserDescr → CoreM Formatter
   | ParserDescr.const n                             => getConstAlias formatterAliasesRef n
   | ParserDescr.unary n d                           => return (← getUnaryAlias formatterAliasesRef n) (← interpretParserDescr d)
   | ParserDescr.binary n d₁ d₂                      => return (← getBinaryAlias formatterAliasesRef n) (← interpretParserDescr d₁) (← interpretParserDescr d₂)
-  | ParserDescr.node k prec d                       => return node.formatter k (← interpretParserDescr d)
+  | ParserDescr.node k _ d                          => return node.formatter k (← interpretParserDescr d)
   | ParserDescr.nodeWithAntiquot _ k d              => return node.formatter k (← interpretParserDescr d)
   | ParserDescr.sepBy p sep psep trail              => return sepBy.formatter (← interpretParserDescr p) sep (← interpretParserDescr psep) trail
   | ParserDescr.sepBy1 p sep psep trail             => return sepBy1.formatter (← interpretParserDescr p) sep (← interpretParserDescr psep) trail
   | ParserDescr.trailingNode k prec lhsPrec d       => return trailingNode.formatter k prec lhsPrec (← interpretParserDescr d)
   | ParserDescr.symbol tk                           => return symbol.formatter tk
-  | ParserDescr.nonReservedSymbol tk includeIdent   => return nonReservedSymbol.formatter tk
+  | ParserDescr.nonReservedSymbol tk _              => return nonReservedSymbol.formatter tk
   | ParserDescr.parser constName                    => combinatorFormatterAttribute.runDeclFor constName
-  | ParserDescr.cat catName prec                    => return categoryParser.formatter catName
+  | ParserDescr.cat catName _                       => return categoryParser.formatter catName
 
 end Formatter
 end PrettyPrinter

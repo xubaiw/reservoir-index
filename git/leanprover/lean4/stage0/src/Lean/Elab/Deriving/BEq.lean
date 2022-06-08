@@ -11,10 +11,10 @@ namespace Lean.Elab.Deriving.BEq
 open Lean.Parser.Term
 open Meta
 
-def mkBEqHeader (ctx : Context) (indVal : InductiveVal) : TermElabM Header := do
-  mkHeader ctx `BEq 2 indVal
+def mkBEqHeader (indVal : InductiveVal) : TermElabM Header := do
+  mkHeader `BEq 2 indVal
 
-def mkMatch (ctx : Context) (header : Header) (indVal : InductiveVal) (auxFunName : Name) : TermElabM Syntax := do
+def mkMatch (header : Header) (indVal : InductiveVal) (auxFunName : Name) : TermElabM Syntax := do
   let discrs ← mkDiscrs header indVal
   let alts ← mkAlts
   `(match $[$discrs],* with $alts:matchAlt*)
@@ -22,7 +22,7 @@ where
   mkElseAlt : TermElabM Syntax := do
     let mut patterns := #[]
     -- add `_` pattern for indices
-    for i in [:indVal.numIndices] do
+    for _ in [:indVal.numIndices] do
       patterns := patterns.push (← `(_))
     patterns := patterns.push (← `(_))
     patterns := patterns.push (← `(_))
@@ -37,13 +37,13 @@ where
         let type ← Core.betaReduce type -- we 'beta-reduce' to eliminate "artificial" dependencies
         let mut patterns := #[]
         -- add `_` pattern for indices
-        for i in [:indVal.numIndices] do
+        for _ in [:indVal.numIndices] do
           patterns := patterns.push (← `(_))
         let mut ctorArgs1 := #[]
         let mut ctorArgs2 := #[]
         let mut rhs ← `(true)
         -- add `_` for inductive parameters, they are inaccessible
-        for i in [:indVal.numParams] do
+        for _ in [:indVal.numParams] do
           ctorArgs1 := ctorArgs1.push (← `(_))
           ctorArgs2 := ctorArgs2.push (← `(_))
         for i in [:ctorInfo.numFields] do
@@ -71,8 +71,8 @@ where
 def mkAuxFunction (ctx : Context) (i : Nat) : TermElabM Syntax := do
   let auxFunName := ctx.auxFunNames[i]
   let indVal     := ctx.typeInfos[i]
-  let header     ← mkBEqHeader ctx indVal
-  let mut body   ← mkMatch ctx header indVal auxFunName
+  let header     ← mkBEqHeader indVal
+  let mut body   ← mkMatch header indVal auxFunName
   if ctx.usePartial then
     let letDecls ← mkLocalInstanceLetDecls ctx `BEq header.argNames
     body ← mkLet letDecls body

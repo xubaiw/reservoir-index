@@ -487,7 +487,7 @@ def instantiateLocalDeclMVars (localDecl : LocalDecl) : MetaM LocalDecl :=
     setMCtx sNew.mctx
     modifyThe Core.State fun s => { s with ngen := sNew.ngen, nextMacroScope := sNew.nextMacroScope }
     pure e
-  | EStateM.Result.error (MetavarContext.MkBinding.Exception.revertFailure mctx lctx toRevert decl) sNew => do
+  | EStateM.Result.error (.revertFailure ..) sNew => do
     setMCtx sNew.mctx
     modifyThe Core.State fun s => { s with ngen := sNew.ngen, nextMacroScope := sNew.nextMacroScope }
     throwError "failed to create binder due to failure when reverting variable dependencies"
@@ -758,7 +758,7 @@ mutual
 
   private partial def isClassExpensive? (type : Expr) : MetaM (Option Name) :=
     withReducible do -- when testing whether a type is a type class, we only unfold reducible constants.
-      forallTelescopeReducingAux type none fun xs type => do
+      forallTelescopeReducingAux type none fun _ type => do
         let env ← getEnv
         match type.getAppFn with
         | Expr.const c _ _ => do
@@ -919,7 +919,7 @@ where
       finalize ()
     else
       match type with
-      | Expr.lam n d b c =>
+      | Expr.lam _ d b c =>
         let d     := d.instantiateRevRange j mvars.size mvars
         let mvar ← mkFreshExprMVar d
         let mvars := mvars.push mvar
@@ -1010,7 +1010,6 @@ def withLocalInstances (decls : List LocalDecl) : n α → n α :=
 
 private def withExistingLocalDeclsImp (decls : List LocalDecl) (k : MetaM α) : MetaM α := do
   let ctx ← read
-  let numLocalInstances := ctx.localInstances.size
   let lctx := decls.foldl (fun (lctx : LocalContext) decl => lctx.addDecl decl) ctx.lctx
   withReader (fun ctx => { ctx with lctx := lctx }) do
     withLocalInstancesImp decls k
@@ -1161,11 +1160,11 @@ def ppExpr (e : Expr) : MetaM Format := do
 instance : OrElse (MetaM α) := ⟨Meta.orElse⟩
 
 instance : Alternative MetaM where
-  failure := fun {α} => throwError "failed"
+  failure := fun {_} => throwError "failed"
   orElse  := Meta.orElse
 
 @[inline] private def orelseMergeErrorsImp (x y : MetaM α)
-    (mergeRef : Syntax → Syntax → Syntax := fun r₁ r₂ => r₁)
+    (mergeRef : Syntax → Syntax → Syntax := fun r₁ _ => r₁)
     (mergeMsg : MessageData → MessageData → MessageData := fun m₁ m₂ => m₁ ++ Format.line ++ m₂) : MetaM α := do
   let env  ← getEnv
   let mctx ← getMCtx
@@ -1188,7 +1187,7 @@ instance : Alternative MetaM where
   The default `mergeRef` uses the `ref` (position information) for the first message.
   The default `mergeMsg` combines error messages using `Format.line ++ Format.line` as a separator. -/
 @[inline] def orelseMergeErrors [MonadControlT MetaM m] [Monad m] (x y : m α)
-    (mergeRef : Syntax → Syntax → Syntax := fun r₁ r₂ => r₁)
+    (mergeRef : Syntax → Syntax → Syntax := fun r₁ _ => r₁)
     (mergeMsg : MessageData → MessageData → MessageData := fun m₁ m₂ => m₁ ++ Format.line ++ Format.line ++ m₂) : m α := do
   controlAt MetaM fun runInBase => orelseMergeErrorsImp (runInBase x) (runInBase y) mergeRef mergeMsg
 
