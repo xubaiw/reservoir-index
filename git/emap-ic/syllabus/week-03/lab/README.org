@@ -1,0 +1,42 @@
+#+title: Lab
+
+* Instruções
+
+  Completar as funções =selection= e =bubble= para que implementem
+  respectivamente 'selection sort' e 'bubble sort'.
+
+  Seu código deverá retornar um número por linha, de forma ordenada,
+  do menor para o maior. O primeiro parâmetro passado irá controlar
+  qual função de ordenação deve ser chamada. Sua única alteração na
+  função 'main' deverá ser para escolher a função de ordenação
+  adequada dependendo do segundo parâmetro passado. Se for 's' será a
+  'selection', se for 'b' será a 'bubble'.
+
+  Desafio!! Tente implementar também a função =merge= que implementa o
+  'merge sort'. No código fonte apresendo na forma de comentário link
+  para um bom livro com o pseudo-código para o merge sort.
+
+
+* Testando
+
+  O código está pronto para ler arquivos texto no formato:
+
+  1. a primeira linha contém um número que corresponderá a quantidade
+     de números nas linhas restantes. Iremos chamar esta linha de
+     'header'.
+
+  2. da segunda linha até a última linha, o arquivo deve conter
+     números que possam ser representados como 'int' em C.
+
+  3. O programa irá terminar com erro (exit code 1) se a quantidade de
+     números da linha 2 até a última linha for menor que o número
+     informado na primeira linha, o header. Se o número informado for
+     menor que a quantidade de linhas até o final do arquivo, serão
+     lidos apenas a quantidade de números informada no header.
+
+  4. Se alguma linha do arquivo não puder ser transformada em 'int', o
+     inteiro 0 será usado (vide documentação da função atoi).
+
+  5. Os arquivos =numbers0.txt= e =numbers1.txt= são exemplos que
+     podem ser usados para testes.
+
