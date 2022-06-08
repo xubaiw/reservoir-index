@@ -62,6 +62,9 @@ def gfbits : Nat := 12
 def sys_t : Nat := 64
 
 @[reducible]
+def sys_n : Nat := 3488
+
+@[reducible]
 def pk_nrows : Nat := sys_t * gfbits
 
 @[reducible]
@@ -146,6 +149,9 @@ constant gf_iszero : GF -> GF
 @[extern "lean_gf_inv"]
 constant gf_inv : GF -> GF
 
+@[extern "lean_bitrev"]
+constant gf_bitrev : GF -> GF
+
 def genPolyGen_mask (mat : Matrix (sys_t+1) sys_t GF) (j:Nat) : GF := Id.run do
   let mut r := mat.get! j j
   for i in range j (sys_t + 1 - j) do
@@ -191,8 +197,11 @@ constant store_gf (irr : Vector sys_t GF) : ByteVec (2*sys_t)
 constant init_pi (perm : Vector (1 <<< gfbits) UInt32)
   : Option (Vector (1 <<< gfbits) GF)
 
-@[extern "lean_pk_gen"]
-constant pk_gen (sk : Vector sys_t GF) (perm : Vector (1 <<< gfbits) GF)
+@[extern "lean_eval"]
+constant eval (sk : Vector sys_t GF) (x : GF) : GF
+
+@[extern "lean_pk_gen2"]
+constant pk_gen2 (inv : Vector sys_n GF) (L : Vector sys_n GF)
   : Option PublicKey
 
 @[extern "lean_controlbitsfrompermutation"]
@@ -200,9 +209,13 @@ constant controlBitsFromPermutation (pi : Vector (1 <<< gfbits) GF) : ByteVec co
 
 def tryCryptoKemKeypair (seed: ByteVec 32) (r: ByteVec rw) : Option KeyPair := do
   let sk_input :=                      r.extractN 0 (N/8)
-  let pi  ← init_pi    $ load4Array  $ r.extractN (N/8) (4*(1 <<< gfbits))
   let irr ← genPolyGen $ loadGfArray $ r.extractN (N/8 + 4*(1 <<< gfbits)) (2*sys_t)
-  let pk ← pk_gen irr pi
+
+  let pi  ← init_pi    $ load4Array  $ r.extractN (N/8) (4*(1 <<< gfbits))
+  let L := Vector.generate sys_n λi => gf_bitrev (pi.get! i)
+  let inv := Vector.generate sys_n (λi => gf_inv (eval irr (L.get! i)))
+
+  let pk ← pk_gen2 inv L
   some ⟨pk, seed ++ ByteVec.ofUInt64lsb 0xffffffff ++ store_gf irr ++ controlBitsFromPermutation pi ++ sk_input⟩
 
 def mkCryptoKemKeypair (iseed : Seed) (attempts: optParam Nat 10) : Option (KeyPair × DRBG) := do

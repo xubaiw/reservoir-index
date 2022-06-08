@@ -409,13 +409,113 @@ lean_obj_res lean_init_pi(b_lean_obj_arg perm_obj) {
     return lean_mk_option_some(pi_obj);
 }
 
+static
+int gaussian_elim_row(unsigned char** out, const unsigned char** mat, int row) {
+    int i = row / 8;
+    int j = row % 8;
+
+    unsigned char mat_row[ SYS_N/8 ];
+    for (size_t c = 0; c < SYS_N/8; c++)
+        mat_row[c] = mat[row][c];
+
+    for (size_t k = row + 1; k < PK_NROWS; k++) {
+        unsigned char mask = mat_row[i] ^ mat[k][i];
+        mask >>= j;
+        mask &= 1;
+        mask = -mask;
+
+        for (size_t c = 0; c < SYS_N/8; c++)
+            mat_row[c] ^= mat[k][c] & mask;
+    }
+
+    if ( ((mat_row[ i ] >> j) & 1) == 0 ) // return if not systematic
+    {
+        return -1;
+    }
+
+
+    for (size_t k = 0; k < PK_NROWS; k++) {
+        if (k == row) {
+            for (size_t c = 0; c < SYS_N/8; c++)
+                out[k][c] = mat_row[c];
+        } else {
+            unsigned char mask;
+            mask = mat[ k ][ i ] >> j;
+            mask &= 1;
+            mask = -mask;
+
+            for (size_t c = 0; c < SYS_N/8; c++)
+                out[k][c] = mat[k][c] ^ mat_row[c] & mask;
+        }
+    }
+    return 0;
+}
+
+
+static
+int gaussian_elim(unsigned char** mat) {
+	unsigned char outs[PK_NROWS][SYS_N/8];
+	unsigned char* out[PK_NROWS];
+    for (size_t i = 0; i < PK_NROWS; ++i)
+        out[i] = outs[i];
+
+	const unsigned char** matr = const_cast<const unsigned char**>(mat);
+
+	for (size_t r = 0; r < PK_NROWS; ++r) {
+        if (gaussian_elim_row(out, matr, r))
+            return -1;
+    	for (size_t i = 0; i < PK_NROWS; ++i)
+            memcpy(mat[i], out[i], SYS_N/8);
+    }
+    return 0;
+}
+
+
+static
+void init_mat_row(unsigned char* matj, const gf* Lj, gf* invj) {
+    for (size_t i = 0; i < SYS_T; i++) {
+        for (size_t k = 0; k < GFBITS;  k++) {
+            unsigned char b;
+            b  = (invj[7] >> k) & 1; b <<= 1;
+            b |= (invj[6] >> k) & 1; b <<= 1;
+            b |= (invj[5] >> k) & 1; b <<= 1;
+            b |= (invj[4] >> k) & 1; b <<= 1;
+            b |= (invj[3] >> k) & 1; b <<= 1;
+            b |= (invj[2] >> k) & 1; b <<= 1;
+            b |= (invj[1] >> k) & 1; b <<= 1;
+            b |= (invj[0] >> k) & 1;
+            matj[i*GFBITS + k] = b;
+        }
+
+        for (size_t c = 0; c != 8; ++c) {
+            invj[c] = gf_mul(invj[c], Lj[c]);
+        }
+    }
+}
+
+static
+void init_mat(unsigned char** mat, const gf* L, const gf* inv) {
+    for (size_t j = 0; j < SYS_N/8; ++j) {
+
+    	unsigned char matj[PK_NROWS];
+
+        gf invj[8];
+        memcpy(invj, inv + 8*j, 8*sizeof(gf));
+
+        init_mat_row(matj, L+8*j, invj);
+
+        for (int i = 0; i != PK_NROWS; ++i) {
+            mat[i][j] = matj[i];
+        }
+	}
+}
+
 /* input: secret key sk */
 /* output: public key pk */
 static
 int my_pk_gen(unsigned char * pk, const gf* L, gf* inv) {
 
 	// filling the matrix
-
 
 	unsigned char mats[ PK_NROWS ][ SYS_N/8 ];
 
@@ -424,108 +524,44 @@ int my_pk_gen(unsigned char * pk, const gf* L, gf* inv) {
         mat[i] = mats[i];
     }
 
-    for (size_t j = 0; j < SYS_N/8; ++j) {
-    	for (size_t i = 0; i < SYS_T; i++) {
-            for (size_t k = 0; k < GFBITS;  k++) {
-            	unsigned char b;
-                b  = (inv[8*j+7] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+6] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+5] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+4] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+3] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+2] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+1] >> k) & 1; b <<= 1;
-                b |= (inv[8*j+0] >> k) & 1;
-                mat[i*GFBITS + k][j] = b;
-            }
-
-            for (size_t c = 0; c != 8; ++c) {
-                inv[8*j+c] = gf_mul(inv[8*j+c], L[8*j+c]);
-            }
-
-        }
-	}
-
+    init_mat(mat, L, inv);
 	// gaussian elimination
+    if (gaussian_elim(mat))
+        return -1;
 
-	for (size_t i = 0; i < (PK_NROWS + 7) / 8; i++) {
-
-        for (size_t j = 0; j < 8; j++) {
-        	int row = i*8 + j;
-
-            if (row >= PK_NROWS)
-                break;
-
-	        unsigned char mat_row[ SYS_N/8 ];
-            for (size_t c = 0; c < SYS_N/8; c++)
-                mat_row[c] = mat[ row ][ c ];
-
-            for (size_t k = row + 1; k < PK_NROWS; k++) {
-                unsigned char mask = mat_row[i] ^ mat[k][i];
-                mask >>= j;
-                mask &= 1;
-                mask = -mask;
-
-                for (size_t c = 0; c < SYS_N/8; c++)
-                    mat_row[c] ^= mat[k][c] & mask;
-            }
-
-            if ( ((mat_row[ i ] >> j) & 1) == 0 ) // return if not systematic
-            {
-                return -1;
-            }
-
-
-            for (size_t k = 0; k < PK_NROWS; k++) {
-                if (k == row) {
-                    for (size_t c = 0; c < SYS_N/8; c++)
-                        mat[row][c] = mat_row[c];
-                } else {
-                	unsigned char mask;
-                    mask = mat[ k ][ i ] >> j;
-                    mask &= 1;
-                    mask = -mask;
-
-                    for (size_t c = 0; c < SYS_N/8; c++)
-                        mat[ k ][ c ] ^= mat_row[c] & mask;
-                }
-            }
-        }
-    }
-
-    const unsigned char* matr[PK_NROWS];
-    for (size_t i = 0; i != PK_NROWS; ++i) {
-        matr[i] = mat[i];
-    }
-
-    init_pk(pk, matr);
+    init_pk(pk, const_cast<const unsigned char**>(mat));
 	return 0;
 }
 
-extern "C" lean_obj_res lean_pk_gen(b_lean_obj_arg g_obj, b_lean_obj_arg pi_obj) {
+extern "C" uint16_t lean_bitrev(uint16_t x) {
+    return bitrev(x);
+}
 
+
+extern "C"  uint16_t lean_eval(b_lean_obj_arg g_obj, uint16_t x) {
 	gf g[ SYS_T+1 ]; // Goppa polynomial
     for (size_t i = 0; i != SYS_T; ++i) {
         g[i] = lean_unbox_uint32(lean_array_get_core(g_obj, i));
     }
 	g[ SYS_T ] = 1;
 
-    const size_t perm_count = 1 << GFBITS;
-    assert(lean_array_size(pi_obj) == perm_count);
-    gf pi[perm_count];
-    for (size_t i = 0; i != perm_count; ++i) {
-        pi[i] = lean_unbox_uint32(lean_array_get_core(pi_obj, i));
+    return my_eval(g, x);
+}
+
+extern "C" lean_obj_res lean_pk_gen2(b_lean_obj_arg inv_obj, b_lean_obj_arg l_obj) {
+    assert(lean_array_size(l_obj) == SYS_N);
+    gf L[SYS_N];
+    for (size_t i = 0; i != SYS_N; ++i) {
+        L[i] = lean_unbox_uint32(lean_array_get_core(l_obj, i));
+    }
+
+	gf inv[ SYS_N ];
+    for (size_t i = 0; i != SYS_N; ++i) {
+        inv[i] = lean_unbox_uint32(lean_array_get_core(inv_obj, i));
     }
 
     lean_obj_res pk_obj = lean_alloc_sarray1(1, crypto_kem_PUBLICKEYBYTES);
     uint8_t* pk = lean_sarray_cptr(pk_obj);
-
-    gf L[ SYS_N ]; // support
-    for (size_t i = 0; i < SYS_N; i++) L[i] = bitrev(pi[i]);
-
-	gf inv[ SYS_N ];
-	for (size_t i = 0; i < SYS_N; i++)
-		inv[i] = gf_inv(my_eval(g, L[i]));
 
     if (my_pk_gen(pk, L, inv)) {
         return lean_mk_option_none();
