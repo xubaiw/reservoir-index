@@ -16,12 +16,15 @@ open Lean System
 
 /-- A Lean library's declarative configuration. -/
 structure LeanLibConfig where
+  /-- The name of the target. -/
+  name : Name
+
   /--
   The name of the library.
-  Used as a base for the file names of the library's
-  static and dynamic binaries.
+  Used as a base for the file names of its static and dynamic binaries.
+  Defaults to the upper camel case name of the target.
   -/
-  name : String
+  libName := toUpperCamelCase name |>.toString (escape := false)
 
   /--
   The root module(s) of the library.
@@ -61,7 +64,8 @@ def isLocalModule (mod : Name) (self : LeanLibConfig) : Bool :=
 
 /-- Whether the given module is in the library (i.e., is built as part of it). -/
 def hasModule (mod : Name) (self : LeanLibConfig) : Bool :=
-  self.globs.any fun glob => glob.matches mod
+  self.globs.any (fun glob => glob.matches mod) ||
+  self.roots.any (fun root => root.isPrefixOf mod && self.globs.any (·.matches root))
 
 /-- Get an `Array` of the library's modules. -/
 def getModuleArray (self : LeanLibConfig) (srcDir : FilePath) : IO (Array Name) := do
@@ -72,11 +76,11 @@ def getModuleArray (self : LeanLibConfig) (srcDir : FilePath) : IO (Array Name) 
 
 /-- The file name of package's static library (i.e., `lib{libName}.a`) -/
 def staticLibFileName (self : LeanLibConfig) : FilePath :=
-  s!"lib{self.name}.a"
+  s!"lib{self.libName}.a"
 
 /-- The file name of package's shared library. -/
 def sharedLibFileName (self : LeanLibConfig) : FilePath :=
-  s!"{self.name}.{sharedLibExt}"
+  s!"{self.libName}.{sharedLibExt}"
 
 /--
 The arguments to pass to `leanc` when linking the shared library.
@@ -93,6 +97,9 @@ end LeanLibConfig
 
 /-- A Lean executable's declarative configuration. -/
 structure LeanExeConfig where
+  /-- The name of the target. -/
+  name : Name
+
   /--
   The root module of the binary executable.
   Should include a `main` definition that will serve
@@ -100,14 +107,16 @@ structure LeanExeConfig where
 
   The root is built by recursively building its
   local imports (i.e., fellow modules of the workspace).
+
+  Defaults to the name of the target.
   -/
-  root : Name
+  root : Name := name
 
   /--
-  The file name of the binary executable.
-  Defaults to the executable's root with any `.` replaced with a `-`.
+  The name of the binary executable.
+  Defaults to the target name with any `.` replaced with a `-`.
   -/
-  name : String := root.toStringWithSep "-" (escape := false)
+  exeName : String := name.toStringWithSep "-" (escape := false)
 
   /--
   Whether to expose symbols within the executable to the Lean interpreter.
@@ -134,10 +143,10 @@ namespace LeanExeConfig
 
 /--
 The file name of binary executable
-(i.e., `name` plus the platform's `exeExtension`).
+(i.e., `exeName` plus the platform's `exeExtension`).
 -/
 def fileName (self : LeanExeConfig) : FilePath :=
-  FilePath.withExtension self.name FilePath.exeExtension
+  FilePath.withExtension self.exeName FilePath.exeExtension
 
 /--
 The arguments to pass to `leanc` when linking the binary executable.

@@ -14,7 +14,7 @@ fi
 
 ./clean.sh
 
-$LAKE build +Baz
+$LAKE build +Foo.Test
 $LAKE build Bar:o
 
 $LAKE build a
@@ -27,5 +27,5 @@ $LAKE build b c
 $LAKE build foo:static
 $LAKE build bar:shared
 
-test -f ./build/lib/libfoo.a
-test -f ./build/lib/bar.$SHARED_LIB_EXT
+test -f ./build/lib/libFoo.a
+test -f ./build/lib/Bar.$SHARED_LIB_EXT
