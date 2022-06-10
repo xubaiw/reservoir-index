@@ -66,6 +66,7 @@
  "gebner/oleanparser",
  "gebner/quote4",
  "hargoniX/cpdt-lean",
+ "hargoniX/lean-ink-bug",
  "hargoniX/lean4-c-bug",
  "hargoniX/lean4-fixed",
  "hargoniX/lean4-statvfs",
@@ -130,5 +131,6 @@
  "yatima-inc/LSpec",
  "yatima-inc/Radiya.lean",
  "yatima-inc/yatima-lang",
+ "zaxioms/LeanAlg",
  "zenna/LeanOmega",
  "zygi/lean4-sha3"]
