@@ -30,6 +30,35 @@
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lake</h3>
 <p dir="auto">Lake (Lean Make) is a new build system and package manager for Lean 4.
 With Lake, package configuration is written in Lean inside a dedicated <code>lakefile.lean</code> stored in the root of the package directory. Each <code>lakefile.lean</code> includes a <code>package</code> declaration (akin to <code>main</code>) which defines the package's configuration.</p>
+<h4 dir="auto">Table of Contents</h4>
+<ul dir="auto">
+<li><a href="#getting-lake">Getting Lake</a></li>
+<li><a href="#creating-and-building-a-package">Creating and Building a Package</a></li>
+<li><a href="#package-configuration-options">Package Configuration Options</a>
+<ul dir="auto">
+<li><a href="#workspace-options">Workspace Options</a></li>
+<li><a href="#per-package-options">Per Package Options</a></li>
+</ul>
+</li>
+<li><a href="#defining-build-targets">Defining Build Targets</a>
+<ul dir="auto">
+<li><a href="#lean-libraries">Lean Libraries</a></li>
+<li><a href="#binary-executables">Binary Executables</a></li>
+</ul>
+</li>
+<li><a href="#adding-dependencies">Adding Dependencies</a>
+<ul dir="auto">
+<li><a href="#syntax-of-require">Syntax of <code>require</code></a></li>
+</ul>
+</li>
+<li><a href="#writing-and-running-lake-scripts">Writing and Running Lake Scripts</a></li>
+<li><a href="#building-and-running-lake-from-the-source">Building and Running Lake from the Source</a>
+<ul dir="auto">
+<li><a href="#building-with-nix-flakes">Building with Nix Flakes</a></li>
+<li><a href="#augmenting-lakes-search-path">Augmenting Lake's Search Path</a></li>
+</ul>
+</li>
+</ul>
 <h4 dir="auto">Getting Lake</h4>
 <p dir="auto">Lake is part of the <a href="https://github.com/leanprover/lean4">lean4</a> repository and is distributed along with its official releases (e.g., as part of the <a href="https://github.com/leanprover/elan">elan</a> toolchain). So if you have installed a semi-recent Lean 4 nightly, you should already have it!</p>
 <p dir="auto">Note that the Lake included with Lean is not updated as frequently as this repository, so some bleeding edge features may be missing. If you want to build the latest version from the source yourself, check out the build instructions at the bottom of this README.</p>
@@ -51,22 +80,44 @@ $ cd hello
 <p dir="auto"><strong>Hello.lean</strong></p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def hello := "world""><pre><span class="pl-k">def</span> <span class="pl-en">hello</span> := <span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto"><strong>Main.lean</strong></p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def main : IO Unit :=
-  IO.println s!"Hello, {hello}!""><pre><span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit :=
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Hello
+
+def main : IO Unit :=
+  IO.println s!"Hello, {hello}!""><pre><span class="pl-k">import</span> Hello
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit :=
   IO.println s!<span class="pl-s"><span class="pl-pds">"</span>Hello, {hello}!<span class="pl-pds">"</span></span></pre></div>
-<p dir="auto">Lake also creates a basic <code>lakefile.lean</code> for the package:</p>
+<p dir="auto">Lake also creates a basic <code>lakefile.lean</code> for the package along with a <code>lean-toolchain</code> file that contains the version string of the currently active Lean, which tells <a href="https://github.com/leanprover/elan"><code>elan</code></a> to use that Lean toolchain for the package.</p>
+<p dir="auto"><strong>lakefile.lean</strong></p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
 open Lake DSL
 
 package hello {
-  -- add configuration options here
+  -- add package configuration options here
+}
+
+lean_lib Hello {
+  -- add library configuration options here
+}
+
+@[defaultTarget]
+lean_exe hello {
+  root := `Main
 }"><pre><span class="pl-k">import</span> Lake
 <span class="pl-k">open</span> Lake DSL
 
 package hello {
-  <span class="pl-c"><span class="pl-c">--</span> add configuration options here</span>
+  <span class="pl-c"><span class="pl-c">--</span> add package configuration options here</span>
+}
+
+lean_lib Hello {
+  <span class="pl-c"><span class="pl-c">--</span> add library configuration options here</span>
+}
+
+<span class="pl-k">@[defaultTarget]</span>
+lean_exe hello {
+  root := <span class="pl-en">`Main</span>
 }</pre></div>
-<p dir="auto">along with a <code>lean-toolchain</code> file that contains the version string of the currently active Lean, which tells <a href="https://github.com/leanprover/elan"><code>elan</code></a> to use that Lean toolchain for the package.</p>
 <p dir="auto">The command <code>lake build</code> can then be used to build the package (and its dependencies, if it has them) into a native executable. The result will be placed in <code>build/bin</code>.</p>
 <div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
 ...
@@ -76,52 +127,80 @@ Hello, world!"><pre class="notranslate"><code>$ lake build
 $ ./build/bin/hello
 Hello, world!
 </code></pre></div>
-<h4 dir="auto">Adding Dependencies</h4>
-<p dir="auto">Lake packages can also have dependencies. Dependencies are other Lake packages the current package needs in order to function. To define a dependency, add an entry to the <code>dependencies</code> field of the package configuration. Each entry includes the name of the package and where to find it. Dependencies can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. When sourcing from a Git repository, specify the revision of the package to clone, which can be a commit hash, branch, or tag.</p>
-<p dir="auto">For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"@"master"
-
-package hello"><pre>require mathlib <span class="pl-k">from</span> git
-  <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
-
-package hello</pre></div>
-<p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it. Information on the specific revision cloned will then be saved to <code>manifest.json</code> in <code>lean_packages</code> to enable reproducibility. To update <code>mathlib</code> after this, you will need to run <code>lake update</code> -- other commands do not update resolved dependencies.</p>
-<p dir="auto">Further examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
+<p dir="auto">Examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
 <h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>
-<h5 dir="auto">Workspace</h5>
+<h5 dir="auto">Workspace Options</h5>
 <p dir="auto">Workspace options are shared across a package and its dependencies.</p>
 <ul dir="auto">
 <li><code>packagesDir</code>: The directory to which Lake should download remote dependencies. Defaults to <code>lean_packages</code>.</li>
 </ul>
-<h5 dir="auto">General</h5>
+<h5 dir="auto">Per Package Options</h5>
 <ul dir="auto">
-<li><code>dependencies</code>: An <code>Array</code> of the package's dependencies.</li>
-<li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>.</li>
-<li><code>defaultFacet</code>: The <code>PackageFacet</code> to build on a bare <code>lake build</code> of the package. Can be one of <code>bin</code>, <code>staticLib</code>, <code>sharedLib</code>, or <code>oleans</code>. Defaults to <code>bin</code>. See <code>lake help build</code> for more info on build facets.</li>
-<li><code>moreServerArgs</code>:  Additional arguments to pass to the Lean language server (i.e., <code>lean --server</code>) launched by <code>lake server</code>.</li>
 <li><code>srcDir</code>: The directory containing the package's Lean source files. Defaults to the package's directory. (This will be passed to <code>lean</code> as the <code>-R</code> option.)</li>
 <li><code>buildDir</code>: The directory to which Lake should output the package's build results. Defaults to <code>build</code>.</li>
 <li><code>oleanDir</code>: The build subdirectory to which Lake should output the package's <code>.olean</code> files. Defaults to <code>lib</code>.</li>
-<li><code>libRoots</code>: The root module(s) of the package. Imports relative to this root (e.g., <code>Pkg.Foo</code>) are considered part of the package. Defaults to a single root of the package's uppercase <code>name</code>.</li>
-<li><code>libGlobs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the package's library. Defaults to a <code>Glob.one</code> of each of the module's <code>libRoots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the package) are also recursively built.</li>
-<li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
-</ul>
-<h5 dir="auto">Library / Binary Compilation</h5>
-<ul dir="auto">
-<li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes <code>-O3</code> and <code>-DNDEBUG</code> automatically, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
 <li><code>irDir</code>: The build subdirectory to which Lake should output the package's intermediary results (e.g., <code>.c</code> and <code>.o</code> files). Defaults to <code>ir</code>.</li>
-<li><code>libName</code>: The name of the package's static library. Defaults to the package's upper camel case <code>name</code>.</li>
-<li><code>libDir</code>: The build subdirectory to which Lake should output the package's static library. Defaults to <code>lib</code>.</li>
-<li><code>binName</code>: The name of the package's binary executable. Defaults to the package's <code>name</code> with any <code>.</code> replaced with a <code>-</code>.</li>
-<li><code>binDir</code>: The build subdirectory to which Lake should output the package's binary executable. Defaults to <code>bin</code>.</li>
-<li><code>binRoot</code>: The root module of the package's binary executable. Defaults to <code>Main</code>. The root is built by recursively building its local imports (i.e., fellow modules of the package). This setting is most useful for packages that are distributing both a library and a binary (like Lake itself). In such cases, it is common for there to be code (e.g., <code>main</code>) that is needed for the binary but should not be included in the library proper.</li>
-<li><code>moreLibTargets</code>: An <code>Array</code> of additional library <code>FileTarget</code>s (beyond the package's and its dependencies' libraries) to build and link to the package's binary executable (and/or to dependent package's executables).</li>
-<li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
-<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the package's binary executable. These will come <em>after</em> the paths of libraries built with <code>moreLibTargets</code>.</li>
+<li><code>libDir</code>: The build subdirectory to which Lake should output the package's libraries. Defaults to <code>lib</code>.</li>
+<li><code>binDir</code>: The build subdirectory to which Lake should output the package's binary executables. Defaults to <code>bin</code>.</li>
+<li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>.</li>
+<li><code>moreServerArgs</code>:  Additional arguments to pass to the Lean language server (i.e., <code>lean --server</code>) launched by <code>lake serve</code>.</li>
+<li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
+<li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes <code>-O3</code> and <code>-DNDEBUG</code> automatically, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
+<li><code>moreLibTargets</code>: An <code>Array</code> of additional library <code>FileTarget</code>s (beyond the package's and its dependencies' Lean libraries) to build and link to the package's binaries (and to dependent packages' binaries).</li>
+<li><code>defaultFacet</code>: The <code>PackageFacet</code> to build on a bare <code>lake build</code> of the package. Can be one of <code>bin</code>, <code>staticLib</code>, <code>sharedLib</code>, or <code>oleans</code>. Defaults to <code>exe</code>. See <code>lake help build</code> for more info on build facets. <strong>DEPRECATED:</strong> Package facets will be removed in a future version of Lake. Use a separate <code>lean_lib</code> or <code>lean_exe</code> default target instead.</li>
 </ul>
-<h4 dir="auto">Scripts</h4>
+<h4 dir="auto">Defining Build Targets</h4>
+<p dir="auto">A Lake package can include multiple configurations for building different Lean libraries and binary executables. Libraries are defined using the <code>lean_lib</code> command and executables are defined using <code>lean_exe</code>. Any number of these declarations can be marked with the <code>@[defaultTarget]</code> attribute to tell Lake to build them on a bare <code>lake build</code> of the package.</p>
+<h5 dir="auto">Lean Libraries</h5>
+<p dir="auto">A Lean library target defines a set of Lean modules available to <code>import</code> and how to build them.</p>
+<p dir="auto"><strong>Syntax</strong></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="lean_lib «target-name» {
+  -- configuration options go here
+}"><pre>lean_lib «<span class="pl-en">target-name</span>» {
+  <span class="pl-c"><span class="pl-c">--</span> configuration options go here</span>
+}</pre></div>
+<p dir="auto"><strong>Configuration Options</strong></p>
+<ul dir="auto">
+<li><code>roots</code>: The root module(s) of the library. Submodules of these roots (e.g., <code>Lib.Foo</code> of <code>Lib</code>) are considered part of the library. Defaults to a single root of the library's upper camel case name.</li>
+<li><code>globs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the library. Defaults to a <code>Glob.one</code> of each of the library's  <code>roots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the workspace) are also recursively built.</li>
+<li><code>libName</code>: The name of the library. Used as a base for the file names of its static and dynamic binaries. Defaults to the upper camel case name of the target.</li>
+<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while linking the shared library. These will come <em>after</em> the paths of libraries built with the package's
+<code>moreLibTargets</code>.</li>
+</ul>
+<h5 dir="auto">Binary Executables</h5>
+<p dir="auto">A Lean executable target builds a binary executable from a Lean module with a <code>main</code> function.</p>
+<p dir="auto"><strong>Syntax</strong></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="lean_exe «target-name» {
+  -- configuration options go here
+}"><pre>lean_exe «<span class="pl-en">target-name</span>» {
+  <span class="pl-c"><span class="pl-c">--</span> configuration options go here</span>
+}</pre></div>
+<p dir="auto"><strong>Configuration Options</strong></p>
+<ul dir="auto">
+<li><code>root</code>: The root module of the binary executable. Should include a <code>main</code> definition that will serve as the entry point of the program. The root is built by recursively building its local imports (i.e., fellow modules of the workspace). Defaults to the name of the target.</li>
+<li><code>exeName</code>: The name of the binary executable. Defaults to the target name with any <code>.</code> replaced with a <code>-</code>.</li>
+<li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
+<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> when linking the binary executable. These will come <em>after</em> the paths of libraries built with the package's <code>moreLibTargets</code>.</li>
+</ul>
+<h4 dir="auto">Adding Dependencies</h4>
+<p dir="auto">Lake packages can have dependencies. Dependencies are other Lake packages the current package needs in order to function. They can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git"@"master""><pre>package hello
+
+require mathlib <span class="pl-k">from</span> git
+  <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it. Information on the specific revision cloned will then be saved to <code>manifest.json</code> in the workspace's <code>packageDir</code> (by default, <code>lean_packages</code>) to enable reproducibility. To update <code>mathlib</code> after this, you will need to run <code>lake update</code> -- other commands do not update resolved dependencies.</p>
+<h5 dir="auto">Syntax of <code>require</code></h5>
+<p dir="auto">The <code>require</code> command has two forms:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require foo from "path"/"to"/"local"/"package" with ["optional","args"]
+require bar from git "url.git"@"rev"/"optional"/"path-to"/"dir-with-pkg""><pre>require foo <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">"</span>path<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>local<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>package<span class="pl-pds">"</span></span> <span class="pl-k">with</span> [<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>args<span class="pl-pds">"</span></span>]
+require bar <span class="pl-k">from</span> git <span class="pl-s"><span class="pl-pds">"</span>url.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>rev<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>path-to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>dir-with-pkg<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto">The first form adds a local dependency and the second form adds a Git dependency. For a Git dependency, the revision can be a commit hash, branch, or tag. Also, the <code>/</code> and the following term of the <code>require</code> is optional.</p>
+<p dir="auto">Both forms also support an optional <code>with</code> clause to specify arguments to pass to the dependency's package configuration (i.e., same as <code>args</code> in a <code>lake build -- <args...></code> invocation). The elements of both the <code>from</code> and <code>with</code> clauses are proper terms so normal computation is supported within them (though parentheses made be required to disambiguate the syntax).</p>
+<h4 dir="auto">Writing and Running Lake Scripts</h4>
 <p dir="auto">A configuration file can also contain a number of <code>scripts</code> declaration. A script is an arbitrary <code>(args : List String) → ScriptM UInt32</code> definition that can be run by <code>lake script run</code>. For example, given the following <code>lakefile.lean</code>:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
 open Lake DSL

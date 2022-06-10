@@ -34,31 +34,27 @@
 <h4 dir="auto">Installation</h4>
 <h5 dir="auto">Lake</h5>
 <p dir="auto">Add the following dependency to your <code>lakefile.lean</code> :</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package your-package where
   dependencies := #[{
     name := `postgres
     src := Source.git "https://github.com/FWuermse/lean-postgres.git" "master"
-  }]"><pre class="notranslate" lang="lean"><code>package your-package where
+  }]"><pre>package your-package where
   dependencies := #[{
-    name := `postgres
-    src := Source.git "https://github.com/FWuermse/lean-postgres.git" "master"
-  }]
-</code></pre></div>
+    name := <span class="pl-en">`postgres</span>
+    src := Source.git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/FWuermse/lean-postgres.git<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span>
+  }]</pre></div>
 <h4 dir="auto">Usage</h4>
 <h5 dir="auto">Requirements</h5>
 <p dir="auto">Requires a running Postgres instance e.G. via Docker:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre class="notranslate" lang="sh"><code>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres
-</code></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="docker run -d --name postgres -e POSTGRES_PASSWORD=password -v ~/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres"><pre>docker run -d --name postgres -e POSTGRES_PASSWORD=password -v <span class="pl-k">~</span>/my-volume:/var/lib/postgresql/data -p 5432:5432 postgres</pre></div>
 <p dir="auto">and currently only supports free text password auth, enabled by changing the following line in your <code>~/my-volume/pg_hba.conf</code></p>
 <p dir="auto">from</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre class="notranslate" lang="sh"><code>host all all all scram-sha-256
-</code></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all scram-sha-256"><pre>host all all all scram-sha-256</pre></div>
 <p dir="auto">to</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre class="notranslate" lang="sh"><code>host all all all password
-</code></pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="host all all all password"><pre>host all all all password</pre></div>
 <h5 dir="auto">Code</h5>
 <p dir="auto">Currently only simple queries and inserts are supported:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Postgres
 
 open Insert
 open Connect
@@ -79,36 +75,34 @@ def main : IO Unit := do
     FROM employee 
     WHERE employee.employment_date <= "1800-12-31"
   IO.println $ ← sendQuery conn query
-  conn.close"><pre class="notranslate" lang="lean"><code>import Postgres
+  conn.close"><pre><span class="pl-k">import</span> Postgres
 
-open Insert
-open Connect
-open Query
+<span class="pl-k">open</span> Insert
+<span class="pl-k">open</span> Connect
+<span class="pl-k">open</span> Query
 
-def main : IO Unit := do
-  let conn ← openConnection "localhost" "5432" "postgres" "postgres" "pw"
-  let insertQuery :=
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> conn ← openConnection <span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>postgres<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>pw<span class="pl-pds">"</span></span>
+  <span class="pl-k">let</span> insertQuery :=
     INSERT INTO employee 
     VALUES [
-      -- Type checking for row alignment and types
-      (Varchar(15) "Florian", Varchar(15) "Würmseer", 123, 'R', 2014-01-09),
-      (Varchar(15) "Erin", Varchar(15) "Jaeger", 999, 'A', 850-03-30)
+      <span class="pl-c"><span class="pl-c">--</span> Type checking for row alignment and types</span>
+      (Varchar(<span class="pl-c1">15</span>) <span class="pl-s"><span class="pl-pds">"</span>Florian<span class="pl-pds">"</span></span>, Varchar(<span class="pl-c1">15</span>) <span class="pl-s"><span class="pl-pds">"</span>Würmseer<span class="pl-pds">"</span></span>, <span class="pl-c1">123</span>, <span class="pl-s">'R'</span>, <span class="pl-c1">2014</span>-<span class="pl-c1">01</span>-<span class="pl-c1">09</span>),
+      (Varchar(<span class="pl-c1">15</span>) <span class="pl-s"><span class="pl-pds">"</span>Erin<span class="pl-pds">"</span></span>, Varchar(<span class="pl-c1">15</span>) <span class="pl-s"><span class="pl-pds">"</span>Jaeger<span class="pl-pds">"</span></span>, <span class="pl-c1">999</span>, <span class="pl-s">'A'</span>, <span class="pl-c1">850</span>-<span class="pl-c1">03</span>-<span class="pl-c1">30</span>)
     ]
   IO.println $ ← insert conn insertQuery
-  let query := 
+  <span class="pl-k">let</span> query := 
     SELECT surname, nr, employment_date
     FROM employee 
-    WHERE employee.employment_date <= "1800-12-31"
+    WHERE employee.employment_date <= <span class="pl-s"><span class="pl-pds">"</span>1800-12-31<span class="pl-pds">"</span></span>
   IO.println $ ← sendQuery conn query
-  conn.close
-</code></pre></div>
+  conn.close</pre></div>
 <p dir="auto">Output:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="INSERT 0 2
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="INSERT 0 2
 surname × nr × employment_date
-(Jaeger, 999, 0850-03-30)"><pre class="notranslate" lang="sh"><code>INSERT 0 2
+(Jaeger, 999, 0850-03-30)"><pre>INSERT 0 2
 surname × nr × employment_date
-(Jaeger, 999, 0850-03-30)
-</code></pre></div>
+(Jaeger, 999, 0850-03-30)</pre></div>
 <p dir="auto">Please find more examples in the <a href="https://github.com/FWuermse/lean-postgres/tree/master/examples/open-connection">example folder</a>.</p>
 <h4 dir="auto">TODOs</h4>
 <ul dir="auto">

@@ -90,8 +90,9 @@ def Workspace.processImportList
 /--
 Build the workspace-local modules of list of imports.
 
-Builds only module `.olean` files if the default package facet is
-just `oleans`. Otherwise, builds both `.olean` and `.c` files.
+Build only module `.olean` and `.ilean` files if
+the default package build does not include any binary targets
+Otherwise, also build `.c` files.
 -/
 def Package.buildImportsAndDeps (imports : List String) (self : Package) : BuildM PUnit := do
   let depTarget ← self.buildExtraDepsTarget
@@ -101,7 +102,7 @@ def Package.buildImportsAndDeps (imports : List String) (self : Package) : Build
   else
     -- build local imports from list
     let infos := (← getWorkspace).processImportList imports
-    if self.defaultFacet == PackageFacet.oleans then
+    if self.exes.isEmpty && self.defaultFacet matches .none | .leanLib | .oleans then
       let build := recBuildModuleOleanTargetWithLocalImports depTarget
       let targets ← buildModuleArray infos build
       targets.forM (·.buildOpaque)
