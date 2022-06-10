@@ -19,7 +19,9 @@ See `Swappable.swap` for details about the actual property.
 - `f`: the binary operation whose arguments are "swappable" under `R`.
 - `R`: the binary relation that holds between "swapped" invocations of `f`.
 -/
-class Swappable {α : Sort u} {β : Sort v} (f : α → α → β) (R : β → β → Prop) :=
+class Swappable
+    {α : Sort u} {β : Sort v} (f : α → α → β) (R : β → β → Sort w)
+    :=
   /--
   The relation `R` holds between any two invocations of `f` that have the same
   arguments, but provided in the opposite order as each other.

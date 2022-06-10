@@ -143,6 +143,18 @@ instance negation_preserves_symmetry
 }
 
 /--
+Conjunction (i.e. logical _and_) is symmetric.
+
+**Intuition**: The order of a conjunction's arguments doesn't affect its truth
+value.
+-/
+instance and_symmetric : Symmetric (· ∧ ·) := by
+  apply Symmetric.mk
+  intro p q (And.intro (_ : p) (_ : q))
+  show q ∧ p
+  exact And.intro ‹q› ‹p›
+
+/--
 Class for
 [transitive relations](https://en.wikipedia.org/wiki/Transitive_relation).
 

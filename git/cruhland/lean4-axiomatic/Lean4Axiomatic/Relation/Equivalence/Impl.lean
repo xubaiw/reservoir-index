@@ -248,6 +248,53 @@ type `α × β`.
 instance eqvOp : EqvOp (α × β) :=
   Mapped.eqvOp depFn_from_prod (β_eqvOp := DepFn.eqvOp indexed_eqvOp)
 
+/--
+Characterizes the equivalence relation on ordered pairs in terms of the pairs'
+elements.
+
+**Proof intuition**: Fully expanding the definition of the equivalence relation
+on ordered pairs reveals it to be a dependent function with domain `Hand`. The
+codomain of the function simplifies greatly when specialized to a specific
+`Hand` value; doing that for both `Hand.L` and `Hand.R` gives the two
+equivalences between elements on the conjunction side of this theorem's type.
+
+**Named parameters**
+- `α`: The type of the pairs' left elements.
+- `β`: The type of the pairs' right elements.
+- `a₁`: The first pair's left element.
+- `a₂`: The second pair's left element.
+- `b₁`: The first pair's right element.
+- `b₂`: The second pair's right element.
+
+**Class parameters**
+- `EqvOp α`: Evidence that `α` has an equivalence relation.
+- `EqvOp β`: Evidence that `β` has an equivalence relation.
+-/
+theorem eqv_defn
+    {a₁ a₂ : α} {b₁ b₂ : β} : (a₁, b₁) ≃ (a₂, b₂) ↔ a₁ ≃ a₂ ∧ b₁ ≃ b₂
+    := by
+  let expanded_eqv :=
+    ∀ (hand : Hand),
+      indexed_eqvOp.tildeDash
+        (depFn_from_prod (a₁, b₁) hand)
+        (depFn_from_prod (a₂, b₂) hand)
+  apply Iff.intro
+  case mp =>
+    intro (_ : (a₁, b₁) ≃ (a₂, b₂))
+    show a₁ ≃ a₂ ∧ b₁ ≃ b₂
+    have elem_eqv : expanded_eqv := ‹(a₁, b₁) ≃ (a₂, b₂)›
+    have : a₁ ≃ a₂ := elem_eqv Hand.L
+    have : b₁ ≃ b₂ := elem_eqv Hand.R
+    exact And.intro ‹a₁ ≃ a₂› ‹b₁ ≃ b₂›
+  case mpr =>
+    intro (And.intro (_ : a₁ ≃ a₂) (_ : b₁ ≃ b₂))
+    show (a₁, b₁) ≃ (a₂, b₂)
+    show expanded_eqv
+    intro hand
+    cases hand
+    case L => exact ‹a₁ ≃ a₂›
+    case R => exact ‹b₁ ≃ b₂›
+
 end Prod
 
 end Lean4Axiomatic.Relation.Equivalence.Impl

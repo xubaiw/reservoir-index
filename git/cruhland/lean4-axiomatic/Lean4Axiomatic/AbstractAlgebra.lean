@@ -70,7 +70,7 @@ class DistributiveOn
   - `z`: the right argument to `g`.
   -/
   distrib {x y z : α} :
-    let f' := forHand hand f
+    let f' := hand.align f
     f' x (g y z) ≃ g (f' x y) (f' x z)
 
 export DistributiveOn (distrib)

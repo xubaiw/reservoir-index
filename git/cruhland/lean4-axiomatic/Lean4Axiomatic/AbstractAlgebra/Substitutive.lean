@@ -10,6 +10,10 @@ open Relation.Equivalence (EqvOp)
 
 Generalized substitution allows the equalities of the ordinary substitution
 property to be replaced by arbitrary binary relations.
+
+## Substitution
+
+### Definitions
 -/
 
 /--
@@ -86,82 +90,132 @@ export Injective (inject)
 
 /--
 Class for types and operations that satisfy either the left- or right-handed
-binary generalized substitution property.
+heterogeneous binary generalized substitution property.
 
 For more information see `SubstitutiveOn.subst₂`.
 
 **Named parameters**
-- `hand`: indicates whether the property is left- or right-handed.
-- `α`: the argument type of the binary operation `f`.
-- `β`: the result type of the binary operation `f`.
-- `f`: the binary operation that obeys the generalized substitution property.
-- `C`: a constraint that the non-`hand` argument to `f` must meet.
-- `rα`: a binary relation over `f`'s argument type `α`.
-- `rβ`: a binary relation over `f`'s result type `β`.
+- `hand`:
+    Indicates whether the property is left- or right-handed.
+- `α`:
+    The `Sort` of `f`'s left-hand parameter.
+- `β`:
+    The `Sort` of `f`'s right-hand parameter.
+- `γ`:
+    The `Sort` of `f`'s result.
+- `f`:
+    The heterogeneous binary operation that obeys the generalized substitution
+    property.
+- `C`:
+    A constraint that the non-`hand` argument to `f` must meet.
+- `inputRel`:
+    A binary relation on values of `α` or `β`, whichever is selected by `hand`.
+- `outputRel`:
+    A binary relation on values of `γ`.
 -/
 class SubstitutiveOn
-    (hand : Hand) {α : Sort u} {β : Sort v}
-    (f : α → α → β) (C : outParam (α → Prop))
-    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    where
+    (hand : Hand) {α β : Sort u} {γ : Sort v} (f : α → β → γ)
+    (C : outParam (hand.pick β α → Prop))
+    (inputRel : outParam (hand.pick α β → hand.pick α β → Prop))
+    (outputRel : γ → γ → Prop)
+    :=
   /--
-  The left- or right-handed generalized substitution property of a binary
-  operation `f`.
+  The left- or right-handed generalized substitution property of a
+  heterogeneous binary operation `f`.
 
-  An `f` that satisfies this property must map values of type `α` that are
-  related by `rα` -- given as arguments in the position specified by `hand` --
-  to values of type `β` that are related by `rβ`.
+  An `f` that satisfies this property must map values of one of its input sorts
+  (either `α` or `β`) that are related by `inputRel` to values of sort `γ` that
+  are related by `outputRel`. If `hand` is `Hand.L`, then the input sort is `α`
+  because that's the one for `f`'s left-hand parameter. Similarly, `Hand.R`
+  picks `β` for the input sort.
 
-  Often `α` and `β` will be the same type, and `rα` and `rβ` will be the same
-  relation. A simple example is of addition on natural numbers: if we know
-  `n₁ ≃ n₂`, then we can conclude that `n₁ + m ≃ n₂ + m`, or that
+  Often `α`, `β`, and `γ` will be the same sort, and `inputRel` and `outputRel`
+  will be the same relation. A simple example is addition on natural numbers:
+  if we know `n₁ ≃ n₂`, then we can conclude that `n₁ + m ≃ n₂ + m`, or that
   `m + n₁ ≃ m + n₂`.
 
   More advanced applications may require a nontrivial constraint `C` on `y`; an
   example is that `x₁ < x₂` implies `x₁ * y < x₂ * y` only for positive `y`.
 
   **Named parameters**
-  - see `SubstitutiveOn` for the class parameters.
-  - `x₁` and `x₂`: the arguments to `f`, related by `rα`; the `hand` parameter
-    indicates which side of `f` they are given on.
-  - `y`: the other argument to `f`; goes on the side opposite `hand`.
-  - `cy`: evidence that the constraint on `y` is satisfied.
+  - See `SubstitutiveOn` for the class parameters.
+  - `x₁` and `x₂`:
+      The arguments to `f`, related by `inputRel`; the `hand` parameter
+      indicates which side of `f` they are given on.
+  - `y`:
+      The other argument to `f`; goes on the side opposite `hand`.
+  - `cy`:
+      Evidence that the constraint on `y` is satisfied.
   -/
   subst₂
-    {x₁ x₂ y : α} (cy : C y)
-    : rα x₁ x₂ → rβ (forHand hand f x₁ y) (forHand hand f x₂ y)
+    {x₁ x₂ : hand.pick α β} {y : hand.pick β α} (cy : C y)
+    : inputRel x₁ x₂ → outputRel (hand.hAlign f x₁ y) (hand.hAlign f x₂ y)
 
 export SubstitutiveOn (subst₂)
 
 /--
 Convenience function for the left-handed binary generalized substitution
-property, without a constraint on `y`.
+property, for a homogeneous `f` without a constraint on `y`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `subst₂` function.
 
 See `SubstitutiveOn.subst₂` for detailed documentation.
+
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s input parameters.
+- `β`:
+    The `Sort` of `f`'s result.
+- `f`:
+    The homogeneous binary operation that obeys the left-handed generalized
+    substitution property.
+- `rα`:
+    A binary relation on `f`'s input values.
+- `rβ`:
+    A binary relation on `f`'s output values.
+- `x₁`, `x₂`:
+    The left-hand arguments to `f`, related by `rα`.
+- `y`:
+    The right-hand argument to `f`.
 -/
 abbrev substL
     {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
     {rβ : β → β → Prop} [self : SubstitutiveOn Hand.L f tc rα rβ]
     {x₁ x₂ y : α} :=
-  @subst₂ Hand.L α β f tc rα rβ self x₁ x₂ y True.intro
+  @subst₂ Hand.L α α β f tc rα rβ self x₁ x₂ y True.intro
 
 /--
 Convenience function for the right-handed binary generalized substitution
-property, without a constraint on `y`.
+property, for a homogeneous `f` without a constraint on `y`.
 
 Can often resolve cases where type inference gets stuck when using the more
 general `subst₂` function.
 
 See `SubstitutiveOn.subst₂` for detailed documentation.
+
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s input parameters.
+- `β`:
+    The `Sort` of `f`'s result.
+- `f`:
+    The homogeneous binary operation that obeys the right-handed generalized
+    substitution property.
+- `rα`:
+    A binary relation on `f`'s input values.
+- `rβ`:
+    A binary relation on `f`'s output values.
+- `x₁`, `x₂`:
+    The right-hand arguments to `f`, related by `rα`.
+- `y`:
+    The left-hand argument to `f`.
 -/
 abbrev substR
     {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
     {rβ : β → β → Prop} [self : SubstitutiveOn Hand.R f tc rα rβ]
     {x₁ x₂ y : α} :=
-  @subst₂ Hand.R α β f tc rα rβ self x₁ x₂ y True.intro
+  @subst₂ Hand.R α α β f tc rα rβ self x₁ x₂ y True.intro
 
 /--
 Convenience function for the left-handed binary generalized substitution
@@ -186,20 +240,76 @@ See `SubstitutiveOn.subst₂` for detailed documentation.
 abbrev substRC := @subst₂ Hand.R
 
 /--
-Convenience class for types and operations that satisfy the full (left- **and**
-right-handed) binary generalized substitution property.
+Convenience class for types and heterogeneous operations that satisfy the full
+(left- **and** right-handed) binary generalized substitution property.
 
 See `SubstitutiveOn` for detailed documentation.
--/
-class Substitutive₂
-    {α : Sort u} {β : Sort v}
-    (f : α → α → β) (C : α → Prop) (rα : α → α → Prop) (rβ : β → β → Prop)
-    where
-  substitutiveL : SubstitutiveOn Hand.L f C rα rβ
-  substitutiveR : SubstitutiveOn Hand.R f C rα rβ
 
-attribute [instance] Substitutive₂.substitutiveL
-attribute [instance] Substitutive₂.substitutiveR
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s left-hand parameter.
+- `β`:
+    The `Sort` of `f`'s right-hand parameter.
+- `γ`:
+    The `Sort` of `f`'s result.
+- `f`:
+    The heterogeneous binary operation that obeys the left- and right-handed
+    generalized substitution property.
+- `CL`:
+    A constraint that the right-hand argument to `f` must meet for left-handed
+    substitution.
+- `CR`:
+    A constraint that the left-hand argument to `f` must meet for right-handed
+    substitution.
+- `inputRelL`:
+    A binary relation on input values of sort `α`, used for left-handed
+    substitution.
+- `inputRelR`:
+    A binary relation on input values of sort `β`, used for right-handed
+    substitution.
+- `outputRel`:
+    A binary relation on values of `γ`.
+-/
+class HSubstitutive₂
+    {α β : Sort u} {γ : Sort v} (f : α → β → γ) (CL : β → Prop) (CR : α → Prop)
+    (inputRelL : α → α → Prop) (inputRelR : β → β → Prop)
+    (outputRel : γ → γ → Prop)
+    :=
+  substitutiveL : SubstitutiveOn Hand.L f CL inputRelL outputRel
+  substitutiveR : SubstitutiveOn Hand.R f CR inputRelR outputRel
+
+attribute [instance] HSubstitutive₂.substitutiveL
+attribute [instance] HSubstitutive₂.substitutiveR
+
+/--
+Simplified type constructor for the very common case of _homogeneous_
+operations that satisfy the full (left- **and** right-handed) binary
+generalized substitution property.
+
+See `HSubstitutive₂` for the more general type constructor that supports
+heterogeneous operations.
+
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s input parameters.
+- `β`:
+    The `Sort` of `f`'s result.
+- `f`:
+    The homogeneous binary operation that obeys the left- and right-handed
+    generalized substitution property.
+- `C`:
+    A constraint that the argument to `f` (on the side opposite the substituted
+    argument) must meet.
+- `inputRel`:
+    A binary relation on the input values to `f` that are being substituted.
+-/
+abbrev Substitutive₂
+    {α : Sort u} {β : Sort v}
+    (f : α → α → β) (C : α → Prop) (inputRel : α → α → Prop)
+    :=
+  @HSubstitutive₂ α α β f C C inputRel inputRel
+
+/-! ### Properties -/
 
 /--
 If two properties are logically equivalent, one can be substituted for the
@@ -411,6 +521,87 @@ instance neq_substitutive
   substitutiveL := neq_substL
   substitutiveR := substR_from_substL_swap (rS := (· ↔ ·)) neq_substL
 
+namespace Prod
+
+/-! ### Products (i.e. ordered pairs) -/
+
+open Relation.Equivalence.Impl.Prod (eqv_defn)
+
+variable {α β : Type}
+variable [EqvOp α]
+variable [EqvOp β]
+
+/--
+Substitution of equivalent values in the left component of ordered pairs.
+
+**Intuition**: This follows directly from the definition of equivalence for
+ordered pairs. The left components must be equivalent for the pairs to be
+equivalent.
+
+**Named parameters**
+- `α`: The type of the pairs' left components.
+- `β`: The type of the pairs' right components.
+- `x₁`, `x₂`: The equivalent left component values to substitute.
+- `y`: The right component value.
+
+**Class parameters**
+- `EqvOp α`, `EqvOp β`: Needed for equivalence between pairs.
+-/
+theorem substL {x₁ x₂ : α} {y : β} : x₁ ≃ x₂ → (x₁, y) ≃ (x₂, y) := by
+  intro (_ : x₁ ≃ x₂)
+  apply eqv_defn.mpr
+  show x₁ ≃ x₂ ∧ y ≃ y
+  exact And.intro ‹x₁ ≃ x₂› Rel.refl
+
+def substitutiveL
+    : SubstitutiveOn Hand.L (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
+    := {
+  subst₂ := λ (_ : True) => substL
+}
+
+/--
+Substitution of equivalent values in the right component of ordered pairs.
+
+**Intuition**: This follows directly from the definition of equivalence for
+ordered pairs. The right components must be equivalent for the pairs to be
+equivalent.
+
+**Named parameters**
+- `α`: The type of the pairs' left components.
+- `β`: The type of the pairs' right components.
+- `x₁`, `x₂`: The equivalent right component values to substitute.
+- `y`: The left component value.
+
+**Class parameters**
+- `EqvOp α`, `EqvOp β`: Needed for equivalence between pairs.
+-/
+theorem substR {x₁ x₂ : β} {y : α} : x₁ ≃ x₂ → (y, x₁) ≃ (y, x₂) := by
+  intro (_ : x₁ ≃ x₂)
+  apply eqv_defn.mpr
+  show y ≃ y ∧ x₁ ≃ x₂
+  exact And.intro Rel.refl ‹x₁ ≃ x₂›
+
+def substitutiveR
+    : SubstitutiveOn Hand.R (α := α) (β := β) (·,·) tc (· ≃ ·) (· ≃ ·)
+    := {
+  subst₂ := λ (_ : True) => substR
+}
+
+instance substitutive
+    : HSubstitutive₂ (α := α) (β := β) (·,·) tc tc (· ≃ ·) (· ≃ ·) (· ≃ ·)
+    := {
+  substitutiveL := substitutiveL
+  substitutiveR := substitutiveR
+}
+
+end Prod
+
+/-!
+## Cancellation
+
+### Definitions
+-/
+
 /--
 Class for types and operations that satisfy either the left- or right-handed
 generalized cancellation property.
@@ -458,7 +649,7 @@ class CancellativeOn
   -/
   cancel
     {x y₁ y₂ : α} (cx : C x)
-    : rβ (forHand hand f x y₁) (forHand hand f x y₂) → rα y₁ y₂
+    : rβ (hand.align f x y₁) (hand.align f x y₂) → rα y₁ y₂
 
 export CancellativeOn (cancel)
 
@@ -530,6 +721,8 @@ class Cancellative
 
 attribute [instance] Cancellative.cancellativeL
 attribute [instance] Cancellative.cancellativeR
+
+/-! ### Properties -/
 
 /--
 Derives the right-handed generalized cancellation property from its left-handed
