@@ -28,7 +28,59 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">SMT Lean</h3>
-<p dir="auto">This project is inspired by <a href="https://smtcoq.github.io/" rel="nofollow">SMTCoq</a> and aims to provide Lean tactics that discharge goals into SMT solvers. This project is in its early design/development phase and is not recommended for use.</p>
+<p dir="auto">This project is inspired by <a href="https://smtcoq.github.io/" rel="nofollow">SMTCoq</a> and aims to
+provide Lean tactics that discharge goals into SMT solvers. This project is
+in its early design/development phase and is not recommended for use.</p>
+<h3 dir="auto">Requirements</h3>
+<p dir="auto"><code>lean-smt</code> communicates with SMT solvers via the SMT-LIB textual interface.
+Therefore, it requires a supported SMT solver to be installed. Currently,
+<code>lean-smt</code> supports two SMT solvers:</p>
+<ul dir="auto">
+<li><a href="https://cvc5.github.io" rel="nofollow"><code>cvc5</code></a> (default).</li>
+<li><a href="https://github.com/Z3Prover/z3"><code>z3</code></a>.</li>
+</ul>
+<h3 dir="auto">Usage</h3>
+<p dir="auto">To use the <code>lean-smt</code> in your project. Add the following line to your list of
+dependencies in <code>lakefile.lean</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require smt from git "https://github.com/ufmg-smite/lean-smt.git"@"main""><pre>require smt <span class="pl-k">from</span> git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/ufmg-smite/lean-smt.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>main<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto"><code>lean-smt</code> comes with one main tactic, <code>smt</code>, that translates the current goal
+into an SMT query, sends the query to an SMT solver, and prints the result
+returned by the SMT solver. The tactic DOES NOT currently generate a proof term
+to discharge the goal.</p>
+<h3 dir="auto">Example</h3>
+<p dir="auto">To use the <code>smt</code> tactic, you just need to import the <code>Smt</code> library:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Smt
+
+theorem modus_ponens (p q : Prop) : p → (p → q) → q := by
+  smt
+  simp_all"><pre><span class="pl-k">import</span> Smt
+
+<span class="pl-k">theorem</span> <span class="pl-en">modus_ponens</span> (p q : <span class="pl-k">Prop</span>) : p → (p → q) → q := <span class="pl-k">by</span>
+  smt
+  simp_all</pre></div>
+<p dir="auto">For the theorem above, <code>smt</code> prints</p>
+<div class="highlight highlight-source-smt notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="goal: p → (p → q) → q
+
+query:
+(declare-const p Bool)
+(declare-const q Bool)
+(assert (not (=> p (=> (=> p q) q))))
+(check-sat)
+
+result: unsat"><pre>goal: p → (p → q) → q
+
+query:
+(<span class="pl-k">declare-const</span> <span class="pl-en">p</span> <span class="pl-c1">Bool</span>)
+(<span class="pl-k">declare-const</span> <span class="pl-en">q</span> <span class="pl-c1">Bool</span>)
+(<span class="pl-k">assert</span> (<span class="pl-k">not</span> (<span class="pl-k">=></span> p (<span class="pl-k">=></span> (<span class="pl-k">=></span> p q) q))))
+(<span class="pl-k">check-sat</span>)
+
+result: <span class="pl-c1">unsat</span></pre></div>
+<p dir="auto">You can specify the SMT solver to use like so:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option smt.solver.kind "z3""><pre><span class="pl-k">set_option</span> smt.solver.kind <span class="pl-s"><span class="pl-pds">"</span>z3<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto"><code>lean-smt</code> assumes the specified SMT solver to be in the path. If that's not
+the case, you can specify the path to the SMT solver like so:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="set_option smt.solver.path "path/to/z3""><pre><span class="pl-k">set_option</span> smt.solver.path <span class="pl-s"><span class="pl-pds">"</span>path/to/z3<span class="pl-pds">"</span></span></pre></div>
 </article></div></main>
 </body>
 </html>
