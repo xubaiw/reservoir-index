@@ -69,6 +69,10 @@ structure PackageConfig extends WorkspaceConfig where
   /-
   An `Array` of the package's dependencies.
   See the documentation of `Dependency` for more information.
+
+  **DEPRECATED:**
+  This setting will be removed in a future version of Lake.
+  Use the `require` syntax to declare dependencies instead.
   -/
   dependencies : Array Dependency := #[]
 
@@ -82,7 +86,7 @@ structure PackageConfig extends WorkspaceConfig where
 
   /--
   The optional `PackageFacet` to build on a bare `lake build` of the package.
-  Can be one of `exe`, `leanLib`, `staticLib`, `sharedLib`.
+  Can be one of `exe`, `leanLib`, `staticLib`, `sharedLib`, or `none`.
   Defaults to `exe`. See `lake help build` for more info on build facets.
 
   **DEPRECATED:**
@@ -200,6 +204,8 @@ structure PackageConfig extends WorkspaceConfig where
   Additional library `FileTarget`s (beyond the package's and its dependencies'
   Lean libraries) to build and link to the package's binaries (and to dependent
   packages' binaries).
+
+  **DEPRECATED:** Use separate `extern_lib` targets instead.
   -/
   moreLibTargets : Array FileTarget := #[]
 

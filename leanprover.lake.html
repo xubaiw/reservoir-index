@@ -29,21 +29,18 @@
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lake</h3>
 <p dir="auto">Lake (Lean Make) is a new build system and package manager for Lean 4.
-With Lake, package configuration is written in Lean inside a dedicated <code>lakefile.lean</code> stored in the root of the package directory. Each <code>lakefile.lean</code> includes a <code>package</code> declaration (akin to <code>main</code>) which defines the package's configuration.</p>
+With Lake, the package's configuration is written in Lean inside a dedicated <code>lakefile.lean</code> stored in the root of the package's directory.</p>
+<p dir="auto">Each <code>lakefile.lean</code> includes a <code>package</code> declaration (akin to <code>main</code>) which defines the package's basic configuration. It also typically includes build configurations for different targets (e.g., Lean libraries and binary executables) and Lean scripts to run on the command line (via <code>lake script run</code>).</p>
 <h4 dir="auto">Table of Contents</h4>
 <ul dir="auto">
 <li><a href="#getting-lake">Getting Lake</a></li>
 <li><a href="#creating-and-building-a-package">Creating and Building a Package</a></li>
-<li><a href="#package-configuration-options">Package Configuration Options</a>
-<ul dir="auto">
-<li><a href="#workspace-options">Workspace Options</a></li>
-<li><a href="#per-package-options">Per Package Options</a></li>
-</ul>
-</li>
+<li><a href="#package-configuration-options">Package Configuration Options</a></li>
 <li><a href="#defining-build-targets">Defining Build Targets</a>
 <ul dir="auto">
 <li><a href="#lean-libraries">Lean Libraries</a></li>
 <li><a href="#binary-executables">Binary Executables</a></li>
+<li><a href="#external-libraries">External Libraries</a></li>
 </ul>
 </li>
 <li><a href="#adding-dependencies">Adding Dependencies</a>
@@ -51,7 +48,7 @@ With Lake, package configuration is written in Lean inside a dedicated <code>lak
 <li><a href="#syntax-of-require">Syntax of <code>require</code></a></li>
 </ul>
 </li>
-<li><a href="#writing-and-running-lake-scripts">Writing and Running Lake Scripts</a></li>
+<li><a href="#writing-and-running-scripts">Writing and Running Scripts</a></li>
 <li><a href="#building-and-running-lake-from-the-source">Building and Running Lake from the Source</a>
 <ul dir="auto">
 <li><a href="#building-with-nix-flakes">Building with Nix Flakes</a></li>
@@ -61,7 +58,7 @@ With Lake, package configuration is written in Lean inside a dedicated <code>lak
 </ul>
 <h4 dir="auto">Getting Lake</h4>
 <p dir="auto">Lake is part of the <a href="https://github.com/leanprover/lean4">lean4</a> repository and is distributed along with its official releases (e.g., as part of the <a href="https://github.com/leanprover/elan">elan</a> toolchain). So if you have installed a semi-recent Lean 4 nightly, you should already have it!</p>
-<p dir="auto">Note that the Lake included with Lean is not updated as frequently as this repository, so some bleeding edge features may be missing. If you want to build the latest version from the source yourself, check out the build instructions at the bottom of this README.</p>
+<p dir="auto">Note that the Lake included with Lean is not updated as frequently as this repository, so some bleeding edge features may be missing. If you want to build the latest version from the source yourself, check out the <a href="#building-and-running-lake-from-the-source">build instructions</a> at the bottom of this README.</p>
 <h4 dir="auto">Creating and Building a Package</h4>
 <p dir="auto">To create a new package, either run <code>lake init <package-name></code> to setup the package in the current directory or <code>lake new <package-name></code> to create it in a new directory. For example, we could create the package <code>hello</code> like so:</p>
 <div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ mkdir hello
@@ -118,7 +115,7 @@ lean_lib Hello {
 lean_exe hello {
   root := <span class="pl-en">`Main</span>
 }</pre></div>
-<p dir="auto">The command <code>lake build</code> can then be used to build the package (and its dependencies, if it has them) into a native executable. The result will be placed in <code>build/bin</code>.</p>
+<p dir="auto">The command <code>lake build</code> can then be used to build the package (and its <a href="#adding-dependencies">dependencies</a>, if it has them) into a native executable. The result will be placed in <code>build/bin</code>.</p>
 <div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build
 ...
 $ ./build/bin/hello
@@ -130,12 +127,12 @@ Hello, world!
 <p dir="auto">Examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
 <h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>
-<h5 dir="auto">Workspace Options</h5>
+<p dir="auto"><strong>Workspace Options</strong></p>
 <p dir="auto">Workspace options are shared across a package and its dependencies.</p>
 <ul dir="auto">
 <li><code>packagesDir</code>: The directory to which Lake should download remote dependencies. Defaults to <code>lean_packages</code>.</li>
 </ul>
-<h5 dir="auto">Per Package Options</h5>
+<p dir="auto"><strong>Per Package Options</strong></p>
 <ul dir="auto">
 <li><code>srcDir</code>: The directory containing the package's Lean source files. Defaults to the package's directory. (This will be passed to <code>lean</code> as the <code>-R</code> option.)</li>
 <li><code>buildDir</code>: The directory to which Lake should output the package's build results. Defaults to <code>build</code>.</li>
@@ -147,11 +144,11 @@ Hello, world!
 <li><code>moreServerArgs</code>:  Additional arguments to pass to the Lean language server (i.e., <code>lean --server</code>) launched by <code>lake serve</code>.</li>
 <li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
 <li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes <code>-O3</code> and <code>-DNDEBUG</code> automatically, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
-<li><code>moreLibTargets</code>: An <code>Array</code> of additional library <code>FileTarget</code>s (beyond the package's and its dependencies' Lean libraries) to build and link to the package's binaries (and to dependent packages' binaries).</li>
-<li><code>defaultFacet</code>: The <code>PackageFacet</code> to build on a bare <code>lake build</code> of the package. Can be one of <code>bin</code>, <code>staticLib</code>, <code>sharedLib</code>, or <code>oleans</code>. Defaults to <code>exe</code>. See <code>lake help build</code> for more info on build facets. <strong>DEPRECATED:</strong> Package facets will be removed in a future version of Lake. Use a separate <code>lean_lib</code> or <code>lean_exe</code> default target instead.</li>
+<li><code>moreLibTargets</code>: An <code>Array</code> of additional library <code>FileTarget</code>s (beyond the package's and its dependencies' Lean libraries) to build and link to the package's binaries (and to dependent packages' binaries). <strong>DEPRECATED:</strong> Use separate <a href="#external-libraries"><code>extern_lib</code></a> targets instead.</li>
+<li><code>defaultFacet</code>: The <code>PackageFacet</code> to build on a bare <code>lake build</code> of the package. Can be one of <code>exe</code>, <code>leanLib</code>, <code>staticLib</code>, <code>sharedLib</code>, or <code>none</code>. Defaults to <code>exe</code>. See <code>lake help build</code> for more info on build facets. <strong>DEPRECATED:</strong> Package facets will be removed in a future version of Lake. Use a separate <a href="#lean-libraries"><code>lean_lib</code></a> or <a href="#binary-executables"><code>lean_exe</code></a> default target instead.</li>
 </ul>
 <h4 dir="auto">Defining Build Targets</h4>
-<p dir="auto">A Lake package can include multiple configurations for building different Lean libraries and binary executables. Libraries are defined using the <code>lean_lib</code> command and executables are defined using <code>lean_exe</code>. Any number of these declarations can be marked with the <code>@[defaultTarget]</code> attribute to tell Lake to build them on a bare <code>lake build</code> of the package.</p>
+<p dir="auto">A Lake package can have many build targets, such as different Lean libraries and multiple binary executables. Any number of these declarations can be marked with the <code>@[defaultTarget]</code> attribute to tell Lake to build them on a bare <code>lake build</code> of the package.</p>
 <h5 dir="auto">Lean Libraries</h5>
 <p dir="auto">A Lean library target defines a set of Lean modules available to <code>import</code> and how to build them.</p>
 <p dir="auto"><strong>Syntax</strong></p>
@@ -183,6 +180,12 @@ Hello, world!
 <li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
 <li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> when linking the binary executable. These will come <em>after</em> the paths of libraries built with the package's <code>moreLibTargets</code>.</li>
 </ul>
+<h5 dir="auto">External Libraries</h5>
+<p dir="auto">A external library target is a non-Lean binary library that will be linked to the binaries of the package and its dependents (e.g., their shared libraries and executables).</p>
+<p dir="auto"><strong>Syntax</strong></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="extern_lib «target-name» :=
+  -- term of type `FileTarget` that builds the external library"><pre>extern_lib «<span class="pl-en">target-name</span>» :=
+  <span class="pl-c"><span class="pl-c">--</span> term of type `FileTarget` that builds the external library</span></pre></div>
 <h4 dir="auto">Adding Dependencies</h4>
 <p dir="auto">Lake packages can have dependencies. Dependencies are other Lake packages the current package needs in order to function. They can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello
@@ -198,9 +201,9 @@ require mathlib <span class="pl-k">from</span> git
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require foo from "path"/"to"/"local"/"package" with ["optional","args"]
 require bar from git "url.git"@"rev"/"optional"/"path-to"/"dir-with-pkg""><pre>require foo <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">"</span>path<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>local<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>package<span class="pl-pds">"</span></span> <span class="pl-k">with</span> [<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>args<span class="pl-pds">"</span></span>]
 require bar <span class="pl-k">from</span> git <span class="pl-s"><span class="pl-pds">"</span>url.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>rev<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>path-to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>dir-with-pkg<span class="pl-pds">"</span></span></pre></div>
-<p dir="auto">The first form adds a local dependency and the second form adds a Git dependency. For a Git dependency, the revision can be a commit hash, branch, or tag. Also, the <code>/</code> and the following term of the <code>require</code> is optional.</p>
+<p dir="auto">The first form adds a local dependency and the second form adds a Git dependency. For a Git dependency, the revision can be a commit hash, branch, or tag. Also, the <code>@"rev"</code> and <code>/"path-to"/"term"</code> parts of the <code>require</code> are optional.</p>
 <p dir="auto">Both forms also support an optional <code>with</code> clause to specify arguments to pass to the dependency's package configuration (i.e., same as <code>args</code> in a <code>lake build -- <args...></code> invocation). The elements of both the <code>from</code> and <code>with</code> clauses are proper terms so normal computation is supported within them (though parentheses made be required to disambiguate the syntax).</p>
-<h4 dir="auto">Writing and Running Lake Scripts</h4>
+<h4 dir="auto">Writing and Running Scripts</h4>
 <p dir="auto">A configuration file can also contain a number of <code>scripts</code> declaration. A script is an arbitrary <code>(args : List String) → ScriptM UInt32</code> definition that can be run by <code>lake script run</code>. For example, given the following <code>lakefile.lean</code>:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake
 open Lake DSL
