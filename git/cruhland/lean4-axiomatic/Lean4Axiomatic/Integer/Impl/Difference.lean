@@ -1,8 +1,5 @@
 import Lean4Axiomatic.Integer
 import Lean4Axiomatic.Natural
-import Lean4Axiomatic.Operators
-
-open Lean4Axiomatic
 
 /-!
 # Implementation of integers as formal differences of natural numbers
@@ -33,6 +30,15 @@ structure Difference (α : Type) : Type :=
 infixl:90 "——" => Difference.mk
 
 namespace Difference
+
+/--
+Create a `Difference` from an ordered pair of values.
+
+**Named parameters**
+- `α`: The type of both elements of the ordered pair.
+-/
+def from_prod {α : Type} : α × α → Difference α
+| (x, y) => x——y
 
 variable {ℕ : Type}
 variable [Natural ℕ]
@@ -86,7 +92,7 @@ theorem symm {a b : Difference ℕ} : a ≃ b → b ≃ a := by
 The equivalence relation on differences is transitive.
 
 **Proof intuition**: Add the underlying equalities of the two hypotheses; this
-nearly produces the goal equality, but both sides have an extra `bn + bp`. Use
+nearly produces the goal equality, but both sides have an extra `b₂ + b₁`. Use
 the cancellation property of natural number addition to remove it.
 
 The bulk of the proof is just the algebra needed to prepare for cancellation.
@@ -106,20 +112,37 @@ theorem trans {a b c : Difference ℕ} : a ≃ b → b ≃ c → a ≃ c := by
     (c₁ + a₂) + (b₂ + b₁) ≃ _ := Rel.refl
   exact AA.cancelR ‹(a₁ + c₂) + (b₂ + b₁) ≃ (c₁ + a₂) + (b₂ + b₁)›
 
-def eqvOp : Relation.Equivalence.EqvOp (Difference ℕ) := {
+instance eqvOp : Relation.Equivalence.EqvOp (Difference ℕ) := {
   toTildeDash := tildeDash
   refl := refl
   symm := symm
   trans := trans
 }
 
-def equality : Equality (Difference ℕ) := {
-  eqvOp := eqvOp
-}
+/--
+Conversion of ordered pairs into `Difference`s preserves equivalence.
 
-def core : Core (Difference ℕ) := {
-  toEquality := equality
-}
+**Proof intuition**: Equivalence of ordered pairs is stricter than equivalence
+of differences. For ordered pairs, both the left and right elements must be
+equivalent; for differences, any values representing the same gap are
+equivalent. Thus one only needs to show that the former is strong enough to
+imply the latter.
+-/
+instance from_prod_substitutive
+    : AA.Substitutive₁ (α := ℕ × ℕ) from_prod (· ≃ ·) (· ≃ ·)
+    := by
+  apply AA.Substitutive₁.mk
+  intro p q; revert p; intro ((n, m)); revert q; intro ((k, j))
+  intro (_ : (n, m) ≃ (k, j))
+  show from_prod (n, m) ≃ from_prod (k, j)
+  show n——m ≃ k——j
+  show n + j ≃ k + m
+  have (And.intro (_ : n ≃ k) (_ : m ≃ j)) :=
+    Relation.Equivalence.Impl.Prod.eqv_defn.mp ‹(n, m) ≃ (k, j)›
+  calc
+    n + j ≃ _ := AA.substL ‹n ≃ k›
+    k + j ≃ _ := AA.substR (Rel.symm ‹m ≃ j›)
+    k + m ≃ _ := Rel.refl
 
 /--
 Addition of differences.
@@ -134,8 +157,77 @@ instance addOp : Add (Difference ℕ) := {
   add := add
 }
 
+/--
+Addition of natural number differences is commutative.
+
+**Proof intuition**: Expand definitions to see that we need to show the
+equivalence of two differences of natural number sums. The left and right sides
+of the differences are directly equivalent via commutativity of natural number
+addition, so convert the differences into ordered pairs and use commutativity
+element-wise.
+-/
+theorem add_comm {a b : Difference ℕ} : a + b ≃ b + a := by
+  revert a; intro (a₁——a₂); revert b; intro (b₁——b₂)
+  show a₁——a₂ + b₁——b₂ ≃ b₁——b₂ + a₁——a₂
+  show (a₁ + b₁)——(a₂ + b₂) ≃ (b₁ + a₁)——(b₂ + a₂)
+  show from_prod (a₁ + b₁, a₂ + b₂) ≃ from_prod (b₁ + a₁, b₂ + a₂)
+  apply AA.subst₁
+  show (a₁ + b₁, a₂ + b₂) ≃ (b₁ + a₁, b₂ + a₂)
+  calc
+    (a₁ + b₁, a₂ + b₂) ≃ _ := AA.substL AA.comm
+    (b₁ + a₁, a₂ + b₂) ≃ _ := AA.substR AA.comm
+    (b₁ + a₁, b₂ + a₂) ≃ _ := Rel.refl
+
+instance add_commutative : AA.Commutative (α := Difference ℕ) (· + ·) := {
+  comm := add_comm
+}
+
+/--
+Adding the same difference on the right of two equivalent differences preserves
+their equivalence.
+
+**Proof intuition**: The property is already intuitively true; imagine
+extending two line segments of the same length by the same amount. So the proof
+just expands all definitions into equalities of sums of natural numbers, and
+performs algebra to obtain the desired result.
+-/
+theorem add_substL {a₁ a₂ b : Difference ℕ} : a₁ ≃ a₂ → a₁ + b ≃ a₂ + b := by
+  revert a₁; intro (n——m); revert a₂; intro (k——j); revert b; intro (p——q)
+  intro (_ : n——m ≃ k——j)
+  have : n + j ≃ k + m := ‹n——m ≃ k——j›
+  show n——m + p——q ≃ k——j + p——q
+  show (n + p)——(m + q) ≃ (k + p)——(j + q)
+  show (n + p) + (j + q) ≃ (k + p) + (m + q)
+  calc
+    (n + p) + (j + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (n + j) + (p + q) ≃ _ := AA.substL ‹n + j ≃ k + m›
+    (k + m) + (p + q) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (k + p) + (m + q) ≃ _ := Rel.refl
+
+def add_substitutiveL
+    : AA.SubstitutiveOn
+      Hand.L (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+  subst₂ := λ (_ : True) => add_substL
+}
+
+def add_substitutive
+    : AA.Substitutive₂ (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+  substitutiveL := add_substitutiveL
+  substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL
+}
+
+def equality : Equality (Difference ℕ) := {
+  eqvOp := eqvOp
+}
+
+instance core : Core (Difference ℕ) := {
+  toEquality := equality
+}
+
 def addition : Addition.Base (Difference ℕ) := {
   addOp := addOp
+  add_substitutive := add_substitutive
+  add_commutative := add_commutative
 }
 
 /--

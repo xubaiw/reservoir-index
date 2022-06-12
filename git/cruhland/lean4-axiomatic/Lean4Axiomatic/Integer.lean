@@ -22,8 +22,8 @@ required to construct an instance.
 - `ℤ`: a type that obeys all of the properties provided by this class.
 -/
 class Integer (ℤ : Type) :=
-  toAddition : Addition.Base ℤ
   toCore : Core ℤ
+  toAddition : Addition.Base ℤ
   toMultiplication : Multiplication.Base ℤ
 
 namespace Integer

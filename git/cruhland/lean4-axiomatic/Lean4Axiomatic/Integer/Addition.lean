@@ -1,3 +1,5 @@
+import Lean4Axiomatic.AbstractAlgebra
+import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic.Integer
 
@@ -10,9 +12,18 @@ Definition of addition, and properties that it must satisfy.
 
 All other properties of addition can be derived from these.
 -/
-class Addition.Base (ℤ : Type) :=
+class Addition.Base (ℤ : Type) [Core ℤ] :=
   /-- Definition of and syntax for addition. -/
   addOp : Add ℤ
+
+  /--
+  Addition preserves equality of integers; two equal integers are still equal
+  after the same quantity is added to both (on the left or right).
+  -/
+  add_substitutive : AA.Substitutive₂ (α := ℤ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
+
+  /-- Exchanging the operands of an addition does not change the result. -/
+  add_commutative : AA.Commutative (α := ℤ) (· + ·)
 
 namespace Addition
 export Addition.Base (addOp)

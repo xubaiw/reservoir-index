@@ -99,6 +99,7 @@ end
 ---@class InfoviewNewArgs
 ---@field width? integer
 ---@field height? integer
+---@field horizontal_position? "top"|"bottom"
 
 --- Create a new infoview.
 ---@param obj InfoviewNewArgs
@@ -120,11 +121,8 @@ function Infoview:open()
 
   local window_before_split = vim.api.nvim_get_current_win()
 
-  local win_width = vim.api.nvim_win_get_width(window_before_split)
-  local win_height = vim.api.nvim_win_get_height(window_before_split)
-
   local ch_aspect_ratio = 2.5 -- characters are 2.5x taller than they are wide
-  if win_width > ch_aspect_ratio * win_height then
+  if vim.o.columns > ch_aspect_ratio * vim.o.lines then
     self.__orientation = 'vertical'
     vim.cmd('botright ' .. self.__width .. 'vsplit')
   else
@@ -518,7 +516,7 @@ end
 
 --- Update the diff pin to use the current pin's positon params if they are valid,
 --- and the provided params if they are not.
----@param params UIParams
+---@param params? UIParams
 function Info:__update_auto_diff_pin(params)
   if self.pin.__ui_position_params and util.position_params_valid(self.pin.__ui_position_params) then
     -- update diff pin to previous position
