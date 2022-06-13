@@ -1,0 +1,49 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>yatima-inc/Megaparsec.lean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>yatima-inc/Megaparsec.lean</h1>
+<p>Lean 4 port of Megaparsec</p>
+<a href="https://github.com/yatima-inc/Megaparsec.lean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Megaparsec</h3>
+<p dir="auto">This is a port of the Haskell package
+<a href="https://hackage.haskell.org/package/megaparsec" rel="nofollow">megaparsec</a> to Lean 4.</p>
+<h4 dir="auto">Reference implementation as a submodule</h4>
+<p dir="auto">The original <code>megaparsec</code> repository is included as a reference in
+<code>reference/megaparsec</code>. To download it, include <code>--recursive</code> when cloning this
+repository.</p>
+<p dir="auto">If you have this repository cloned already, but need to fetch the reference implementation, please run <code>git submodule update --init --recursive</code></p>
+<h5 dir="auto">Haskell language server in VSCode</h5>
+<p dir="auto">The latest version of the extension uses GHCup (whatever it is).
+If you want to keep using Nix, you'll have to add the following two options to your <code>settings.json</code>:</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="  "haskell.manageHLS": "PATH",
+  "haskell.serverExecutablePath": "/nix/store/2xrgxzjcxww2z2xh05x06yf4xwcn103a-haskell-language-server-1.4.0.0/bin/haskell-language-server","><pre class="notranslate"><code>  "haskell.manageHLS": "PATH",
+  "haskell.serverExecutablePath": "/nix/store/2xrgxzjcxww2z2xh05x06yf4xwcn103a-haskell-language-server-1.4.0.0/bin/haskell-language-server",
+</code></pre></div>
+<p dir="auto">Where the second line is the output of running <code>which haskell-language-server</code>.
+At the time of writing, I don't know of a better way to make HLS work aside from this.</p>
+</article></div></main>
+</body>
+</html>
