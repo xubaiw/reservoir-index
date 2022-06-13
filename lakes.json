@@ -131,6 +131,7 @@
  "xubaiw/sjtu-math2501-ode",
  "yatima-inc/Http.lean",
  "yatima-inc/LSpec",
+ "yatima-inc/Megaparsec.lean",
  "yatima-inc/Radiya.lean",
  "yatima-inc/yatima-lang",
  "zaxioms/LeanAlg",
