@@ -1,0 +1,18 @@
+% proving 2^n > n^2 - 1
+
+Theorem Two to n is greater than n squared minus one: $2^n > n^2 - 1$
+
+We will prove this by induction.
+
+For $n = 0$, we have $2^0 > 0^2 - 1$
+For $n = 1$, we have $2^1 = 2 > 1 = 1^2 - 1$
+For $n = 2$, we have $2^2 = 4 > 3 = 2^2 - 1$
+% For $n = 3$, we have $2^3 = 8 > 7 = 3^2 - 1$
+
+We now want to prove that this is true for $n = k + 3$ if it is true for $n = k + 2$.
+
+By simple arithmetic, we have $(k+3) \geq 3$
+
+We have $2^{k+1} = 2 \cdot 2^k > 2 \cdot (k^2 - 1) = k^2 + k^2 - 2 \geq k^2 + 3k - 2 \geq k^2 + 2k + 1 \gt k^2 + 2k = (k+1)^2 - 1$ 
+
+Hence, we have $2^{k+1} > (k+1)^2 - 1$
