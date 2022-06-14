@@ -75,6 +75,9 @@ class Multiplication.Derived
   mul_cancellative : AA.Cancellative (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
 
 attribute [instance] Multiplication.Derived.mul_associative
+attribute [instance] Multiplication.Derived.mul_commutative
+attribute [instance] Multiplication.Derived.mul_distributive
+attribute [instance] Multiplication.Derived.mul_substitutive_eq
 
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
