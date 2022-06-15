@@ -1,3 +1,10 @@
+/-
+Copyright (c) 2021-2022 by the authors listed in the file AUTHORS and their
+institutional affiliations. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Abdalrhman Mohamed
+-/
+
 import Lean
 import Std
 
@@ -45,12 +52,12 @@ def registerSmtAttr (attrName : Name) (attrDescr : String)
     descr := attrDescr
     applicationTime := AttributeApplicationTime.afterTypeChecking
     add   := fun decl stx attrKind => do
-      trace[Smt.debug.attr] s!"attrName: {attrName}, attrDescr: {attrDescr}"
-      trace[Smt.debug.attr] s!"decl: {decl}, stx: {stx}, attrKind: {attrKind}"
+      trace[smt.debug.attr] s!"attrName: {attrName}, attrDescr: {attrDescr}"
+      trace[smt.debug.attr] s!"decl: {decl}, stx: {stx}, attrKind: {attrKind}"
       Attribute.Builtin.ensureNoArgs stx
       validate decl
       setEnv (smtExt.addEntry (← getEnv) decl)
-      trace[Smt.debug.attr]
+      trace[smt.debug.attr]
         s!"transformers: {(smtExt.getState (← getEnv)).toList}"
     erase := fun declName => do
       let s := smtExt.getState (← getEnv)

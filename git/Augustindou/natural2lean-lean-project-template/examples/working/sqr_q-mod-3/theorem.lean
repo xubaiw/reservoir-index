@@ -1,7 +1,4 @@
-import LeanUtils.Tactic
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Use
-
+import LeanUtils
 open Nat
 
 theorem square_mod_3 (q : Nat) : (¬divisible 3 q) → (q^2 % 3 = 1) := by

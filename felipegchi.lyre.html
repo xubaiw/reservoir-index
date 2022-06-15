@@ -21,16 +21,49 @@
 </header>
 <main>
 <h1>felipegchi/lyre</h1>
-<p>None Description</p>
+<p>Incomplete LALR(1) DSL for Lean (that compiles to a LR Table but does not compile to lean code lol)</p>
 <a href="https://github.com/felipegchi/lyre">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-{
-  "message": "Not Found",
-  "documentation_url": "https://docs.github.com/rest/reference/repos#get-a-repository-readme"
-}
-</main>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Lyre</h3>
+<p dir="auto">Incomplete LALR(1) DSL for Lean (that compiles to a LR Table but does not compile to lean code lol)</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lyre.Grammar
+import Lyre.LR1
+import Lyre.DSL
+open DSL
+
+grammar myGrammar where
+
+  start s { String }
+
+  token x      : { "a" }
+  token star   : { "v" }
+  token eq     : { "c" }
+
+  rule s
+    :            { Int }
+    | s s star   { d }
+    | s s x      { x }
+    | x          { e }"><pre><span class="pl-k">import</span> Lyre.Grammar
+<span class="pl-k">import</span> Lyre.LR1
+<span class="pl-k">import</span> Lyre.DSL
+<span class="pl-k">open</span> DSL
+
+grammar myGrammar where
+
+  start s { String }
+
+  token x      : { <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span> }
+  token star   : { <span class="pl-s"><span class="pl-pds">"</span>v<span class="pl-pds">"</span></span> }
+  token eq     : { <span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span> }
+
+  rule s
+    :            { Int }
+    | s s star   { d }
+    | s s x      { x }
+    | x          { e }</pre></div>
+</article></div></main>
 </body>
 </html>

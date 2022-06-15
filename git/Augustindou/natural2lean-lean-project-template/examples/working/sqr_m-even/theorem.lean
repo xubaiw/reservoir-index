@@ -1,6 +1,4 @@
-import LeanUtils.Tactic
-import Mathlib.Tactic.Ring
-
+import LeanUtils
 open Nat
 
 theorem square_of_even_number_is_even (m : Nat) : (even m) → (even (m ^ 2)) := by
