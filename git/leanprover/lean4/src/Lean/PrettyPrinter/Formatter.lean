@@ -70,7 +70,7 @@ unsafe def mkFormatterAttribute : IO (KeyedDeclsAttribute Formatter) :=
       if (builtin && (env.find? id).isSome) || Parser.isValidSyntaxNodeKind env id then pure id
       else throwError "invalid [formatter] argument, unknown syntax kind '{id}'"
   } `Lean.PrettyPrinter.formatterAttribute
-@[builtinInit mkFormatterAttribute] constant formatterAttribute : KeyedDeclsAttribute Formatter
+@[builtinInit mkFormatterAttribute] opaque formatterAttribute : KeyedDeclsAttribute Formatter
 
 unsafe def mkCombinatorFormatterAttribute : IO ParserCompiler.CombinatorAttribute :=
   ParserCompiler.registerCombinatorAttribute
@@ -81,7 +81,7 @@ unsafe def mkCombinatorFormatterAttribute : IO ParserCompiler.CombinatorAttribut
   Note that, unlike with [formatter], this is not a node kind since combinators usually do not introduce their own node kinds.
   The tagged declaration may optionally accept parameters corresponding to (a prefix of) those of `c`, where `Parser` is replaced
   with `Formatter` in the parameter types."
-@[builtinInit mkCombinatorFormatterAttribute] constant combinatorFormatterAttribute : ParserCompiler.CombinatorAttribute
+@[builtinInit mkCombinatorFormatterAttribute] opaque combinatorFormatterAttribute : ParserCompiler.CombinatorAttribute
 
 namespace Formatter
 
@@ -177,11 +177,11 @@ def withMaybeTag (pos? : Option String.Pos) (x : FormatterM Unit) : Formatter :=
 -- `categoryParser -> mkAntiquot -> termParser -> categoryParser`, so we need to introduce an indirection somewhere
 -- anyway.
 @[extern "lean_mk_antiquot_formatter"]
-constant mkAntiquot.formatter' (name : String) (kind : Option SyntaxNodeKind) (anonymous := true) : Formatter
+opaque mkAntiquot.formatter' (name : String) (kind : Option SyntaxNodeKind) (anonymous := true) : Formatter
 
 -- break up big mutual recursion
 @[extern "lean_pretty_printer_formatter_interpret_parser_descr"]
-constant interpretParserDescr' : ParserDescr → CoreM Formatter
+opaque interpretParserDescr' : ParserDescr → CoreM Formatter
 
 private def SourceInfo.getExprPos? : SourceInfo → Option String.Pos
   | SourceInfo.synthetic pos _ => pos
@@ -203,7 +203,7 @@ unsafe def formatterForKindUnsafe (k : SyntaxNodeKind) : Formatter := do
     withMaybeTag (getExprPos? stx) f
 
 @[implementedBy formatterForKindUnsafe]
-constant formatterForKind (k : SyntaxNodeKind) : Formatter
+opaque formatterForKind (k : SyntaxNodeKind) : Formatter
 
 @[combinatorFormatter Lean.Parser.withAntiquot]
 def withAntiquot.formatter (antiP p : Formatter) : Formatter :=

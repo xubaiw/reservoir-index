@@ -1863,7 +1863,7 @@ static lean_object* _init_l_Lean_Linter_unusedVariables_isInConstantOrAxiom___ra
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string_from_bytes("constant", 8);
+x_1 = lean_mk_string_from_bytes("opaque", 6);
 return x_1;
 }
 }
@@ -3132,7 +3132,7 @@ static lean_object* _init_l_List_foldr___at_Lean_Linter_unusedVariables_isPatter
 _start:
 {
 lean_object* x_1; 
-x_1 = lean_mk_string_from_bytes("inductionAlt", 12);
+x_1 = lean_mk_string_from_bytes("inductionAltLHS", 15);
 return x_1;
 }
 }

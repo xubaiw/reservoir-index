@@ -11,7 +11,8 @@ open Meta
 
 /-- Returns a list of new congruence subgoals, which contains `none` for each argument with
 forward dependencies. -/
-private def congrApp (mvarId : MVarId) (lhs rhs : Expr) : MetaM (List (Option MVarId)) :=
+private def congrApp (mvarId : MVarId) (lhs rhs : Expr) (addImplicitArgs := false) :
+   MetaM (List (Option MVarId)) :=
   -- TODO: add support for `[congr]` lemmas
   lhs.withApp fun f args => do
     let infos := (← getFunInfoNArgs f args.size).paramInfo
@@ -21,7 +22,7 @@ private def congrApp (mvarId : MVarId) (lhs rhs : Expr) : MetaM (List (Option MV
     for arg in args do
       let addGoal ←
         if i < infos.size then
-          pure infos[i].binderInfo.isExplicit
+          pure (addImplicitArgs || infos[i].binderInfo.isExplicit)
         else
           pure (← whnfD (← inferType r.expr)).isArrow
       let hasFwdDep := i < infos.size && infos[i].hasFwdDeps
@@ -55,14 +56,14 @@ def isImplies (e : Expr) : MetaM Bool :=
   else
     return false
 
-def congr (mvarId : MVarId) : MetaM (List (Option MVarId)) :=
+def congr (mvarId : MVarId) (addImplicitArgs := false) : MetaM (List (Option MVarId)) :=
   withMVarContext mvarId do
     let (lhs, rhs) ← getLhsRhsCore mvarId
     let lhs := (← instantiateMVars lhs).consumeMData
     if (← isImplies lhs) then
       return (← congrImplies mvarId).map Option.some
     else if lhs.isApp then
-      congrApp mvarId lhs rhs
+      congrApp mvarId lhs rhs addImplicitArgs
     else
       throwError "invalid 'congr' conv tactic, application or implication expected{indentExpr lhs}"
 
@@ -96,12 +97,12 @@ private def selectIdx (tacticName : String) (mvarIds : List (Option MVarId)) (i 
 
 @[builtinTactic Lean.Parser.Tactic.Conv.arg] def evalArg : Tactic := fun stx => do
    match stx with
-   | `(conv| arg $i) =>
+   | `(conv| arg $[@%$tk?]? $i:num) =>
       let i := i.isNatLit?.getD 0
       if i == 0 then
         throwError "invalid 'arg' conv tactic, index must be greater than 0"
       let i := i - 1
-      let mvarIds ← congr (← getMainGoal)
+      let mvarIds ← congr (← getMainGoal) (addImplicitArgs := tk?.isSome)
       selectIdx "arg" mvarIds i
    | _ => throwUnsupportedSyntax
 

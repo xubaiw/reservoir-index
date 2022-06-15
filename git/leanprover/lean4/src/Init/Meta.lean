@@ -11,28 +11,28 @@ import Init.Data.Array.Basic
 namespace Lean
 
 @[extern c inline "lean_box(LEAN_VERSION_MAJOR)"]
-private constant version.getMajor (u : Unit) : Nat
+private opaque version.getMajor (u : Unit) : Nat
 def version.major : Nat := version.getMajor ()
 
 @[extern c inline "lean_box(LEAN_VERSION_MINOR)"]
-private constant version.getMinor (u : Unit) : Nat
+private opaque version.getMinor (u : Unit) : Nat
 def version.minor : Nat := version.getMinor ()
 
 @[extern c inline "lean_box(LEAN_VERSION_PATCH)"]
-private constant version.getPatch (u : Unit) : Nat
+private opaque version.getPatch (u : Unit) : Nat
 def version.patch : Nat := version.getPatch ()
 
 @[extern "lean_get_githash"]
-constant getGithash (u : Unit) : String
+opaque getGithash (u : Unit) : String
 def githash : String := getGithash ()
 
 @[extern c inline "LEAN_VERSION_IS_RELEASE"]
-constant version.getIsRelease (u : Unit) : Bool
+opaque version.getIsRelease (u : Unit) : Bool
 def version.isRelease : Bool := version.getIsRelease ()
 
 /-- Additional version description like "nightly-2018-03-11" -/
 @[extern c inline "lean_mk_string(LEAN_SPECIAL_VERSION_DESC)"]
-constant version.getSpecialDesc (u : Unit) : String
+opaque version.getSpecialDesc (u : Unit) : String
 def version.specialDesc : String := version.getSpecialDesc ()
 
 def versionStringCore :=
@@ -61,7 +61,7 @@ def toolchain :=
     ""
 
 @[extern c inline "LEAN_IS_STAGE0"]
-constant Internal.isStage0 (u : Unit) : Bool
+opaque Internal.isStage0 (u : Unit) : Bool
 
 /- Valid identifier names -/
 def isGreek (c : Char) : Bool :=

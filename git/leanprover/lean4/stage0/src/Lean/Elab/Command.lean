@@ -218,7 +218,7 @@ unsafe def mkCommandElabAttributeUnsafe : IO (KeyedDeclsAttribute CommandElab) :
   mkElabAttribute CommandElab `Lean.Elab.Command.commandElabAttribute `builtinCommandElab `commandElab `Lean.Parser.Command `Lean.Elab.Command.CommandElab "command"
 
 @[implementedBy mkCommandElabAttributeUnsafe]
-constant mkCommandElabAttribute : IO (KeyedDeclsAttribute CommandElab)
+opaque mkCommandElabAttribute : IO (KeyedDeclsAttribute CommandElab)
 
 builtin_initialize commandElabAttribute : KeyedDeclsAttribute CommandElab ← mkCommandElabAttribute
 
@@ -297,11 +297,14 @@ partial def elabCommand (stx : Syntax) : CommandElabM Unit := do
           | elabFns => elabCommandUsing s stx elabFns
     | _ => throwError "unexpected command"
 
+builtin_initialize registerTraceClass `Elab.input
+
 /--
 `elabCommand` wrapper that should be used for the initial invocation, not for recursive calls after
 macro expansion etc.
 -/
 def elabCommandTopLevel (stx : Syntax) : CommandElabM Unit := withRef stx do
+  trace[Elab.input] stx
   let initMsgs ← modifyGet fun st => (st.messages, { st with messages := {} })
   let initInfoTrees ← getResetInfoTrees
   -- We should *not* factor out `elabCommand`'s `withLogging` to here since it would make its error
