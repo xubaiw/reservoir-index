@@ -21,17 +21,30 @@
 </header>
 <main>
 <h1>xubaiw/sjtu-math2501-ode</h1>
-<p>常微分方程形式化验证 Formal proof of SJTU MATH2501 ODE course</p>
+<p>上交常微分方程课程计算机辅助证明 Formal proof of Ordinary Differential Equations course at SJTU</p>
 <a href="https://github.com/xubaiw/sjtu-math2501-ode">GitHub Link</a>
 <a href="#" title="Missing now!">Documentation</a>
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">sjtu-math2501-ode</h3>
-<p dir="auto">本文是对于上海交通大学 Math2501 常微分方程的形式化验证，课程所用教材为《常微分方程》张伟年高等教育出版社第二版。</p>
-<p dir="auto">形式化验证，即 Formal Proof，又称为计算机辅助证明，即利用计算机验证证明的正确性，其理论基础是 <a href="https://github.com/HoTT/HoTT">同伦类型论 HoTT </a>中的 <a href="https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence" rel="nofollow">Curry-Howard 一致性</a>，即命题能够表示为类型，从而使得计算机能检查命题层面的组合。需要注意的是，Formal Proof 本身仅仅只是验证证明的正确性；但是近年来，开始有研究将机器学习应用到 FP 中，发掘其中的命题组合模式，从而实现自动证明。</p>
-<p dir="auto">Formal Proof 本身需要使用类型检查工具（编程语言），目前已经有 Coq、Lean 等语言原生支持 HoTT 定理证明，并且已经广泛运用于其中，例如上面的 HoTT 本身就是使用 Coq 证明的。本文使用的是其中的 <a href="https://leanprover.github.io/" rel="nofollow">Lean</a>， 因为它不但能够实现定理证明，同时也能够进行通用编程，因此也能实现教材中非定理证明的那些部分（例如符号求解、绘图、近似计算等）。</p>
-<p dir="auto">Lean 同样有其特色的 <a href="https://leanprover-community.github.io/mathlib_docs/analysis/ODE/picard_lindelof.html" rel="nofollow">Mathlib</a>，全世界的数学研究者在其中贡献了形式化验证，几乎所有主流的数学分支都能在其中找到。不过其中常微分方程部分只列入了 <a href="https://leanprover-community.github.io/mathlib_docs/analysis/ODE/picard_lindelof.html" rel="nofollow">Picard 定理</a> 和 <a href="https://leanprover-community.github.io/mathlib_docs/analysis/ODE/gronwall.html" rel="nofollow">Gronwall 不等式</a>，因此本文同样也能起到补充这方面证明的作用。</p>
+<p dir="auto">本作品是对于上海交通大学MATH2501常微分方程的计算机辅助证明。</p>
+<p dir="auto">Formal proof of MATH2501 <em>Ordinary Differntial Equations</em> cource at Shanghai Jiao Tong University.</p>
+<h4 dir="auto">课程信息 Cource Information</h4>
+<ul dir="auto">
+<li>课程主页（homepage）：<a href="https://oc.sjtu.edu.cn/courses/39366" rel="nofollow">MATH2501 at Canvas Platform</a></li>
+<li>参考书（reference）：<a href="https://www.hep.com.cn/book/show/91dc74ea-8bd8-45f3-a774-610faffa3c68" rel="nofollow">张伟年. 常微分方程. 高等教育出版社</a></li>
+</ul>
+<h4 dir="auto">代码结构 Code Structure</h4>
+<p dir="auto">采用 <a href="https://github.com/leanprover/lean4"><code>Lean 4</code></a> 进行证明，出于精简 理论和证明结构的目的，不使用 <code>Mathlib</code>。</p>
+<p dir="auto">The formalization is down with <a href="https://github.com/leanprover/lean4"><code>Lean 4</code></a>. Note that <code>Mathlib</code> is intentionally avoided to achieve a concise proof structure.</p>
+<p dir="auto">代码总体可以分为两个部分：</p>
+<ul dir="auto">
+<li><code>Supporting</code>: 基础的支持性定义，例如实数、求导、求积分等 Supporting definitions, such as real number and basic calculus</li>
+<li><code>ODE</code>: 按书本章节进行证明 Proof accorded with the chapter order of the reference book</li>
+</ul>
+<h4 dir="auto">安装使用 Usage</h4>
+<p dir="auto">参照 <a href="https://github.com/leanprover/lean4"><code>Lean 4</code></a> 官方说明进行安装，使用 VSCode lean4 拓展查看证明过程。</p>
 </article></div></main>
 </body>
 </html>
