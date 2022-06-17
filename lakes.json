@@ -126,6 +126,7 @@
  "xubaiw/BaseN.lean",
  "xubaiw/CMark.lean",
  "xubaiw/Dirs.lean",
+ "xubaiw/Economics.lean",
  "xubaiw/Reservoir.lean",
  "xubaiw/Socket.lean",
  "xubaiw/Unicode.lean",
