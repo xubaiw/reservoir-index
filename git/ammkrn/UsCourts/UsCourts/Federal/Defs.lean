@@ -37,6 +37,7 @@ def Division.fullName (d : Division) : String :=
   s!"{d.name} DIVISION"
 
 structure District where
+  --timeOffset : Offset
   stateOrTerritory : StateOrTerritoryTag
   identifier : Option String
   divisions : List Division
@@ -48,6 +49,21 @@ structure District where
 deriving DecidableEq, Hashable, Repr, ToJson, FromJson
 
 def District.timeOffset (d : District) : Offset := sorry
+def District.timeZone (d : District) : TimeZone := d.timeOffset.toTimeZone
+def District.observedNonstandardHolidays (d : District) : List Holiday := sorry
+
+/- For rule 6 stuff. -/
+def District.allRelevantHolidays (d : District) : List Holiday := 
+  federalHolidays ++ d.observedNonstandardHolidays
+
+--def District.clerksOfficeClosesAt (d : District) : ScalarDate → Option (DateTime d.timeOffset):= 
+--  sorry
+--
+--def District.clerksOfficeInaccessible (d : District) (x : ScalarDate) (electronic : Bool) : Bool := 
+--  sorry
+--
+--def District.firstAccessibleDayAfter (d : District) (x : ScalarDate) (electronic : Bool) : ScalarDate := 
+--  sorry
 
 def District.fullName (d : District) : String :=
   let pfx := ((d.identifier.map (fun i => s!"{i} ")).getD "").map Char.toUpper
@@ -91,7 +107,9 @@ structure State where
   districts : List District
 deriving DecidableEq, Repr, ToJson, FromJson
 
-def State.stateHolidays (s : State) : List FederalHoliday := sorry
+def State.stateHolidays (s : State) : List Holiday := sorry
+
+def StateOrTerritoryTag.stateHolidays (s : StateOrTerritoryTag) : List Holiday := sorry
 
 structure Circuit where
   districts : List District

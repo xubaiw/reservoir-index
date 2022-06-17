@@ -41,7 +41,7 @@ def christmasDay (y : Year) : ScalarDate :=
   (Ymd.mk y .december 25 (by decide) (by simp [Month.numDays])).toScalarDate
 
 /- The base federal holidays defined by FRCP rule 6 -/
-def baseFederalHolidays : List Holiday := [
+def federalHolidays : List Holiday := [
   ⟨mlkDay⟩,
   ⟨washingtonDay⟩,
   ⟨memorialDay⟩,
