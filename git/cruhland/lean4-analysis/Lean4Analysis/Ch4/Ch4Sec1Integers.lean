@@ -11,7 +11,7 @@ abbrev ℕ : Type := Nat
 namespace Impl
 
 export Integer.Impl.Difference (
-  addition equality from_prod from_prod_substitutive multiplication
+  addition equality from_prod from_prod_substitutive multiplication negation
 )
 
 end Impl
@@ -148,5 +148,56 @@ example {n m : ℕ} : (n——0) ≃ (m——0) ↔ n ≃ m := by
     show n——0 ≃ m——0
     show n + 0 ≃ m + 0
     exact AA.substL ‹n ≃ m›
+
+-- Thus we may _identify_ the natural numbers with integers by setting
+-- `n ≡ n——0`; this does not affect our definitions of addition or
+-- multiplication or equality since they are consistent with each other.
+-- [Note: In Lean, the left- and right-hand sides of an equivalence must be the
+-- same type, so we can't follow the book exactly here. However, we can define
+-- a _coercion_ that converts natural numbers to integers, and use that to
+-- demonstrate equivalence.]
+example {n : ℕ} : ↑n ≃ n——0 := rfl
+
+-- For instance the natural number `3` is now considered to be the same as the
+-- integer `3——0`, thus `3 ≃ 3——0`.
+example : 3 ≃ 3——0 := rfl
+
+-- In particular `0` is equal to `0——0` and `1` is equal to `1——0`.
+example : 0 ≃ 0——0 := rfl
+example : 1 ≃ 1——0 := rfl
+
+-- Of course, if we set `n` equal to `n——0`, then it will also be equal to any
+-- other integer which is equal to `n——0`, for instance `3` is equal not only
+-- to `3——0`, but also to `4——1`, `5——2`, etc.
+example : 3 ≃ 4——1 := rfl
+example : 3 ≃ 5——2 := rfl
+
+-- We can now define incrementation on the integers by defining
+-- `step x := x + 1` for any integer `x`; this is of course consistent with our
+-- definition of the increment operation for natural numbers. However, this is
+-- no longer an important operation for us, as it has now been superceded by
+-- the more general notion of addition.
+def step (x : ℤ) := x + 1
+example {n : ℕ} : step ↑n ≃ ↑(Natural.step n) := rfl
+
+-- Definition 4.1.4 (Negation of integers).
+-- If `(a——b)` is an integer, we define the negation `-(a——b)` to be the
+-- integer `(b——a)`.
+example {a b : ℕ} : -(a——b) ≃ (b——a) := rfl
+
+-- [definition of integer negation]
+example : ℤ → ℤ := Impl.negation.negOp.neg
+
+-- In particular if `n ≃ n——0` is a positive natural number, we can define its
+-- negation `-n ≃ 0——n`.
+example {n : ℕ} : -↑n ≃ 0——n := rfl
+
+-- For instance `-(3——5) ≃ (5——3)`.
+example : -(3——5) ≃ 5——3 := rfl
+
+-- Exercise 4.1.2.
+-- One can check this definition is well-defined.
+example {a b a' b' : ℕ} : a——b ≃ a'——b' → -(a——b) ≃ -(a'——b') :=
+  AA.subst₁ (self := Impl.negation.neg_substitutive)
 
 end AnalysisI.Ch4.Sec1

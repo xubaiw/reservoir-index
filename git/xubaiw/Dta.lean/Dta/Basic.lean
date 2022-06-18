@@ -56,15 +56,62 @@ inductive VariableType
   | byte
   deriving Repr
 
+namespace VariableType
+
+def toLeanType : VariableType → Type
+  | str _  => String
+  | strL   => String
+  | double => Float
+  | float  => Float
+  | long   => UInt32
+  | int    => UInt16
+  | byte   => UInt8
+
+end VariableType
+
 abbrev VariableTypes := Array VariableType
 
 abbrev VarNames := Array String
+
+abbrev SortList := Array UInt16
+
+abbrev Formats := Array String
+
+abbrev ValueLabelNames := Array String
+
+abbrev VariableLabels := Array String
+
+structure Characteristic where
+  varname : String
+  charname : String
+  contents : Array String
+  deriving Repr
+
+abbrev Characteristics := Array Characteristic
+
+inductive Observation
+  | str (n : Fin 2045) (vs : Array String)
+  | strL (vs : Array String)
+  | double (vs : Array Float)
+  | float (vs : Array Float)
+  | long (vs : Array UInt32)
+  | int (vs : Array UInt16)
+  | byte (vs : Array UInt8)
+  deriving Repr
+
+abbrev Data := Array Observation
 
 structure Dta where
   header : Header
   map : Map
   variableTypes : VariableTypes
   varnames : VarNames
+  sortlist : SortList
+  formats : Formats
+  valueLabelNames : ValueLabelNames
+  variableLabels : VariableLabels
+  characteristics : Characteristics
+  data : Data
   deriving Repr
 
 end Dta

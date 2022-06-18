@@ -11,8 +11,14 @@ namespace Lean4Axiomatic.Integer
 Definition of multiplication, and properties that it must satisfy.
 
 All other properties of multiplication can be derived from these.
+
+**Named parameters**
+- `ℤ`: The type of integers.
+
+**Class parameters**
+- `Equality ℤ`: Required to express most properties of multiplication.
 -/
-class Multiplication.Base (ℤ : Type) [Core ℤ] :=
+class Multiplication.Base (ℤ : Type) [Equality ℤ] :=
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ
 
