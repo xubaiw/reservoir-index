@@ -1,0 +1,5 @@
+{"version": 1,
+ "packages":
+ [{"url": "https://github.com/xubaiw/Parsec.lean",
+   "rev": "b6e8721c36bde18bca6a81e7b40d966b401cb329",
+   "name": "parsec"}]}

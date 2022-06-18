@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>算法分析与设计大作业报告</title>
+  <style>
+    :root {
+      font-size: smaller;
+    }
+
+    body {
+      margin: 0 2%;
+    }
+
+    p {
+      text-indent: 2em;
+    }
+
+    a,
+    a:visited {
+      color: #000;
+    }
+
+    a {
+      border: solid 1.5px lightgreen;
+      text-decoration: none;
+    }
+
+    u {
+      text-decoration-style: wavy;
+    }
+
+    pre {
+      margin-left: 2em;
+      padding-left: 2em;
+      border-left: solid 1px;
+    }
+
+    h1::after {
+      content: " #";
+      color: lightgray;
+    }
+
+    h2::after {
+      content: " ##";
+      color: lightgray;
+    }
+
+    h3::after {
+      content: " ###";
+      color: lightgray;
+    }
+
+    h4::after {
+      content: " #*4";
+      color: lightgray;
+    }
+
+    h5::after {
+      content: " #*5";
+      color: lightgray;
+    }
+
+    h6::after {
+      content: " #*6";
+      color: lightgray;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>算法分析与设计大作业报告：水排序拼图</h1>
+  <p>王维境 519120910046</p>
+  <p>
+    格式说明：文中具有 <a href="#">绿色边框</a> 的内容为引用（外部链接），<u>波浪线</u>为重点标记。
+  </p>
+  <h2>数学模型和代码实现</h2>
+  <p>
+    代码见附录压缩包。
+  </p>
+  <p>
+    本实现采用 Lean 4 编程语言。
+    <small><u>这里必须要种草一波 Lean 4</u>，Lean 是 Microsoft Research 旗下一门实验性编程语言，核心团队由 Leonardo de Moura
+      (Microsoft)、Sebastian Ullrich (KIT) 等组成，拥有一大批活跃的社区维护者（也包括我:D）。Lean 是一门具有依赖类型系统的函数式编程语言，起源于<a
+        href="https://en.wikipedia.org/wiki/Proof_assistant">计算机辅助证明</a>（Formal Proof,
+      FP）和程序验证（Formal Verification, FV）的研究。事实上，在 Lean 3 时期，Lean
+      就已经占据了两个领域的半壁江山，并且已经有许多相关的<a href="https://leanprover-community.github.io">研究论文和代码实践</a>（其中最出色的
+      <code>mathlib</code> 工作形式化了当代数学的几乎所有主流领域）；而目前还处在 nightly 阶段的 Lean 4 致力于走向一门通用编程语言
+    </small>
+    <u>对于本门课算法设计来讲，Lean
+      具有以下优势</u>：（一）数学模型和数据结构合一，让编程回归数学，更加自然；（二）证明和算法合一，能够实现算法正确性、可终止性、复杂度等性质的形式化证明；（三）支持 Unicode
+    符号，语法整洁清晰。<u>编程环境的安装配置</u>可以参见<a
+      href="https://github.com/leanprover/lean4/blob/master/doc/setup.md">安装文档</a>，为了方便运行我提供了 Dockerfile（见附件）可以直接运行为
+    Docker 镜像。
+  </p>
+  <h3>运行方式</h3>
+  <p>
+    <u>运行方式如下</u>：
+  </p>
+  <pre><code>
+cd <附件文件夹>
+
+# 使用 本地环境
+lake build          # lake 是 Lean 的包管理器
+./build/bin/wsp     # 运行程序，用 `-h` flag 查看更多功能
+
+# 使用 Docker
+docker build -t wsp .
+docker run -p 8080:8080 wsp
+
+# 随后可以在浏览器内访问 http://localhost:8080 访问可视化前端
+  </code></pre>
+
+  <!-- 问题定义部分 -->
+
+  <h3>问题定义</h3>
+  <p>
+    注：由于 Lean 数学和编程合一的优异性质，在这里我们可以直接用代码来描述数学模型：
+  </p>
+
+  <p>
+    问题中给定 <code>m</code> 种颜色，则颜色可以用有限整数集 <code>Fin m</code> 来表示。采用 newtype 编程习惯，我们定义一个颜色类型 <code>Color m</code>：
+  </p>
+  <pre><code>
+abbrev Color (m : Nat) := Fin m
+  </code></pre>
+
+  <p>
+    一根试管的容量为 <code>h</code>，其中可以放入不同的 m 种颜色，最多可以放入容量为 <code>h</code> 的颜色。我们可以在 <code>List</code> 的基础上添加限制（liquid
+    type）构造试管类型 <code>Tube m h</code>：
+  </p>
+  <pre><code>
+structure Tube (m h : Nat) where
+  val : List (Color m)
+  hVolume : val.length ≤ h  -- 试管容量限制的假设（hypothesis)
+  </code></pre>
+
+  <p>
+    总共 <code>n</code> 支试管组合可以认为是一个列表，定义为类型 <code>Tubes m h n</code>。其中还需要满足颜色完全假设
+    <code>colorComplete</code>，即所有试管的各颜色加和的数量都为 h 的整数倍：
+  </p>
+  <pre><code>
+def colorComplete (tubes : List (Tube m h)) : Prop :=
+  -- 在 Lean 中需要区分布尔 `Bool` 与命题 `Prop`，两者通过 `Decidable` typeclass 联系在一起
+  let flattened := tubes.map Tube.val |>.join
+  ∀ i : Fin m, (count i flattened) % h = 0    
+where
+  /-- 统计所有试管内某种颜色的数量 -/
+  count i flattened :=
+    flattened.foldl (λ acc x => acc + if x = i then 1 else 0) 0
+
+structure Tubes (m h n : Nat) where
+  val : List (Tube m h)
+  hNum : val.length = n   -- 共有 n 个试管
+  hColorComplete : colorComplete val  -- 试管所有颜色数量都为 h 的整数倍
+  </code></pre>
+
+  <p>
+    从而整个问题的初始条件也就可以给出，即初始的试管组合以及全满/全空的约束（省略了 <code>∈</code> 和 <code>length</code> 的定义，详见代码）：
+  </p>
+  <pre><code>
+structure PuzzleConfig (m h n : Nat) where
+  initial : Tubes m h n
+  k : Nat := 0  -- 空试管数量
+  hFull : ∀ t, t ∈ initial → t.length = h
+  </code></pre>
+
+  <p>
+    解决这个问题的方式就是倾倒试管。倾倒的过程可以分解为三个字段（从哪倒？倒到哪？倒多少？），定义为类型 <code>PourStep</code>：
+  </p>
+  <pre><code>
+structure PourStep (n : Nat) where
+  amount : Nat
+  source : Fin n
+  sink : Fin n
+  </code></pre>
+
+  <p>
+    <u>则问题的解 <code>Solution</code> 和求解函数 <code>solve</code> 的类型定义</u>就是：
+  </p>
+  <pre><code>
+structure Solution (n : Nat) where
+  steps : List (PourStep n)
+  k : Nat   -- 需要的空试管数量
+  
+def solve (config : PuzzleConfig m h n) : Solution n :=
+  sorry
+  </code></pre>
+
+  <!-- 求解思路部分 -->
+
+  <h3>求解思路</h3>
+
+  <p>
+    接下来拆解求解思路。
+  </p>
+
+  <h4>逐步增加空试管</h4>
+  <p>
+    在最外层的 <code>solve</code> 函数中直接给出了需要的空试管的数量。我们可以先将问题简化为给定 <code>k</code> 空试管，是否有解；如果无解，则增添空试管即可。我们给出新的
+    <code>solveAux</code> 函数，而原有的 <code>solve</code> 可以进一步细化：
+  </p>
+  <pre><code>
+def solveAux (config : PuzzleConfig m h n) : Option (Solution n) :=
+  sorry
+
+partial def solve (config : PuzzleConfig m h n) : Solution n :=
+  match solveAux config with
+  | some solution => solution
+  | none => solve { config with k := config.k + 1 }
+  </code></pre>
+
+  <p>
+    这里我们暂时使用了 <code>partial</code>，即求解函数可能不终止（因为自然数 <code>k</code> 递增可能无穷多）。为了证明函数终止，一个直观的想法是：当空试管的数量多于 <code>n</code>
+    个时，我们必然可以通过直接倒入对应空试管的方式来解决问题。
+  </p>
+  <pre><code>
+theorem solveAux_k_ge_n : config.k ≥ n → (solveAux config).isSome :=
+  sorry
+  </code></pre>
+</body>
+
+</html>
