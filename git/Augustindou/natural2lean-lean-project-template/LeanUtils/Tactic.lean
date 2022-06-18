@@ -26,6 +26,7 @@ attribute [simp]
     Nat.right_distrib
 
     -- defined in LeanUtils
+    Nat.divisible
     Nat.mod_rewrite
     Nat.even
     Nat.odd

@@ -1,5 +1,7 @@
 -- proving 2^n > n^2 - 1
 
+-- https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/.E2.9C.94.20lean4.20induction.20with.20multiple.20base.20cases
+
 import LeanUtils
 open Nat
 

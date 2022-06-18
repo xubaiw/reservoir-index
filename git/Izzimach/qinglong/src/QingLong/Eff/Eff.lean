@@ -1,32 +1,17 @@
 -- extensible effect monad "Eff" based on "Free Monads, More Extensible Effects"
 -- built on top of the W type
 
-import QingLong.PFunctor
-import QingLong.Wtype
-import QingLong.OpenUnion
+import QingLong.Data.OpenUnion
 
 import Lean
 open Lean Elab Command Term --Meta
 
 
-open pfunctor
-open Wtype
 open openunion
 
 namespace effW
 
-namespace FixHack
 
-variable {α : Sort u} {C : α → Sort v} {r : α → α → Prop}
-
-unsafe def fix'.impl (hwf : WellFounded r) (F : ∀ x, (∀ y, r y x → C y) → C x) (x : α) : C x :=
-    F x fun y _ => impl hwf F y
-
-set_option codegen false in
-@[implementedBy fix'.impl]
-def fix' (hwf : WellFounded r) (F : ∀ x, (∀ y, r y x → C y) → C x) (x : α) : C x := hwf.fix F x
-
-end FixHack
 
 
 mutual
@@ -54,7 +39,7 @@ def snoc (q : Arrs r a γ) (f : γ → Eff r b) : Arrs r a b := Arrs.Node γ q (
 
 def append (q1 : Arrs r a x) (q2 : Arrs r x b) : Arrs r a b := Arrs.Node x q1 q2
 
-def send {v : Type} [HasEffect t r] : t v → Eff r v :=
+def send {v : Type} [HasEffect t effs] : t v → Eff effs v :=
     fun tv => Eff.Impure v (HasEffect.inject tv) (tsingleton Eff.Pure)
 
 end
@@ -156,19 +141,57 @@ def handleRelayS {effs : List (Type → Type)} {eff : Type → Type} {s : Type}
     termination_by handleRelayS e => 1
     decreasing_by sorry
 
+def replaceRelay {effs : List (Type → Type)} {eff eff': Type → Type} {α β : Type}
+  (handlePure : α → Eff (eff' :: effs) β)
+  (handleEff : ∀ γ, eff γ → Arr (eff' :: effs) γ β → Eff (eff' :: effs) β)
+  : Eff (eff :: effs) α -> Eff (eff' :: effs) β
+      | Eff.Pure x => handlePure x
+      | Eff.Impure e ou next =>
+            let k := qComp next (replaceRelay handlePure handleEff) 
+            match ou with
+            | OU.Leaf me => handleEff _ me k
+            | OU.Cons c => Eff.Impure _ (weaken c) (tsingleton k)
+    termination_by replaceRelay e => 1
+    decreasing_by sorry
+
+-- Alexis had this in freer-simple so we have it here too. Sometimes helps to infer types.
+def replaceRelayS {effs : List (Type → Type)} {eff eff': Type → Type} {α β s : Type}
+  (state : s)
+  (handlePure : s → α → Eff (eff' :: effs) β)
+  (handleEff : ∀ γ, s → eff γ → Arr (eff' :: effs) γ β → Eff (eff' :: effs) β)
+  : Eff (eff :: effs) α -> Eff (eff' :: effs) β
+      | Eff.Pure x => handlePure state x
+      | Eff.Impure e ou next =>
+            let k := qComp next (replaceRelayS state handlePure handleEff) 
+            match ou with
+            | OU.Leaf me => handleEff _ state me k
+            | OU.Cons c => Eff.Impure _ (weaken c) (tsingleton k)
+    termination_by replaceRelayS e => 1
+    decreasing_by sorry
+
 
 def interpretWith {effs : List (Type → Type)} {eff : Type → Type}
     (handleEff: ∀ γ, eff γ → (γ -> Eff effs β) -> Eff effs β)
     : Eff (eff :: effs) β → Eff effs β :=
         fun effVal => handleRelay pure handleEff effVal
 
-
 def interpret {effs : List (Type → Type)} {eff : Type → Type}
     (handleEff : ∀ γ, (eff γ → Eff effs γ))
     : Eff (eff :: effs) β → Eff effs β :=
         fun effVal => handleRelay pure (fun g ef next => (handleEff g ef) >>= next) effVal
 
-    
+-- transform from one effect to another, leaving the remaining effects unmodified
+def reinterpret {effs : List (Type → Type)} {eff eff' : Type → Type} {α : Type}
+  (reHandle : ∀ γ, eff γ → Eff (eff' :: effs) γ)
+  : Eff (eff :: effs) α → Eff (eff' :: effs) α
+  := replaceRelay pure (fun a f next => (reHandle a f) >>= next)
+
+-- transform from one effect to another, leaving the remaining effects unmodified
+def reinterpretS {effs : List (Type → Type)} {eff eff' : Type → Type} {α : Type}
+  (reHandle : ∀ γ, eff γ → Eff (eff' :: effs) γ)
+  : Eff (eff :: effs) α → Eff (eff' :: effs) α
+  := replaceRelay pure (fun a f next => (reHandle a f) >>= next)
+
 --
 -- Reader effect
 --
@@ -185,11 +208,12 @@ def runReader {α : Type} {effs : List (Type → Type)} {i : Type} (inp : i) : E
     interpret (fun γ r => match r with 
                           | ReaderE.Ask => pure inp)
 
+/-
 def addGet : Nat → Eff [ReaderE Nat] Nat :=
     fun x => ask >>= fun i => pure (i+x)
 
 #eval run <| runReader 10 <| addGet 2
-
+-/
 
 --
 -- State effect
@@ -210,7 +234,6 @@ def stateGo {s : Type}  (γ : Type) (state : s) (eff : StateE s γ) (next : s �
 
 def runState {α : Type} {effs : List (Type → Type)} {s : Type} (state : s) : Eff (StateE s :: effs) α → Eff effs (α × s) :=
     fun effVal => handleRelayS state (fun s x => pure (x,s)) stateGo effVal
-
 
 
 end effW
