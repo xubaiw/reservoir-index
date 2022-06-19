@@ -62,8 +62,9 @@ InfoviewNewArgs                                                *InfoviewNewArgs*
 
 
     Fields: ~
-        {width}   (?)  integer
-        {height}  (?)  integer
+        {width}                (?)  integer
+        {height}               (?)  integer
+        {horizontal_position}  (?)  "top"|"bottom"
 
 
 infoview.close_all()                                        *infoview.close_all*
@@ -179,6 +180,12 @@ infoview.disable_widgets()                            *infoview.disable_widgets*
 
 infoview.go_to()                                                *infoview.go_to*
      Move the cursor to the infoview window.
+
+
+infoview.reposition()                                      *infoview.reposition*
+     Move the current infoview to the appropriate spot based on the
+     current screen dimensions.
+     Does nothing if there are more than 2 open windows.
 
 
  Support for abbreviations (unicode character replacement).
