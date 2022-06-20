@@ -64,7 +64,7 @@ private def findPathForAssignedMVars (assignedMVars : HashSet MVarId)
         return false
       else
         return true)
-    (λ cref =>
+    (λ _ =>
       return true)
     (TreeRef.goal start)
   if ! (← done.get) then
@@ -229,6 +229,6 @@ private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
 -- the necessary changes. So after calling it, you should check whether the
 -- rapp's parent goal is proven and mark it accordingly.
 @[implementedBy addRappUnsafe]
-constant addRapp : AddRapp → TreeM RappRef
+opaque addRapp : AddRapp → TreeM RappRef
 
 end Aesop

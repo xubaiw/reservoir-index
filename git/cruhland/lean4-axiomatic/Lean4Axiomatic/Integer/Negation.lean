@@ -18,7 +18,8 @@ All other properties of negation can be derived from these.
 **Class parameters**
 - `Equality ℤ`: Required to express most properties of negation.
 -/
-class Negation.Base (ℤ : Type) [Equality ℤ] :=
+class Negation.Base
+    (ℕ : Type) [Natural ℕ] (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ] :=
   /-- Definition of and syntax for negation. -/
   negOp : Neg ℤ
 
@@ -27,6 +28,13 @@ class Negation.Base (ℤ : Type) [Equality ℤ] :=
   after both are negated.
   -/
   neg_substitutive : AA.Substitutive₁ (α := ℤ) (-·) (· ≃ ·) (· ≃ ·)
+
+  /-- Every integer is either positive, negative, or zero. -/
+  trichotomy {a : ℤ}
+    : AA.ExactlyOneOfThree
+      (a ≃ ↑(0 : ℕ))
+      (∃ (n : ℕ), Natural.Positive n ∧ a ≃ n)
+      (∃ (n : ℕ), Natural.Positive n ∧ a ≃ -n)
 
 namespace Negation
 export Negation.Base (negOp)

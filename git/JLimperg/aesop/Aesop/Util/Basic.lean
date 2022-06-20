@@ -14,7 +14,7 @@ open Std (HashSet PHashSet)
 
 def BEq.ofOrd (ord : Ord α) : BEq α where
   beq x y :=
-    match compare x y with
+    match ord.compare x y with
     | Ordering.eq => true
     | _ => false
 
@@ -29,11 +29,11 @@ def forM [Monad m] (f : α → m Unit) : Option α → m Unit
   | some a => f a
 
 def mergeLeftBiased : Option α → Option α → Option α
-  | some x, y => some x
+  | some x, _ => some x
   | none, y => y
 
 def mergeRightBiased : Option α → Option α → Option α
-  | x, some y => some y
+  | _, some y => some y
   | x, none => x
 
 end Option
@@ -52,8 +52,8 @@ namespace Nat
 
 theorem trichotomous_lt_eq_gt : @Trichotomous Nat (· < ·) (· = ·) (· > ·)
 | zero, zero => Tri.eq rfl
-| zero, succ m => Tri.lt $ zero_lt_succ _
-| succ n, zero => Tri.gt $ zero_lt_succ _
+| zero, succ _ => Tri.lt $ zero_lt_succ _
+| succ _, zero => Tri.gt $ zero_lt_succ _
 | succ n, succ m =>
   match trichotomous_lt_eq_gt n m with
   | Tri.lt p => Tri.lt $ succ_lt_succ p
@@ -69,7 +69,7 @@ theorem lt_of_not_ge {n m : Nat} (h : ¬ n ≥ m) : n < m :=
 theorem sub_add_le_sub (n m k : Nat) : n - (m + k) ≤ n - m :=
   match k with
   | zero => Nat.le_of_eq rfl
-  | succ k => Nat.le_trans (pred_le _) (sub_add_le_sub _ _ _)
+  | succ _ => Nat.le_trans (pred_le _) (sub_add_le_sub _ _ _)
 
 theorem ne_zero_of_zero_lt {n : Nat} (h : 0 < n) : n ≠ 0 := λ contra =>
   match n with
@@ -92,7 +92,7 @@ theorem pred_sub : ∀ n m, pred (n - m) = pred n - m
 
 theorem lt_pred_of_succ_lt {n m : Nat} : succ n < m → n < pred m
   | le.refl => Nat.lt_succ_self _
-  | @le.step _ x h₂ => Nat.lt_trans (Nat.lt_succ_self _) h₂
+  | @le.step _ _ h₂ => Nat.lt_trans (Nat.lt_succ_self _) h₂
 
 theorem zero_lt_sub {n m : Nat} (h : m < n) : 0 < n - m :=
   match m with
@@ -106,7 +106,7 @@ theorem sub_add_lt_sub {n m k : Nat} (h₁ : m + k ≤ n) (h₂ : k ≠ 0) :
     n - (m + k) < n - m :=
   match k with
   | zero => h₂ rfl |>.elim
-  | succ k =>
+  | succ _ =>
     Nat.lt_of_lt_of_le
       (pred_lt $ ne_zero_of_zero_lt $ zero_lt_sub $ lt_of_succ_le h₁)
       (sub_add_le_sub _ _ _)
@@ -318,7 +318,7 @@ def mergeSortedMergingDuplicates [ord : Ord α] (xs ys : Array α)
 
 def mergeSortedFilteringDuplicates [ord : Ord α] (xs ys : Array α) :
     Array α :=
-  mergeSortedMergingDuplicates xs ys λ x y => x
+  mergeSortedMergingDuplicates xs ys λ x _ => x
 
 -- Merge `xs` and `ys`, which do not need to be sorted. Elements which occur in
 -- both `xs` and `ys` are only added once. If `xs` and `ys` do not contain
@@ -351,7 +351,7 @@ def mergeAdjacentDuplicates [eq : BEq α] (f : α → α → α) (xs : Array α)
     termination_by _ i _ => xs.size - i
 
 def deduplicateSorted [eq : BEq α] (xs : Array α) : Array α :=
-  xs.mergeAdjacentDuplicates (λ x y => x)
+  xs.mergeAdjacentDuplicates (λ x _ => x)
 
 def deduplicate [Inhabited α] [ord : Ord α] (xs : Array α) : Array α :=
   deduplicateSorted $ xs.qsort λ x y => compare x y |>.isLT
@@ -664,7 +664,7 @@ mutual
   private unsafe def mapMNodeImpl [Monad m] {β γ : Type u} (f : β → m γ)
       {α : Type u} : Node α β → m (Node α γ)
     | Node.entries es => Node.entries <$> es.mapM (mapMEntryImpl f)
-    | Node.collision ks vs h =>
+    | Node.collision ks vs _ =>
       return Node.collision ks (← vs.mapM f) lcProof
       -- The lcProof here is conceptually trivial (it says that `vs.mapM f` has
       -- the same length as `vs`), but it would require a bit of effort because
@@ -672,11 +672,11 @@ mutual
 end
 
 @[implementedBy mapMEntryImpl]
-constant mapMEntry [Monad m] {β γ : Type u} (f : β → m γ) {α : Type u} :
+opaque mapMEntry [Monad m] {β γ : Type u} (f : β → m γ) {α : Type u} :
     Entry α β (Node α β) → m (Entry α γ (Node α γ))
 
 @[implementedBy mapMNodeImpl]
-constant mapMNode [Monad m] {β γ : Type u} (f : β → m γ) {α : Type u} :
+opaque mapMNode [Monad m] {β γ : Type u} (f : β → m γ) {α : Type u} :
     Node α β → m (Node α γ)
 
 @[inline]
@@ -740,7 +740,7 @@ unsafe def forInImpl [BEq α] [Hashable α] {m : Type u → Type v} [Monad m]
 
 -- Inhabited inference is being stupid here, so we can't use `partial`.
 @[implementedBy forInImpl]
-constant forIn [BEq α] [Hashable α] {m : Type u → Type v} [Monad m]
+opaque forIn [BEq α] [Hashable α] {m : Type u → Type v} [Monad m]
     (map : PersistentHashMap α β) (init : σ) (f : α × β → σ → m (ForInStep σ)) :
     m σ :=
   pure init
@@ -833,7 +833,7 @@ unsafe def foldMUnsafe [Monad m] (initialKeys : Array Key)
       t.foldMUnsafe (initialKeys.push k) f s
 
 @[implementedBy foldMUnsafe]
-constant foldM [Monad m] (initalKeys : Array Key)
+opaque foldM [Monad m] (initalKeys : Array Key)
     (f : σ → Array Key → α → m σ) (init : σ) (t : Trie α) : m σ :=
   pure init
 
@@ -848,10 +848,10 @@ unsafe def foldValuesMUnsafe [Monad m] (f : σ → α → m σ) (init : σ) :
     Trie α → m σ
 | node vs children => do
   let s ← vs.foldlM (init := init) f
-  children.foldlM (init := s) λ s (k, c) => c.foldValuesMUnsafe (init := s) f
+  children.foldlM (init := s) λ s (_, c) => c.foldValuesMUnsafe (init := s) f
 
 @[implementedBy foldValuesMUnsafe]
-constant foldValuesM [Monad m] (f : σ → α → m σ) (init : σ) (t : Trie α) :
+opaque foldValuesM [Monad m] (f : σ → α → m σ) (init : σ) (t : Trie α) :
     m σ :=
   pure init
 
@@ -861,7 +861,7 @@ def foldValues (f : σ → α → σ) (init : σ) (t : Trie α) : σ :=
 
 partial def size : Trie α → Nat
   | Trie.node vs children =>
-    children.foldl (init := vs.size) λ n (k, c) => n + size c
+    children.foldl (init := vs.size) λ n (_, c) => n + size c
 
 partial def merge : Trie α → Trie α → Trie α
   | node vs₁ cs₁, node vs₂ cs₂ =>
@@ -874,7 +874,7 @@ partial def merge : Trie α → Trie α → Trie α
       have : Ord (Key × Trie α) :=
         ⟨λ (k₁, _) (k₂, _) => compare k₁ k₂⟩
       Array.mergeSortedMergingDuplicates cs₁ cs₂
-        (λ (k₁, t₁) (k₂, t₂) => (k₁, merge t₁ t₂))
+        (λ (k₁, t₁) (_, t₂) => (k₁, merge t₁ t₂))
 
 end Trie
 
@@ -902,11 +902,11 @@ def toArray (t : DiscrTree α) : Array (Array Key × α) :=
   t.fold (init := #[]) λ as keys a => as.push (keys, a)
 
 def size (t : DiscrTree α) : Nat :=
-  t.root.foldl (init := 0) λ n k t => n + t.size
+  t.root.foldl (init := 0) λ n _ t => n + t.size
 
 @[inline]
 def merge [BEq α] (t u : DiscrTree α) : DiscrTree α :=
-  { root := t.root.merge u.root λ k trie₁ trie₂ => trie₁.merge trie₂ }
+  { root := t.root.merge u.root λ _ trie₁ trie₂ => trie₁.merge trie₂ }
 
 private def getKeyArgs (e : Expr) (isMatch root : Bool) : MetaM (Key × Array Expr) := do
   let e ← whnfDT e root
@@ -1017,7 +1017,7 @@ partial def getUnifyWithTransparency (d : DiscrTree α) (e : Expr)
 where
   process (skip : Nat) (todo : Array Expr) (c : Trie α) (result : Array α) : MetaM (Array α) := do
     match skip, c with
-    | skip+1, Trie.node vs cs =>
+    | skip+1, Trie.node _ cs =>
       if cs.isEmpty then
         return result
       else
@@ -1066,7 +1066,7 @@ def getConstKeys (decl : Name) : MetaM (Array Key) := do
   let arity := info.type.arity
   let mut keys := Array.mkEmpty (arity + 1)
   keys := keys.push $ .const decl arity
-  for i in [0:arity] do
+  for _ in [0:arity] do
     keys := keys.push $ .star
   return keys
 
@@ -1093,7 +1093,7 @@ def eraseSimpEntry (s : SimpTheorems) : SimpEntry → SimpTheorems
     | none => s
   | SimpEntry.toUnfold d =>
     { s with toUnfold := s.toUnfold.erase d }
-  | SimpEntry.toUnfoldThms n thms =>
+  | SimpEntry.toUnfoldThms n _ =>
     { s with toUnfoldThms := s.toUnfoldThms.erase n }
 
 def foldSimpEntriesM [Monad m] (f : σ → SimpEntry → m σ) (init : σ)
@@ -1127,9 +1127,9 @@ def merge (s t : SimpTheorems) : SimpTheorems := {
     lemmaNames := s.lemmaNames.merge t.lemmaNames
     toUnfold := s.toUnfold.merge t.toUnfold
     toUnfoldThms := s.toUnfoldThms.merge t.toUnfoldThms
-      (λ decl thms₁ thms₂ => thms₁)
-      -- We can ignore collisions here because `thms₁` and `thms₂` should be
-      -- identical.
+      (λ _ thms₁ _ => thms₁)
+      -- We can ignore collisions here because the theorems should always be the
+      -- same.
     erased := mkErased t s $ mkErased s t {}
   }
   where
@@ -1268,12 +1268,15 @@ def isDeclaredMVar (mvarId : MVarId) : MetaM Bool := do
   | some _ => pure true
   | none => pure false
 
+-- Note: includes mvars in auxDecls.
 def getHypMVarsNoDelayed (goal : MVarId) : MetaM (HashSet MVarId) := do
   instantiateMVarsInGoal goal
   withMVarContext goal do
     let mut mvars := HashSet.empty
-    for hyp in (← getLCtx) do
-      mvars := mvars.insertMany (← getMVarsNoDelayed (mkFVar hyp.fvarId))
+    for ldecl in (← getLCtx) do
+      mvars := mvars.insertMany (← getMVarsNoDelayed ldecl.type)
+      if let (some val) := ldecl.value? then
+        mvars := mvars.insertMany (← getMVarsNoDelayed val)
     return mvars
 
 def getTargetMVarsNoDelayed (goal : MVarId) : MetaM (Array MVarId) := do
@@ -1303,7 +1306,7 @@ def eraseExprMVarAssignment [Monad m] [MonadMCtx m] (mvarId : MVarId) : m Unit :
 def unassignedExprMVarsNoDelayed : MetaM (Array MVarId) := do
   let mctx ← getMCtx
   let mut result := #[]
-  for (mvarId, decl) in mctx.decls do
+  for (mvarId, _) in mctx.decls do
     if ← notM (isExprMVarAssigned mvarId) <&&> notM (isDelayedAssigned mvarId) then
       result := result.push mvarId
   return result
@@ -1361,7 +1364,7 @@ def tryClearMany' (goal : MVarId) (hyps : Array FVarId) : MetaM MVarId := do
 
 def matchAppOf (f : Expr) (e : Expr) : MetaM (Option (Array Expr)) := do
   let type ← inferType f
-  let (mvars, _, concl) ← forallMetaTelescope type
+  let (mvars, _, _) ← forallMetaTelescope type
   let app := mkAppN f mvars
   if ← isDefEq app e then
     some <$> mvars.mapM instantiateMVars
@@ -1436,7 +1439,7 @@ def runTacticMAsMetaM (tac : TacticM Unit) (goal : MVarId) :
   run goal tac |>.run'
 
 def runMetaMAsImportM (x : MetaM α) : ImportM α := do
-  let ctx : Core.Context := { options := (← read).opts }
+  let ctx : Core.Context := { options := (← read).opts, fileName := "<runMetaMAsImportM>", fileMap := default }
   let state : Core.State := { env := (← read).env }
   let r ← x |>.run {} {} |>.run ctx state |>.toIO'
   match r with
@@ -1493,7 +1496,7 @@ private inductive MatchUpToIndexSuffix
 private def matchUpToIndexSuffix (n : Name) (query : Name) :
     MatchUpToIndexSuffix :=
   match n, query with
-  | Name.str p₁ s₁ _, Name.str p₂ s₂ _ =>
+  | Name.str _ s₁ _, Name.str _ s₂ _ =>
     match s₁.dropPrefix s₂ with
     | none => MatchUpToIndexSuffix.noMatch
     | some suffix =>
