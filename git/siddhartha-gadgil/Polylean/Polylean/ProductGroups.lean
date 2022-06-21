@@ -1,4 +1,5 @@
 import Polylean.MetabelianGroup
+import Polylean.Experiments.Tactics
 
 /-
 Define the product of two groups and related concepts.
@@ -37,12 +38,30 @@ instance : @Cocycle Q K _ _ trivial_cocycle :=
 theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h = MetabelianGroup.mul trivial_cocycle h g := by
   intro (k, q)
   intro (k', q')
-  simp [MetabelianGroup.mul, trivial_cocycle]
-  apply And.intro
-  · have : ∀ q : Q, ∀ κ : K, q • κ = κ := λ _ _ => rfl
-    rw [this, this, add_comm]
-  · exact AddCommGroup.add_comm q q'
+  repeat (rw [MetabelianGroup.mul])
+  show  (k + k' + 0, q + q') = (k' + k + 0, q' + q)
+  rw [add_zero, add_zero, AddCommGroup.add_comm k k', AddCommGroup.add_comm q q']
 
+theorem prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by
+  apply Iff.intro
+  · intro (h : Prod.mk a b = Prod.mk c d)
+    injection h
+    apply And.intro <;> assumption
+  · intro ⟨hac, hbd⟩
+    subst hac hbd
+    rfl
+
+theorem product_coords : ∀ g h : K × Q,
+     MetabelianGroup.mul trivial_cocycle g h = (g.1 + h.1, g.2 + h.2) := by
+        intro (k, q) (k', q')
+        reduceGoal
+        let tc : @trivial_cocycle Q K _ q q' = 0 := by rfl
+        show (k + q • k' + trivial_cocycle q q', q + q') = (k + k', q + q')
+        rw [tc, add_zero]
+        simp only [SMul.sMul] 
+        have tc' : trivial_action q k'= k' := by rfl
+        rw [tc']
+        
 end Product
 
 namespace DirectSum
@@ -50,14 +69,24 @@ namespace DirectSum
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 
 -- Direct sums as an additive version of products
+-- @[irreducible]
 instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
 theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
-    simp [MetabelianGroup.mul, trivial_cocycle]
-    rfl
+    show (a + a' + 0, b + b') = _
+    rw [add_zero]
 
-@[simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
+@[reducible, simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := by simp only [HAdd.hAdd, Add.add]; exact mul
+
+theorem zero_pair : (0 : A × B) = ((0 : A), (0 : B)) := rfl
+/-
+  have pair_left_id : ∀ x : A × B, (0, 0) + x = x := by
+    intro (a, b); rw [add, zero_add, zero_add]
+  have id_add : (0, 0) + (0 : A × B) = (0, 0) := by rw [add_zero]
+  rw [pair_left_id] at id_add
+  assumption
+-/
 
 end DirectSum
 
@@ -68,7 +97,7 @@ variable {A B C D : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C] [
 
 -- products of homomorphisms
 -- this is used in defining the group action required for constructing the Metabelian group `P`
-def prod (f : A → C) (g : B → D) : A × B → C × D
+@[reducible] def prod (f : A → C) (g : B → D) : A × B → C × D
   | (a, b) => (f a, g b)
 
 infixr:100 " × " => prod
@@ -77,10 +106,11 @@ infixr:100 " × " => prod
 instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [ψHom : AddCommGroup.Homomorphism ψ] :
   AddCommGroup.Homomorphism (ϕ × ψ) where
     add_dist := by
-                intro (a, b)
-                intro (a', b')
-                simp [trivial_cocycle, MetabelianGroup.mul, prod]
-                rfl
+                intro (a, b) (a', b')
+                rw [prod, DirectSum.add]
+                show (ϕ (a + a'), ψ (b + b')) = (ϕ a, ψ b) + (ϕ a', ψ b')
+                rw [DirectSum.add]
+                rw [ϕHom.add_dist, ψHom.add_dist]
 
 abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
 
@@ -97,15 +127,13 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomor
 instance proj₁ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₁) where
   add_dist := by
     intro a a'
-    simp [ι₁]
-    rw [← Homϕ.add_dist]
-    simp
+    show ϕ (a + a', 0) = ϕ (a, 0) + ϕ (a', 0)
+    rw [← Homϕ.add_dist, DirectSum.add, add_zero]
 
 instance proj₂ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₂) where
   add_dist := by
     intro b b'
-    simp [ι₂]
-    rw [← Homϕ.add_dist]
-    simp
+    show ϕ (0, b + b') = ϕ (0, b) + ϕ (0, b')
+    rw [← Homϕ.add_dist, DirectSum.add, add_zero]
 
 end Homomorphisms

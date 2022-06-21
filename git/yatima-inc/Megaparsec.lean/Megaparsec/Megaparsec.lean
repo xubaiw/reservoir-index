@@ -66,13 +66,17 @@ inductive ErrorItem (T: Type) where
 
 abbrev Hints (T : Type) := List (List (ErrorItem T))
 
-def ord2beq [Ord T] (x y: T): Bool :=
+instance ord2beq [Ord T] : BEq T where
+  -- beq x y := compare x y == Ordering.eq
+  beq x := BEq.beq Ordering.eq ∘ compare x
+
+def ord2compare [Ord T] (x y: T): Bool :=
   compare x y == Ordering.eq
 
 def ord2beq_nel [Ord T] [BEq T] (x y: NonEmptyList T): Bool :=
   match x, y with
-  | .cons u x₁, .cons v y₁ => ord2beq u v && List.instBEqList.beq x₁ y₁
-  | .nil u, .nil v => ord2beq u v
+  | .cons u x₁, .cons v y₁ => ord2compare u v && List.instBEqList.beq x₁ y₁
+  | .nil u, .nil v => ord2compare u v
   | _, _ => false
 
 instance ord2beq_ei [Ord T] [BEq T] : BEq (ErrorItem T) where
@@ -91,9 +95,9 @@ def errorItemMax [Ord T] [BEq T] (e₁ : ErrorItem T) (e₂ : ErrorItem T) : Err
 class Stream (S : Type) where
   Token : Type
   ordToken : Ord Token
-  hashToken : Hashable Token
-  beqEi : BEq (ErrorItem Token)
-  hashEi : Hashable (ErrorItem Token)
+  -- hashToken : Hashable Token
+  -- beqEi : BEq (ErrorItem Token)
+  -- hashEi : Hashable (ErrorItem Token)
   Tokens : Type
   ordTokens : Ord Tokens
   tokenToChunk : Token → Tokens
@@ -412,7 +416,7 @@ instance (E S : Type) [m : Monad M] [stream : Stream S]
       -- let ps := [ (@ErrorItem.tokens stream.Token chunk) ]
       let es := match stream.chunkToTokens chunk with
         | List.cons x xs => [ErrorItem.tokens $ NonEmptyList.cons x xs]
-        | [] => [ErrorItem.label $ NonEmptyList.cons 'e' ['m', 'p', 't', 'y', ' ', 't', 'a', 'r', 'g', 'e', 't', ' ', 'c', 'h', 'u', 'n', 'k']]
+        | [] => [ErrorItem.label $ NonEmptyList.cons ' ' "Empty target chunk.".data]
         -- ^ This should never happen, because an empty target always succeeds by design
       ParseError.trivial pos' us es
     let len := stream.chunkLength chunk
@@ -429,7 +433,7 @@ instance (E S : Type) [m : Monad M] [stream : Stream S]
         else
           let oops := match stream.chunkToTokens consumed with
           | List.cons x xs => ErrorItem.tokens $ NonEmptyList.cons x xs
-          | [] => ErrorItem.label $ NonEmptyList.cons 'e' ['m', 'p', 't', 'y', ' ', 'c', 'o', 'n', 's', 'u', 'm', 'e', 'd', ' ', 'c', 'h', 'u', 'n', 'k']
+          | [] => ErrorItem.label $ NonEmptyList.cons ' ' "Nothing consumed.".data
           -- ^ This should never happen, because we handle chunkEmpty earlier on
           eerr (unexpect s₀.stateOffset oops) (State.mk s₀.stateInput s₀.stateOffset s₀.statePosState s₀.stateParseErrors)
   takeWhileP _ ml f :=

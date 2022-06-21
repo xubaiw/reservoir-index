@@ -28,18 +28,33 @@ class FromImpl [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
 class FromWand [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
   from_wand : (Q1 -∗ Q2) ⊢ P
 
+class FromForall [BI PROP] (P : PROP) {α : outParam Type} (Ψ : outParam <| α → PROP) where
+  from_forall : (∀ x, Ψ x) ⊢ P
+
 class FromAnd [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
   from_and : Q1 ∧ Q2 ⊢ P
 
+class IntoAnd (p : Bool) [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
+  into_and : □?p P ⊢ □?p (Q1 ∧ Q2)
+
 class FromSep [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
   from_sep : Q1 ∗ Q2 ⊢ P
+
+class IntoSep [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) :=
+  into_sep : P ⊢ Q1 ∗ Q2
+
+class FromOr [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
+  from_or : Q1 ∨ Q2 ⊢ P
+
+class IntoOr [BI PROP] (P : PROP) (Q1 Q2 : outParam PROP) where
+  into_or : P ⊢ Q1 ∨ Q2
 
 
 class IntoPersistent (p : Bool) [BI PROP] (P : PROP) (Q : outParam PROP) where
   into_persistent : <pers>?p P ⊢ <pers> Q
 
-class FromAffinely [BI PROP] (P : outParam PROP) (Q : PROP) where
-  from_affinely : <affine> Q ⊢ P
+class FromAffinely [BI PROP] (P : outParam PROP) (Q : PROP) (p : Bool := true) where
+  from_affinely : <affine>?p Q ⊢ P
 
 class IntoAbsorbingly [BI PROP] (P : outParam PROP) (Q : PROP) where
   into_absorbingly : P ⊢ <absorb> Q
@@ -47,5 +62,8 @@ class IntoAbsorbingly [BI PROP] (P : outParam PROP) (Q : PROP) where
 
 class FromAssumption (p : Bool) [BI PROP] (P Q : PROP) where
   from_assumption : □?p P ⊢ Q
+
+class IntoPure [BI PROP] (P : PROP) (φ : outParam Prop) where
+  into_pure : P ⊢ ⌜φ⌝
 
 end Iris.Proofmode

@@ -1,3 +1,10 @@
+import Lean
+
+section
+open Lean Elab Term
+elab "!" tm:term : term => elabTermEnsuringType tm none
+end
+
 namespace prover
 noncomputable section
 
@@ -46,20 +53,16 @@ infixl:50 (priority := high) " ≠ " => ne
 def exi {α : Type} (P : α → Prop) : Prop :=
 ¬(∀ (x : α), ¬P x)
 
-section
-open Lean
+section open Lean
 macro (priority := high) "∃ " xs:explicitBinders ", " b:term : term =>
-expandExplicitBinders ``exi xs b
-end
+expandExplicitBinders ``exi xs b end
 
 def exiu {α : Type} (P : α → Prop) : Prop :=
 (∃ (x : α), P x) ∧ (∀ (x y : α), P x → P y → x = y)
 
-section
-open Lean
+section open Lean
 macro (priority := high) "∃! " xs:explicitBinders ", " b:term : term =>
-expandExplicitBinders ``exiu xs b
-end
+expandExplicitBinders ``exiu xs b end
 
 -- Axioms
 
@@ -381,3 +384,6 @@ cpos h₁ # λ h₃ => not_not_intro # h₂ h₃
 
 theorem cpos_nn {P Q : Prop} (h₁ : ¬P) (h₂ : Q → P) : ¬Q :=
 cpos' h₁ h₂
+
+theorem hv {P Q : Prop} (h₁ : P) (h₂ : P → Q) : Q :=
+h₂ h₁

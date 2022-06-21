@@ -102,6 +102,11 @@ variable {A : Type _} [AddCommGroup A] {a b c : A}
 @[simp] theorem add_right_eq_cancel : b + a = a ↔ b = 0 := by
   rw [add_comm]; simp
 
+@[simp] theorem neg_zero : (-0 : A) = (0 : A) := by
+  have : (-0 : A) + (0 : A) = (0 : A) := neg_add_self (0 : A)
+  rw [add_zero] at this
+  exact this
+
 end AddCommGroup
 
 namespace Group.Homomorphism
@@ -262,6 +267,13 @@ attribute [simp] Int.cast_id
 
 variable {A : Type _} [SubNegMonoid A] (a : A)
 
+instance : SMul ℕ A where
+  sMul := SubNegMonoid.gsmul ∘ Int.ofNat
+
+@[simp] theorem smul_zero : Nat.zero • a = (0 : A) := SubNegMonoid.gsmul_zero' _
+
+@[simp] theorem smul_succ : ∀ (m : ℕ) (a : A), (Nat.succ m) • a = a + m • a := SubNegMonoid.gsmul_succ'
+
 @[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul (↑(n) + 1) a = a + SubNegMonoid.gsmul (↑ n) a := by
   rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.gsmul_succ' _ _
 
@@ -296,9 +308,6 @@ section mul_hom
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 
-instance : SMul ℕ A where
-  sMul := SubNegMonoid.gsmul ∘ Int.ofNat
-
 @[simp] theorem hom_mul : ∀ a : A, ∀ n : ℕ, n • (ϕ a) = ϕ (n • a) := by
   intro a n
   induction n with
@@ -331,7 +340,7 @@ instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   rw [← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
   ← add_assoc, add_comm a a', add_right_neg]
 
-def neg (a : A) := -a
+@[reducible] def neg (a : A) := -a
 
 instance : AddCommGroup.Homomorphism (neg : A → A) where
   add_dist := neg_hom
