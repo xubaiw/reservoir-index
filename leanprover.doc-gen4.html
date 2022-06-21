@@ -34,8 +34,10 @@
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ /path/to/doc-gen4 Module"><pre>$ /path/to/doc-gen4 Module</pre></div>
 <p dir="auto">where <code>Module</code> is one or more of the top level modules you want to document.
 The tool will then proceed to compile the project using lake (if that hasn't happened yet),
-analyze it and put the result in <code>./build/doc</code>.
-You could e.g. host the files locally with the built-in Python webserver:</p>
+analyze it and put the result in <code>./build/doc</code>.</p>
+<p dir="auto">You can optionally provide the path to a <code>LeanInk</code> binary using the <code>--ink</code> flag which will make
+the tool produce <code>Alectryon</code> style rendered output along the usual documentation.</p>
+<p dir="auto">You could e.g. host the files locally with the built-in Python webserver:</p>
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd build/doc && python -m http.server"><pre>$ <span class="pl-c1">cd</span> build/doc <span class="pl-k">&&</span> python -m http.server</pre></div>
 </article></div></main>
 </body>

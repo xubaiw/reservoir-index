@@ -31,6 +31,9 @@ class Addition.Base (ℤ : Type) [Equality ℤ] :=
   /-- Exchanging the operands of an addition does not change the result. -/
   add_commutative : AA.Commutative (α := ℤ) (· + ·)
 
+  /-- The grouping of the terms in a sum doesn't matter. -/
+  add_associative : AA.Associative (α := ℤ) (· + ·)
+
 namespace Addition
 export Addition.Base (addOp)
 end Addition
