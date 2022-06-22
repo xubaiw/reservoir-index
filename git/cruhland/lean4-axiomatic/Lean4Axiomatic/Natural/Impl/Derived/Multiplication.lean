@@ -373,7 +373,32 @@ instance mul_cancellative
   cancellativeL := mul_cancelL
   cancellativeR := AA.cancelR_from_cancelL mul_cancelL
 
-instance multiplication_derived : Multiplication.Derived ℕ where
+/--
+The natural number `1` is a left multiplicative identity element.
+
+**Property intuition**: A sum of a single instance of a number should be equal
+to that number.
+
+**Proof intuition**: Expand the definition of multiplication into addition to
+see that multiplying by one is the same as adding zero.
+-/
+theorem mul_identL {n : ℕ} : 1 * n ≃ n := calc
+  1 * n      ≃ _ := AA.substL Literals.literal_step
+  step 0 * n ≃ _ := Base.step_mul
+  0 * n + n  ≃ _ := AA.substL Base.zero_mul
+  0 + n      ≃ _ := AA.identL
+  n          ≃ _ := Rel.refl
+
+def mul_identityL : AA.IdentityOn Hand.L (α := ℕ) 1 (· * ·) := {
+  ident := mul_identL
+}
+
+def mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
+  identityL := mul_identityL
+  identityR := AA.identityR_from_identityL mul_identityL
+}
+
+instance multiplication_derived : Multiplication.Derived ℕ := {
   mul_substitutive_eq := mul_substitutive_eq
   mul_zero := mul_zero
   mul_step := mul_step
@@ -384,5 +409,7 @@ instance multiplication_derived : Multiplication.Derived ℕ where
   mul_associative := mul_associative
   mul_substitutive_lt := mul_substitutive_lt
   mul_cancellative := mul_cancellative
+  mul_identity := mul_identity
+}
 
 end Lean4Axiomatic.Natural.Derived

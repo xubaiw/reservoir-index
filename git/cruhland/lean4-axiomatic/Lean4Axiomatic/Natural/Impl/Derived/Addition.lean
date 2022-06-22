@@ -198,7 +198,12 @@ theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
       Rel.trans (Rel.symm Addition.step_add) ‹step n + m ≃ 0›
     exact Axioms.step_neq_zero ‹step (n + m) ≃ 0›
 
-instance addition_derived : Addition.Derived ℕ where
+def add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
+  identityL := AA.IdentityOn.mk Addition.zero_add
+  identityR := AA.IdentityOn.mk add_zero
+}
+
+instance addition_derived : Addition.Derived ℕ := {
   add_zero := add_zero
   add_step := add_step
   add_substitutive := add_substitutive
@@ -207,6 +212,8 @@ instance addition_derived : Addition.Derived ℕ where
   add_associative := add_associative
   add_cancellative := add_cancellative
   zero_sum_split := zero_sum_split
+  add_identity := add_identity
+}
 
 end Derived
 

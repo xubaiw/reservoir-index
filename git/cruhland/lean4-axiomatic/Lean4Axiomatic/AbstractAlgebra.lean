@@ -36,6 +36,100 @@ class Associative {α : Sort u} [EqvOp α] (f : α → α → α) where
 export Associative (assoc)
 
 /--
+Class for types, values, and operations that satisfy either the left- or
+right-handed identity property.
+
+For more information see `IdentityOn.ident` or
+[consult Wikipedia](https://en.wikipedia.org/wiki/Identity_element).
+
+**Named parameters**
+- `hand`: Indicates whether the property is left- or right-handed.
+- `α`: The `Sort` of the identity element and the parameters of the operation.
+- `e`: The identity element.
+- `f`: The binary operation that obeys the identity property with `e`.
+
+**Class parameters**
+- `EqvOp α`: Necessary because the property expresses an equality on `α`.
+-/
+class IdentityOn
+    (hand : Hand) {α : Sort u} [EqvOp α] (e : α) (f : outParam (α → α → α))
+    :=
+  /--
+  The left- or right-handed identity property of a distinguished element `e`
+  and a binary operation `f` defined over a sort `α`.
+
+  The most well-known examples are the additive and multiplicative identities
+  from arithmetic. Zero is the identity element for addition (because
+  `0 + n ≃ n + 0 ≃ n` for all `n`), while one is the identity for
+  multiplication (because `1 * m ≃ m * 1 ≃ m` for all `m`).
+
+  **Named parameters**
+  - See `IdentityOn` for the class parameters.
+  - `x`:
+    The argument to `f` that is not the identity element; it will be in the
+    position that is the opposite of `hand`.
+  -/
+  ident {x : α} : hand.align f e x ≃ x
+
+export IdentityOn (ident)
+
+/--
+Convenience function for the left-handed identity property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `ident` function.
+
+See `IdentityOn.ident` for detailed documentation.
+-/
+abbrev identL := @ident Hand.L
+
+/--
+Convenience function for the right-handed identity property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `ident` function.
+
+See `IdentityOn.ident` for detailed documentation.
+-/
+abbrev identR := @ident Hand.R
+
+/--
+Convenience class for types, values, and operations that satisfy the full
+(left- **and** right-handed) identity property.
+
+See `IdentityOn` for detailed documentation.
+-/
+class Identity {α : Sort u} [EqvOp α] (e : α) (f : outParam (α → α → α)) :=
+  identityL : IdentityOn Hand.L e f
+  identityR : IdentityOn Hand.R e f
+
+attribute [instance] Identity.identityL
+attribute [instance] Identity.identityR
+
+/--
+Derive the right-identity property from left-identity for operations `f`
+meeting certain conditions.
+
+**Named parameters**
+- `α`: The `Sort` of the identity element and the parameters of the operation.
+- `e`: The identity element.
+- `f`: The binary operation that obeys the identity property with `e`.
+
+**Class parameters**
+- `EqvOp α`: Necessary because `IdentityOn.ident` expresses an equality on `α`.
+- `Commutative f`: Restriction on `f` that's required for the derivation.
+-/
+def identityR_from_identityL
+    {α : Sort u} [EqvOp α] {e : α} {f : α → α → α} [Commutative f]
+    : IdentityOn Hand.L e f → IdentityOn Hand.R e f
+    := by
+  intro _ -- Make left identity available to instance search
+  apply IdentityOn.mk
+  intro (x : α)
+  show f x e ≃ x
+  exact Rel.trans AA.comm identL
+
+/--
 Class for types and operations that satisfy either the left- or right-handed
 distributive property.
 

@@ -28,6 +28,9 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   /-- Adding zero to any natural number (on the right) leaves it unchanged. -/
   add_zero {n : ℕ} : n + 0 ≃ n
 
+  /-- Adding zero to a natural number produces the same natural number. -/
+  add_identity : AA.Identity (α := ℕ) 0 (· + ·)
+
   /-- Incrementing the right term in a sum increments the result. -/
   add_step {n m : ℕ} : n + step m ≃ step (n + m)
 
@@ -60,6 +63,7 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
 attribute [instance] Addition.Derived.add_associative
 attribute [instance] Addition.Derived.add_cancellative
 attribute [instance] Addition.Derived.add_commutative
+attribute [instance] Addition.Derived.add_identity
 attribute [instance] Addition.Derived.add_substitutive
 
 namespace Addition

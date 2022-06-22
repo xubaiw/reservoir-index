@@ -74,6 +74,9 @@ class Multiplication.Derived
   -/
   mul_cancellative : AA.Cancellative (α := ℕ) (· * ·) (· ≄ 0) (· ≃ ·) (· ≃ ·)
 
+  /-- Multiplying a natural number by one produces the same natural number. -/
+  mul_identity : AA.Identity (α := ℕ) 1 (· * ·)
+
 attribute [instance] Multiplication.Derived.mul_associative
 attribute [instance] Multiplication.Derived.mul_commutative
 attribute [instance] Multiplication.Derived.mul_distributive

@@ -28,12 +28,23 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Megaparsec</h3>
-<p dir="auto">This is a port of the Haskell package
-<a href="https://hackage.haskell.org/package/megaparsec" rel="nofollow">megaparsec</a> to Lean 4.</p>
+<p dir="auto">This is a port of the Haskell package <a href="https://hackage.haskell.org/package/megaparsec" rel="nofollow">megaparsec</a> to Lean 4.</p>
+<h3 dir="auto">Idea</h3>
+<p dir="auto">The big idea of Megaparsec goes like this:</p>
+<p dir="auto"><code>MonadParsec</code> is a typeclass.
+If a type is <code>MonadParsec</code>, it means that there are:</p>
+<ol dir="auto">
+<li>Basic parsers defined on it.</li>
+<li>Basic parser combinators defined on it.</li>
+<li>Ways to retrieve and update parser state.</li>
+<li>Track errors with ParseError.</li>
+<li>Thread the values through a particular monad.</li>
+</ol>
+<p dir="auto"><code>ParsecT</code> is a structure designed to be a <code>MonadParsec</code> and a trasformer that adds its capabilities to the underlying monad.</p>
+<h3 dir="auto">Hacking</h3>
 <h4 dir="auto">Reference implementation as a submodule</h4>
-<p dir="auto">The original <code>megaparsec</code> repository is included as a reference in
-<code>reference/megaparsec</code>. To download it, include <code>--recursive</code> when cloning this
-repository.</p>
+<p dir="auto">The original <code>megaparsec</code> repository is included as a reference in <code>reference/megaparsec</code>.
+To download it, include <code>--recursive</code> when cloning this repository.</p>
 <p dir="auto">If you have this repository cloned already, but need to fetch the reference implementation, please run <code>git submodule update --init --recursive</code></p>
 <h5 dir="auto">Haskell language server in VSCode</h5>
 <p dir="auto">I tried both nix and GHCup, both seem to be currently broken, so I disabled HLS VSCode extension for the time being.</p>
