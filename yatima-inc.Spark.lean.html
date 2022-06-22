@@ -1,0 +1,50 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>yatima-inc/Spark.lean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>yatima-inc/Spark.lean</h1>
+<p>None Description</p>
+<a href="https://github.com/yatima-inc/Spark.lean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Spark</h3>
+<p dir="auto">This is an implementation of the Spark API for Lean 4.</p>
+<h4 dir="auto">Motivation</h4>
+<p dir="auto">It's somewhat expensive to maintain consistent Spark queries because one relies
+on running the Spark validator to catch inconsistencies in the pipeline. Some
+examples of such inconsistencies are:</p>
+<ul dir="auto">
+<li>Dataframes with duplicated column names</li>
+<li>Inexistent selected columns</li>
+<li>Joins performed on absent columns</li>
+<li>Joins that result on dataframes with duplicated columns</li>
+</ul>
+<p dir="auto">We want to use Lean 4's powerful type system to prevent those at compilation
+time rather than relying on running the Spark validator everytime in some
+integration test.</p>
+<h4 dir="auto">Plan of action</h4>
+<p dir="auto">We will provide an interface to create verified Spark queries and an executable
+binary that can run them, communicating with the Spark kernel via FFI.</p>
+</article></div></main>
+</body>
+</html>

@@ -60,6 +60,11 @@ It is very important that <code>lean</code> is in the search path of VS Code and
 <li>Open the Extensions tab (<code>Ctrl+Shift+X</code>) and install the <code>lean4</code> extension (author: <code>leanprover</code>).</li>
 <li>You should now have working error diagnostics, go-to-definition, as well as a goal display for tactic proofs in the supplement files!</li>
 </ul>
+<h4 dir="auto">Regenerating the HTML output</h4>
+<p dir="auto">The versions of <a href="https://github.com/cpitclaudel/alectryon">Alectryon</a> and its Lean 4 backend <a href="https://github.com/leanprover/LeanInk">LeanInk</a> used to generate the accompanying HTML files are archived in the folders <code>alectryon</code> and <code>LeanInk</code>, respectively.
+To regenerate the output, first install the local Alectryon version as described in its readme:</p>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="python3 -m pip install ./alectryon"><pre>python3 -m pip install ./alectryon</pre></div>
+<p dir="auto">After ensuring that <code>alectryon</code> is now in your <code>PATH</code>, running <code>make html</code> (optionally preceded by <code>make clean</code>) should regenerate the files.</p>
 </article></div></main>
 </body>
 </html>
