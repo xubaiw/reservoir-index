@@ -111,6 +111,7 @@
  "opencompl/lean-mlir-semantics",
  "pnwamk/lean4-assert-command",
  "ramonfmir/junglean",
+ "rebryant/model-counting",
  "remimimimimi/lambda-calculus-typecheckers",
  "remimimimimi/lean4-type-theory",
  "shingtaklam1324/iva",
