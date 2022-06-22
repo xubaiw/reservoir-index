@@ -50,7 +50,7 @@
 <li>You can also define a theorem name, by writing <code>theorem [...] : if [...] then [...]</code>.</li>
 </ul>
 <h5 dir="auto">Statements</h5>
-<ul dir="auto">
+<ul>
 <li>For now, most statements need the <code>have</code> keyword. The system will try to match a substatement on the right of the <code>have</code> keyword and will try to find the proof of that substatement in the sentence. Any equation should be solved automatically, and in addition to that, the keys in <a href="src/natural2lean/proof_elements/statement/have.py"><code>natural2lean.text.have.PROOFS</code></a> will also be understood.</li>
 <li>You can also conclude a goal by simply stating it (for example, if your goal is to prove that <math-renderer class="js-inline-math" data-static-url="https://github.githubassets.com/static" style="display: inline">$m^2$</math-renderer> is even, then stating <code>$m^2$ is even</code> will work).</li>
 <li>You can add words to make your proof more readable, such as <code>Hence, $m^2$ is even</code>, even though just writing <code>$m^2$ even</code> will have the same effect.</li>

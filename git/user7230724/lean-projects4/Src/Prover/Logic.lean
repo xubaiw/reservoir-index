@@ -1,9 +1,7 @@
 import Lean
 
-section
-open Lean Elab Term
-elab "!" tm:term : term => elabTermEnsuringType tm none
-end
+section open Lean Elab Term
+elab "!" tm:term : term => elabTermEnsuringType tm none end
 
 namespace prover
 noncomputable section
@@ -67,6 +65,7 @@ expandExplicitBinders ``exiu xs b end
 -- Axioms
 
 axiom prop_rec (F : Prop → Prop) {P : Prop} : F true → F false → F P
+axiom funext {α β : Type} {f g : α → β} : (∀ x, f x = g x) → f = g
 
 -- Theorems
 
@@ -332,19 +331,25 @@ iff_intro iff_assoc_aux
 (λ h => iff_symm # iff_rec' (λ x => R ↔ x) iff_symm' #
   iff_assoc_aux # iff_rec' (λ x => x ↔ P) iff_symm' # iff_symm h)
 
-theorem and_trans {P Q R  : Prop} (h₁ : P ∧ Q) (h₂ : Q ∧ R) : P ∧ R :=
+theorem and_trans {P Q R : Prop} (h₁ : P ∧ Q) (h₂ : Q ∧ R) : P ∧ R :=
 and_intro (and_left h₁) (and_right h₂)
 
-theorem iff_trans {P Q R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+theorem iff_trans {P Q R : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_intro (λ h₃ => mp h₂ # mp h₁ h₃) (λ h₃ => mpr h₁ # mpr h₂ h₃)
 
-theorem iff_trans' (Q : Prop) {P R  : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
+theorem iff_trans' {P Q R : Prop} (h₁ : P ↔ Q) (h₂ : R ↔ Q) : R ↔ P :=
+iff_symm # iff_trans h₁ # iff_symm h₂
+
+theorem iff_trans_with (Q : Prop) {P R : Prop} (h₁ : P ↔ Q) (h₂ : Q ↔ R) : P ↔ R :=
 iff_trans h₁ h₂
 
 theorem eq_trans {α : Type} {x y z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_rec' (λ x => x = z) h₁ h₂
 
-theorem eq_trans' {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
+theorem eq_trans' {α : Type} {P Q R : α} (h₁ : P = Q) (h₂ : R = Q) : R = P :=
+eq_symm # eq_trans h₁ # eq_symm h₂
+
+theorem eq_trans_with {α : Type} (y : α) {x z : α} (h₁ : x = y) (h₂ : y = z) : x = z :=
 eq_trans h₁ h₂
 
 theorem exiu_iff {α : Type} {P : α → Prop} :
@@ -387,3 +392,22 @@ cpos' h₁ h₂
 
 theorem hv {P Q : Prop} (h₁ : P) (h₂ : P → Q) : Q :=
 h₂ h₁
+
+theorem or_iff_or_left {P Q R : Prop} (h : P ↔ Q) : R ∨ P ↔ R ∨ Q :=
+iff_rec' (λ x => R ∨ x ↔ _) h iff_refl
+
+theorem or_iff_or_right {P Q R : Prop} (h : P ↔ Q) : P ∨ R ↔ Q ∨ R :=
+iff_rec' (λ x => x ∨ R ↔ _) h iff_refl
+
+theorem or_of_and {P Q : Prop} (h : P ∧ Q) : P ∨ Q :=
+or_inl # and_left h
+
+theorem congr_fun {α β : Type} {f g : α → β} {a : α} (h : f = g) : f a = g a :=
+eq_rec' (λ x => x a = g a) h rfl
+
+theorem congr_arg {α β : Type} {f : α → β} {a b : α} (h : a = b) : f a = f b :=
+eq_rec' (λ x => f x = f b) h rfl
+
+theorem congr {α β : Type} {f g : α → β} {a b : α}
+  (h₁ : f = g) (h₂ : a = b) : f a = g b :=
+eq_trans (congr_fun h₁) # congr_arg h₂
