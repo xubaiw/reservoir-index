@@ -106,11 +106,41 @@ def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
   assoc := add_assoc
 }
 
-def addition : Addition.Base (Difference ℕ) := {
+/--
+The integer `0` is a left additive identity element.
+
+**Property intuition**: Adding nothing to a value should leave it unchanged.
+
+**Proof intuition**: Both components of the literal `0` are also `0`, so we can
+use the additive identity property on natural numbers elementwise.
+-/
+theorem add_identL {a : Difference ℕ} : 0 + a ≃ a := by
+  revert a; intro (n——m)
+  show 0——0 + n——m ≃ n——m
+  show (0 + n)——(0 + m) ≃ n——m
+  show from_prod (0 + n, 0 + m) ≃ from_prod (n, m)
+  apply AA.subst₁
+  show (0 + n, 0 + m) ≃ (n, m)
+  calc
+    (0 + n, 0 + m) ≃ _ := AA.substL AA.identL
+    (n, 0 + m)     ≃ _ := AA.substR AA.identL
+    (n, m)         ≃ _ := Rel.refl
+
+def add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
+  ident := add_identL
+}
+
+def add_identity : AA.Identity (α := Difference ℕ) 0 (· + ·) := {
+  identityL := add_identityL
+  identityR := AA.identityR_from_identityL add_identityL
+}
+
+def addition : Addition.Base ℕ (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative
   add_associative := add_associative
+  add_identity := add_identity
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

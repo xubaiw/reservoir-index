@@ -3,9 +3,9 @@ open Nat
 
 theorem n_cube_plus_2_n (n : Nat) : divisible 3 (n^3 + 2*n) := by
   match n with
-  | 0 => repeat (first | rfl | trivial | ring | simp_all)
+  | 0 => repeat (first | trivial | ring | simp_all)
   | k+1 => 
-    have h₁ : divisible 3 (k ^ 3 + 2 * k) := n_cube_plus_2_n k
+    have h₁ : divisible 3 (k ^ 3 + 2 * k) := n_cube_plus_2_n _
 
     have ⟨z, h₂⟩ : ∃ z, k^3 + 2*k = 3*z := by
       repeat (first | ring | simp_all)
@@ -23,7 +23,7 @@ theorem n_cube_plus_2_n (n : Nat) : divisible 3 (n^3 + 2*n) := by
     try rw [h₃]
   
     apply mod_rewrite.mpr
-    exact ⟨_, by repeat (first | rfl | assumption | ring | simp_all)⟩
+    exact ⟨_, by repeat (first | trivial | ring | simp_all)⟩
 
-  
+
 

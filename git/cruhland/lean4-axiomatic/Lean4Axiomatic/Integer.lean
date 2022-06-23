@@ -36,7 +36,7 @@ construct an instance.
 class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toEquality : Equality ℤ
   toConversion : Conversion ℕ ℤ
-  toAddition : Addition.Base ℤ
+  toAddition : Addition.Base ℕ ℤ
   toNegation : Negation.Base ℕ ℤ
   toMultiplication : Multiplication.Base ℤ
 
