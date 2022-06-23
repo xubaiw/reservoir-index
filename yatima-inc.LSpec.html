@@ -28,7 +28,7 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">LSpec</h3>
-<p dir="auto">A Testing Framework for Lean</p>
+<p dir="auto">A testing framework for Lean 4, inspired by Haskell's <a href="https://hspec.github.io/" rel="nofollow">Hspec</a> package.</p>
 <h4 dir="auto">Usage</h4>
 <p dir="auto">There are two ways to use LSpec: via the <code>#lspec</code> command and the <code>lspec</code> function.
 Both become available once you <code>import LSpec</code>.</p>
@@ -36,85 +36,66 @@ Both become available once you <code>import LSpec</code>.</p>
 If you use <code>LSpec</code> as a dependency, a test failure shall interrupt the execution of the <code>lake build</code> command and throw an error visible in the editor.</p>
 <p dir="auto">The latter is for writing tests in a separate test file.
 Test files can be run independently with the <code>lspec</code> binary, as shown later.</p>
-<h4 dir="auto">The <code>LSpec</code> and <code>Rel</code> types</h4>
-<p dir="auto"><code>LSpec</code> is the basic structure used to encode tests.
-We can create a term with the type <code>LSpec</code> by using the <code>it</code> function described below.</p>
-<p dir="auto"><code>Rel</code> represents an assertion of some kind.
-This is very general; here are some examples:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def shouldBe [BEq α] (a' : α) : Rel α :=
-  fun a => a == a'"><pre><span class="pl-k">def</span> <span class="pl-en">shouldBe</span> [BEq α] (a' : α) : Rel α :=
-  fun a => a == a'</pre></div>
-<p dir="auto">This simple predicate asserts that the input <code>a'</code> should be some value <code>a</code>.</p>
-<p dir="auto">We also define:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def shouldNotBe [BEq α] (a' : α) : Rel α :=
-  fun a => not $ a == a'
-
-def shouldBeEmpty : Rel (List α) :=
-  fun l => l.isEmpty
-
-def shouldNotBeEmpty : Rel (List α) :=
-  fun l => not l.isEmpty"><pre><span class="pl-k">def</span> <span class="pl-en">shouldNotBe</span> [BEq α] (a' : α) : Rel α :=
-  fun a => not $ a == a'
-
-<span class="pl-k">def</span> <span class="pl-en">shouldBeEmpty</span> : Rel (List α) :=
-  fun l => l.isEmpty
-
-<span class="pl-k">def</span> <span class="pl-en">shouldNotBeEmpty</span> : Rel (List α) :=
-  fun l => not l.isEmpty</pre></div>
-<p dir="auto">These are just some of the most trivial assertions.
-For the time being, we do not provide many more, although it can change.
-That said, one can easily define a custom assertion type for their own needs.</p>
-<h4 dir="auto">The <code>it</code> helper function</h4>
-<p dir="auto"><code>it</code> creates an instance of an <code>LSpec</code> and represents a single test.
-<code>it</code> requires four arguments:</p>
-<ol dir="auto">
-<li><code>descr : String</code>: a description of the test</li>
-<li><code>val : α</code>: the value tested</li>
-<li><code>rel : Rel α</code>: an assertion that <code>a</code> is tested on</li>
-<li><code>next : LSpec</code>: the next test (also defined by an <code>it</code>);
-the default option <code>done</code> represents no further tests.</li>
-</ol>
-<p dir="auto">For example, we could define two simple tests:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def twoTests : LSpec :=
-  it "knows equality" 42 (shouldBe 42) $
-  it "knows lists" [42].length (shouldBe 1)"><pre><span class="pl-k">def</span> <span class="pl-en">twoTests</span> : LSpec :=
-  it <span class="pl-s"><span class="pl-pds">"</span>knows equality<span class="pl-pds">"</span></span> <span class="pl-c1">42</span> (shouldBe <span class="pl-c1">42</span>) $
-  it <span class="pl-s"><span class="pl-pds">"</span>knows lists<span class="pl-pds">"</span></span> [<span class="pl-c1">42</span>].length (shouldBe <span class="pl-c1">1</span>)</pre></div>
-<h4 dir="auto">The <code>#lspec</code> command</h4>
+<h5 dir="auto">The <code>TestSeq</code> type</h5>
+<p dir="auto"><code>TestSeq</code> is used to represent sequences of tests.
+In order to instantiate terms of <code>TestSeq</code>, use one of the two following helper functions:</p>
+<ul dir="auto">
+<li><code>test</code>: consumes a description and a proposition;</li>
+<li><code>test'</code>: consumes a description, a proposition and an (optional) extra <code>TestSeq</code>.
+Use it if you don't want to use <code>do</code> notation.</li>
+</ul>
+<p dir="auto">The propositions above, however, must have their own instances of <code>TDecidable</code>.</p>
+<h5 dir="auto">The <code>TDecidable</code> class</h5>
+<p dir="auto"><code>TDecidable</code> is how Lean is instructed to decide whether certain propositions are resolved as <code>true</code> or <code>false</code>.
+This is an example of a simple instance for decidability of equalities:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="instance (x y : α) [DecidableEq α] [Repr α] : TDecidable (x = y) :=
+  if h : x = y then
+    .isTrue h
+  else
+    .isFalse h s!"Not equal: {repr x} and {repr y}""><pre><span class="pl-k">instance</span> (x y : α) [DecidableEq α] [Repr α] : TDecidable (x = y) :=
+  <span class="pl-k">if</span> h : x = y <span class="pl-k">then</span>
+    .isTrue h
+  <span class="pl-k">else</span>
+    .isFalse h s!<span class="pl-s"><span class="pl-pds">"</span>Not equal: {repr x} and {repr y}<span class="pl-pds">"</span></span></pre></div>
+<p dir="auto">The custom failure message is optional.</p>
+<p dir="auto">There are more examples of <code>TDecidable</code> instances in <a href="LSpec/Instances.lean">LSpec/Instances.lean</a>.
+Such instances are automatically imported via <code>import LSpec</code>.</p>
+<p dir="auto">The user is, of course, free to provide their own instances.</p>
+<h5 dir="auto">The <code>#lspec</code> command</h5>
 <p dir="auto">The <code>#lspec</code> command allows you to test interactively in a file.
-It requires one argument <code>foo : LSpec</code>.</p>
-<p dir="auto">The command will throw an error if the type of the argument is not <code>LSpec</code> or if the test fails.</p>
-<p dir="auto">For example:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="#lspec it "knows equality" 4 (shouldBe 4)"><pre>#lspec it <span class="pl-s"><span class="pl-pds">"</span>knows equality<span class="pl-pds">"</span></span> <span class="pl-c1">4</span> (shouldBe <span class="pl-c1">4</span>)</pre></div>
-<p dir="auto">Will output <code>✓ it knows equality</code> and succeed.</p>
-<h4 dir="auto">The <code>lspec</code> function</h4>
-<p dir="auto">The <code>lspec</code> function is for writing tests in a separate file and represents the result of one <code>LSpec</code> test suite.
-As discussed earlier, one can chain <code>LSpec</code> tests by providing the next test as the last argument of the <code>it</code> function.
-The <code>lspec</code> function requires two arguments, a description of the tests and the <code>LSpec</code> to run.</p>
-<p dir="auto">For example, take <code>twoTests</code> we defined above.
-Then we can create a standalone <code>Tests.lean</code> file:</p>
+It requires one argument <code>t : TestSeq</code>.</p>
+<p dir="auto">Examples:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import LSpec
 
-def twoTests : LSpec :=
-  it "knows equality" 42 (shouldBe 42) $
-  it "knows lists" [42].length (shouldBe 1)
+#lspec do
+  test "four equals four" (4 = 4)
+  test "five equals five" (5 = 5)
 
-def main :=
-  lspec "some description" twoTests"><pre><span class="pl-k">import</span> LSpec
+#lspec
+  test' "four equals four" (4 = 4) $
+  test' "five equals five" (5 = 5)"><pre><span class="pl-k">import</span> LSpec
 
-<span class="pl-k">def</span> <span class="pl-en">twoTests</span> : LSpec :=
-  it <span class="pl-s"><span class="pl-pds">"</span>knows equality<span class="pl-pds">"</span></span> <span class="pl-c1">42</span> (shouldBe <span class="pl-c1">42</span>) $
-  it <span class="pl-s"><span class="pl-pds">"</span>knows lists<span class="pl-pds">"</span></span> [<span class="pl-c1">42</span>].length (shouldBe <span class="pl-c1">1</span>)
+#lspec <span class="pl-k">do</span>
+  test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>)
+  test <span class="pl-s"><span class="pl-pds">"</span>five equals five<span class="pl-pds">"</span></span> (<span class="pl-c1">5</span> = <span class="pl-c1">5</span>)
 
-<span class="pl-k">def</span> <span class="pl-en">main</span> :=
-  lspec <span class="pl-s"><span class="pl-pds">"</span>some description<span class="pl-pds">"</span></span> twoTests</pre></div>
+#lspec
+  test' <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>) $
+  test' <span class="pl-s"><span class="pl-pds">"</span>five equals five<span class="pl-pds">"</span></span> (<span class="pl-c1">5</span> = <span class="pl-c1">5</span>)</pre></div>
+<h5 dir="auto">The <code>lspec</code> function</h5>
+<p dir="auto">The <code>lspec</code> function is for writing tests in a separate file and represents the result of one <code>LSpec</code> test suite.
+Similarly to the <code>#lspec</code> command, it requires an argument of type <code>TestSeq</code>.</p>
+<p dir="auto">For example, we can create a standalone <code>Tests.lean</code> file:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import LSpec
+
+def main := lspec $
+  test "four equals four" (4 = 4)"><pre><span class="pl-k">import</span> LSpec
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> := lspec $
+  test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>)</pre></div>
 <p dir="auto">If you run <code>Tests.lean</code>, the expected output should be:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="Testing that: some description
-✓ it knows equality
-✓ it knows lists"><pre>Testing that: some description
-✓ it knows equality
-✓ it knows lists</pre></div>
-<h4 dir="auto">The <code>lspec</code> binary</h4>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="✓ four equals four"><pre>✓ four equals four</pre></div>
+<h5 dir="auto">The <code>lspec</code> binary</h5>
 <p dir="auto">Suppose you want to create multiple test files, each with a separate test suite.
 Create a folder called <code>Tests</code> in the root directory of your project and then:</p>
 <ol dir="auto">

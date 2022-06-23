@@ -1,4 +1,6 @@
 import Mathlib.Init.Data.Nat.Basic
+import Mathlib.Tactic.Ring
+
 
 /- Div : functions and theorems relative to the division and modulo operations -/
 
@@ -15,5 +17,16 @@ namespace Nat
 
   -- TODO : find equivalent in mathlib / prove it
   axiom mod_rewrite {a b m : Nat} : a % b = m ↔ ∃ k, a = b * k + m
+
+  
+  theorem div_plus_div {a b c : Nat} : divisible c a → divisible c b → divisible c (a + b) := by
+    intros h₁ h₂
+    rw [divisible, mod_rewrite] at h₁ h₂
+    have ⟨n, hn⟩ := h₁
+    have ⟨m, hm⟩ := h₂
+    rw [hn, hm]
+    apply mod_rewrite.mpr
+    exact ⟨n+m, by ring⟩
+
 end Nat
 

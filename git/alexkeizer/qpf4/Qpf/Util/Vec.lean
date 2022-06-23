@@ -17,7 +17,7 @@ abbrev Vec (α : Type _) (n : Nat)
   := @DVec n fun _ => α
 
 namespace Vec
-  def append1 {α : Type u} {n} (tl : Vec α n) (hd : α) : Vec α (n+1)
+  def append1 {α : Type u} {n} (tl : Vec α n) (hd : α) : Vec α (.succ n)
     | (Fin2.fs i) => tl i
     | Fin2.fz     => hd
 
@@ -61,4 +61,69 @@ namespace Vec
 
   abbrev nil  : Vec α 0           := DVec.nil
   abbrev last : Vec α n.succ → α  := DVec.last
+
+  def reverse (v : Vec α n) : Vec α n :=
+    fun i => v i.inv
+
+
+  @[simp]
+  theorem reverse_involution {v : Vec α n} :
+    v.reverse.reverse = v :=
+  by
+    funext i;
+    simp[reverse]
+    apply congrArg;
+    exact Fin2.inv_involution
 end Vec
+
+
+
+/-
+  # Notation macros
+-/
+
+syntax "![" term,* "]" : term
+macro_rules
+  | `(![])    => `(Vec.nil)
+  | `(![$x])  => `(Vec.append1 ![] $x)
+  | `(![ $xs,* , $x]) => `(Vec.append1 ![$xs,*] $x)
+
+
+
+
+
+-- #check Lean.Meta.getMVarDecl
+
+-- section 
+--   open Lean Tactic Elab.Tactic
+
+-- def elabVecEqAux : TacticM Unit := do
+--   evalTactic <|← `(tactic| sorry)
+
+
+-- #check Lean.Expr.app
+
+-- open Lean Meta Elab.Term Expr in
+-- elab "vec_eq " a:term b:term : term => do
+--   let α ← mkFreshTypeMVar
+--   let n ← mkFreshExprMVar (mkConst ``Nat)
+
+--   let vec_type := mkApp2 (mkConst ``Vec) n α
+
+--   let a' ← elabTermEnsuringType a vec_type
+--   let b' ← elabTermEnsuringType b vec_type
+
+--   synthesizeSyntheticMVarsNoPostponing
+
+--   let n' ← match ←getExprMVarAssignment? n.mvarId! with
+--   | none    => throwError "Failed to assign a value to {n}"
+--   | some n' => pure n'
+  
+--   match ← whnf n' with
+--   | Expr.app (Expr.const (`Nat.cons) ..) .. => 
+--       by sorry
+--   | Expr.app (Expr.const (`Nat) ..) ..        => 
+--       by sorry
+--   | _                                       => throwErrow "Nat literal expected:\n\t{n}"
+  
+-- end
