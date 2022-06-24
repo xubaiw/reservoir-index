@@ -1,5 +1,5 @@
 #####################################################################################
-# Copyright (c) 2021 Marijn Heule, Randal E. Bryant, Carnegie Mellon University
+# Copyright (c) 2022 Randal E. Bryant, Carnegie Mellon University
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 # associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -17,14 +17,101 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ########################################################################################
 
-# Code for generating CNF, order, schedule, and crat proof files
-class WriterException(Exception):
+# Code for reading and generating CNF, order, schedule, and crat proof files
+
+def trim(s):
+    while len(s) > 0 and s[-1] in '\r\n':
+        s = s[:-1]
+    return s
+
+class CnfException(Exception):
 
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
-        return "Writer Exception: " + str(self.value)
+        return "CNF Exception: " + str(self.value)
+
+
+# Read CNF file.
+# Save list of clauses, each is a list of literals (zero at end removed)
+# Also saves comment lines
+class CnfReader():
+    file = None
+    commentLines = []
+    clauses = []
+    nvar = 0
+    verbLevel = 1
+    
+    def __init__(self, fname = None, verbLevel = 1):
+        self.verbLevel = verbLevel
+        if fname is None:
+            opened = False
+            self.file = sys.stdin
+        else:
+            opened = True
+            try:
+                self.file = open(fname, 'r')
+            except Exception:
+                raise CnfException("Could not open file '%s'" % fname)
+        self.clauses = []
+        self.commentLines = []
+        try:
+            self.readCnf()
+        except Exception as ex:
+            if opened:
+                self.file.close()
+            raise ex
+        
+    def readCnf(self):
+        lineNumber = 0
+        nclause = 0
+        self.nvar = 0
+        clauseCount = 0
+        for line in self.file:
+            lineNumber += 1
+            line = trim(line)
+            if len(line) == 0:
+                continue
+            fields = line.split()
+            if len(fields) == 0:
+                continue
+            elif line[0] == 'c':
+                if self.verbLevel > 1:
+                    self.commentLines.append(line)
+            elif line[0] == 'p':
+                fields = line[1:].split()
+                if len(fields) != 3 or fields[0] != 'cnf':
+                    raise CnfException("Line %d.  Bad header line '%s'.  Not cnf" % (lineNumber, line))
+                try:
+                    self.nvar = int(fields[1])
+                    nclause = int(fields[2])
+                except Exception:
+                    raise CnfException("Line %d.  Bad header line '%s'.  Invalid number of variables or clauses" % (lineNumber, line))
+            else:
+                if nclause == 0:
+                    raise CnfException("Line %d.  No header line.  Not cnf" % (lineNumber))
+                # Check formatting
+                try:
+                    lits = [int(s) for s in line.split()]
+                except:
+                    raise CnfException("Line %d.  Non-integer field" % lineNumber)
+                # Last one should be 0
+                if lits[-1] != 0:
+                    raise CnfException("Line %d.  Clause line should end with 0" % lineNumber)
+                lits = lits[:-1]
+                vars = sorted([abs(l) for l in lits])
+                if len(vars) == 0:
+                    raise CnfException("Line %d.  Empty clause" % lineNumber)                    
+                if vars[-1] > self.nvar or vars[0] == 0:
+                    raise CnfException("Line %d.  Out-of-range literal" % lineNumber)
+                for i in range(len(vars) - 1):
+                    if vars[i] == vars[i+1]:
+                        raise CnfException("Line %d.  Opposite or repeated literal" % lineNumber)
+                self.clauses.append(lits)
+                clauseCount += 1
+        if clauseCount != nclause:
+            raise CnfException("Line %d: Got %d clauses.  Expected %d" % (lineNumber, clauseCount, nclause))
 
 
 # Generic writer
@@ -78,6 +165,13 @@ class Writer:
         self.outfile = None
 
 
+class WriterException(Exception):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return "Writer Exception: " + str(self.value)
      
 
 # Creating CNF
