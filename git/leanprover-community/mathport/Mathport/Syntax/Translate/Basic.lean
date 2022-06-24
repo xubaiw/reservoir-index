@@ -845,7 +845,7 @@ def trExpr' : Expr → M Syntax
   | Expr.sorry => `(sorry)
   | Expr.«_» => `(_)
   | Expr.«()» => `(())
-  | Expr.«{}» => `({})
+  | Expr.«{}» => `(Parser.Term.structInst| {})
   | Expr.ident n => mkIdentI n
   | Expr.const n none choices => mkIdentI n.kind choices
   | Expr.const n (some #[]) choices => mkIdentI n.kind choices
@@ -927,13 +927,14 @@ def trExpr' : Expr → M Syntax
   | Expr.begin tacs => do `(by $(← trBlock tacs):tacticSeq)
   | Expr.let bis e => do
     bis.foldrM (init := ← trExpr e) fun bi stx => do
-      `(let $(← trLetDecl bi.kind):letDecl $stx)
+      `(let $(← trLetDecl bi.kind):letDecl
+        $stx)
   | Expr.match #[x] _ #[] => do `(nomatch $(← trExpr x))
   | Expr.match xs _ #[] => do `(match $[$(← xs.mapM fun x => trExpr x):term],* with.)
   | Expr.match xs ty eqns => do
     `(match $[$(← xs.mapM fun x => trExpr x):term],* with $[$(← eqns.mapM trArm):matchAlt]*)
   | Expr.do _ els => do let els ← els.mapM fun e => trDoElem e.kind; `(do $[$els:doElem]*)
-  | Expr.«{,}» es => do `({$(← es.mapM fun e => trExpr e),*})
+  | Expr.«{,}» es => do `({$(← es.mapM fun e => trExpr e):term,*})
   | Expr.subtype false x ty p => do
     `({$(mkIdent x.kind) $[: $(← ty.mapM fun e => trExpr e)]? // $(← trExpr p)})
   | Expr.subtype true x none p => do `({$(mkIdent x.kind):ident | $(← trExpr p)})
@@ -956,11 +957,9 @@ def trExpr' : Expr → M Syntax
         `(Parser.Term.structInstField| $lhsId:ident := $(← trExpr rhs))
     -- TODO(Mario): formatter has trouble if you omit the commas
     if catchall then
-      `({ $[$srcs,* with]? $[$flds:structInstField, ]* .. })
-    else if let some last := flds.back? then
-      `({ $[$srcs,* with]? $[$(flds.pop):structInstField, ]* $last:structInstField })
+      `({ $[$srcs,* with]? $[$flds:structInstField],* .. })
     else
-      `({ $[$srcs,* with]? })
+      `({ $[$srcs,* with]? $[$flds:structInstField],* })
   | Expr.atPat lhs rhs => do `($(mkIdent lhs.kind)@ $(← trExpr rhs))
   | Expr.notation n args => trNotation n args
   | Expr.userNotation n args => do
