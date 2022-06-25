@@ -107,7 +107,7 @@ def add_associative : AA.Associative (α := Difference ℕ) (· + ·) := {
 }
 
 /--
-The integer `0` is a left additive identity element.
+The natural number difference `0` is a left additive identity element.
 
 **Property intuition**: Adding nothing to a value should leave it unchanged.
 

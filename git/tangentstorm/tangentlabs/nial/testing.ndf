@@ -1,0 +1,33 @@
+% testing tools for nial code
+% --------------------------------------------------;
+loaddefs "ansi
+
+assert is op assertion {
+ if not eval assertion then
+    fault unquote assertion
+ endif };
+
+try is op quote {
+  oldtrigger := settrigger o;
+  result := eval quote;
+  settrigger oldtrigger;
+  result }
+
+cheq is op q0 q1 {
+  % check for equality: both quotes should produce the same result;
+  emit (fg "K) 'testing:' plain (unquote q0);
+  vals := each try q0 q1; msg := null; res :='';
+  if isfault vals then
+    msg := (fg "y) 'error: ' (fg "R) (string res)
+  elseif imp[= each tally, =] vals then
+    ok
+  else
+    v0 v1 := vals;
+    msg := ((newline) (fg "r) ' expected: ' (fg "M) (display v1)
+            (newline) (fg "r) '  but saw: ' (fg "R) (display v0))
+  endif;
+  if empty msg
+    then res := res link ((fg "g) 'ok' plain)
+    else res := res link ((fg "r) (link msg) plain)
+  endif;
+  emit res };

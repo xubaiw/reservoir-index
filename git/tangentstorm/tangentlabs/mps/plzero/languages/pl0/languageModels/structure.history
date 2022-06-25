@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<history>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="-1" />
+    </dependencies>
+    <rename id="vydg.714196159579087055" type="CONCEPT" from="Integer" to="VInteger" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="0" />
+    </dependencies>
+    <rename id="vydg.714196159579087055" type="CONCEPT" from="VInteger" to="IntLiteral" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="1" />
+    </dependencies>
+    <rename id="vydg.714196159579168284" type="CONCEPT" from="e" to="Odd" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="2" />
+    </dependencies>
+    <rename id="vydg.714196159579189267" type="CONCEPT" from="Suite" to="BeginStmt" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="3" />
+    </dependencies>
+    <rename id="vydg.714196159579207550" type="CHILD" from="statements" to="statement" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="4" />
+    </dependencies>
+    <rename id="vydg.714196159579236082" type="CONCEPT" from="Variable" to="VarDef" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="5" />
+    </dependencies>
+    <rename id="vydg.714196159579179398" type="CHILD" from="xExpr" to="y" />
+  </StructureModification>
+  <StructureModification>
+    <dependencies>
+      <model index="vydg" modelUID="r:f052d088-2c7b-4428-8b1d-dd4b1c4d192f(pl0.structure)" version="6" />
+    </dependencies>
+    <rename id="vydg.714196159579435095" type="CHILD" from="op" to="verb" />
+  </StructureModification>
+</history>
+

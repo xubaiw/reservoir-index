@@ -1,0 +1,11 @@
+*~
+*#
+*.#*
+*.o
+*.so
+*.ppu
+*.pyc
+*.exe
+gen
+*.bak
+a.out

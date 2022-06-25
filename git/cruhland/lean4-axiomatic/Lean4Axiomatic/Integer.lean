@@ -38,7 +38,7 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toConversion : Conversion ℕ ℤ
   toAddition : Addition.Base ℕ ℤ
   toNegation : Negation.Base ℕ ℤ
-  toMultiplication : Multiplication.Base ℤ
+  toMultiplication : Multiplication.Base ℕ ℤ
 
 namespace Integer
 

@@ -80,6 +80,7 @@ class Multiplication.Derived
 attribute [instance] Multiplication.Derived.mul_associative
 attribute [instance] Multiplication.Derived.mul_commutative
 attribute [instance] Multiplication.Derived.mul_distributive
+attribute [instance] Multiplication.Derived.mul_identity
 attribute [instance] Multiplication.Derived.mul_substitutive_eq
 
 namespace Multiplication

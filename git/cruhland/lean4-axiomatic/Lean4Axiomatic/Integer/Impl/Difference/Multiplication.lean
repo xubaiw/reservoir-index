@@ -167,11 +167,45 @@ def mul_associative : AA.Associative (α := Difference ℕ) (· * ·) := {
   assoc := mul_assoc
 }
 
-def multiplication : Multiplication.Base (Difference ℕ) := {
+/--
+The natural number difference `1` is a left multiplicative identity element.
+
+**Property intuition**: A sum of a single value produces that same value.
+
+**Proof intuition**: Not sure there's any deep insight here, the proof is the
+standard formula of (1) expand definitions and (2) algebra.
+-/
+theorem mul_identL {a : Difference ℕ} : 1 * a ≃ a := by
+  revert a; intro (n——m)
+  show 1——0 * n——m ≃ n——m
+  show (1 * n + 0 * m)——(1 * m + 0 * n) ≃ n——m
+  show from_prod (1 * n + 0 * m, 1 * m + 0 * n) ≃ from_prod (n, m)
+  apply AA.subst₁
+  show (1 * n + 0 * m, 1 * m + 0 * n) ≃ (n, m)
+  calc
+    (1 * n + 0 * m, 1 * m + 0 * n) ≃ _ := AA.substL (AA.substL AA.identL)
+    (n + 0 * m, 1 * m + 0 * n)     ≃ _ := AA.substL (AA.substR Natural.zero_mul)
+    (n + 0, 1 * m + 0 * n)         ≃ _ := AA.substR (AA.substL AA.identL)
+    (n + 0, m + 0 * n)             ≃ _ := AA.substR (AA.substR Natural.zero_mul)
+    (n + 0, m + 0)                 ≃ _ := AA.substL AA.identR
+    (n, m + 0)                     ≃ _ := AA.substR AA.identR
+    (n, m)                         ≃ _ := Rel.refl
+
+def mul_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 1 (· * ·) := {
+  ident := mul_identL
+}
+
+def mul_identity : AA.Identity (α := Difference ℕ) 1 (· * ·) := {
+  identityL := mul_identityL
+  identityR := AA.identityR_from_identityL mul_identityL
+}
+
+def multiplication : Multiplication.Base ℕ (Difference ℕ) := {
   mulOp := mulOp
   mul_commutative := mul_commutative
   mul_substitutive := mul_substitutive
   mul_associative := mul_associative
+  mul_identity := mul_identity
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

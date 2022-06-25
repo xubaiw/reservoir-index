@@ -18,7 +18,10 @@ All other properties of multiplication can be derived from these.
 **Class parameters**
 - `Equality ℤ`: Required to express most properties of multiplication.
 -/
-class Multiplication.Base (ℤ : Type) [Equality ℤ] :=
+class Multiplication.Base
+    (ℕ : Type) [Natural ℕ]
+    (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ]
+    :=
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ
 
@@ -33,6 +36,9 @@ class Multiplication.Base (ℤ : Type) [Equality ℤ] :=
 
   /-- The grouping of the terms in a product doesn't matter. -/
   mul_associative : AA.Associative (α := ℤ) (· * ·)
+
+  /-- Multiplying an integer by one produces the same integer. -/
+  mul_identity : AA.Identity (α := ℤ) ↑(1 : ℕ) (· * ·)
 
 namespace Multiplication
 export Multiplication.Base (mulOp)

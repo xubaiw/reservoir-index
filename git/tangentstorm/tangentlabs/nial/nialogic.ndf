@@ -1,0 +1,478 @@
+% predicate logic in nial;
+each loaddefs "basics "ansi "testing;
+
+reload is { loaddefs "nialogic };
+
+% a little logo:;
+nialogic := "|B "nia "|C `l "|c "ogic "|w;
+
+clear is { emit link Clrscr Nialogic ( char 10 ) };
+clear;
+
+
+section 'substitution';
+% --------------------------------------------------;
+
+subs is op dict expr {
+  if dict = "no then "no
+  elseif any empty dict expr then expr
+  else
+    k v := cols ((floor(tally dict /2) 2) reshape dict);
+    if expr in k then v@( find expr k )
+    else each (op item {
+      if k = solitary item then
+        v@0
+      elseif item in k then
+        v@( find item k )
+      elseif atomic item then
+        item
+      else
+        subs dict item
+      endif }) expr
+    endif
+  endif }
+
+
+% substitution tests;
+% --------------------------------------------------;
+
+cheq !( subs ("a 1) "a )      !( 1 );
+cheq !( subs ("b 1) ("b "b))  !( 1 1 );
+cheq !( subs ("c 1) ["c])     !( [1] );
+cheq !( subs ("d 1) [] )      !( [] );
+
+%breakin "subs;
+cheq !( subs ("e [1]) "e )      !( [1] );
+%breakin "subs;
+
+cheq !( subs ("f [1]) ["f "f])  !( [[1][1]] );
+cheq !( subs ("g 1) [1 ["g]]) !( [1 [1]] );
+
+(cheq !( subs ("h 1 "i 2) ("h "i "h))
+      !( 1 2 1 ))
+(cheq !( subs ("j 1 "k 2) (["k]["j ["k] 3]))
+      !( [2] [1 [2] 3] ))
+
+
+section 'unification';
+% --------------------------------------------------;
+
+intree is op x tree {x in (link leaf id tree)};
+isvar is imp[isphrase, `$ = head string ];
+
+passive is link team [reverse,pass][2 take,2 drop];
+
+con is tr f (f link team[reverse,pass][2 take,2 drop]);
+
+lengths is each tally;
+
+unify is op x y {
+  if x = y then []
+  elseif and[isvar x, not or[isvar y, x intree y]] then [ x, y ]
+  elseif and[isvar y, not or[isvar x, y intree x]] then [ y, x ]
+  elseif or[atomic x, atomic y, diverse lengths x y] then "no
+  else hu := unify (each head x y);
+    if hu = "no then "no
+    else
+      tu := (unify (each ((hu subs) tail) x y));
+      if tu = "no then "no
+      else hu link tu endif
+    endif
+  endif }
+
+
+% unification tests;
+%---------------------------------------------------;
+
+cheq !( isvar "a )      !( o );
+cheq !( isvar "$a )     !( l );
+
+% 0 variables;
+cheq !( unify 0 0 )     !( [] );
+cheq !( unify 0 1 )     !( "no );
+
+% single variable;
+
+cheq !( unify "$a "$a )     !( [] );
+
+cheq !( unify "$a ["x "$a]) !( "no );
+cheq !( unify "$a 5 )      !( ["$a, 5] );
+cheq !( unify "$a [] )     !( "$a [] );
+cheq !( unify "$a [1] )    !( "$a [1] );
+
+cheq !( unify "$a "a )    !( "$a "a );
+
+cheq !( unify [ 1 "vs "$a] [  1 "vs 2]) !( "$a 2 );
+cheq !( unify [ 1 "vs   2] ["$x "vs 2]) !( "$x 1 );
+cheq !( unify [ 1 "vs "$a] ["$x "vs 2]) !( "$x 1 "$a 2 );
+cheq !( unify [ 1 "vs "$a] ["$x "vs 2]) !( "$x 1 "$a 2 );
+
+cheq !( unify ["$a "$a] [1 2]) !( "no );
+cheq !( unify ["$a "$a] [1 1]) !( "$a 1 );
+
+cheq !( unify ["$a ["$a]] [1 [1]]) !( "$a 1 );
+cheq !( unify ["$a "$a] [[1] [1]]) !( "$a [1] );
+
+
+
+section 'tabular binary relations';
+% --------------------------------------------------;
+
+doma IS BYROWS first;  % first column is the domain;
+codo IS BYROWS last;   % second column is the codomain;
+iv IS BYROWS reverse;  % inverse;
+body is last;
+
+col is op n xs (floor(tally xs div n) link n reshape xs);
+% law : ∀x:rel2[ 2 col link zip [doma, codo] x = x ] ;
+% (where rel2 is a 2-column relational  ;
+
+
+colget is op ab k { a b := ab; b@( find k a )};
+
+% relate treats the table as an operation, and applies it to arguments;
+relate is op rel vals {
+  link sublist[or(vals eachleft eachright in each (0 pick)),
+               each rest] (last rel) };
+
+% total makes any dyad total (by falling back to 'id' if the dyad fails);
+total is tr f op x {
+  fx := try !( f x );
+  if or[isfault,empty] fx then x else fx endif };
+
+
+haskey is op rel key { key in   head rel };
+keypos is op rel key { key find head rel };
+
+showrel is op rel {
+   if tally head rel <= 1
+     then post[head, post last] rel
+     else post[head, mix last] rel
+   endif };
+
+
+% relational algebra;
+
+rename is op rel oldnew { old new := oldnew; [old new subs head, body] rel };
+
+select is op rel keys {
+ ind := rel eachright keypos keys;
+ [ind choose head, cull (ind eachright choose body)] rel };
+
+where is op rel keyvals {
+  res := rel;
+  for kv with rows (2 col keyvals) do
+    key val := kv; ind := res keypos key;
+    res := [head, sublist[each((val =)(ind pick)), id] last] res
+  endfor; res };
+
+
+
+
+% relational algebra tests;
+
+ab := [ "a "b, [ "a1 "b1, "a2 "b2 ]];
+cheq  !( ab rename "a "AA ) !( ("AA "b) [ "a1 "b1, "a2 "b2 ]);
+
+cheq  !( ab select "a )     !( ("a) [ "a1, "a2 ] );
+cheq  !( ab select "b )     !( ("b) [ "b1, "b2 ] );
+
+% okay (for now?) to select the same column twice;
+cheq  !( ab select "b "b)   !( ("b "b) [ "b1 "b1, "b2 "b2 ]);
+
+% but rows should be unique;
+bc := [ "b "c, [ "b3 "c1, "b2 "c1, "b1 "c2 ]];
+cheq  !( bc select "c )  !( "c [ "c1, "c2 ] );
+cheq  !( bc select "b )  !( "b [ "b3, "b2, "b1 ] );
+
+cd := [ "c "d, [ "c1 "d1, "c2 "d2, "c3 "d1 ]];
+cheq !( cd where "d "d1 ) !( ( "c "d ) [ "c1 "d1, "c3 "d1 ]);
+cheq !( cd where "d "d1 "c "c1 ) !( ( "c "d ) [ "c1 "d1 ]);
+
+
+
+
+section 'logical language';
+% --------------------------------------------------;
+
+master := [
+  "const    "alias   "glyph  "synid,
+[ "top       "l      (ph'⊤')  "const,
+  "bot       "o      (ph'⊥')  "const,
+  "forall    "A.     (ph'∀')  "quant,
+  "exists    "E.     (ph'∃')  "quant,
+  "entails   "|-     (ph'⊢')  "infix,
+  "imp       "->     (ph'→')  "infix,
+  "iff       "><     (ph'⇔')  "infix,
+  "and       "*.     (ph'∧')  "infix,
+  "vel       "+.     (ph'∨')  "infix,
+  "not       "-.     (ph'¬')  "monad,
+  "xor       "~:     (ph'⊕')  "infix,
+  "reduce    "/.     (ph'/')  "trans,
+  "gamma     "G.     (ph'Γ')  "const,
+  "delta     "D.     (ph'Δ')  "const,
+  "sub       "sub    (ph'⊂')  "infix,
+  "sbe       "sbe    (ph'⊆')  "infix,
+  "lambda    "lam    (ph'λ')  "quant,
+  "IMP       "=>     (ph'⇒')  "infix,
+  "LPAREN    (ph'(') (ph'(')  "token,
+  "RPAREN    (ph')') (ph')')  "token,
+  "LBRACK    (ph'[') (ph']')  "token,
+  "RBRACK    (ph'[') (ph']')  "token,
+  "LBRACE    (ph'{') (ph'{')  "token,
+  "RBRACE    (ph'}') (ph'}')  "token
+]];
+
+syntax := [ "synid   "fields     "rule,
+[ "const   ([])         ("^),
+  "quant   ("$v+ "$p+)  ("^ "$v+ (ph'[') "$p+ (ph']')),
+  "infix   ("$p "$q)    ("$p "^ "$q),
+  "trans   ("$c "$p+)   ("$c "^ "$p+),
+  "monad   ("$p)        ("^ "$p)
+]];
+
+c2gV IS { Master select "const "glyph };
+glyph IS TOTAL ( c2gV relate );
+
+cheq !( (master select "alias "glyph) relate "*. "-> "-. ) !( words '→ ∧ ¬' );
+cheq !( (master select "alias "glyph) relate "A. "E. ) !( words '∀ ∃' );
+cheq !( glyph "A. "x "E. "y ) !( words '∀ x ∃ y' );
+
+
+% rendering for logic language;
+% --------------------------------------------------;
+
+gentoks is op node {
+  node := unboxed node;
+  sym := head node;
+  rule := (Syntax relate)({ Master select "const "synid } relate) sym;
+  if empty rule then
+    % it wasn't in the table so it must be a variable or predicate;
+    if empty rest node then string sym
+    else sym '(' link (each gentoks) (rest node) ')' endif
+  else
+    ptn tpl := rule;
+    if "no = (u := unify ptn (rest node)) then
+      fault link ['?unify: failed to unify pattern: ',
+                   (display ptn), ' against rest: ',
+                   (display rest node) ]
+    else g := glyph sym;  u := ["^, glyph sym] link u;
+      each gentoks (subs u tpl)
+    endif
+  endif };
+
+fmt is op node { link each string content gentoks node };
+
+% tests for language display
+% --------------------------------------------------;
+
+%cheq !( each fmt "top "bot "forall "exists "x ) !( '⊤' '⊥' '∀' '∃' 'x' );
+cheq !( fmt ("P "x))                             !( 'P(x)' );
+cheq !( fmt  "forall ["x] ["P "x]  )             !( '∀x[P(x)]' );
+cheq !( fmt ["forall "x ["imp "x "top]])         !( '∀x[x→⊤]'  );
+
+
+section 'bitvars (truth tables)';
+% --------------------------------------------------;
+
+bitvars is OP N {
+  rows (1 match transpose BYROWS 0 laminate list tell ( N reshape 2 )) }
+
+
+cheq !( bitvars 3 ) !([oooollll,oollooll,olololol]);
+
+
+
+
+section 'ZF (Zermelo-Fraenkel set theory)';
+% --------------------------------------------------;
+
+zf := [ "rulename "note "wff,
+[ "zf.extensionality
+     'Sets with the same members are equal.'
+     '∀(A,B,x)[(X ∈ A ⇔ X ∈ B) ⇒ (A = B)].',
+  "zf.foundation
+     'Every non-empty set contains an element distinct from itself.'
+     '∀S[(∃x.x∈S) ⇒ ∃y∈S[∀z∈S[ ¬(z∈y)]]].',
+  "zf.pairing
+     'For any pair of sets, there is a set containing exactly that pair.'
+     '∀A ∀B ∃C ∀y[y∈C ⇔ (y=A ∨ y=B)].',
+  "zf.infinity
+     'There exists an infinite set.'
+     '∃S[ ∅∈S ∧ ∀x∈S[ X∪X⁺ ∈ S ]].',
+  "zf.union
+     'For any two sets, there is a set equal to their union.'
+     '∀X ∃Y ∀u[u∈Y ⇔ ∃z. (z∈X ∧ u∈z)].',
+  "zf.powerset
+     'The powerset of set X contains every subset of X.'
+     '∀X ∃Y ∀u [ u∈Y ⇔ u⊆X ].',
+  "zf.existence
+     'There exists an empty set.'
+     '∃S ∀X[¬(X∈S)].',
+  "zf.separation
+     'Predicate functions can partition a set.'
+     '∀P:(a → Bit)[∀z∃x∀y(y∈x ⇒ (y∈z ∧ P(y)))].',
+  "zf.replacement
+     'The image of a set under a function is also a set.'
+     '∃x.∀y∈a[ ∃z.A(y,z) ⇒ ∃z∈x.A(y,z) ]' ]];
+
+% abstract syntax trees for zf (for testing the parser);
+
+zf_ast := [ "rulename "ast, [
+  "zf.extensionality
+      ["forall ["A "B "X]
+          ["imp ["iff ["mem "X "A] ["mem "X "B]] ["eql "A "B]]],
+  "zf.powerset
+      ["forall ["X] ["exists ["Y] ["forall ["u]
+          ["iff ["mem "u "Y] ["sbe "u "y]]]]],
+  "zf.existence
+      ["exists ["S] ["forall ["X]
+          ["not ["mem "X "S]]]],
+  "zf.separation
+      ["schema ["P ["mem "P ["fun "$a "bit]]]
+          ["forall ["Z "Y] ["exists ["X]
+              ["imp ["mem "Y "X] ["and ["mem "Y "Z] ["P "y]]]]]],
+  "zf.replacement ["schema ["A "z]
+      "TODO],
+  "zf.foundation
+      ["forall ["S]
+          ["imp ["exists ["X ["mem "X "S]]
+             ["exists ["Y ["mem "Y "S] ["forall ["Z ["mem "Z "S]]
+               ["not ["mem "Z "Y]]]]]]]],
+  "zf.pairing
+      ["forall ["A "B] ["exists ["C]  ["forall ["Y]
+          ["iff ["mem "Y "C] ["vel ["eq "Y "A] ["eq "Y "B ]]]]]],
+  "zf.infinity
+      ["exists ["S]
+        ["and ["mem "nil "S]
+              ["forall [["X ["mem "X "S]]]
+                       ["mem ["union "X ["set "X]] "S]]]],
+  "zf.union
+     ["forall ["X] ["exists ["Y] ["forall "u]
+       ["iff ["mem "u "Y]
+             ["exists ["Z] ["and ["mem "Z "X] ["mem "U "Z]]]]]] ]];
+
+section 'command prompt';
+% --------------------------------------------------;
+
+stack := []
+
+bar := link ' ' (fg "K) '|' (fg "w) ' '
+
+push is op x { nonlocal stack; stack := stack link x };
+
+pop is { nonlocal stack; res stack := [last, front] stack; res };
+
+reset is { nonlocal stack; stack := [] };
+
+prompt is { readscreen link (fg "r) ' > ' (fg "w) };
+
+repl is {
+  done := false;
+  repeat line := prompt;
+    for cmd with each phrase (words line) do
+      if cmd = "bye then done := true
+      else push cmd endif
+    endfor
+  until done endrepeat };
+
+# repl
+
+
+
+section 'proofs';
+% --------------------------------------------------;
+
+ap is op rule expr {
+  % apply rule to expression;
+  e0 oper e1 := rule;
+  (e0 unify expr) subs e1 }
+
+apat is op rule path x {
+  % apply at: apply rule at a particular location in x;
+  ((rule ap) (path reach x)) path deepplace x}
+
+% ~ and ^ are used in describing low-level proofs
+% low-level proofs are just sequences of rewrite-rule
+% applications at different points in the expression.
+% the steps are given as a sequence of [rule,path] pairs;
+~ is reverse;
+^ := [[]]; % empty path. (replace entire expr);
+
+aprules is op p steps {
+  % apply rules for low-level proof;
+  res := p;
+  for rp with steps do
+    rule path := rp; if path = ^ then path := [] endif;
+    res := apat rule path res
+  endfor }
+
+section 'proof tests';
+% --------------------------------------------------;
+
+% exponent rule;
+r0 := rExpMul := (("$x "^ "$y) "^ "$z) "= ("$x "^ ("$y "* "$z));
+
+% commutative rule for *;
+r1 := rMulCom := ("$x "* "$y) "= ("$y "* "$x);
+
+p := (("x "^ "y) "^ "z);
+q := (("x "^ "z) "^ "y);
+
+r := p;
+r := r0 ap p;
+r := apat r1 [2] r;
+r := reverse r0 ap r;
+
+cheq !( r ) !( q );
+cheq !( (~r0) ap apat r1 [2] (r0 ap p) ) !( q );
+
+% we can get q from p by following this series of rule applications;
+cheq !( p aprules [r0, ^] [r1, 2] [~r0, ^] ) !( q );
+
+# TODO: high level proofs like this:
+t := { show p "= q (
+      (("x "^ "y) "^ "z)   [ "r0, ^ ]
+   "=  ("x "^ ("y "* "z))  [ "r1, 2 ]
+   "=  ("x "^ ("z "* "y))  [ "~0, ^ ]
+   "= (("x "^ "z) "^ "y) ) }
+
+
+section 'simple inference engine';
+% --------------------------------------------------;
+MP := ("Rule 'MP' ("$P "$Q) [("imp "$P "$Q)] [("$Q)]);
+
+# language L from /A Primer for Logic and Proof/
+# by Holly P. Hirst and Jeffry L. Hirst
+# http://www.mathsci.appstate.edu/~jlh/primer/hirst.pdf;
+
+HirstL := [ MP,
+    ("Rule 'A1' ("$A "$B) []
+         ["imp "$A ["imp "$B "$A]]),
+    ("Rule 'A2' ("$A "$B "$C) []
+         ["imp ["imp "$A ["imp "$B "$C]]]
+         ["imp ["imp "$A "$B] ["imp "$A "$C]]),
+    ("Rule 'A3' ("$A "$B) []
+         ["imp ["imp  ("not "$B) ("not "$A)]
+               ["imp [("not "$B) "$A] "$B]]) ];
+
+goals := ("Rule 'L1' ["$A] [] (l1 :=["imp "A "A]));
+
+antecedents is op r { head r @ 3 };
+consequents is op r { head r @ 4 };
+
+leads is op stmt ctx {
+  res := [];
+  for rule with ctx do
+    write display rule;
+    cons := consequents rule; sub := stmt unify cons;
+    if sub = "no then ok
+    else res := res link ["Try stmt ctx rule sub] endif;
+  endfor; res }
+
+for lead with leads l1 hirstl do
+   _try stmt ctx rule sub := lead;
+   emit "|r;
+   write display (antecedents rule);
+   emit "|w;
+endfor;

@@ -1,0 +1,60 @@
+# various math routines
+
+idv is op x y {
+  % integer division;
+  floor((x - (x mod y)) div y) };
+
+dvm is op x y {
+  % divmod;
+  x [idv,mod] y };
+
+base is op n k {
+  % base n representation of k;
+  if n < 1 then k := ?badbase
+  elseif n = 1 then k := k reshape 1
+  else while first k > (n - 1) do
+    k := first k dvm n link rest k;
+  endwhile endif; k }
+
+bits is op k {
+  % bit vector for a positive integer;
+  (base 2 k) eachall = 1 }
+
+% hex digits;
+hexits := '0123456789abcdef';
+
+hex is op n (phrase hexits #( base 16 n ));
+
+hexbyte is (op n { hexits#((floor (n div 16)) (n mod 16) )});
+
+% adapted from nialib/cgi-lib.ndf;
+h2n is op sym {
+  % convert hex string/symbol to integer;
+  str := toupper reverse string sym;
+  pos := num := 0;
+  for c with str do
+    num := num + ((find c hexits) *
+            (if pos = 0 then 1 else (pos * 16) endif));
+    pos := pos + 1
+  endfor; num }
+
+pervasive is tr f op x {
+  % unary pervasive operation;
+  if atomic x then f x else each f x endif };
+
+hexbits is pervasive (op sym {
+  % convert hex string/symbol to bit vector;
+  if (or[isphrase,isstring] sym) then
+    patterns := [
+      oooo, oool, oolo, ooll, oloo, olol, ollo, olll,
+      looo, lool, lolo, loll, lloo, llol, lllo, llll ];
+    res := [];
+    for ch with string sym do
+      res := res link (patterns @ (ch find '0123456789abcdef'))
+    endfor; res
+  else fault 'expecting a string or symbol' endif })
+
+ismulof is op x y {
+   % is x a multple of y? ;
+   x mod y = 0 };
+
