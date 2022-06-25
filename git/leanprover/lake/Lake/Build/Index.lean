@@ -46,18 +46,16 @@ abbrev PackageBuildMap (m : Type → Type v) :=
 Converts a conveniently typed module facet build function into its
 dynamically typed equivalent.
 -/
-@[inline] def mkModuleFacetBuild {facet : WfName}
-(build : Module → IndexBuildFn m → m α) [h : DynamicType ModuleData facet α]
-: Module → IndexBuildFn m → m (ModuleData facet) :=
+@[inline] def mkModuleFacetBuild {facet : WfName} (build : Module → IndexT m α)
+[h : DynamicType ModuleData facet α] : Module → IndexT m (ModuleData facet) :=
   cast (by rw [← h.eq_dynamic_type]) build
 
 /--
 Converts a conveniently typed package facet build function into its
 dynamically typed equivalent.
 -/
-@[inline] def mkPackageFacetBuild {facet : WfName}
-(build : Package → IndexBuildFn m → m α) [h : DynamicType PackageData facet α]
-: Package → IndexBuildFn m → m (PackageData facet) :=
+@[inline] def mkPackageFacetBuild {facet : WfName} (build : Package → IndexT m α)
+[h : DynamicType PackageData facet α] : Package → IndexT m (PackageData facet) :=
   cast (by rw [← h.eq_dynamic_type]) build
 
 section
@@ -73,34 +71,30 @@ the initial set of Lake module facets (e.g., `lean.{imports, c, o, dynlib]`).
 -/
 @[specialize] def moduleBuildMap : ModuleBuildMap m :=
   have : MonadLift BuildM m := ⟨liftM⟩
-  ModuleBuildMap.empty.insert
+  ModuleBuildMap.empty (m := m)
   -- Compute unique imports (direct × transitive)
-  &`lean.imports (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recParseImports recurse
-  ) |>.insert
+  |>.insert &`lean.imports (mkModuleFacetBuild (·.recParseImports))
   -- Build module (`.olean` and `.ilean`)
-  &`lean (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recBuildLean false recurse
-  ) |>.insert
-  &`olean (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recBuildFacet &`lean recurse
-  ) |>.insert
-  &`ilean (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recBuildFacet &`lean recurse
-  ) |>.insert
+  |>.insert &`lean (mkModuleFacetBuild (fun mod => do
+    mod.recBuildLean !mod.isLeanOnly
+  ))
+  |>.insert &`olean (mkModuleFacetBuild (fun mod => do
+    mod.recBuildLean (!mod.isLeanOnly) <&> (·.withInfo mod.oleanFile)
+  ))
+  |>.insert &`ilean (mkModuleFacetBuild (fun mod => do
+    mod.recBuildLean (!mod.isLeanOnly) <&> (·.withInfo mod.ileanFile)
+  ))
   -- Build module `.c` (and `.olean` and `.ilean`)
-  &`lean.c (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recBuildLean true recurse <&> (·.withInfo mod.cFile)
-  ) |>.insert
-  -- Build module `.o`
-  &`lean.o (mkModuleFacetBuild <| fun mod recurse => do
-    let cTarget ← mod.recBuildFacet &`lean.c recurse
-    mod.mkOTarget (Target.active cTarget) |>.activate
-  ) |>.insert
-  -- Build shared library for `--load-dynlb`
-  &`lean.dynlib (mkModuleFacetBuild <| fun mod recurse => do
-    mod.recBuildDynLib recurse
+  |>.insert &`lean.c (mkModuleFacetBuild <| fun mod => do
+    mod.recBuildLean true <&> (·.withInfo mod.cFile)
   )
+  -- Build module `.o`
+  |>.insert &`lean.o (mkModuleFacetBuild <| fun mod => do
+    let cTarget ← mod.recBuildFacet &`lean.c
+    mod.mkOTarget (Target.active cTarget) |>.activate
+  )
+  -- Build shared library for `--load-dynlb`
+  |>.insert &`lean.dynlib (mkModuleFacetBuild (·.recBuildDynLib))
 
 /--
 A package facet name to build function map that contains builders for
@@ -108,37 +102,56 @@ the initial set of Lake package facets (e.g., `extraDep`).
 -/
 @[specialize] def packageBuildMap : PackageBuildMap m :=
   have : MonadLift BuildM m := ⟨liftM⟩
-  PackageBuildMap.empty.insert
+  PackageBuildMap.empty (m := m)
+  -- Compute the package's transitive dependencies
+  |>.insert &`deps (mkPackageFacetBuild <| fun pkg => do
+    let mut deps := #[]
+    let mut depSet := PackageSet.empty
+    for dep in pkg.dependencies do
+      if let some depPkg ← findPackage? dep.name then
+        for depDepPkg in (← depPkg.recBuildFacet &`deps) do
+          unless depSet.contains depDepPkg do
+            deps := deps.push depDepPkg
+            depSet := depSet.insert depDepPkg
+        unless depSet.contains depPkg do
+          deps := deps.push depPkg
+          depSet := depSet.insert depPkg
+    return deps
+  )
   -- Build the `extraDepTarget` for the package and its transitive dependencies
-  &`extraDep (mkPackageFacetBuild <| fun pkg recurse => do
+  |>.insert &`extraDep (mkPackageFacetBuild <| fun pkg => do
     let mut target := ActiveTarget.nil
     for dep in pkg.dependencies do
       if let some depPkg ← findPackage? dep.name then
-        let extraDepTarget ← depPkg.recBuildFacet &`extraDep recurse
+        let extraDepTarget ← depPkg.recBuildFacet &`extraDep
         target ← target.mixOpaqueAsync extraDepTarget
     target.mixOpaqueAsync <| ← pkg.extraDepTarget.activate
+  )
+  -- Build the `extern_lib` targets of the package
+  |>.insert &`externSharedLibs (mkPackageFacetBuild <| fun pkg => do
+    let mut targets := #[]
+    for (_, config) in pkg.externLibs.toList do
+      let target := staticToLeanDynlibTarget config.target
+      targets := targets.push <| ← target.activate
+    return targets
   )
 
 /-!
 ## Topologically-based Recursive Build Using the Index
 -/
 
-/-- The type of a recursive build function for the Lake build index. -/
-abbrev RecIndexBuildFn (m) :=
-  DRecBuildFn BuildInfo (BuildData ·.key) m
-
 /-- Recursive build function for anything in the Lake build index. -/
-@[specialize] def recBuildIndex : RecIndexBuildFn m := fun info recurse => do
+@[specialize] def recBuildIndex (info : BuildInfo) : IndexT m (BuildData info.key) := do
   have : MonadLift BuildM m := ⟨liftM⟩
   match info with
   | .module mod facet =>
     if let some build := moduleBuildMap.find? facet then
-      build mod recurse
+      build mod
     else
       error s!"do not know how to build module facet `{facet}`"
   | .package pkg facet =>
     if let some build := packageBuildMap.find? facet then
-      build pkg recurse
+      build pkg
     else
       error s!"do not know how to build package facet `{facet}`"
   | _ =>

@@ -39,6 +39,9 @@ class Addition.Base
   /-- Adding zero to an integer produces the same integer. -/
   add_identity : AA.Identity (α := ℤ) ↑(0 : ℕ) (· + ·)
 
+attribute [instance] Addition.Base.addOp
+attribute [instance] Addition.Base.add_identity
+
 namespace Addition
 export Addition.Base (addOp)
 end Addition

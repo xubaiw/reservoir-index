@@ -6,8 +6,6 @@ from functools import total_ordering
 import sys
 import readwrite
 
-tautologyId = 1000 * 1000 * 1000
-
 class SchemaException(Exception):
 
     def __init__(self, value):
@@ -45,10 +43,13 @@ class ProtoNode:
 
 class Node(ProtoNode):
     xlit = None
+    # Information used during proof generation.  Holdover from when node represented ITE
+    iteVar = None
  
     def __init__(self, xlit, ntype, children):
         ProtoNode.__init__(self, ntype, children)
         self.xlit = xlit
+        self.iteVar = None
     
     def __hash__(self):
         return self.xlit
@@ -70,7 +71,7 @@ class Variable(Node):
 
 class One(Node):
     def __init__(self):
-        Node.__init__(self, tautologyId, NodeType.tautology, [])
+        Node.__init__(self, readwrite.tautologyId, NodeType.tautology, [])
 
     def __str__(self):
         return "TAUT"
@@ -81,7 +82,7 @@ class Negation(Node):
         Node.__init__(self, -child.xlit, NodeType.negation, [child])
 
     def __str__(self):
-        return "!" + str(self.children[0])
+        return "-" + str(self.children[0])
 
 class Conjunction(Node):
     clauseId = None
@@ -118,10 +119,12 @@ class Schema:
     # Verbosity level
     verbLevel = 1
     cwriter = None
+    clauseList = []
     
     def __init__(self, variableCount, clauseList, froot, verbLevel = 1):
         self.verbLevel = verbLevel
         self.uniqueTable = {}
+        self.clauseList = clauseList
         self.cwriter = readwrite.CratWriter(variableCount, clauseList, froot, verbLevel)
         self.leaf1 = One()
         self.store(self.leaf1)
@@ -146,7 +149,6 @@ class Schema:
     def store(self, node):
         key = node.key()
         self.uniqueTable[key] = node
-#        print("UniqueTable[%s] = %s" % (str(key), str(node)))
         self.nodes.append(node)
 
     def addNegation(self, child):
@@ -211,9 +213,9 @@ class Schema:
             ntrue = self.addConjunction(nif, nthen)
             nfalse = self.addConjunction(self.addNegation(nif), nelse)
             hints = [ntrue.clauseId+1, nfalse.clauseId+1]
-            n = self.addDisjunction(ntrue, nelse, hints)
+            n = self.addDisjunction(ntrue, nfalse, hints)
             result = n
-#        print("ITE(%s, %s, %s) --> %s" % (str(nif), str(nthen), str(nelse), str(result)))
+        print("ITE(%s, %s, %s) --> %s" % (str(nif), str(nthen), str(nelse), str(result)))
         return result
 
     # hlist can be clauseId or (node, offset), where 0 <= offset < 3
@@ -234,12 +236,51 @@ class Schema:
     def addComment(self, s):
         self.cwriter.doComment(s)
 
-    def deleteClause(self, id):
-        self.cwriter.doDeleteClause(id)
+    def deleteClause(self, id, hlist = None):
+        self.cwriter.doDeleteClause(id, hlist)
 
     def deleteOperation(self, node):
         self.cwriter.doDeleteOperation(node.xlit, node.clauseId)
         
+    def doValidate(self):
+        root = self.nodes[-1]
+        if self.verbLevel >= 1:
+            self.addComment("Assert unit clause for root")
+        self.addClause([root])
+        if self.verbLevel >= 1:
+            self.addComment("Delete input clauses")
+        for cid in range(1, len(self.clauseList)+1):
+            self.deleteClause(cid)
+            
+    def doMark(self, root, markSet):
+        if root.xlit in markSet:
+            return
+        markSet.add(root.xlit)
+        for c in root.children:
+            self.doMark(c, markSet)
         
+
+    def compress(self):
+        markSet = set([])
+        root = self.nodes[-1]
+        self.doMark(root, markSet)
+        nnodes = []
+        for node in self.nodes:
+            if node.xlit in markSet:
+                nnodes.append(node)
+        if self.verbLevel >= 2:
+            print("Compressed schema from %d to %d nodes" % (len(self.nodes), len(nnodes)))
+        self.nodes = nnodes
+
+    def show(self):
+        for node in self.nodes:
+            if node.ntype != NodeType.negation:
+                outs = str(node)
+                schildren = [str(c) for c in node.children]
+                if len(schildren) > 0:
+                    outs += " (" + ", ".join(schildren) + ")"
+                print(outs)
+        print("Root = %s" % str(self.nodes[-1]))
+            
         
         

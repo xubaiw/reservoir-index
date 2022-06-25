@@ -25,6 +25,7 @@ opaque PackageData (facet : WfName) : Type
 /-- Type of build data associated with Lake targets (e.g., `extern_lib`). -/
 opaque TargetData (key : BuildKey) : Type
 
+
 /--
 Type of the build data associated with a key in the Lake build store.
 It is dynamic type composed of the three separate dynamic types for modules,
@@ -37,6 +38,28 @@ def BuildData (key : BuildKey) :=
     PackageData key.facet
   else
     TargetData key
+
+theorem isModuleKey_data {k : BuildKey}
+(h : k.isModuleKey = true) : BuildData k = ModuleData k.facet := by
+  unfold BuildData; simp [h]
+
+instance (k : ModuleBuildKey f)
+[t : DynamicType ModuleData f α] : DynamicType BuildData k α where
+  eq_dynamic_type := by
+    have h := isModuleKey_data k.is_module_key
+    simp [h, k.facet_eq_fixed, t.eq_dynamic_type]
+
+theorem isPackageKey_data {k : BuildKey}
+(h : k.isPackageKey = true) : BuildData k = PackageData k.facet := by
+  unfold BuildData, BuildKey.isModuleKey
+  have has_pkg := of_decide_eq_true (of_decide_eq_true h |>.1)
+  simp [has_pkg, h]
+
+instance (k : PackageBuildKey f)
+[t : DynamicType PackageData f α] : DynamicType BuildData k α where
+  eq_dynamic_type := by
+    have h := isPackageKey_data k.is_package_key
+    simp [h, k.facet_eq_fixed, t.eq_dynamic_type]
 
 /-- Macro for declaring new `PackageData`. -/
 scoped macro (name := packageDataDecl) doc?:optional(Parser.Command.docComment)

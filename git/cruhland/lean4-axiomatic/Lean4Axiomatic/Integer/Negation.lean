@@ -1,4 +1,5 @@
 import Lean4Axiomatic.AbstractAlgebra
+import Lean4Axiomatic.Integer.Addition
 import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic.Integer
@@ -19,7 +20,9 @@ All other properties of negation can be derived from these.
 - `Equality ℤ`: Required to express most properties of negation.
 -/
 class Negation.Base
-    (ℕ : Type) [Natural ℕ] (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ] :=
+    (ℕ : Type) [Natural ℕ]
+    (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ] [Addition.Base ℕ ℤ]
+    :=
   /-- Definition of and syntax for negation. -/
   negOp : Neg ℤ
 
@@ -35,6 +38,9 @@ class Negation.Base
       (a ≃ ↑(0 : ℕ))
       (∃ (n : ℕ), Natural.Positive n ∧ a ≃ n)
       (∃ (n : ℕ), Natural.Positive n ∧ a ≃ -n)
+
+  /-- An integer added to its negation is always zero. -/
+  neg_inverse : AA.Inverse (α := ℤ) (-·) (· + ·)
 
 namespace Negation
 export Negation.Base (negOp)

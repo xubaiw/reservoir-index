@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Integer.Impl.Difference.Core
+import Lean4Axiomatic.Relation.Equivalence
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
@@ -105,10 +106,72 @@ def mul_substitutive
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) mul_substitutiveL
 }
 
+/--
+Multiplication of natural number differences is associative.
+
+**Intuition**: It's not really clear why the property is true, or if there's a
+clear principle behind the proof; brute force definition expansion and algebra
+get the job done anyway.
+-/
+theorem mul_assoc {a b c : Difference ℕ} : (a * b) * c ≃ a * (b * c) := by
+  revert a; intro (q——p); revert b; intro (n——m); revert c; intro (k——j)
+  show (q——p * n——m) * k——j ≃ q——p * (n——m * k——j)
+  let qn_pm := q * n + p * m
+  let qm_pn := q * m + p * n
+  let nk_mj := n * k + m * j
+  let nj_mk := n * j + m * k
+  show qn_pm——qm_pn * k——j ≃ q——p * nk_mj——nj_mk
+  show (qn_pm * k + qm_pn * j)——(qn_pm * j + qm_pn * k)
+     ≃ (q * nk_mj + p * nj_mk)——(q * nj_mk + p * nk_mj)
+  show from_prod (qn_pm * k + qm_pn * j, qn_pm * j + qm_pn * k)
+     ≃ from_prod (q * nk_mj + p * nj_mk, q * nj_mk + p * nk_mj)
+  apply AA.subst₁
+  show (qn_pm * k + qm_pn * j, qn_pm * j + qm_pn * k)
+     ≃ (q * nk_mj + p * nj_mk, q * nj_mk + p * nk_mj)
+  apply Relation.Equivalence.Impl.Prod.eqv_defn.mpr
+  show qn_pm * k + qm_pn * j ≃ q * nk_mj + p * nj_mk
+     ∧ qn_pm * j + qm_pn * k ≃ q * nj_mk + p * nk_mj
+  have redistribute (x y : ℕ)
+      : (q * n + p * m) * x + (q * m + p * n) * y
+      ≃  q * (n * x + m * y) + p * (n * y + m * x)
+      := calc
+    (q * n + p * m) * x + (q * m + p * n) * y
+      ≃ _ := AA.substL AA.distribR
+    (q * n) * x + (p * m) * x + (q * m + p * n) * y
+      ≃ _ := AA.substR AA.distribR
+    (q * n) * x + (p * m) * x + ((q * m) * y + (p * n) * y)
+      ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (q * n) * x + (q * m) * y + ((p * m) * x + (p * n) * y)
+      ≃ _ := AA.substR AA.comm
+    (q * n) * x + (q * m) * y + ((p * n) * y + (p * m) * x)
+      ≃ _ := AA.substL (AA.substL AA.assoc)
+    q * (n * x) + (q * m) * y + ((p * n) * y + (p * m) * x)
+      ≃ _ := AA.substL (AA.substR AA.assoc)
+    q * (n * x) + q * (m * y) + ((p * n) * y + (p * m) * x)
+      ≃ _ := AA.substR (AA.substL AA.assoc)
+    q * (n * x) + q * (m * y) + (p * (n * y) + (p * m) * x)
+      ≃ _ := AA.substR (AA.substR AA.assoc)
+    q * (n * x) + q * (m * y) + (p * (n * y) + p * (m * x))
+      ≃ _ := AA.substL (Rel.symm AA.distribL)
+    q * (n * x + m * y) + (p * (n * y) + p * (m * x))
+      ≃ _ := AA.substR (Rel.symm AA.distribL)
+    q * (n * x + m * y) + p * (n * y + m * x)
+      ≃ _ := Rel.refl
+  apply And.intro
+  · show qn_pm * k + qm_pn * j ≃ q * nk_mj + p * nj_mk
+    exact redistribute k j
+  · show qn_pm * j + qm_pn * k ≃ q * nj_mk + p * nk_mj
+    exact redistribute j k
+
+def mul_associative : AA.Associative (α := Difference ℕ) (· * ·) := {
+  assoc := mul_assoc
+}
+
 def multiplication : Multiplication.Base (Difference ℕ) := {
   mulOp := mulOp
   mul_commutative := mul_commutative
   mul_substitutive := mul_substitutive
+  mul_associative := mul_associative
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

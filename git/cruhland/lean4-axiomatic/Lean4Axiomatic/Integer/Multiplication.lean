@@ -31,6 +31,9 @@ class Multiplication.Base (ℤ : Type) [Equality ℤ] :=
   /-- Exchanging the operands of multiplication does not change the result. -/
   mul_commutative : AA.Commutative (α := ℤ) (· * ·)
 
+  /-- The grouping of the terms in a product doesn't matter. -/
+  mul_associative : AA.Associative (α := ℤ) (· * ·)
+
 namespace Multiplication
 export Multiplication.Base (mulOp)
 end Multiplication

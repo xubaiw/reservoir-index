@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Core
+import Lean4Axiomatic.Integer.Impl.Difference.Addition
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
@@ -183,10 +183,43 @@ where
         Rel.trans AA.comm (Rel.trans ‹n + 0 ≃ k + m› AA.comm)
       exact And.intro ‹Natural.Positive k› (Rel.symm ‹0 + n ≃ m + k›)
 
+/--
+The negation of a natural number difference is that difference's left additive
+inverse.
+
+**Property intuition**: This property is pretty much why the integers are a
+useful concept in the first place.
+
+**Proof intuition**: Negation swaps the elements of a difference, so adding a
+difference to its negation will result in a difference with equal elements. All
+differences with equal elements represent zero.
+-/
+theorem neg_invL {a : Difference ℕ} : (-a) + a ≃ 0 := by
+  revert a; intro (n——m)
+  show -(n——m) + n——m ≃ 0——0
+  show m——n + n——m ≃ 0——0
+  show (m + n)——(n + m) ≃ 0——0
+  show (m + n) + 0 ≃ 0 + (n + m)
+  calc
+    (m + n) + 0 ≃ _ := AA.identR
+    m + n       ≃ _ := AA.comm
+    n + m       ≃ _ := Rel.symm AA.identL
+    0 + (n + m) ≃ _ := Rel.refl
+
+def neg_inverseL : AA.InverseOn Hand.L (α := Difference ℕ) (-·) (· + ·) := {
+  inverse := neg_invL
+}
+
+def neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
+  inverseL := neg_inverseL
+  inverseR := AA.inverseR_from_inverseL neg_inverseL
+}
+
 def negation : Negation.Base ℕ (Difference ℕ) := {
   negOp := negOp
   neg_substitutive := neg_substitutive
   trichotomy := trichotomy
+  neg_inverse := neg_inverse
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

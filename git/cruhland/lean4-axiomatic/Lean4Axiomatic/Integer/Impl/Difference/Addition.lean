@@ -130,12 +130,12 @@ def add_identityL : AA.IdentityOn Hand.L (α := Difference ℕ) 0 (· + ·) := {
   ident := add_identL
 }
 
-def add_identity : AA.Identity (α := Difference ℕ) 0 (· + ·) := {
+instance add_identity : AA.Identity (α := Difference ℕ) 0 (· + ·) := {
   identityL := add_identityL
   identityR := AA.identityR_from_identityL add_identityL
 }
 
-def addition : Addition.Base ℕ (Difference ℕ) := {
+instance addition : Addition.Base ℕ (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative
