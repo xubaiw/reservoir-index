@@ -59,7 +59,10 @@ class Multiplication.Derived
   /-- The product of positive natural numbers is positive. -/
   mul_positive {n m : ℕ} : Positive n → Positive m → Positive (n * m)
 
-  /-- Multiplication distributes over addition. -/
+  /--
+  Multiplication of a sum by a value is equivalent to summing the
+  multiplication of each term by that value.
+  -/
   mul_distributive : AA.Distributive (α := ℕ) (· * ·) (· + ·)
 
   /-- The grouping of the factors in a product doesn't matter. -/

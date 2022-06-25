@@ -1,5 +1,5 @@
 import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Integer.Core
+import Lean4Axiomatic.Integer.Addition
 
 namespace Lean4Axiomatic.Integer
 
@@ -20,7 +20,7 @@ All other properties of multiplication can be derived from these.
 -/
 class Multiplication.Base
     (ℕ : Type) [Natural ℕ]
-    (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ]
+    (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ] [Addition.Base ℕ ℤ]
     :=
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ
@@ -39,6 +39,12 @@ class Multiplication.Base
 
   /-- Multiplying an integer by one produces the same integer. -/
   mul_identity : AA.Identity (α := ℤ) ↑(1 : ℕ) (· * ·)
+
+  /--
+  Multiplication of a sum by a value is equivalent to summing the
+  multiplication of each term by that value.
+  -/
+  mul_distributive : AA.Distributive (α := ℤ) (· * ·) (· + ·)
 
 namespace Multiplication
 export Multiplication.Base (mulOp)

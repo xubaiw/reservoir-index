@@ -73,8 +73,9 @@ def add_substitutiveL
   subst₂ := λ (_ : True) => add_substL
 }
 
-def add_substitutive
-    : AA.Substitutive₂ (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) := {
+instance add_substitutive
+    : AA.Substitutive₂ (α := Difference ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
   substitutiveL := add_substitutiveL
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substitutiveL
 }

@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Integer.Impl.Difference.Core
+import Lean4Axiomatic.Integer.Impl.Difference.Addition
 import Lean4Axiomatic.Relation.Equivalence
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
@@ -200,12 +200,77 @@ def mul_identity : AA.Identity (α := Difference ℕ) 1 (· * ·) := {
   identityR := AA.identityR_from_identityL mul_identityL
 }
 
+/--
+Multiplication on the left distributes over addition.
+
+**Property intuition**
+
+If we think of natural number differences as 1-dimensional vectors representing
+the distance and direction to get from their first component to their second
+component, then addition of differences is just the sum of vectors (magnitudes
+and directions combine and some cancellation may occur) and multiplication of
+differences is scaling, with a change in direction if the signs are opposite.
+
+With that interpretation, this property then says that adding (combining) two
+differences and multiplying (scaling with direction) the result is the same as
+multiplying each difference before adding them. Geometrically this seems
+plausible.
+
+**Proof intuition**
+
+After all definitions are expanded, the resulting equivalence of differences
+turns out to follow from the "pointwise" equivalence of their components. So
+the proof can be split into two cases, each of which follows from the same
+algebraic identity on natural numbers.
+-/
+theorem mul_distribL {a b c : Difference ℕ} : a * (b + c) ≃ a * b + a * c := by
+  revert a; intro (q——p); revert b; intro (n——m); revert c; intro (k——j)
+  show q——p * (n——m + k——j) ≃ q——p * n——m + q——p * k——j
+  let n_k := n + k; let m_j := m + j
+  let qn := q * n; let qm := q * m; let qk := q * k; let qj := q * j
+  let pn := p * n; let pm := p * m; let pk := p * k; let pj := p * j
+  show q——p * n_k——m_j ≃ (qn + pm)——(qm + pn) + (qk + pj)——(qj + pk)
+  show (q * n_k + p * m_j)——(q * m_j + p * n_k)
+     ≃ ((qn + pm) + (qk + pj))——((qm + pn) + (qj + pk))
+  show from_prod (q * n_k + p * m_j, q * m_j + p * n_k)
+     ≃ from_prod ((qn + pm) + (qk + pj), (qm + pn) + (qj + pk))
+  apply AA.subst₁
+  show (q * n_k + p * m_j, q * m_j + p * n_k)
+     ≃ ((qn + pm) + (qk + pj), (qm + pn) + (qj + pk))
+  apply Relation.Equivalence.Impl.Prod.eqv_defn.mpr
+  show q * n_k + p * m_j ≃ (qn + pm) + (qk + pj)
+     ∧ q * m_j + p * n_k ≃ (qm + pn) + (qj + pk)
+  have distrib_swap (w x y z : ℕ)
+      : q * (w + y) + p * (x + z) ≃ (q * w + p * x) + (q * y + p * z)
+      := calc
+    q * (w + y) + p * (x + z)         ≃ _ := AA.substL AA.distribL
+    (q * w + q * y) + p * (x + z)     ≃ _ := AA.substR AA.distribL
+    (q * w + q * y) + (p * x + p * z) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (q * w + p * x) + (q * y + p * z) ≃ _ := Rel.refl
+  apply And.intro
+  · show q * n_k + p * m_j ≃ (qn + pm) + (qk + pj)
+    exact distrib_swap n m k j
+  · show q * m_j + p * n_k ≃ (qm + pn) + (qj + pk)
+    exact distrib_swap m n j k
+
+def mul_distributiveL
+    : AA.DistributiveOn Hand.L (α := Difference ℕ) (· * ·) (· + ·)
+    := {
+  distrib := mul_distribL
+}
+
+def mul_distributive : AA.Distributive (α := Difference ℕ) (· * ·) (· + ·) := {
+  distributiveL := mul_distributiveL
+  distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL
+}
+
 def multiplication : Multiplication.Base ℕ (Difference ℕ) := {
   mulOp := mulOp
   mul_commutative := mul_commutative
   mul_substitutive := mul_substitutive
   mul_associative := mul_associative
   mul_identity := mul_identity
+  mul_distributive := mul_distributive
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
