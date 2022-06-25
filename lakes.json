@@ -107,6 +107,7 @@
  "marcusrossel/model-checking",
  "marcusrossel/reactor-model",
  "mhuisi/lean4-cli",
+ "opencompl/egg-tactic-code",
  "opencompl/lean-gap",
  "opencompl/lean-mlir",
  "opencompl/lean-mlir-semantics",
