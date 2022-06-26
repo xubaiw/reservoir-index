@@ -1,5 +1,6 @@
 import Qpf
 import Qpf.Examples._01_List
+import Qpf.Macro.Tactic.FinDestr
 
 open MvQpf
 
@@ -64,10 +65,10 @@ namespace QpfTree
     ```
   -/
 
-  def F_manual : TypeFun 2
+  abbrev Manual.F : TypeFun 2
     := Comp Shape.P.Obj ![
         Prj 1,
-        MvQpf.Comp QpfList' ![Prj 0]
+        Comp QpfList' ![Prj 0]
     ]
 
   /-
@@ -80,10 +81,21 @@ namespace QpfTree
     under `.typefun`
   -/
   #check (F_curried : Type _ → Type _ → Type _)
+  #check (F_curried.typefun : TypeFun 2)
 
   abbrev F := F_curried.typefun
 
-  #check (F : TypeFun 2)
+    -- -- Unfold the definitions, to see both are applications of `Comp`
+    -- dsimp [F_manual, F_curried.typefun]
+    -- apply congrArg;
+
+    -- -- At this point, the goal is to show that two vectors, of known size are equal.
+    -- -- These vectors are not definitially equal, but their respective elements are.
+    -- funext i;
+    -- -- The following tactic takes a `i : Fin2 n`, where `n` is a known constant, and breaks the goal
+    -- -- into `n` subgoals, one for each concrete possible value of `i`
+    -- fin_destr i <;> rfl
+    
 
 
   /-
@@ -98,29 +110,22 @@ namespace QpfTree
   /-
   ## Constructor
 
-  We'd like to take `QpfList (QpfTree α)` as an argument, since that is what users expect.
-  However, `Fix.mk` expects something akin to `(Comp QpfList' ![Prj 0]) ![_, QpfTree' ![α]]`,
-  which is not definitionally equal, so we'll have to massage the types a bit
+  -- We'd like to take `QpfList (QpfTree α)` as an argument, since that is what users expect.
+  -- However, `Fix.mk` expects something akin to `(Comp QpfList' ![Prj 0]) ![_, QpfTree' ![α]]`,
+  -- which is not definitionally equal, so we'll have to massage the types a bit
   -/
 
 
   def node (a : α) (children : QpfList (QpfTree α)) : QpfTree α :=
     Fix.mk ⟨Shape.HeadT.node, 
             fun i _ => match i with
-            | 0 => cast (by
-                      unfold QpfList; unfold QpfTree
-                      unfold TypeFun.curried
-                      simp only [TypeFun.curriedAux, TypeFun.reverseArgs]
-                      simp only [Vec.append1, Vec.reverse]
-                      simp only [Prj, Comp]
-                      apply congrArg
-
-                      funext j; 
-                      match j with
-                      | .fs _ => contradiction
-                      | .fz =>
-                        simp only [Fin2.inv, Fin2.last, Vec.append1, TypeVec.append1, Vec.reverse]
-                    ) children                    
+            | 0 => children
+                    -- by  
+                    -- apply cast ?_ children;
+                    -- unfold QpfList;
+                    -- dsimp only [TypeFun.curried, TypeFun.curriedAux, TypeFun.reverseArgs]
+                    -- apply congrArg
+                    -- vec_eq;
             | 1 => a
     ⟩
 

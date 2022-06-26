@@ -1,0 +1,100 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>langfield/the-varieties-of-natural-experience</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>langfield/the-varieties-of-natural-experience</h1>
+<p>Why are there so many syntax variations for inductive type definitions in Lean 4?</p>
+<a href="https://github.com/langfield/the-varieties-of-natural-experience">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><blockquote>
+<p dir="auto">There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.</p>
+</blockquote>
+<ul dir="auto">
+<li>PEP 20 - The Zen of Python</li>
+</ul>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="-- How many different ways can we write an inductive type for the naturals?
+inductive Nat1 where
+  | zero : Nat1
+  | succ (n : Nat1) : Nat1
+deriving Repr
+
+inductive Nat2 where
+  | zero : Nat2
+  | succ : Nat2 → Nat2
+deriving Repr
+
+inductive Nat3 where
+  | zero
+  | succ (n : Nat3)
+deriving Repr
+
+inductive Nat4
+  | zero
+  | succ (n : Nat4)
+deriving Repr
+
+inductive Nat5
+| zero
+| succ (n : Nat5)
+deriving Repr
+
+#eval Nat1.succ Nat1.zero
+#eval Nat2.succ Nat2.zero
+#eval Nat3.succ Nat3.zero
+#eval Nat4.succ Nat4.zero
+#eval Nat5.succ Nat5.zero"><pre><span class="pl-c"><span class="pl-c">--</span> How many different ways can we write an inductive type for the naturals?</span>
+<span class="pl-k">inductive</span> <span class="pl-en">Nat1</span> <span class="pl-en">where</span>
+  | zero : Nat1
+  | succ (n : Nat1) : Nat1
+deriving Repr
+
+<span class="pl-k">inductive</span> <span class="pl-en">Nat2</span> <span class="pl-en">where</span>
+  | zero : Nat2
+  | succ : Nat2 → Nat2
+deriving Repr
+
+<span class="pl-k">inductive</span> <span class="pl-en">Nat3</span> <span class="pl-en">where</span>
+  | zero
+  | succ (n : Nat3)
+deriving Repr
+
+<span class="pl-k">inductive</span> <span class="pl-en">Nat4</span>
+  | zero
+  | succ (n : Nat4)
+deriving Repr
+
+<span class="pl-k">inductive</span> <span class="pl-en">Nat5</span>
+| zero
+| succ (n : Nat5)
+deriving Repr
+
+<span class="pl-k">#eval</span> Nat1.succ Nat1.zero
+<span class="pl-k">#eval</span> Nat2.succ Nat2.zero
+<span class="pl-k">#eval</span> Nat3.succ Nat3.zero
+<span class="pl-k">#eval</span> Nat4.succ Nat4.zero
+<span class="pl-k">#eval</span> Nat5.succ Nat5.zero</pre></div>
+</article></div></main>
+</body>
+</html>
