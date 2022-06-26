@@ -87,6 +87,7 @@
  "justinfargnoli/koi",
  "langfield/mergesort",
  "langfield/nflow",
+ "langfield/the-varieties-of-natural-experience",
  "larsk21/iris-lean",
  "leanprover-community/lean3port",
  "leanprover-community/mathlib3port",
@@ -148,6 +149,7 @@
  "yatima-inc/Radiya.lean",
  "yatima-inc/Spark.lean",
  "yatima-inc/yatima-lang",
+ "yatima-inc/yatima-prelude",
  "zaxioms/LeanAlg",
  "zenna/LeanOmega",
  "zygi/lean4-sha3"]
