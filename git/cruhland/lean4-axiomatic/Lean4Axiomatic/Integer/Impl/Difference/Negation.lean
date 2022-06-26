@@ -215,7 +215,7 @@ def neg_inverse : AA.Inverse (α := Difference ℕ) (-·) (· + ·) := {
   inverseR := AA.inverseR_from_inverseL neg_inverseL
 }
 
-def negation : Negation.Base ℕ (Difference ℕ) := {
+instance negation : Negation.Base ℕ (Difference ℕ) := {
   negOp := negOp
   neg_substitutive := neg_substitutive
   trichotomy := trichotomy

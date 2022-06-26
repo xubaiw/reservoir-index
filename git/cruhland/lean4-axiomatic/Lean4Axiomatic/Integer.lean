@@ -2,6 +2,7 @@ import Lean4Axiomatic.Integer.Addition
 import Lean4Axiomatic.Integer.Core
 import Lean4Axiomatic.Integer.Multiplication
 import Lean4Axiomatic.Integer.Negation
+import Lean4Axiomatic.Integer.Subtraction
 
 /-!
 # Combined typeclass of all integer definitions and properties
@@ -11,6 +12,7 @@ namespace Lean4Axiomatic
 
 open Integer (
   Addition.Base Conversion Equality Multiplication.Base Negation.Base
+  Subtraction.Base
 )
 
 /--
@@ -39,6 +41,7 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toAddition : Addition.Base ℕ ℤ
   toNegation : Negation.Base ℕ ℤ
   toMultiplication : Multiplication.Base ℕ ℤ
+  toSubtraction : Subtraction.Base ℤ
 
 namespace Integer
 

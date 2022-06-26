@@ -25,8 +25,8 @@ class Addition.Base
   addOp : Add ℤ
 
   /--
-  Addition preserves equality of integers; two equal integers are still equal
-  after the same quantity is added to both (on the left or right).
+  Addition preserves equivalence of integers; two equivalent integers are still
+  equivalent after the same quantity is added to both (on the left or right).
   -/
   add_substitutive : AA.Substitutive₂ (α := ℤ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
 
@@ -41,6 +41,7 @@ class Addition.Base
 
 attribute [instance] Addition.Base.addOp
 attribute [instance] Addition.Base.add_identity
+attribute [instance] Addition.Base.add_substitutive
 
 namespace Addition
 export Addition.Base (addOp)
