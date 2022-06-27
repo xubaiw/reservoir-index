@@ -31,12 +31,12 @@ Used by `lake print-paths` to build modules for the Lean server.
 Returns the set of module dynlibs built (so they can be loaded by the server).
 
 Builds only module `.olean` and `.ilean` files if the package is configured
-as "Lean-only". Otherwise, also build `.c` and `.o` files.
+as "Lean-only". Otherwise, also build `.c` files.
 -/
 def Package.buildImportsAndDeps (imports : List String) (self : Package) : BuildM (Array FilePath) := do
   if imports.isEmpty then
     -- build the package's (and its dependencies') `extraDepTarget`
-    buildPackageFacet self &`extraDep >>= (·.buildOpaque)
+    self.buildFacet &`extraDep >>= (·.buildOpaque)
     return #[]
   else
     -- build local imports from list
@@ -47,12 +47,12 @@ def Package.buildImportsAndDeps (imports : List String) (self : Package) : Build
       else if mod.isLeanOnly then
         buildModuleTop mod &`lean
       else
-        buildModuleTop mod &`lean.o <&> (·.withoutInfo)
+        buildModuleTop mod &`lean.c <&> (·.withoutInfo)
     let importTargets ← failOnBuildCycle res
     let dynlibTargets := bStore.collectModuleFacetArray &`lean.dynlib
-    let externLibTargets := bStore.collectPackageFacetArray &`externSharedLibs
+    let externLibTargets := bStore.collectSharedExternLibs
     importTargets.forM (·.buildOpaque)
     let dynlibs ← dynlibTargets.mapM (·.build)
-    let externLibs ← externLibTargets.concatMapM (·.mapM (·.build))
+    let externLibs ← externLibTargets.mapM (·.build)
     -- Note: Lean wants the external library symbols before module symbols
     return  externLibs ++ dynlibs
