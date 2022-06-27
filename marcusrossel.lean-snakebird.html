@@ -27,10 +27,33 @@
 <h2>Pick a version!</h2>
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
-{
-  "message": "Not Found",
-  "documentation_url": "https://docs.github.com/rest/reference/repos#get-a-repository-readme"
-}
-</main>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean-snakebird</h3>
+<p dir="auto"><em>lean-snakebird</em> is a Lean-based implementation of the game <a href="https://store.steampowered.com/app/357300/Snakebird/" rel="nofollow">Snakebird</a>. This project was inspired by <a href="https://github.com/dwrensha/lean4-maze">lean4-maze</a> which shows off the meta-programming capabilities of Lean 4. Accordingly, <em>lean-snakebird</em> implements a <a href="Snakebird/Levels/Syntax.lean">DSL</a> in Lean 4 which can be used to define levels of the game:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def level8 :=
+••••••••••••••◎•
+••••••••••••••••
+••┏━1••••••••▦▦▦
+•╺┛0━╸•••••✸✸✸▦▦
+▦▦▦▦▦▦✸✸✸••✸••••
+•▦▦▦▦▦••✸✸▦✸••••
+••••••••••••••••
+••••••••••••••••
+∼∼∼∼∼∼∼∼∼∼∼∼∼∼∼∼"><pre><span class="pl-k">def</span> <span class="pl-en">level8</span> :=
+••••••••••••••◎•
+••••••••••••••••
+••┏━<span class="pl-c1">1</span>••••••••▦▦▦
+•╺┛<span class="pl-c1">0</span>━╸•••••✸✸✸▦▦
+▦▦▦▦▦▦✸✸✸••✸••••
+•▦▦▦▦▦••✸✸▦✸••••
+••••••••••••••••
+••••••••••••••••
+∼∼∼∼∼∼∼∼∼∼∼∼∼∼∼∼</pre></div>
+<p dir="auto">To run the game:</p>
+<ol dir="auto">
+<li>Clone this repository.</li>
+<li>Run <code>lake build</code>.</li>
+<li>Run <code>./build/bin/snakebird</code>.</li>
+</ol>
+</article></div></main>
 </body>
 </html>

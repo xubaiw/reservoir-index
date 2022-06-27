@@ -46,7 +46,7 @@ export Literals (literal literal_step literal_zero)
 export Multiplication (
   mul_associative mul_cancellative mul_commutative mul_distributive mulOp
   mul_positive mul_substitutive_eq mul_substitutive_lt mul_zero step_mul
-  zero_mul zero_product_split
+  zero_mul mul_split_zero
 )
 export Order (
   le_antisymm le_defn le_reflexive le_split le_transitive leOp

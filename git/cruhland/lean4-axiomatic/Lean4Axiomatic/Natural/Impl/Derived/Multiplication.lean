@@ -173,7 +173,7 @@ Intuition
   zero.
 - backwards: by `Base.zero_mul` or `Derived.mul_zero`.
 -/
-theorem zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
+theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
   apply Iff.intro
   · show n * m ≃ 0 → n ≃ 0 ∨ m ≃ 0
     apply Axioms.cases_on (motive := λ x => x * m ≃ 0 → x ≃ 0 ∨ m ≃ 0) n
@@ -212,7 +212,7 @@ theorem zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := 
 The product of positive natural numbers is positive.
 
 Intuition: reframe positive as nonzero, then contradict with
-`Derived.zero_product_split`.
+`Derived.mul_split_zero`.
 -/
 theorem mul_positive {n m : ℕ}
     : Positive n → Positive m → Positive (n * m) := by
@@ -224,7 +224,7 @@ theorem mul_positive {n m : ℕ}
   show n * m ≄ 0
   intro (_ : n * m ≃ 0)
   show False
-  have : n ≃ 0 ∨ m ≃ 0 := Derived.zero_product_split.mp ‹n * m ≃ 0›
+  have : n ≃ 0 ∨ m ≃ 0 := Derived.mul_split_zero.mp ‹n * m ≃ 0›
   apply Or.elim ‹n ≃ 0 ∨ m ≃ 0›
   · intro (_ : n ≃ 0)
     show False
@@ -403,7 +403,7 @@ instance multiplication_derived : Multiplication.Derived ℕ := {
   mul_zero := mul_zero
   mul_step := mul_step
   mul_commutative := mul_commutative
-  zero_product_split := zero_product_split
+  mul_split_zero := mul_split_zero
   mul_positive := mul_positive
   mul_distributive := mul_distributive
   mul_associative := mul_associative

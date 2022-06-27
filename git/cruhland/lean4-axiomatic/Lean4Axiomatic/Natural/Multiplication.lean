@@ -54,7 +54,7 @@ class Multiplication.Derived
   mul_commutative : AA.Commutative (α := ℕ) (· * ·)
 
   /-- A product is zero iff at least one of its factors is zero. -/
-  zero_product_split {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0
+  mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0
 
   /-- The product of positive natural numbers is positive. -/
   mul_positive {n m : ℕ} : Positive n → Positive m → Positive (n * m)
@@ -91,7 +91,7 @@ export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
   mul_associative mul_cancellative mul_commutative mul_distributive
   mul_positive mul_substitutive_eq mul_substitutive_lt mul_zero
-  zero_product_split
+  mul_split_zero
 )
 end Multiplication
 
