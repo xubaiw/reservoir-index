@@ -108,6 +108,7 @@
  "lecopivo/SciLean",
  "lecopivo/lean4-karray",
  "lecopivo/leanPluginTest",
+ "marcusrossel/lean-snakebird",
  "marcusrossel/model-checking",
  "marcusrossel/reactor-model",
  "mhuisi/lean4-cli",
