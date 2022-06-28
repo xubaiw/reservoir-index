@@ -17,16 +17,17 @@ def expandOptPrecedence (stx : Syntax) : MacroM (Option Nat) :=
   else
     return some (← evalPrec stx[0][1])
 
-private def mkParserSeq (ds : Array Term) : TermElabM Syntax := do
+private def mkParserSeq (ds : Array (Term × Nat)) : TermElabM (Term × Nat) := do
   if ds.size == 0 then
     throwUnsupportedSyntax
   else if ds.size == 1 then
     pure ds[0]
   else
-    let mut r := ds[0]
-    for d in ds[1:ds.size] do
+    let mut (r, stackSum) := ds[0]
+    for (d, stackSz) in ds[1:ds.size] do
       r ← `(ParserDescr.binary `andthen $r $d)
-    return r
+      stackSum := stackSum + stackSz
+    return (r, stackSum)
 
 structure ToParserDescrContext where
   catName  : Name
@@ -36,12 +37,20 @@ structure ToParserDescrContext where
   behavior : Parser.LeadingIdentBehavior
 
 abbrev ToParserDescrM := ReaderT ToParserDescrContext (StateRefT (Option Nat) TermElabM)
+abbrev ToParserDescr := ToParserDescrM (Term × Nat)
 private def markAsTrailingParser (lhsPrec : Nat) : ToParserDescrM Unit := set (some lhsPrec)
 
 @[inline] private def withNotFirst {α} (x : ToParserDescrM α) : ToParserDescrM α :=
   withReader (fun ctx => { ctx with first := false }) x
 
-@[inline] private def withNestedParser {α} (x : ToParserDescrM α) : ToParserDescrM α :=
+def ensureUnaryOutput (x : Term × Nat) : Term :=
+  let (stx, stackSz) := x
+  if stackSz != 1 then
+    Unhygienic.run ``(ParserDescr.unary $(quote `group) $stx)
+  else
+    stx
+
+@[inline] private def withNestedParser (x : ToParserDescr) : ToParserDescr := do
   withReader (fun ctx => { ctx with leftRec := false, first := false }) x
 
 def checkLeftRec (stx : Syntax) : ToParserDescrM Bool := do
@@ -80,15 +89,16 @@ def resolveParserName [Monad m] [MonadInfoTree m] [MonadResolveName m] [MonadEnv
 
 open TSyntax.Compat in
 /--
-  Given a `stx` of category `syntax`, return a pair `(newStx, lhsPrec?)`,
+  Given a `stx` of category `syntax`, return a `(newStx, lhsPrec?)`,
   where `newStx` is of category `term`. After elaboration, `newStx` should have type
   `TrailingParserDescr` if `lhsPrec?.isSome`, and `ParserDescr` otherwise. -/
 partial def toParserDescr (stx : Syntax) (catName : Name) : TermElabM (Term × Option Nat) := do
   let env ← getEnv
   let behavior := Parser.leadingIdentBehavior env catName
-  (process stx { catName := catName, first := true, leftRec := true, behavior := behavior }).run none
+  let ((newStx, _), lhsPrec?) ← (process stx { catName := catName, first := true, leftRec := true, behavior := behavior }).run none
+  return (newStx, lhsPrec?)
 where
-  process (stx : Syntax) : ToParserDescrM Term := withRef stx do
+  process (stx : Syntax) : ToParserDescr := withRef stx do
     let kind := stx.getKind
     if kind == nullKind then
       processSeq stx
@@ -99,9 +109,9 @@ where
     else if kind == ``Lean.Parser.Syntax.cat then
       processNullaryOrCat stx
     else if kind == ``Lean.Parser.Syntax.unary then
-      processUnary stx
+      processAlias stx[0] #[stx[2]]
     else if kind == ``Lean.Parser.Syntax.binary then
-      processBinary stx
+      processAlias stx[0] #[stx[2], stx[4]]
     else if kind == ``Lean.Parser.Syntax.sepBy then
       processSepBy stx
     else if kind == ``Lean.Parser.Syntax.sepBy1 then
@@ -138,12 +148,39 @@ where
       throwErrorAt stx "invalid atomic left recursive syntax"
     let prec? ← liftMacroM <| expandOptPrecedence stx[1]
     let prec := prec?.getD 0
-    `(ParserDescr.cat $(quote catName) $(quote prec))
+    return (← `(ParserDescr.cat $(quote catName) $(quote prec)), 1)
 
+  processAlias (id : Syntax) (args : Array Syntax) := do
+    let aliasName := id.getId.eraseMacroScopes
+    let info ← Parser.getParserAliasInfo aliasName
+    let args ← args.mapM (withNestedParser ∘ process)
+    let (args, stackSz) := if let some stackSz := info.stackSz? then
+      if !info.autoGroupArgs then
+        (args.map (·.1), stackSz)
+      else
+        (args.map ensureUnaryOutput, stackSz)
+    else
+      let (args, stackSzs) := args.unzip
+      (args, stackSzs.foldl (· + ·) 0)
+    let stx ← match args with
+      | #[]       => Parser.ensureConstantParserAlias aliasName; ``(ParserDescr.const $(quote aliasName))
+      | #[p1]     => Parser.ensureUnaryParserAlias aliasName; ``(ParserDescr.unary $(quote aliasName) $p1)
+      | #[p1, p2] => Parser.ensureBinaryParserAlias aliasName; ``(ParserDescr.binary $(quote aliasName) $p1 $p2)
+      | _         => unreachable!
+    return (stx, stackSz)
+    
   processNullaryOrCat (stx : Syntax) := do
     match (← resolveParserName stx[0]) with
-    | [(c, true)]      => ensureNoPrec stx; return mkIdentFrom stx c
-    | [(c, false)]     => ensureNoPrec stx; `(ParserDescr.parser $(quote c))
+    | [(c, true)]      =>
+      ensureNoPrec stx
+      -- `syntax _ :=` at least enforces this
+      let stackSz := 1
+      return (mkIdentFrom stx c, stackSz)
+    | [(c, false)]     =>
+      ensureNoPrec stx
+      -- as usual, we assume that people using `Parser` know what they are doing
+      let stackSz := 1
+      return (← `(ParserDescr.parser $(quote c)), stackSz)
     | cs@(_ :: _ :: _) => throwError "ambiguous parser declaration {cs.map (·.1)}"
     | [] =>
       let id := stx[0].getId.eraseMacroScopes
@@ -151,37 +188,23 @@ where
         processParserCategory stx
       else if (← Parser.isParserAlias id) then
         ensureNoPrec stx
-        Parser.ensureConstantParserAlias id
-        `(ParserDescr.const $(quote id))
+        processAlias stx[0] #[]
       else
         throwError "unknown parser declaration/category/alias '{id}'"
 
-  processUnary (stx : Syntax) := do
-    let aliasName := (stx[0].getId).eraseMacroScopes
-    Parser.ensureUnaryParserAlias aliasName
-    let d ← withNestedParser do process stx[2]
-    `(ParserDescr.unary $(quote aliasName) $d)
-
-  processBinary (stx : Syntax) := do
-    let aliasName := (stx[0].getId).eraseMacroScopes
-    Parser.ensureBinaryParserAlias aliasName
-    let d₁ ← withNestedParser do process stx[2]
-    let d₂ ← withNestedParser do process stx[4]
-    `(ParserDescr.binary $(quote aliasName) $d₁ $d₂)
-
   processSepBy (stx : Syntax) := do
-    let p ← withNestedParser $ process stx[1]
+    let p ← ensureUnaryOutput <$> withNestedParser do process stx[1]
     let sep := stx[3]
-    let psep ← if stx[4].isNone then `(ParserDescr.symbol $sep) else process stx[4][1]
+    let psep ← if stx[4].isNone then `(ParserDescr.symbol $sep) else ensureUnaryOutput <$> withNestedParser do process stx[4][1]
     let allowTrailingSep := !stx[5].isNone
-    `(ParserDescr.sepBy $p $sep $psep $(quote allowTrailingSep))
+    return (← `(ParserDescr.sepBy $p $sep $psep $(quote allowTrailingSep)), 1)
 
   processSepBy1 (stx : Syntax) := do
-    let p ← withNestedParser do process stx[1]
+    let p ← ensureUnaryOutput <$> withNestedParser do process stx[1]
     let sep := stx[3]
-    let psep ← if stx[4].isNone then `(ParserDescr.symbol $sep) else process stx[4][1]
+    let psep ← if stx[4].isNone then `(ParserDescr.symbol $sep) else ensureUnaryOutput <$> withNestedParser do process stx[4][1]
     let allowTrailingSep := !stx[5].isNone
-    `(ParserDescr.sepBy1 $p $sep $psep $(quote allowTrailingSep))
+    return (← `(ParserDescr.sepBy1 $p $sep $psep $(quote allowTrailingSep)), 1)
 
   isValidAtom (s : String) : Bool :=
     !s.isEmpty &&
@@ -198,14 +221,14 @@ where
       /- For syntax categories where initialized with `LeadingIdentBehavior` different from default (e.g., `tactic`), we automatically mark
          the first symbol as nonReserved. -/
       if (← read).behavior != Parser.LeadingIdentBehavior.default && (← read).first then
-        `(ParserDescr.nonReservedSymbol $(quote atom) false)
+        return (← `(ParserDescr.nonReservedSymbol $(quote atom) false), 1)
       else
-        `(ParserDescr.symbol $(quote atom))
+        return (← `(ParserDescr.symbol $(quote atom)), 1)
     | none => throwUnsupportedSyntax
 
   processNonReserved (stx : Syntax) := do
     match stx[1].isStrLit? with
-    | some atom => `(ParserDescr.nonReservedSymbol $(quote atom) false)
+    | some atom => return (← `(ParserDescr.nonReservedSymbol $(quote atom) false), 1)
     | none      => throwUnsupportedSyntax
 
 
