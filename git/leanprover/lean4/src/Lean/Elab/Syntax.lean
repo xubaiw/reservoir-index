@@ -17,7 +17,7 @@ def expandOptPrecedence (stx : Syntax) : MacroM (Option Nat) :=
   else
     return some (← evalPrec stx[0][1])
 
-private def mkParserSeq (ds : Array Syntax) : TermElabM Syntax := do
+private def mkParserSeq (ds : Array Term) : TermElabM Syntax := do
   if ds.size == 0 then
     throwUnsupportedSyntax
   else if ds.size == 1 then
@@ -57,16 +57,38 @@ def checkLeftRec (stx : Syntax) : ToParserDescrM Bool := do
   markAsTrailingParser (prec?.getD 0)
   return true
 
+/-- Resolve the given parser name and return a list of candidates.
+    Each candidate is a pair `(resolvedParserName, isDescr)`.
+    `isDescr == true` if the type of `resolvedParserName` is a `ParserDescr`. -/
+def resolveParserName [Monad m] [MonadInfoTree m] [MonadResolveName m] [MonadEnv m] [MonadError m] (parserName : Syntax) : m (List (Name × Bool)) := do
+  try
+    let candidates ← resolveGlobalConstWithInfos parserName
+    /- Convert `candidates` in a list of pairs `(c, isDescr)`, where `c` is the parser name,
+        and `isDescr` is true iff `c` has type `Lean.ParserDescr` or `Lean.TrailingParser` -/
+    let env ← getEnv
+    return candidates.filterMap fun c =>
+        match env.find? c with
+        | none      => none
+        | some info =>
+          match info.type with
+        | Expr.const ``Lean.Parser.TrailingParser _ _ => (c, false)
+        | Expr.const ``Lean.Parser.Parser _ _         => (c, false)
+        | Expr.const ``Lean.ParserDescr _ _           => (c, true)
+        | Expr.const ``Lean.TrailingParserDescr _ _   => (c, true)
+        | _                                           => none
+  catch _ => return []
+
+open TSyntax.Compat in
 /--
   Given a `stx` of category `syntax`, return a pair `(newStx, lhsPrec?)`,
   where `newStx` is of category `term`. After elaboration, `newStx` should have type
   `TrailingParserDescr` if `lhsPrec?.isSome`, and `ParserDescr` otherwise. -/
-partial def toParserDescr (stx : Syntax) (catName : Name) : TermElabM (Syntax × Option Nat) := do
+partial def toParserDescr (stx : Syntax) (catName : Name) : TermElabM (Term × Option Nat) := do
   let env ← getEnv
   let behavior := Parser.leadingIdentBehavior env catName
   (process stx { catName := catName, first := true, leftRec := true, behavior := behavior }).run none
 where
-  process (stx : Syntax) : ToParserDescrM Syntax := withRef stx do
+  process (stx : Syntax) : ToParserDescrM Term := withRef stx do
     let kind := stx.getKind
     if kind == nullKind then
       processSeq stx
@@ -105,27 +127,6 @@ where
     else
       let args ← args.mapIdxM fun i arg => withReader (fun ctx => { ctx with first := ctx.first && i.val == 0 }) do process arg
       mkParserSeq args
-
-  /- Resolve the given parser name and return a list of candidates.
-     Each candidate is a pair `(resolvedParserName, isDescr)`.
-     `isDescr == true` if the type of `resolvedParserName` is a `ParserDescr`. -/
-  resolveParserName (parserName : Syntax) : ToParserDescrM (List (Name × Bool)) := do
-    try
-      let candidates ← resolveGlobalConstWithInfos parserName
-      /- Convert `candidates` in a list of pairs `(c, isDescr)`, where `c` is the parser name,
-         and `isDescr` is true iff `c` has type `Lean.ParserDescr` or `Lean.TrailingParser` -/
-      let env ← getEnv
-      return candidates.filterMap fun c =>
-         match env.find? c with
-         | none      => none
-         | some info =>
-           match info.type with
-          | Expr.const ``Lean.Parser.TrailingParser _ _ => (c, false)
-          | Expr.const ``Lean.Parser.Parser _ _         => (c, false)
-          | Expr.const ``Lean.ParserDescr _ _           => (c, true)
-          | Expr.const ``Lean.TrailingParserDescr _ _   => (c, true)
-          | _                                           => none
-    catch _ => return []
 
   ensureNoPrec (stx : Syntax) :=
     unless stx[1].isNone do
@@ -219,15 +220,14 @@ private def declareSyntaxCatQuotParser (catName : Name) : CommandElabM Unit := d
   if let Name.str _ suffix _ := catName then
     let quotSymbol := "`(" ++ suffix ++ "|"
     let name := catName ++ `quot
-    -- TODO(Sebastian): this might confuse the pretty printer, but it lets us reuse the elaborator
-    let kind := ``Lean.Parser.Term.quot
     let cmd ← `(
       @[termParser] def $(mkIdent name) : Lean.ParserDescr :=
-        Lean.ParserDescr.node $(quote kind) $(quote Lean.Parser.maxPrec)
-          (Lean.ParserDescr.binary `andthen (Lean.ParserDescr.symbol $(quote quotSymbol))
-            (Lean.ParserDescr.binary `andthen
-              (Lean.ParserDescr.cat $(quote catName) 0)
-              (Lean.ParserDescr.symbol ")"))))
+        Lean.ParserDescr.node `Lean.Parser.Term.quot $(quote Lean.Parser.maxPrec)
+          (Lean.ParserDescr.node $(quote name) $(quote Lean.Parser.maxPrec)
+            (Lean.ParserDescr.binary `andthen (Lean.ParserDescr.symbol $(quote quotSymbol))
+              (Lean.ParserDescr.binary `andthen
+                (Lean.ParserDescr.cat $(quote catName) 0)
+                (Lean.ParserDescr.symbol ")")))))
     elabCommand cmd
 
 @[builtinCommandElab syntaxCat] def elabDeclareSyntaxCat : CommandElab := fun stx => do
@@ -341,9 +341,9 @@ def resolveSyntaxKind (k : Name) : CommandElabM Name := do
 def checkRuleKind (given expected : SyntaxNodeKind) : Bool :=
   given == expected || given == expected ++ `antiquot
 
-def inferMacroRulesAltKind : Syntax → CommandElabM SyntaxNodeKind
+def inferMacroRulesAltKind : TSyntax ``matchAlt → CommandElabM SyntaxNodeKind
   | `(matchAltExpr| | $pat:term => $_) => do
-    if !pat.isQuot then
+    if !pat.raw.isQuot then
       throwUnsupportedSyntax
     let quoted := getQuotContent pat
     pure quoted.getKind
@@ -352,7 +352,7 @@ def inferMacroRulesAltKind : Syntax → CommandElabM SyntaxNodeKind
 /--
 Infer syntax kind `k` from first pattern, put alternatives of same kind into new `macro/elab_rules (kind := k)` via `mkCmd (some k)`,
 leave remaining alternatives (via `mkCmd none`) to be recursively expanded. -/
-def expandNoKindMacroRulesAux (alts : Array Syntax) (cmdName : String) (mkCmd : Option Name → Array Syntax → CommandElabM Syntax) : CommandElabM Syntax := do
+def expandNoKindMacroRulesAux (alts : Array (TSyntax ``matchAlt)) (cmdName : String) (mkCmd : Option Name → Array (TSyntax ``matchAlt) → CommandElabM Command) : CommandElabM Command := do
   let mut k ← inferMacroRulesAltKind alts[0]
   if k.isStr && k.getString! == "antiquot" then
     k := k.getPrefix
@@ -365,7 +365,7 @@ def expandNoKindMacroRulesAux (alts : Array Syntax) (cmdName : String) (mkCmd : 
     if altsNotK.isEmpty then
       mkCmd k altsK
     else
-      return mkNullNode #[← mkCmd k altsK, ← mkCmd none altsNotK]
+      `($(← mkCmd k altsK):command $(← mkCmd none altsNotK))
 
 def strLitToPattern (stx: Syntax) : MacroM Syntax :=
   match stx.isStrLit? with

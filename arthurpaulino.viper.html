@@ -1,0 +1,139 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>arthurpaulino/viper</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>arthurpaulino/viper</h1>
+<p>A Python environment manager built in Lean 4</p>
+<a href="https://github.com/arthurpaulino/viper">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">viper</h3>
+<p dir="auto"><code>viper</code> is a Python environment management tool built in Lean 4.</p>
+<p dir="auto">It not only does environment management but also unifies the calls for <code>python</code> and <code>pip</code> binaries.</p>
+<p dir="auto">It's inspired on Julian Berman's <a href="https://pypi.org/project/venvs/" rel="nofollow">venvs</a>, which eliminates the need for environment activation/deactivation.
+Instead, directories are linked to environments in a list persisted on a text file (<code>$HOME/.viper/links</code>).
+Calling <code>viper</code> to run as a frontend for <code>python</code> or <code>pip</code> will trigger a lookup on that file.
+That's how <code>viper</code> knows which environment to use.</p>
+<p dir="auto"><strong>Important</strong>: It's only been tested on Ubuntu!</p>
+<h4 dir="auto">Installation</h4>
+<p dir="auto">Run <code>lake script run setup</code>, which will build <code>viper</code> and ask you where to place its binary.
+You can place it in a directory that's already in your path, for example.</p>
+<h4 dir="auto">Usage</h4>
+<p dir="auto">Again, you can use <code>viper</code> to manage environments or as an interface for <code>python</code> and <code>pip</code>:</p>
+<ul dir="auto">
+<li>Create a new environment with <code>viper new my-env</code></li>
+<li>Link the current directory to an environment with <code>viper link my-env</code></li>
+<li>Create and link in a single command with <code>viper new! my-env</code></li>
+<li>Install packages with <code>viper install pkg1 pkg2</code></li>
+<li>Run Python with <code>viper my_file.py</code></li>
+</ul>
+<p dir="auto">Use <code>viper help</code> to see the full documentation:</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="notation:
+  * '$x' means an arbitrary input, to be referenced as `x`
+  * '$[⋯ xs]' means an arbitrary sequence of inputs, to be referenced as `xs`
+
+usage: `viper $COMMAND`, where `COMMAND` is:
+
+  #### info
+  help                 prints this menu being read
+  links                shows the current links
+  envs                 displays the list of environments
+  env?                 shows the environment linked to this directory
+
+  #### environment management
+  new $env             creates a new environment named `env`
+  new! $env            runs `new env` and links `env` to the current directory
+  rename $env $env'    renames `env` to `env'`, keeping links consistent
+  clone $env $env'     clones `env` to a new environment `env'`
+  del $env             deletes the environment `env` and its links
+
+  #### linking
+  link $env            links the current directory to `env`
+  unlink               removes any link for the current directory
+  unlink dir $d        removes any link for the directory `d`
+  unlink env $e        removes any links to the environment `e`
+
+  #### maintenance
+  fix                  if the current links file is corrupted, creates a new
+                       (empty) one, backing up the old one
+  health               searches for:
+                        - inexistent linked directories
+                        - inexistent linked environments
+                        - unlinked environments
+  prune                removes links for inexistent directories and environments
+  prune!               runs `prune` but also deletes unlinked environments
+
+  #### pip
+  install $[⋯ args]    runs `pip install` with arguments `args`
+  uninstall $[⋯ args]  runs `pip uninstall` with arguments `args`
+
+  #### python
+  $f $[⋯ args]         runs Python interpreter on file `f` with arguments `args`
+  -m $mod $[⋯ args]    runs module `mod` with arguments `args`
+  <nil>                runs Python's REPL"><pre class="notranslate" lang="text"><code>notation:
+  * '$x' means an arbitrary input, to be referenced as `x`
+  * '$[⋯ xs]' means an arbitrary sequence of inputs, to be referenced as `xs`
+
+usage: `viper $COMMAND`, where `COMMAND` is:
+
+  #### info
+  help                 prints this menu being read
+  links                shows the current links
+  envs                 displays the list of environments
+  env?                 shows the environment linked to this directory
+
+  #### environment management
+  new $env             creates a new environment named `env`
+  new! $env            runs `new env` and links `env` to the current directory
+  rename $env $env'    renames `env` to `env'`, keeping links consistent
+  clone $env $env'     clones `env` to a new environment `env'`
+  del $env             deletes the environment `env` and its links
+
+  #### linking
+  link $env            links the current directory to `env`
+  unlink               removes any link for the current directory
+  unlink dir $d        removes any link for the directory `d`
+  unlink env $e        removes any links to the environment `e`
+
+  #### maintenance
+  fix                  if the current links file is corrupted, creates a new
+                       (empty) one, backing up the old one
+  health               searches for:
+                        - inexistent linked directories
+                        - inexistent linked environments
+                        - unlinked environments
+  prune                removes links for inexistent directories and environments
+  prune!               runs `prune` but also deletes unlinked environments
+
+  #### pip
+  install $[⋯ args]    runs `pip install` with arguments `args`
+  uninstall $[⋯ args]  runs `pip uninstall` with arguments `args`
+
+  #### python
+  $f $[⋯ args]         runs Python interpreter on file `f` with arguments `args`
+  -m $mod $[⋯ args]    runs module `mod` with arguments `args`
+  <nil>                runs Python's REPL
+</code></pre></div>
+</article></div></main>
+</body>
+</html>

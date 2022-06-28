@@ -169,11 +169,15 @@ attribute [runBuiltinParserAttributeHooks]
   ppHardSpace ppSpace ppLine ppGroup ppRealGroup ppRealFill ppIndent ppDedent
   ppAllowUngrouped ppDedentIfGrouped ppHardLineUnlessUngrouped
 
-macro "register_parser_alias" aliasName?:optional(strLit) declName:ident : term =>
-  let aliasName := aliasName?.getD (Syntax.mkStrLit declName.getId.toString)
-  `(do Parser.registerAlias $aliasName $declName
-       PrettyPrinter.Formatter.registerAlias $aliasName $(mkIdentFrom declName (declName.getId ++ `formatter))
-       PrettyPrinter.Parenthesizer.registerAlias $aliasName $(mkIdentFrom declName (declName.getId ++ `parenthesizer)))
+syntax "register_parser_alias" group("(" &"kind" " := " term ")")? (strLit)? ident : term
+macro_rules
+  | `(register_parser_alias $[(kind := $kind?)]? $(aliasName?)? $declName) => do
+    let [(fullDeclName, [])] ← Macro.resolveGlobalName declName.getId |
+      Macro.throwError "expected non-overloaded constant name"
+    let aliasName := aliasName?.getD (Syntax.mkStrLit declName.getId.toString)
+    `(do Parser.registerAlias $aliasName $declName (kind? := some $(kind?.getD (quote fullDeclName)))
+         PrettyPrinter.Formatter.registerAlias $aliasName $(mkIdentFrom declName (declName.getId ++ `formatter))
+         PrettyPrinter.Parenthesizer.registerAlias $aliasName $(mkIdentFrom declName (declName.getId ++ `parenthesizer)))
 
 builtin_initialize
   register_parser_alias group

@@ -12,7 +12,16 @@ following commands from your VS Code Terminal window:
 
 ```
 lake build
-"./build/bin/HelloWorld.exe"
+```
+
+[Windows]
+```
+.\build\bin\hello
+```
+
+[Linux]
+```
+./build/bin/hello
 ```
 
 And you will see the console output `Hello, world!`.

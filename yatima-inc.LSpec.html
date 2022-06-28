@@ -95,6 +95,32 @@ def main := lspec $
   test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>)</pre></div>
 <p dir="auto">If you run <code>Tests.lean</code>, the expected output should be:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="✓ four equals four"><pre>✓ four equals four</pre></div>
+<h6 dir="auto">Running tests with IO</h6>
+<p dir="auto">We can use the <code>lspec</code> function to run tests with values that come from
+computations in <code>IO</code> like this:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def fourIO : IO Nat :=
+  return 4
+
+def fiveIO : IO Nat :=
+  return 5
+
+def main : IO UInt32 := do
+  let four ← fourIO
+  let five ← fiveIO
+  lspec do
+    test "fourIO equals 4" (four = 4)
+    test "fiveIO equals 5" (five = 5)"><pre><span class="pl-k">def</span> <span class="pl-en">fourIO</span> : IO Nat :=
+  return <span class="pl-c1">4</span>
+
+<span class="pl-k">def</span> <span class="pl-en">fiveIO</span> : IO Nat :=
+  return <span class="pl-c1">5</span>
+
+<span class="pl-k">def</span> <span class="pl-en">main</span> : IO UInt32 := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> four ← fourIO
+  <span class="pl-k">let</span> five ← fiveIO
+  lspec <span class="pl-k">do</span>
+    test <span class="pl-s"><span class="pl-pds">"</span>fourIO equals 4<span class="pl-pds">"</span></span> (four = <span class="pl-c1">4</span>)
+    test <span class="pl-s"><span class="pl-pds">"</span>fiveIO equals 5<span class="pl-pds">"</span></span> (five = <span class="pl-c1">5</span>)</pre></div>
 <h5 dir="auto">The <code>lspec</code> binary</h5>
 <p dir="auto">Suppose you want to create multiple test files, each with a separate test suite.
 Create a folder called <code>Tests</code> in the root directory of your project and then:</p>

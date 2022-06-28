@@ -5,6 +5,7 @@ Authors: Jannis Limperg
 -/
 
 import Aesop.Options
+import Aesop.Search.Expansion.Simp.Basic
 import Aesop.Search.Queue
 import Aesop.Profiling
 import Aesop.RuleSet
@@ -17,6 +18,7 @@ namespace Aesop.SearchM
 structure Context where
   ruleSet : RuleSet
   normSimpContext : Simp.Context
+  normSimpUseHyps : Bool
   options : Aesop.Options
   rootGoalMVar : MVarId -- TODO this is now the root goal's `preNormGoal`
   profilingEnabled : Bool
@@ -72,15 +74,20 @@ def run' (ctx : SearchM.Context) (σ : SearchM.State Q) (t : Tree)
   let ((a, σ), t) ← ReaderT.run x ctx |>.run σ |>.run t
   return (a, σ, t)
 
-def run (ruleSet : RuleSet) (options : Aesop.Options) (goal : MVarId)
+def run (ruleSet : RuleSet) (options : Aesop.Options)
+    (simpConfig : Aesop.SimpConfig) (goal : MVarId)
     (profile : Profile) (x : SearchM Q α) : MetaM (α × State Q × Tree) := do
   let t ← mkInitialTree goal
   let profilingEnabled ← TraceOption.profile.isEnabled
   let normSimpContext := {
-    (← Simp.Context.mkDefault) with simpTheorems := #[ruleSet.normSimpLemmas]
+    (← Simp.Context.mkDefault) with
+    simpTheorems := #[ruleSet.normSimpLemmas]
+    config := simpConfig.toConfig
   }
   let ctx := {
-    ruleSet, options, rootGoalMVar := goal, profilingEnabled, normSimpContext
+    rootGoalMVar := goal
+    normSimpUseHyps := simpConfig.useHyps
+    ruleSet, options, profilingEnabled, normSimpContext
   }
   let #[rootGoal] := (← t.root.get).goals
     | throwError "aesop: internal error: root mvar cluster does not contain exactly one goal."

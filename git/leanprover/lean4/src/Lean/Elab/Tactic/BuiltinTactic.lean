@@ -222,7 +222,7 @@ where
       return (fvars, [mvarId])
     withMainContext do
       for stx in ids, fvar in fvars do
-        Term.addLocalVarInfo stx (mkFVar fvar)
+        Term.addLocalVarInfo stx.raw (mkFVar fvar)
   | _ => throwUnsupportedSyntax
 
 @[builtinTactic Lean.Parser.Tactic.revert] def evalRevert : Tactic := fun stx =>
@@ -270,6 +270,13 @@ private def findTag? (mvarIds : List MVarId) (tag : Name) : TacticM (Option MVar
   | some mvarId => return mvarId
   | none => mvarIds.findM? fun mvarId => return tag.isPrefixOf (← getMVarDecl mvarId).userName
 
+-- TODO: remove after next stage
+def maybeUnwrapBinderIdent (stx : Syntax) : Syntax :=
+  if stx.isOfKind `Lean.binderIdent then
+    stx[0]
+  else
+    stx
+
 def renameInaccessibles (mvarId : MVarId) (hs : Array Syntax) : TacticM MVarId := do
   if hs.isEmpty then
     return mvarId
@@ -286,7 +293,7 @@ def renameInaccessibles (mvarId : MVarId) (hs : Array Syntax) : TacticM MVarId :
       | none => pure ()
       | some localDecl =>
         if localDecl.userName.hasMacroScopes || found.contains localDecl.userName then
-          let h := hs.back
+          let h := maybeUnwrapBinderIdent hs.back
           if h.isIdent then
             let newName := h.getId
             lctx := lctx.setUserName localDecl.fvarId newName
@@ -306,6 +313,7 @@ def renameInaccessibles (mvarId : MVarId) (hs : Array Syntax) : TacticM MVarId :
 
 private def getCaseGoals (tag : Syntax) : TacticM (MVarId × List MVarId) := do
   let gs ← getUnsolvedGoals
+  let tag := maybeUnwrapBinderIdent tag
   let g ← if tag.isIdent then
     let tag := tag.getId
     let some g ← findTag? gs tag | throwError "tag not found"
@@ -357,11 +365,8 @@ where
   let goals ← getGoals
   let goalsMsg := MessageData.joinSep (goals.map MessageData.ofGoal) m!"\n\n"
   match stx with
-  | `(tactic| fail)      => throwError "tactic 'fail' failed\n{goalsMsg}"
-  | `(tactic| fail $msg) =>
-    match msg.isStrLit? with
-    | none     => throwIllFormedSyntax
-    | some msg => throwError "{msg}\n{goalsMsg}"
+  | `(tactic| fail)          => throwError "tactic 'fail' failed\n{goalsMsg}"
+  | `(tactic| fail $msg:str) => throwError "{msg.getString}\n{goalsMsg}"
   | _ => throwUnsupportedSyntax
 
 @[builtinTactic dbgTrace] def evalDbgTrace : Tactic := fun stx => do

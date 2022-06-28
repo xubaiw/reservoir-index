@@ -257,8 +257,8 @@ def visitToken : Parenthesizer := do
 -- Note that there is a mutual recursion
 -- `categoryParser -> mkAntiquot -> termParser -> categoryParser`, so we need to introduce an indirection somewhere
 -- anyway.
-@[extern 8 "lean_mk_antiquot_parenthesizer"]
-opaque mkAntiquot.parenthesizer' (name : String) (kind : Option SyntaxNodeKind) (anonymous := true) : Parenthesizer
+@[extern "lean_mk_antiquot_parenthesizer"]
+opaque mkAntiquot.parenthesizer' (name : String) (kind : SyntaxNodeKind) (anonymous := true) (isPseudoKind := false) : Parenthesizer
 
 @[inline] def liftCoreM {α} (x : CoreM α) : ParenthesizerM α :=
   liftM x
@@ -308,7 +308,7 @@ def parenthesizeCategoryCore (cat : Name) (_prec : Nat) : Parenthesizer :=
         let stx ← getCur
         parenthesizerForKind stx.getKind
     else
-      withAntiquot.parenthesizer (mkAntiquot.parenthesizer' cat.toString none) (parenthesizerForKind stx.getKind)
+      withAntiquot.parenthesizer (mkAntiquot.parenthesizer' cat.toString cat (isPseudoKind := true)) (parenthesizerForKind stx.getKind)
     modify fun st => { st with contCat := cat }
 
 @[combinatorParenthesizer Lean.Parser.categoryParser]
@@ -334,17 +334,17 @@ def parserOfStack.parenthesizer (offset : Nat) (_prec : Nat := 0) : Parenthesize
 
 @[builtinCategoryParenthesizer term]
 def term.parenthesizer : CategoryParenthesizer | prec => do
-  maybeParenthesize `term true (fun stx => Unhygienic.run `(($stx))) prec $
+  maybeParenthesize `term true (fun stx => Unhygienic.run `(($(⟨stx⟩)))) prec $
     parenthesizeCategoryCore `term prec
 
 @[builtinCategoryParenthesizer tactic]
 def tactic.parenthesizer : CategoryParenthesizer | prec => do
-  maybeParenthesize `tactic false (fun stx => Unhygienic.run `(tactic|($stx))) prec $
+  maybeParenthesize `tactic false (fun stx => Unhygienic.run `(tactic|($(⟨stx⟩)))) prec $
     parenthesizeCategoryCore `tactic prec
 
 @[builtinCategoryParenthesizer level]
 def level.parenthesizer : CategoryParenthesizer | prec => do
-  maybeParenthesize `level false (fun stx => Unhygienic.run `(level|($stx))) prec $
+  maybeParenthesize `level false (fun stx => Unhygienic.run `(level|($(⟨stx⟩)))) prec $
     parenthesizeCategoryCore `level prec
 
 @[builtinCategoryParenthesizer rawStx]

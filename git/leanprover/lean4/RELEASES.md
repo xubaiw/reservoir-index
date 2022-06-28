@@ -1,6 +1,38 @@
 Unreleased
 ---------
 
+* Add ["Typed Macros"](https://github.com/leanprover/lean4/pull/1251): syntax trees produced and accepted by syntax antiquotations now remember their syntax kinds, preventing accidental production of ill-formed syntax trees and reducing the need for explicit `:kind` antiquotation annotations. See PR for details.
+
+* Aliases of protected definitions are protected too. Example:
+  ```lean
+  protected def Nat.double (x : Nat) := 2*x
+
+  namespace Ex
+  export Nat (double) -- Add alias Ex.double for Nat.double
+  end Ex
+
+  open Ex
+  #check Ex.double -- Ok
+  #check double -- Error, `Ex.double` is alias for `Nat.double` which is protected
+  ```
+
+* Use `IO.getRandomBytes` to initialize random seed for `IO.rand`. See discussion at [this PR](https://github.com/leanprover/lean4-samples/pull/2).
+
+* Improve dot notation and aliases interaction. See discussion on [Zulip](https://leanprover.zulipchat.com/#narrow/stream/270676-lean4/topic/Namespace-based.20overloading.20does.20not.20find.20exports/near/282946185) for additional details.
+  Example:
+  ```lean
+  def Set (α : Type) := α → Prop
+  def Set.union (s₁ s₂ : Set α) : Set α := fun a => s₁ a ∨ s₂ a
+  def FinSet (n : Nat) := Fin n → Prop
+
+  namespace FinSet
+    export Set (union) -- FinSet.union is now an alias for `Set.union`
+  end FinSet
+
+  example (x y : FinSet 10) : FinSet 10 :=
+    x.union y -- Works
+  ```
+
 * `ext` and `enter` conv tactics can now go inside let-declarations. Example:
   ```lean
   example (g : Nat → Nat) (y : Nat) (h : let x := y + 1; g (0+x) = x) : g (y + 1) = y + 1 := by
@@ -55,7 +87,7 @@ Unreleased
 
 * [`let/if` indentation in `do` blocks in now supported.](https://github.com/leanprover/lean4/issues/1120)
 
-* Updated Lake to v3.1.1. See the [v3.1.0 release note](https://github.com/leanprover/lake/releases/tag/v3.1.0) for detailed changes.
+* Update Lake to v3.1.1. See the [v3.1.0 release note](https://github.com/leanprover/lake/releases/tag/v3.1.0) for detailed changes.
 
 * Add unnamed antiquotation `$_` for use in syntax quotation patterns.
 

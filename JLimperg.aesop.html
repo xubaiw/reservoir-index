@@ -653,10 +653,17 @@ clause can be given to include additional rule sets, e.g.</p>
 be disabled with <code>rule_sets [-default, -builtin]</code>.</p>
 <b dir="auto">Setting Options</b>
 <p dir="auto">Various options can be set with an <code>options</code> clause, whose syntax is:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(options <term>)"><pre class="notranslate" lang="text"><code>(options <term>)
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(options := <term>)"><pre class="notranslate" lang="text"><code>(options := <term>)
 </code></pre></div>
 <p dir="auto">The term is an arbitrary Lean expression of type <code>Aesop.Options</code>; see there for
 details.</p>
+<p dir="auto">Similarly, options for the builtin norm simp call can be set with</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="(simp_options := <term>)"><pre class="notranslate" lang="text"><code>(simp_options := <term>)
+</code></pre></div>
+<p dir="auto">The term has type <code>Aesop.Simp.Config</code>; see there for details. The <code>useHyps</code>
+option may be particularly useful: when <code>true</code> (the default), norm simp behaves
+like the <code>simp_all</code> tactic; when <code>false</code>, norm simp behaves like
+<code>simp (config := { contextual := true }) at *</code>.</p>
 <h6 dir="auto">Builtin Rules</h6>
 <p dir="auto">The set of builtin rules (those in the <code>builtin</code> rule set) is currently quite
 unstable, so for now I won't document them in detail. See
