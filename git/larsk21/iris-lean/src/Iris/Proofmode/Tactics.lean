@@ -45,7 +45,7 @@ elab "istop_proof" : tactic => do
   -- reduce proof mode definitions
   try evalTactic (← `(tactic|
     simp only [envs_entails, of_envs] ;
-    simp only [bigOp, List.foldr1]
+    simp only [big_op, List.foldr1]
   ))
   catch _ => throwError "unable to stop proof mode"
 
@@ -67,12 +67,12 @@ private def extractEnvsEntailsFromGoal (startProofMode : Bool := false) : Tactic
 
 private def findHypothesis (name : Name) : TacticM HypothesisIndex := do
   let (Γₚ, Γₛ, _) ← extractEnvsEntailsFromGoal
-  if let some i ← Γₚ.asListExpr_findIndex? (·.getMDataName?.isEqSome name) then
-    let some l ← Γₚ.asListExpr_length?
+  if let some i ← EnvExpr.findIndex? Γₚ (·.getMDataName?.isEqSome name) then
+    let some l ← EnvExpr.length? Γₚ
       | throwError "ill-formed proof environment"
     return ⟨.intuitionistic, i, l⟩
-  else if let some i ← Γₛ.asListExpr_findIndex? (·.getMDataName?.isEqSome name) then
-    let some l ← Γₛ.asListExpr_length?
+  else if let some i ← EnvExpr.findIndex? Γₛ (·.getMDataName?.isEqSome name) then
+    let some l ← EnvExpr.length? Γₛ
       | throwError "ill-formed proof environment"
     return ⟨.spatial, i, l⟩
   else
@@ -90,20 +90,20 @@ def Internal.irenameCore (hypIndex : HypothesisIndex) (name : Name) : TacticM Un
 
   let modifyHypothesis (Γ : Expr) (idx : Nat) : TacticM Expr := do
     -- find hypothesis
-    let some h ← Γ.asListExpr_get? idx
+    let some h ← EnvExpr.get? Γ idx
       | throwError "invalid index or ill-formed proof environment"
 
     -- check for unique (or equal) hypothesis name
     let nameFrom? := h.getMDataName?
     if nameFrom? |>.map (· != name) |>.getD true then
-      if ← [Γₚ, Γₛ].anyM (fun Γ => do return (← Γ.asListExpr_any? (·.getMDataName?.isEqSome name)) matches some true) then
+      if ← [Γₚ, Γₛ].anyM (fun Γ => do return (← EnvExpr.any? Γ (·.getMDataName?.isEqSome name)) matches some true) then
         throwError "name is already used for another hypothesis"
 
     -- rename hypothesis
     let h := h.setMDataName? name
 
     -- re-insert hypothesis
-    let some Γ ← Γ.asListExpr_set? h idx
+    let some Γ ← EnvExpr.set? Γ h idx
       | throwError "invalid index or ill-formed proof environment"
 
     return Γ
@@ -155,8 +155,7 @@ def Internal.iintroCore (type : HypothesisType) (name : Name) : TacticM Unit := 
   -- extract environment
   let (Γₚ, Γₛ, _) ← extractEnvsEntailsFromGoal true
 
-  -- determine hypothesis list length
-  let (some lₚ, some lₛ) ← (Γₚ, Γₛ).mapAllM (·.asListExpr_length?)
+  let (some lₚ, some lₛ) ← (Γₚ, Γₛ).mapAllM (EnvExpr.length? ·)
     | throwError "ill-formed proof environment"
 
   match type with
@@ -224,11 +223,16 @@ elab "iexact" colGt name:ident : tactic => do
   catch _ => throwError "failed to use the hypothesis to close the goal"
 
 elab "iassumption_lean" : tactic => do
+  -- retrieve goal mvar declaration
+  let some decl := (← getMCtx).findDecl? (← getMainGoal)
+    | throwError "ill-formed proof environment"
+
   -- try all hypotheses from the local context
-  let hs ← getLCtx
-  for h in ← getLCtx do
+  for h in decl.lctx do
+    let (name, type) := (h.userName, ← instantiateMVars h.type)
+
     -- match on `⊢ Q`
-    let some (P, _) := extractEntails? h.type
+    let some (P, _) := extractEntails? type
       | continue
     if !isEmp P then
       continue
@@ -236,7 +240,7 @@ elab "iassumption_lean" : tactic => do
     -- try to solve the goal
     try
       evalTactic (← `(tactic|
-        refine tac_assumption_lean _ $(mkIdent h.userName)
+        refine tac_assumption_lean _ $(mkIdent name)
       ))
       return
     catch _ => continue
@@ -247,7 +251,7 @@ elab "iassumption" : tactic => do
   -- extract environment
   let (Γₚ, Γₛ, _) ← extractEnvsEntailsFromGoal
 
-  let (some lₚ, some lₛ) ← (Γₚ, Γₛ).mapAllM (M := MetaM) Lean.Expr.asListExpr_length?
+  let (some lₚ, some lₛ) ← (Γₚ, Γₛ).mapAllM (M := MetaM) (EnvExpr.length? ·)
     | throwError "ill-formed proof environment"
 
   -- try to close the goal
@@ -282,7 +286,16 @@ elab "iassumption" : tactic => do
   catch _ => throwError "no matching hypothesis found or remaining environment cannot be cleared"
 
 
-elab "ipure" name:ident : tactic => do
+elab "iex_falso" : tactic => do
+  -- change goal to `False`
+  try evalTactic (← `(tactic|
+    first
+    | refine tac_ex_falso _ ?_
+    | fail
+  )) catch _ => throwError "could not turn goal into False"
+
+
+elab "ipure" colGt name:ident : tactic => do
   -- parse syntax
   if name.getId.isAnonymous then
     throwUnsupportedSyntax
@@ -294,11 +307,11 @@ elab "ipure" name:ident : tactic => do
   try evalTactic (← `(tactic|
     first
     | refine tac_pure $(← hypIndex.quoteAsEnvsIndex) _ ?_
-      intro $name
+      intro $(mkIdent name.getId)
     | fail
   )) catch _ => throwError "could not move hypothesis to the Lean context"
 
-elab "iintuitionistic" name:ident : tactic => do
+elab "iintuitionistic" colGt name:ident : tactic => do
   -- parse syntax
   let name := name.getId
   if name.isAnonymous then
@@ -316,13 +329,14 @@ elab "iintuitionistic" name:ident : tactic => do
 
   -- extract environment
   let (Γₚ, _, _) ← extractEnvsEntailsFromGoal
-  let some lₚ ← Γₚ.asListExpr_length?
+
+  let some lₚ ← EnvExpr.length? Γₚ
     | throwError "ill-formed proof environment"
 
   -- re-name hypothesis
   irenameCore ⟨.intuitionistic, lₚ - 1, lₚ⟩ name
 
-elab "ispatial" name:ident : tactic => do
+elab "ispatial" colGt name:ident : tactic => do
   -- parse syntax
   let name := name.getId
   if name.isAnonymous then
@@ -340,11 +354,22 @@ elab "ispatial" name:ident : tactic => do
 
   -- extract environment
   let (_, Γₛ, _) ← extractEnvsEntailsFromGoal
-  let some lₛ ← Γₛ.asListExpr_length?
+
+  let some lₛ ← EnvExpr.length? Γₛ
     | throwError "ill-formed proof environment"
 
   -- re-name hypothesis
   irenameCore ⟨.spatial, lₛ - 1, lₛ⟩ name
+
+
+elab "ipure_intro" : tactic => do
+  -- change into Lean goal
+  try evalTactic (← `(tactic|
+    first
+    | istart_proof
+      refine tac_pure_intro _ ?_
+    | fail
+  )) catch _ => throwError "goal is not pure"
 
 
 elab "isplit" : tactic => do
@@ -377,24 +402,47 @@ elab "isplit" side:(&"l" <|> &"r") "[" names:ident,* "]" : tactic => do
   -- extract environment
   let (_, Γₛ, _) ← extractEnvsEntailsFromGoal true
 
-  -- find indices
-  let indices ← names.mapM (fun name => do
-    let some index ← Γₛ.asListExpr_findIndex? (·.getMDataName?.isEqSome name)
+  let some lₛ ← EnvExpr.length? Γₛ
+    | throwError "ill-formed proof environment"
+
+  -- construct hypothesis mask
+  let mut mask := List.replicate lₛ false
+  for name in names do
+    let some index ← EnvExpr.findIndex? Γₛ (·.getMDataName?.isEqSome name)
       | throwError "unknown spatial hypothesis"
-    pure index
-  )
+
+    mask := mask.set index true
+
+  if splitRight then
+    mask := mask.map (!·)
 
   -- split conjunction
   try evalTactic (← `(tactic|
     first
-    | refine tac_sep_split $(quote indices.toList) $(quote splitRight) _ ?Sep.left ?Sep.right
-      <;> simp only [List.partitionIndices, List.partitionIndices.go, Prod.map, ite_true, ite_false]
+    | refine tac_sep_split $(quote mask) _ ?Sep.left ?Sep.right
     | fail
   ))
   catch _ => throwError "unable to split separating conjunction"
 
 macro "isplit" &"l" : tactic => `(tactic| isplit r [])
 macro "isplit" &"r" : tactic => `(tactic| isplit l [])
+
+
+elab "ileft" : tactic => do
+  -- choose left side of disjunction
+  try evalTactic (← `(tactic|
+    first
+    | refine tac_disjunction_l _ ?_
+    | fail
+  )) catch _ => throwError "goal is not a disjunction"
+
+elab "iright" : tactic => do
+  -- choose right side of disjunction
+  try evalTactic (← `(tactic|
+    first
+    | refine tac_disjunction_r _ ?_
+    | fail
+  )) catch _ => throwError "goal is not a disjunction"
 
 
 mutual
@@ -409,10 +457,10 @@ mutual
       -- destruct hypothesis and clear one side if requested
       let (h, ra) ← (do
         if args[i] matches .clear then
-          if let some result ← destructRight hypIndex args[i] args[i + 1] then
+          if let some result ← destructRight hypIndex args[i + 1] then
             return result
         else if i + 1 == args.size - 1 && args[i + 1] matches .clear then
-          if let some result ← destructLeft hypIndex args[i] args[i + 1] then
+          if let some result ← destructLeft hypIndex args[i] then
             return result
 
         let some result ← destruct hypIndex args[i] args[i + 1]
@@ -437,12 +485,12 @@ mutual
       -- restore all introduced goals
       setGoals goals
   where
-    destructRight (hypIndex : HypothesisIndex) (argL argR : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
+    destructRight (hypIndex : HypothesisIndex) (argR : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
       -- destruct hypothesis
       try evalTactic (← `(tactic|
         first
         | refine tac_conjunction_destruct_choice $(← hypIndex.quoteAsEnvsIndex) false _ ?_
-          simp only [List.concat, ite_true, ite_false]
+          simp only [ite_true, ite_false]
         | fail
       )) catch _ => return none
 
@@ -456,12 +504,12 @@ mutual
       -- return new hypothesis index and remaining arguments
       return (hypIndex, #[(name, argR)])
 
-    destructLeft (hypIndex : HypothesisIndex) (argL argR : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
+    destructLeft (hypIndex : HypothesisIndex) (argL : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
       -- destruct hypothesis
       try evalTactic (← `(tactic|
         first
         | refine tac_conjunction_destruct_choice $(← hypIndex.quoteAsEnvsIndex) true _ ?_
-          simp only [List.concat, ite_true, ite_false]
+          simp only [ite_true, ite_false]
         | fail
       )) catch _ => return none
 
@@ -480,7 +528,6 @@ mutual
       try evalTactic (← `(tactic|
         first
         | refine tac_conjunction_destruct $(← hypIndex.quoteAsEnvsIndex) _ ?_
-          simp only [List.concat]
         | fail
       ))
       catch _ => return none
@@ -518,7 +565,6 @@ mutual
         | refine tac_disjunction_destruct $(← hypIndex.quoteAsEnvsIndex) _
             ?$(mkIdent <| tagL):ident
             ?$(mkIdent <| tagR):ident
-          <;> simp only [List.concat]
         | fail
       ))
       catch _ => throwError "failed to destruct disjunction"
@@ -648,7 +694,7 @@ elab "iintro" pats:(colGt icasesPat)* : tactic => do
         pat? := none
       catch _ =>
         iintroCore .spatial tmpName
-    else if pat matches .intuitionistic pat then
+    else if let .intuitionistic pat := pat then
       iintroCore .intuitionistic tmpName
       pat? := some pat
     else

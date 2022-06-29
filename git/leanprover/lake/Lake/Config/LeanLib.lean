@@ -38,6 +38,10 @@ namespace LeanLib
 @[inline] def srcDir (self : LeanLib) : FilePath :=
   self.pkg.srcDir / self.config.srcDir
 
+/-- The library's root directory for `lean` (i.e., `srcDir`). -/
+@[inline] def rootDir (self : LeanLib) : FilePath :=
+  self.srcDir
+
 /-- Whether the given module is considered local to the library. -/
 @[inline] def isLocalModule (mod : Name) (self : LeanLib) : Bool :=
   self.config.isLocalModule mod
@@ -68,6 +72,10 @@ Is true if either the package or the library have `precompileModules` set.
 -/
 @[inline] def precompileModules (self : LeanLib) : Bool :=
   self.pkg.precompileModules || self.config.precompileModules
+
+/-- The library's `nativeFacets` configuration. -/
+@[inline] def nativeFacets (self : LeanLib) : Array (ModuleFacet ActiveFileTarget) :=
+  self.config.nativeFacets
 
 /--
 The arguments to pass to `lean` when compiling the library's Lean files.

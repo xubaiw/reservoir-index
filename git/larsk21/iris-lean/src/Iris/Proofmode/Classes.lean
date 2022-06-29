@@ -11,8 +11,8 @@ class AsEmpValid2 (φ : Prop) {PROP : outParam Type} (P : outParam PROP) where
   [bi : BI PROP]
   as_emp_valid : φ ↔ ⊢ P
 
-instance (priority := default - 100) [inst : @AsEmpValid1 φ PROP P] : BI PROP := inst.bi
-instance (priority := default - 100) [inst : @AsEmpValid2 φ PROP P] : BI PROP := inst.bi
+attribute [instance (default - 100)] AsEmpValid1.bi
+attribute [instance (default - 100)] AsEmpValid2.bi
 
 class AsEmpValid (φ : Prop) {PROP : Type} (P : PROP) extends
   AsEmpValid1 φ P,
@@ -65,5 +65,8 @@ class FromAssumption (p : Bool) [BI PROP] (P Q : PROP) where
 
 class IntoPure [BI PROP] (P : PROP) (φ : outParam Prop) where
   into_pure : P ⊢ ⌜φ⌝
+
+class FromPure [BI PROP] (a : outParam Bool) (P : PROP) (φ : outParam Prop) where
+  from_pure : <affine>?a ⌜φ⌝ ⊢ P
 
 end Iris.Proofmode

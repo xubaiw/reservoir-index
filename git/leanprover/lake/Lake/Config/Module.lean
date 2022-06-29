@@ -38,6 +38,9 @@ namespace Module
 abbrev pkg (self : Module) : Package :=
   self.lib.pkg
 
+@[inline] def rootDir (self : Module) : FilePath :=
+  self.lib.rootDir
+
 @[inline] def leanFile (self : Module) : FilePath :=
   Lean.modToFilePath self.lib.srcDir self.name "lean"
 
@@ -77,6 +80,9 @@ abbrev pkg (self : Module) : Package :=
 
 @[inline] def shouldPrecompile (self : Module) : Bool :=
   self.lib.precompileModules
+
+@[inline] def nativeFacets (self : Module) : Array (ModuleFacet ActiveFileTarget) :=
+  self.lib.nativeFacets
 
 @[inline] def isLeanOnly (self : Module) : Bool :=
   self.pkg.isLeanOnly && !self.shouldPrecompile
