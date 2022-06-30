@@ -102,8 +102,8 @@ aforementioned repository) are also welcome.</p>
 <a name="user-content-features"></a>
 <h4 dir="auto">Features</h4>
 <ul dir="auto">
-<li>Abbreviation (unicode character) insertion, can also provide a
-<a href="https://github.com/hrsh7th/nvim-compe">nvim-compe</a> source.</li>
+<li>Abbreviation (unicode character) insertion (currently in insert mode only,
+with plans to do so for search and command modes)</li>
 <li>An infoview which can show persistent goal, term & tactic state,
 as well as interactive widgets in both
 <a data-hovercard-type="pull_request" data-hovercard-url="/leanprover/lean4/pull/596/hovercard" href="https://github.com/leanprover/lean4/pull/596">Lean 4</a> and
@@ -315,9 +315,8 @@ infoview window</td>
 
   -- Abbreviation support
   abbreviations = {
-    -- Set one of the following to true to enable abbreviations
-    builtin = false, -- built-in expander
-    compe = false, -- nvim-compe source
+    -- Enable expanding of unicode abbreviations?
+    enable = true,
     -- additional abbreviations:
     extra = {
       -- Add a \wknight abbreviation to insert ♘
@@ -417,9 +416,8 @@ infoview window</td>
 
   <span class="pl-c"><span class="pl-c">--</span> Abbreviation support</span>
   abbreviations <span class="pl-k">=</span> {
-    <span class="pl-c"><span class="pl-c">--</span> Set one of the following to true to enable abbreviations</span>
-    builtin <span class="pl-k">=</span> <span class="pl-c1">false</span>, <span class="pl-c"><span class="pl-c">--</span> built-in expander</span>
-    compe <span class="pl-k">=</span> <span class="pl-c1">false</span>, <span class="pl-c"><span class="pl-c">--</span> nvim-compe source</span>
+    <span class="pl-c"><span class="pl-c">--</span> Enable expanding of unicode abbreviations?</span>
+    enable <span class="pl-k">=</span> <span class="pl-c1">true</span>,
     <span class="pl-c"><span class="pl-c">--</span> additional abbreviations:</span>
     extra <span class="pl-k">=</span> {
       <span class="pl-c"><span class="pl-c">--</span> Add a \wknight abbreviation to insert ♘</span>

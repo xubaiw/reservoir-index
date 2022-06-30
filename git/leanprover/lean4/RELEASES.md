@@ -1,6 +1,30 @@
 Unreleased
 ---------
 
+* Add support for `CommandElabM` monad at `#eval`. Example:
+  ```lean
+  import Lean
+
+  open Lean Elab Command
+
+  #eval do
+    let id := mkIdent `foo
+    elabCommand (← `(def $id := 10))
+
+  #eval foo -- 10
+  ```
+
+* Try to elaborate `do` notation even if the expected type is not available. We still delay elaboration when the expected type
+  is not available. This change is particularly useful when writing examples such as
+  ```lean
+  #eval do
+    IO.println "hello"
+    IO.println "world"
+  ```
+  That is, we don't have to use the idiom `#eval show IO _ from do ...` anymore.
+  Note that auto monadic lifting is less effective when the expected type is not available.
+  Monadic polymorphic functions (e.g., `ST.Ref.get`) also require the expected type.
+
 * On Linux, panics now print a backtrace by default, which can be disabled by setting the environment variable `LEAN_BACKTRACE` to `0`.
   Other platforms are TBD.
 
@@ -188,7 +212,7 @@ Unreleased
     | true => isTrue (_ : n = m)
     | false => isFalse (_ : ¬n = m)
   -/
-```
+  ```
 
 * `exists` tactic is now takes a comma separated list of terms.
 
