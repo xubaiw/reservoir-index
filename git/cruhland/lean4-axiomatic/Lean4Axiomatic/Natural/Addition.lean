@@ -34,6 +34,9 @@ class Addition.Derived (ℕ : Type) [Core ℕ] extends Addition.Base ℕ where
   /-- Incrementing the right term in a sum increments the result. -/
   add_step {n m : ℕ} : n + step m ≃ step (n + m)
 
+  /-- Incrementing a sum is equivalent to incrementing one of its terms. -/
+  add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·)
+
   /--
   Addition preserves equality of natural numbers; two equal natural numbers are
   still equal after the same quantity is added to both (on the left or right).

@@ -242,6 +242,115 @@ def inverseR_from_inverseL
 
 /--
 Class for types and operations that satisfy either the left- or right-handed
+semicompatibility property.
+
+This property doesn't seem to have a standard name. For more information see
+`SemicompatibleOn.scompat`
+
+**Named parameters**
+- `hand`: Indicates whether the property is left- or right-handed.
+- `α`: The `Sort` that the operations `f` and `g` are defined over.
+- `f`: An unary operation on `α`.
+- `g`: A binary operation on `α`.
+
+**Class parameters**
+- `EqvOp α`: Necessary because the property expresses an equivalence on `α`.
+-/
+class SemicompatibleOn
+    (hand : Hand) {α : Sort u} [EqvOp α] (f : α → α) (g : α → α → α)
+    :=
+  /--
+  The left- or right-handed semicompatibility property of two operations `f`
+  and `g` defined over a sort `α`.
+
+  The property is called _semi_-compatible because when `f` is exchanged with
+  `g`, it only operates on one of `g`'s arguments, rather than both. An example
+  of operations that are semicompatible are _successor_ (i.e., `step`) and
+  _addition_ on natural numbers: `step n + m ≃ step (n + m) ≃ n + step m`.
+  Another example is negation and multiplication on integers:
+  `(-a) * b ≃ -(a * b) ≃ a * (-b)`.
+
+  **Named parameters**
+  - See `SemicompatibleOn` for the class parameters.
+  - `x`: The left-hand argument to `g`.
+  - `y`: The right-hand argument to `g`.
+  -/
+  scompat {x y : α} : f (g x y) ≃ hand.pick (g (f x) y) (g x (f y))
+
+export SemicompatibleOn (scompat)
+
+/--
+Convenience function for the left-handed semicompatibility property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `scompat` function.
+
+See `SemicompatibleOn.scompat` for detailed documentation.
+-/
+abbrev scompatL := @scompat Hand.L
+
+/--
+Convenience function for the right-handed semicompatibility property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `scompat` function.
+
+See `SemicompatibleOn.scompat` for detailed documentation.
+-/
+abbrev scompatR := @scompat Hand.R
+
+/--
+Convenience class for types and operations that satisfy the full (left- **and**
+right-handed) semicompatibility property.
+
+See `SemicompatibleOn` for detailed documentation.
+-/
+class Semicompatible {α : Sort u} [EqvOp α] (f : α → α) (g : α → α → α) :=
+  semicompatibleL : SemicompatibleOn Hand.L f g
+  semicompatibleR : SemicompatibleOn Hand.R f g
+
+attribute [instance] Semicompatible.semicompatibleL
+attribute [instance] Semicompatible.semicompatibleR
+
+/--
+Derive the right-semicompatibility property from left-semicompatibility for
+operations `f` and `g` meeting certain conditions.
+
+**Intuition**: Both the left-handed and right-handed versions of the property
+have one side of their equivalences in common. Thus if `g` is commutative, one
+version implies the other.
+
+**Named parameters**
+- `α`: The `Sort` of the operations' parameters.
+- `f`: An unary operation on `α`.
+- `g`: A binary operation on `α`.
+
+**Class parameters**
+- `EqvOp α`:
+    Necessary because the property expresses an equivalence on `α`.
+- `Substitutive₁ f (· ≃ ·) (· ≃ ·)`:
+    Needed to transform an expression passed to `f`. Nearly every useful `f`
+    will satisfy this property.
+- `Commutative g`:
+    Restriction on `g` that's required for the derivation.
+-/
+def semicompatibleR_from_semicompatibleL
+    {α : Sort u} {f : α → α} {g : α → α → α}
+    [EqvOp α] [Substitutive₁ f (· ≃ ·) (· ≃ ·)] [Commutative g]
+    : SemicompatibleOn Hand.L f g → SemicompatibleOn Hand.R f g
+    := by
+  intro _ -- Make the left-hand property available to instance search
+  apply SemicompatibleOn.mk
+  intro x y
+  show f (g x y) ≃ g x (f y)
+  calc
+    f (g x y) ≃ _ := AA.subst₁ AA.comm
+    f (g y x) ≃ _ := AA.scompatL
+    g (f y) x ≃ _ := AA.comm
+    g x (f y) ≃ _ := Rel.refl
+
+/--
+Class for types and operations that satisfy either the left- or right-handed
 distributive property.
 
 For more information see `DistributiveOn.distrib` or

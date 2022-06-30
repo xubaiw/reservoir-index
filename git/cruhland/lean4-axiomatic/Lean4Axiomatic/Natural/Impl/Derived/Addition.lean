@@ -41,6 +41,11 @@ theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
       step (step (n + m)) ≃ _ := AA.subst₁ (Rel.symm Addition.step_add)
       step (step n + m)   ≃ _ := Rel.refl
 
+def add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·) := {
+  semicompatibleL := AA.SemicompatibleOn.mk (Rel.symm Addition.step_add)
+  semicompatibleR := AA.SemicompatibleOn.mk (Rel.symm add_step)
+}
+
 theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
   apply Axioms.ind_on (motive := λ n => n + m ≃ m + n) n
   case zero =>
@@ -206,6 +211,7 @@ def add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
 instance addition_derived : Addition.Derived ℕ := {
   add_zero := add_zero
   add_step := add_step
+  add_semicompatible_step := add_semicompatible_step
   add_substitutive := add_substitutive
   add_one_step := add_one_step
   add_commutative := add_commutative
