@@ -154,7 +154,7 @@ the initial set of Lake package facets (e.g., `extraDep`).
     if let some build := moduleBuildMap.find? facet then
       build mod
     else if let some config := (← getWorkspace).findModuleFacetConfig? facet then
-      if h : facet = config.facet then
+      if h : facet = config.name then
         have : DynamicType ModuleData facet (ActiveBuildTarget config.resultType) :=
           ⟨by simp [h, eq_dynamic_type]⟩
         mkModuleFacetBuild config.build mod
@@ -165,6 +165,20 @@ the initial set of Lake package facets (e.g., `extraDep`).
   | .package pkg facet =>
     if let some build := packageBuildMap.find? facet then
       build pkg
+    else if let some config := pkg.findPackageFacetConfig? facet then
+      if h : facet = config.name then
+        have : DynamicType PackageData facet (ActiveBuildTarget config.resultType) :=
+          ⟨by simp [h, eq_dynamic_type]⟩
+        mkPackageFacetBuild config.build pkg
+      else
+        error "package facet's name in the configuration does not match the name it was registered with"
+    else if let some config := pkg.findTargetConfig? facet then
+      if h : facet = config.name then
+        have : DynamicType PackageData facet (ActiveBuildTarget config.resultType) :=
+          ⟨by simp [h, eq_dynamic_type]⟩
+        mkPackageFacetBuild config.build pkg
+      else
+        error "target's name in the configuration does not match the name it was registered with"
     else
       error s!"do not know how to build package facet `{facet}`"
   | .staticLeanLib lib =>
@@ -179,8 +193,6 @@ the initial set of Lake package facets (e.g., `extraDep`).
     mkTargetBuild ExternLib.sharedFacet do
       let staticTarget := Target.active <| ← lib.static.recBuild
       staticToLeanDynlibTarget staticTarget |>.activate
-  | _ =>
-    error s!"do not know how to build `{info.key}`"
 
 /--
 Recursively build the given info using the Lake build index

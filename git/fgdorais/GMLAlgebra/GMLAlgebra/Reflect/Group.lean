@@ -58,10 +58,10 @@ def raux : Word xs → Word xs → Word xs
 abbrev rinv : Word xs → Word xs := (raux . id)
 
 def isReduced : Word xs → Bool
-| pos i (pos j w) => isReduced (pos j w)
+| pos _ (pos j w) => isReduced (pos j w)
 | pos i (neg j w) => i ≠ j && isReduced (neg j w)
 | neg i (pos j w) => i ≠ j && isReduced (pos j w)
-| neg i (neg j w) => isReduced (neg j w)
+| neg _ (neg j w) => isReduced (neg j w)
 | _ => true
 
 theorem isReduced_id : (id (xs:=xs)).isReduced := rfl
@@ -70,15 +70,15 @@ theorem isReduced_pos_tail {i : Index xs} : (pos i w).isReduced → w.isReduced 
   intro h
   match w with
   | id => rfl
-  | pos j w => exact h
-  | neg j w => rw [isReduced, Bool.and_eq_true_iff] at h; exact h.2
+  | pos _ _ => exact h
+  | neg _ _ => rw [isReduced, Bool.and_eq_true_iff] at h; exact h.2
 
 theorem isReduced_neg_tail {i : Index xs} : (neg i w).isReduced → w.isReduced := by
   intro h
   match w with
   | id => rfl
-  | pos j w => rw [isReduced, Bool.and_eq_true_iff] at h; exact h.2
-  | neg j w => exact h
+  | pos _ _ => rw [isReduced, Bool.and_eq_true_iff] at h; exact h.2
+  | neg _ _ => exact h
 
 theorem isReduced_lift {x : α} (h : w.isReduced) : (w.lift x).isReduced := by
   induction w with
@@ -86,8 +86,8 @@ theorem isReduced_lift {x : α} (h : w.isReduced) : (w.lift x).isReduced := by
   | pos i w ih =>
     match w with
     | id => rfl
-    | pos j w => rw [lift, lift, isReduced]; exact ih (isReduced_pos_tail h)
-    | neg j w =>
+    | pos _ _ => rw [lift, lift, isReduced]; exact ih (isReduced_pos_tail h)
+    | neg j _ =>
       by_cases i = j with
       | isTrue rfl => simp [isReduced] at h
       | isFalse hne =>
@@ -98,7 +98,7 @@ theorem isReduced_lift {x : α} (h : w.isReduced) : (w.lift x).isReduced := by
   | neg i w ih =>
     match w with
     | id => rfl
-    | pos j w =>
+    | pos j _ =>
       by_cases i = j with
       | isTrue rfl => simp [isReduced] at h
       | isFalse hne =>
@@ -106,13 +106,13 @@ theorem isReduced_lift {x : α} (h : w.isReduced) : (w.lift x).isReduced := by
         constr
         · apply decide_eq_true; intro | rfl => contradiction
         · exact ih (isReduced_neg_tail h)
-    | neg j w => rw [lift, lift, isReduced]; exact ih (isReduced_neg_tail h)
+    | neg _ _ => rw [lift, lift, isReduced]; exact ih (isReduced_neg_tail h)
 
 theorem isReduced_rpos (h : w.isReduced) : (w.rpos i).isReduced := by
   match w with
   | id => exact h
-  | pos j w => exact h
-  | neg j w =>
+  | pos _ _ => exact h
+  | neg j _ =>
     by_cases i = j with
     | isTrue hij => unfold rpos; rw [if_pos hij, isReduced_neg_tail h]
     | isFalse hij => unfold rpos; rw [if_neg hij, isReduced, decide_eq_true hij, h, and]
@@ -120,23 +120,23 @@ theorem isReduced_rpos (h : w.isReduced) : (w.rpos i).isReduced := by
 theorem isReduced_rneg (h : w.isReduced) : (w.rneg i).isReduced := by
   match w with
   | id => exact h
-  | pos j w =>
+  | pos j _ =>
     by_cases i = j with
     | isTrue hij => unfold rneg; rw [if_pos hij, isReduced_pos_tail h]
     | isFalse hij => unfold rneg; rw [if_neg hij, isReduced, decide_eq_true hij, h, and]
-  | neg j w => exact h
+  | neg _ _ => exact h
 
 theorem isReduced_rapp (h : w.isReduced) : (rapp v w).isReduced := by
   induction v with
   | id => exact h
-  | pos i v ih => unfold rapp; apply isReduced_rpos; exact ih
-  | neg i v ih => unfold rapp; apply isReduced_rneg; exact ih
+  | pos _ _ ih => unfold rapp; apply isReduced_rpos; exact ih
+  | neg _ _ ih => unfold rapp; apply isReduced_rneg; exact ih
 
 theorem isReduced_raux (h : w.isReduced) : (raux v w).isReduced := by
   induction v generalizing w with
   | id => exact h
-  | pos i v ih => unfold raux; apply ih; apply isReduced_rneg h
-  | neg i v ih => unfold raux; apply ih; apply isReduced_rpos h
+  | pos _ _ ih => unfold raux; apply ih; apply isReduced_rneg h
+  | neg _ _ ih => unfold raux; apply ih; apply isReduced_rpos h
 
 theorem isReduced_rinv : w.rinv.isReduced := isReduced_raux isReduced_id
 
@@ -361,7 +361,7 @@ theorem eval_raux (a b : Word xs) : eval s (raux a b) = s.op (s.inv (eval s a)) 
   induction a generalizing b with
   | id => rw [raux, eval_id, inv_id s.inv, op_left_id s.op]
   | pos i a ih => rw [raux, eval_pos, ih, eval_rneg, inv_op s.inv, op_assoc s.op]
-  | neg i a ih => rw [raux, eval_neg, ih, eval_rpos, inv_op s.inv, op_assoc s.op, fn_invol s.inv]
+  | neg i a ih => rw [raux, eval_neg, ih, eval_rpos, inv_op s.inv, op_assoc s.op, inv_invol s.inv]
 
 theorem eval_rinv (a : Word xs) : eval s (rinv a) = s.inv (eval s a) := by
   rw [rinv, eval_raux, eval_id, op_right_id s.op]
@@ -448,7 +448,7 @@ def eval : Expr xs → α | ⟨a,_⟩ => Word.eval s a
   unfold Expr.inv eval; rw [Word.eval_rinv]
 
 @[simp] theorem eval_op (a b : Expr xs) : eval s (Expr.op a b) = s.op (eval s a) (eval s b) := by
-  unfold Expr.op eval; rw [Word.eval_raux, Word.eval_rinv, fn_invol s.inv]
+  unfold Expr.op eval; rw [Word.eval_raux, Word.eval_rinv, inv_invol s.inv]
 
 end Eval
 

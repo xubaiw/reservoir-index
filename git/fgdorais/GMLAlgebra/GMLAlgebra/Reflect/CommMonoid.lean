@@ -62,14 +62,16 @@ variable [CommMonoid s]
     match a, b with
     | cons m a, cons n b =>
       induction m, n using Nat.recDiagOn with
-      | zero_zero => calc
+      | zero_zero => 
+        calc
         _ = eval s (Expr.op (cons 0 a) (cons 0 b)) := rfl
         _ = eval s (cons 0 (Expr.op a b)) := by rw [Expr.op]
         _ = eval s (Expr.op a b) := by rw [eval_cons_zero]
         _ = s.op (eval s a) (eval s b) := by rw [ihxs a b]
         _ = s.op (eval s (cons 0 a)) (eval s b) := by rw [eval_cons_zero s a (x:=x)]
         _ = s.op (eval s (cons 0 a)) (eval s (cons 0 b)) := by rw [eval_cons_zero s b (x:=x)]
-      | zero_succ n ih => calc
+      | zero_succ n ih => 
+        calc
         _ = eval s (Expr.op (cons 0 a) (cons (n + 1) b)) := rfl
         _ = eval s (cons (n + 1) (Expr.op a b)) := by rw [Expr.op, Nat.zero_add]
         _ = s.op x (eval s (cons n (Expr.op a b))) := by rw [eval_cons_succ]
@@ -77,7 +79,8 @@ variable [CommMonoid s]
         _ = s.op x (s.op (eval s (cons 0 a)) (eval s (cons n b))) := by rw [ih]
         _ = s.op (eval s (cons 0 a)) (s.op x (eval s (cons n b))) := by rw [Algebra.op_left_comm s.op]
         _ = s.op (eval s (cons 0 a)) (eval s (cons (n + 1) b)) := by rw [eval_cons_succ]
-      | succ_zero m ih => calc
+      | succ_zero m ih => 
+        calc
         _ = eval s (Expr.op (cons (m + 1) a) (cons 0 b)) := rfl
         _ = eval s (cons (m + 1) (Expr.op a b)) := by rw [Expr.op]
         _ = s.op x (eval s (cons (m + 0) (Expr.op a b))) := by rw [eval_cons_succ, Nat.add_zero]
@@ -85,7 +88,8 @@ variable [CommMonoid s]
         _ = s.op x (s.op (eval s (cons m a)) (eval s (cons 0 b))) := by rw [ih]
         _ = s.op (s.op x (eval s (cons m a))) (eval s (cons 0 b)) := by rw [Algebra.op_assoc s.op]
         _ = s.op (eval s (cons (m + 1) a)) (eval s (cons 0 b)) := by rw [eval_cons_succ]
-      | succ_succ m n ih => calc
+      | succ_succ m n ih => 
+        calc
         _ = eval s (Expr.op (cons (m + 1) a) (cons (n + 1) b)) := rfl
         _ = eval s (cons ((m + 1) + (n + 1)) (Expr.op a b)) := by rw [Expr.op]
         _ = eval s (cons (m + n + 1 + 1) (Expr.op a b)) := by rw [Nat.add_succ, Nat.succ_add]; rfl
