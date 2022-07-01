@@ -36,6 +36,104 @@ class Associative {α : Sort u} [EqvOp α] (f : α → α → α) where
 export Associative (assoc)
 
 /--
+Class for types and operations that have either a left or right absorbing
+element.
+
+For more information see `AbsorbingOn.absorb` or
+[consult Wikipedia](https://en.wikipedia.org/wiki/Absorbing_element).
+
+**Named parameters**
+- `hand`:
+  Indicates whether the absorbing element is the left or right argument to the
+  binary operation `f`.
+- `α`:
+  The `Sort` of the absorbing element and the parameters of the operation `f`.
+- `z`:
+  The absorbing element, named `z` to suggest zero (the canonical example).
+- `f`:
+  The binary operation that has `z` as absorbing element.
+
+**Class parameters**
+- `EqvOp α`: Necessary because the property expresses an equivalence on `α`.
+-/
+class AbsorbingOn
+    (hand : Hand) {α : Sort u} [EqvOp α] (z : α) (f : α → α → α)
+    :=
+  /--
+  The left- or right-handed absorption property of a distinguished element `z`
+  and a binary operation `f` defined over a sort `α`.
+
+  The most well-known example of an absorbing element is zero, when paired with
+  multiplication. In all standard number systems, `0 * x ≃ 0 ≃ x * 0` for all
+  numbers `x`.
+
+  **Named parameters**
+  - See `AbsorbingOn` for the class parameters.
+  - `x`:
+    The argument to `f` that is not the absorbing element; it will be in the
+    position that is the opposite of `hand`.
+  -/
+  absorb {x : α} : hand.align f z x ≃ z
+
+export AbsorbingOn (absorb)
+
+/--
+Convenience function for the left-handed absorption property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `AbsorbingOn.absorb` function; see its documentation for details.
+-/
+abbrev absorbL := @absorb Hand.L
+
+/--
+Convenience function for the right-handed absorption property.
+
+Can often resolve cases where type inference gets stuck when using the more
+general `AbsorbingOn.absorb` function; see its documentation for details.
+-/
+abbrev absorbR := @absorb Hand.R
+
+/--
+Convenience class for types and operations that have left **and** right
+absorbing element.
+
+See `AbsorbingOn` for detailed documentation.
+-/
+class Absorbing {α : Sort u} [EqvOp α] (z : α) (f : α → α → α) :=
+  absorbingL : AbsorbingOn Hand.L z f
+  absorbingR : AbsorbingOn Hand.R z f
+
+attribute [instance] Absorbing.absorbingL
+attribute [instance] Absorbing.absorbingR
+
+/--
+Derive right-handed absorption from left-handed absorption for operations `f`
+meeting certain conditions.
+
+**Intuition**: Both left and right absorbing elements produce the same result
+(themselves) from their associated binary operation. Thus, if the arguments to
+`f` can be swapped, one hand can be shown to imply the other.
+
+**Named parameters**
+- `α`: The `Sort` of the absorbing element `z`, and `f`'s parameters.
+- `z`: The absorbing element.
+- `f`: The binary operation that has `z` as absorbing element.
+
+**Class parameters**
+- `EqvOp α`: Necessary because `AbsorbingOn.absorb` requires it.
+- `Commutative f`: Restriction on `f` that's required for the derivation.
+-/
+def absorbingR_from_absorbingL
+    {α : Sort u} {z : α} {f : α → α → α} [EqvOp α] [Commutative f]
+    : AbsorbingOn Hand.L z f → AbsorbingOn Hand.R z f
+    := by
+  intro _ -- Make left absorbing available to instance search
+  apply AbsorbingOn.mk
+  intro (x : α)
+  show f x z ≃ z
+  exact Rel.trans AA.comm AA.absorbL
+
+/--
 Class for types, values, and operations that satisfy either the left- or
 right-handed identity property.
 
@@ -136,7 +234,7 @@ def identityR_from_identityL
   apply IdentityOn.mk
   intro (x : α)
   show f x e ≃ x
-  exact Rel.trans AA.comm identL
+  exact Rel.trans AA.comm AA.identL
 
 /--
 Class for types and operations that satisfy either the left- or right-handed
@@ -210,6 +308,9 @@ class Inverse
   inverseL : InverseOn Hand.L inv f
   inverseR : InverseOn Hand.R inv f
 
+attribute [instance] Inverse.inverseL
+attribute [instance] Inverse.inverseR
+
 /--
 Derive the right-inverse property from left-inverse for operations `f`
 meeting certain conditions.
@@ -238,7 +339,7 @@ def inverseR_from_inverseL
   apply InverseOn.mk
   intro (x : α)
   show f x (inv x) ≃ e
-  exact Rel.trans AA.comm inverseL
+  exact Rel.trans AA.comm AA.inverseL
 
 /--
 Class for types and operations that satisfy either the left- or right-handed

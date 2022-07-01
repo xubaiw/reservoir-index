@@ -199,10 +199,21 @@ def Internal.iintroCoreForall (name : Name) : TacticM Unit := do
     first
     | istart_proof
       refine tac_forall_intro _ ?_
-      intro $(mkIdent name)
+      intro $(mkIdent name):ident
     | fail
   ))
   catch _ => throwError "failed to introduce universally bound variable"
+
+
+elab "iexists" x:term : tactic => do
+  -- resolve existential quantifier with the given argument
+  try evalTactic (← `(tactic|
+    first
+    | istart_proof
+      refine tac_exist _ ?_
+      apply Exists.intro $x
+    | fail
+  )) catch _ => throwError "could not resolve existential quantifier"
 
 
 elab "iexact" colGt name:ident : tactic => do
@@ -255,7 +266,7 @@ elab "iassumption" : tactic => do
     | throwError "ill-formed proof environment"
 
   -- try to close the goal
-  let tryCloseGoal (envsIndex : Syntax) : TacticM Bool := do
+  let tryCloseGoal (envsIndex : TSyntax `term) : TacticM Bool := do
     try
       evalTactic (← `(tactic|
         first
@@ -307,7 +318,7 @@ elab "ipure" colGt name:ident : tactic => do
   try evalTactic (← `(tactic|
     first
     | refine tac_pure $(← hypIndex.quoteAsEnvsIndex) _ ?_
-      intro $(mkIdent name.getId)
+      intro $(mkIdent name.getId):ident
     | fail
   )) catch _ => throwError "could not move hypothesis to the Lean context"
 
@@ -386,11 +397,15 @@ elab "isplit" : tactic => do
   ))
   catch _ => throwError "unable to split conjunction"
 
-elab "isplit" side:(&"l" <|> &"r") "[" names:ident,* "]" : tactic => do
+declare_syntax_cat splitSide
+syntax "l" : splitSide
+syntax "r" : splitSide
+
+elab "isplit" side:splitSide "[" names:ident,* "]" : tactic => do
   -- parse syntax
-  let splitRight ← match side.getKind with
-    | `l => pure false
-    | `r => pure true
+  let splitRight ← match side with
+    | `(splitSide| l) => pure false
+    | `(splitSide| r) => pure true
     | _  => throwUnsupportedSyntax
   let names ← names.getElems.mapM (fun name => do
     let name := name.getId

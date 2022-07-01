@@ -8,27 +8,36 @@ open SumMacro
 open FreerIx
 open IndexedMonad
 
+mkStateIO OneState (z:Nat), (y:String) @@
 #check StateIO
+#check OneState Nat
 
-mkStateIO OneState (z:Nat) @@
+mkSumType ExampleCommand >| (NamedState "z" Nat), IO |<
 
-def incZ {m : Indexer ix → Type → Type 1} [SendableIx (NamedState "z" Nat) m] [IxMonad m] :=
-  checkIxDo m ix Nat ∃>
-    getNamed "z"
+mkFreer ExampleMonad ExampleCommand Nat
+
+def incZ {ix : Type} {m : Indexer ix → Type → Type 1} [SendableIx (NamedState "z" Nat) m] [IxMonad m] :=
+  show m _ Nat from   --checkIxDo m ix Nat ∃>
+        getNamed "z"
     →→= fun b => putNamed "z" (b+1)
-    →→ pure0 3
+    →→  pure0 6004
 
-#check incZ
+#check (incZ : ExampleMonad _ Nat)
+#eval getIndex (incZ : ExampleMonad _ Nat)
 
-def nState1 := NamedState "z" Nat
-mkSumI ExampleMonad o: nState1,IO :o
 
-mkPrismatic ExampleMonad nState1
-mkPrismatic ExampleMonad IO
-mkCollapser blargh OneState ExampleMonad nState1,IO
+def interpreter1 := buildInterpreter ExampleCommand OneState (NamedState "z" Nat),IO
     [:
       -- NamedState "z" Nat
       collapseNamedState "z" Nat,
       -- IO
       collapseIO
     :]
+
+def gork := runExampleMonad interpreter1
+              incZ -- code
+              {z := 3, y := "Argh"} -- initial state
+
+
+#check gork
+#reduce gork

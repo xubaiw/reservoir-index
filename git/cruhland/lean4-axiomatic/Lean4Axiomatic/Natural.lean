@@ -45,8 +45,8 @@ export Exponentiation (powOp pow_step pow_zero)
 export Literals (literal literal_step literal_zero)
 export Multiplication (
   mul_associative mul_cancellative mul_commutative mul_distributive mulOp
-  mul_positive mul_substitutive_eq mul_substitutive_lt mul_zero step_mul
-  zero_mul mul_split_zero
+  mul_positive mul_split_zero mul_substitutive_eq mul_substitutive_lt step_mul
+  zero_mul
 )
 export Order (
   le_antisymm le_defn le_reflexive le_split le_transitive leOp

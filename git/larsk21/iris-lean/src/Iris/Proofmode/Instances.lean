@@ -19,7 +19,7 @@ where
   as_emp_valid := sorry
 
 instance asEmpValidEquiv [bi : BI PROP] (P Q : PROP) :
-  AsEmpValid (P ≡ Q) `[iprop| P ∗-∗ Q]
+  AsEmpValid (P ⊣⊢ Q) `[iprop| P ∗-∗ Q]
 where
   bi := bi
   as_emp_valid := sorry
@@ -41,6 +41,41 @@ instance fromForallForall [BI PROP] (Φ : α → PROP) :
   FromForall (BIBase.forall Φ) Φ
 where
   from_forall := sorry
+
+-- FromExist
+instance (priority := default + 10) fromExistExist [BI PROP] (Φ : α → PROP) :
+  FromExist `[iprop| ∃ a, Φ a] Φ
+where
+  from_exist := sorry
+
+instance fromExistPure (φ : α → Prop) [BI PROP] :
+  FromExist (PROP := PROP) `[iprop| ⌜∃ x, φ x⌝] (fun a => `[iprop| ⌜φ a⌝])
+where
+  from_exist := sorry
+
+instance fromExistAffinely [BI PROP] (P : PROP) (Φ : α → PROP) :
+  [FromExist P Φ] →
+  FromExist `[iprop| <affine> P] (fun a => `[iprop| <affine> (Φ a)])
+where
+  from_exist := sorry
+
+instance fromExistIntuitionistically [BI PROP] (P : PROP) (Φ : α → PROP) :
+  [FromExist P Φ] →
+  FromExist `[iprop| □ P] (fun a => `[iprop| □ (Φ a)])
+where
+  from_exist := sorry
+
+instance fromExistAbsorbingly [BI PROP] (P : PROP) (Φ : α → PROP) :
+  [FromExist P Φ] →
+  FromExist `[iprop| <absorb> P] (fun a => `[iprop| <absorb> (Φ a)])
+where
+  from_exist := sorry
+
+instance from_exist_persistently [BI PROP] (P : PROP) (Φ : α → PROP) :
+  [FromExist P Φ] →
+  FromExist `[iprop| <pers> P] (fun a => `[iprop| <pers> (Φ a)])
+where
+  from_exist := sorry
 
 -- FromAnd
 instance (priority := default - 10) fromAndAnd [BI PROP] (P1 P2 : PROP) :

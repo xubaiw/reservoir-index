@@ -46,6 +46,11 @@ theorem mul_zero {n : ℕ} : n * 0 ≃ 0 := by
       0 + 0      ≃ _ := Addition.zero_add
       0          ≃ _ := Rel.refl
 
+def mul_absorbing : AA.Absorbing (α := ℕ) 0 (· * ·) := {
+  absorbingL := AA.AbsorbingOn.mk Base.zero_mul
+  absorbingR := AA.AbsorbingOn.mk mul_zero
+}
+
 /--
 Take a product and increment the right-hand factor. This gives the same result
 as adding a copy of the left-hand factor to the original product.
@@ -400,7 +405,7 @@ def mul_identity : AA.Identity (α := ℕ) 1 (· * ·) := {
 
 instance multiplication_derived : Multiplication.Derived ℕ := {
   mul_substitutive_eq := mul_substitutive_eq
-  mul_zero := mul_zero
+  mul_absorbing := mul_absorbing
   mul_step := mul_step
   mul_commutative := mul_commutative
   mul_split_zero := mul_split_zero

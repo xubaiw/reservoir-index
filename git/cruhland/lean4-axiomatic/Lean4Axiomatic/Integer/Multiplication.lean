@@ -46,6 +46,11 @@ class Multiplication.Base
   -/
   mul_distributive : AA.Distributive (α := ℤ) (· * ·) (· + ·)
 
+attribute [instance] Multiplication.Base.mulOp
+attribute [instance] Multiplication.Base.mul_commutative
+attribute [instance] Multiplication.Base.mul_distributive
+attribute [instance] Multiplication.Base.mul_substitutive
+
 namespace Multiplication
 export Multiplication.Base (mulOp)
 end Multiplication

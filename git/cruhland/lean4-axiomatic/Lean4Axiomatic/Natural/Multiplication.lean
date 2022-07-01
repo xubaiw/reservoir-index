@@ -41,8 +41,8 @@ class Multiplication.Derived
   -/
   mul_substitutive_eq : AA.Substitutive₂ (α := ℕ) (· * ·) AA.tc (· ≃ ·) (· ≃ ·)
 
-  /-- Multiplying by zero on the right always gives zero. -/
-  mul_zero {n : ℕ} : n * 0 ≃ 0
+  /-- Multiplying by zero always gives zero. -/
+  mul_absorbing : AA.Absorbing (α := ℕ) 0 (· * ·)
 
   /--
   Take a product and increment the right-hand factor. This gives the same
@@ -90,8 +90,7 @@ namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
   mul_associative mul_cancellative mul_commutative mul_distributive
-  mul_positive mul_substitutive_eq mul_substitutive_lt mul_zero
-  mul_split_zero
+  mul_positive mul_split_zero mul_substitutive_eq mul_substitutive_lt
 )
 end Multiplication
 

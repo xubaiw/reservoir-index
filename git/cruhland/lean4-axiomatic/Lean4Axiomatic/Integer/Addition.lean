@@ -40,6 +40,7 @@ class Addition.Base
   add_identity : AA.Identity (α := ℤ) ↑(0 : ℕ) (· + ·)
 
 attribute [instance] Addition.Base.addOp
+attribute [instance] Addition.Base.add_associative
 attribute [instance] Addition.Base.add_identity
 attribute [instance] Addition.Base.add_substitutive
 

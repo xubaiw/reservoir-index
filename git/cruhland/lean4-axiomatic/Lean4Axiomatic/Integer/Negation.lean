@@ -1,5 +1,5 @@
 import Lean4Axiomatic.AbstractAlgebra
-import Lean4Axiomatic.Integer.Addition
+import Lean4Axiomatic.Integer.Multiplication
 import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic.Integer
@@ -43,7 +43,20 @@ class Negation.Base
   neg_inverse : AA.Inverse (α := ℤ) (-·) (· + ·)
 
 attribute [instance] Negation.Base.negOp
+attribute [instance] Negation.Base.neg_inverse
 attribute [instance] Negation.Base.neg_substitutive
+
+/-- Properties that follow from those provided in `Negation.Base`. -/
+class Negation.Derived
+    (ℕ : Type) [Natural ℕ]
+    (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ]
+    [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ]
+    extends Negation.Base ℕ ℤ :=
+  /-- Multiplying by zero always gives zero. -/
+  mul_absorbing : AA.Absorbing (α := ℤ) 0 (· * ·)
+
+  /-- Negation can be moved between a product and either one of its factors. -/
+  neg_semicompatible_mul : AA.Semicompatible (α := ℤ) (-·) (· * ·)
 
 namespace Negation
 export Negation.Base (negOp)
