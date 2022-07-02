@@ -1,0 +1,119 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>dwrensha/lean4-maze</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>dwrensha/lean4-maze</h1>
+<p>maze game encoded in Lean 4 syntax</p>
+<a href="https://github.com/dwrensha/lean4-maze">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">lean4-maze</h3>
+<p dir="auto">This repo shows how maze solving
+can be encoded as theorem proving
+using the Lean 4 programming language.</p>
+<p dir="auto">It draws inspration from <a href="https://github.com/kbuzzard/maze-game">https://github.com/kbuzzard/maze-game</a>.</p>
+<h4 dir="auto">How To Play</h4>
+<p dir="auto">First, install Lean 4 on your computer: <a href="https://leanprover.github.io/lean4/doc/setup.html" rel="nofollow">https://leanprover.github.io/lean4/doc/setup.html</a></p>
+<p dir="auto">Then open <code>Maze.lean</code> in emacs or VSCode.</p>
+<p dir="auto">You can define a maze like this:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def maze := ┌────────┐
+            │▓▓▓▓▓▓▓▓│
+            │▓░▓@▓░▓▓│
+            │▓░▓░░░▓▓│
+            │▓░░▓░▓▓▓│
+            │▓▓░▓░▓░░│
+            │▓░░░░▓░▓│
+            │▓░▓▓▓▓░▓│
+            │▓░░░░░░▓│
+            │▓▓▓▓▓▓▓▓│
+            └────────┘"><pre><span class="pl-k">def</span> <span class="pl-en">maze</span> := ┌────────┐
+            │▓▓▓▓▓▓▓▓│
+            │▓░▓@▓░▓▓│
+            │▓░▓░░░▓▓│
+            │▓░░▓░▓▓▓│
+            │▓▓░▓░▓░░│
+            │▓░░░░▓░▓│
+            │▓░▓▓▓▓░▓│
+            │▓░░░░░░▓│
+            │▓▓▓▓▓▓▓▓│
+            └────────┘</pre></div>
+<p dir="auto">The <code>@</code> symbol denotes your current location.
+You are free to move within the <code>░</code> cells.
+The <code>▓</code> cells are walls.</p>
+<p dir="auto">Your goal is to escape the maze at any of its borders.</p>
+<p dir="auto">You can interactively solve a maze like this:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="example : can_escape maze :=
+ by south
+    east
+    south
+    south"><pre><span class="pl-k">example</span> : can_escape maze :=
+ <span class="pl-k">by</span> south
+    east
+    south
+    south</pre></div>
+<p dir="auto">As you make progress, Lean's goal view will display your current state.
+For example, after the moves made above, the state is shown as:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="⊢ can_escape
+    (
+        ┌────────┐
+        │▓▓▓▓▓▓▓▓│
+        │▓░▓░▓░▓▓│
+        │▓░▓░░░▓▓│
+        │▓░░▓░▓▓▓│
+        │▓▓░▓@▓░░│
+        │▓░░░░▓░▓│
+        │▓░▓▓▓▓░▓│
+        │▓░░░░░░▓│
+        │▓▓▓▓▓▓▓▓│
+        └────────┘
+        )"><pre>⊢ can_escape
+    (
+        ┌────────┐
+        │▓▓▓▓▓▓▓▓│
+        │▓░▓░▓░▓▓│
+        │▓░▓░░░▓▓│
+        │▓░░▓░▓▓▓│
+        │▓▓░▓@▓░░│
+        │▓░░░░▓░▓│
+        │▓░▓▓▓▓░▓│
+        │▓░░░░░░▓│
+        │▓▓▓▓▓▓▓▓│
+        └────────┘
+        )</pre></div>
+<p dir="auto">The main moves available to you at any point are <code>north</code>, <code>south</code>, <code>east</code>, and <code>west</code>.</p>
+<p dir="auto">When you reach the boundary, you can finish your proof with <code>out</code>.</p>
+<h4 dir="auto">how does it work?</h4>
+<p dir="auto">As you traverse a maze, you are constructing a proof
+that the maze satisfies the <code>can_escape</code> predicate, defined as</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def can_escape (state : GameState) : Prop :=
+  ∃ (gs : List Move), is_win (List.foldl make_move state gs)"><pre><span class="pl-k">def</span> <span class="pl-en">can_escape</span> (state : GameState) : <span class="pl-k">Prop</span> :=
+  ∃ (gs : List Move), is_win (List.foldl make_move state gs)</pre></div>
+<p dir="auto">The mazes as drawn above are actual valid Lean 4 syntax!</p>
+<p dir="auto">We define new syntax categories and some <code>macro_rules</code> for elaborating
+them into valid values.</p>
+<p dir="auto">To get Lean to render the values back in the above format,
+we define a delaboration function and register it with the pretty printer.</p>
+<p dir="auto">Lean 4 lets us do all of this in-line, in ordinary Lean 4 code.</p>
+</article></div></main>
+</body>
+</html>

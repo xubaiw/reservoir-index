@@ -1,7 +1,8 @@
 import Lake
+
 open Lake DSL
 
-package dirs
+package maze
 
 @[defaultTarget]
-lean_lib Dirs
+lean_lib Maze

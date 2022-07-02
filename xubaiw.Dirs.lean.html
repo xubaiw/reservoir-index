@@ -28,7 +28,109 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Dirs.lean</h3>
-<p dir="auto">WIP, ported from <a href="https://github.com/dirs-dev/dirs-rs"><code>dirs-rs</code></a>.</p>
+<p dir="auto">Retrieve platform-specific directories in Lean 4, ported from Rust's <a href="https://github.com/dirs-dev/dirs-rs"><code>dirs</code></a>.</p>
+<p dir="auto">Currently, only Linux and MacOS is supported:</p>
+<table>
+<thead>
+<tr>
+<th>Function name</th>
+<th>Value on Linux</th>
+<th>Value on macOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>home</code></td>
+<td><code>some $HOME</code></td>
+<td><code>some $HOME</code></td>
+</tr>
+<tr>
+<td><code>cache</code></td>
+<td><code>some $XDG_CACHE_HOME <⎮> some $HOME/".cache"</code></td>
+<td><code>some $HOME/"Library"/"Caches"</code></td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td><code>some $XDG_CONFIG_HOME <⎮> some $HOME/".config"</code></td>
+<td><code>some $HOME/"Library"/"Application Support"</code></td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td><code>some $XDG_DATA_HOME <⎮> some $HOME/".local"/"share"</code></td>
+<td><code>some $HOME/"Library"/"Application Support"</code></td>
+</tr>
+<tr>
+<td><code>dataLocal</code></td>
+<td><code>some $XDG_DATA_HOME <⎮> some $HOME/".local"/"share"</code></td>
+<td><code>some $HOME/"Library"/"Application Support"</code></td>
+</tr>
+<tr>
+<td><code>executable</code></td>
+<td><code>some $XDG_BIN_HOME <⎮> some $HOME/".local"/"bin"</code></td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td><code>preference</code></td>
+<td><code>some $XDG_CONFIG_HOME <⎮> some $HOME/".config"</code></td>
+<td><code>some $HOME/"Library"/"Preferences"</code></td>
+</tr>
+<tr>
+<td><code>runtime</code></td>
+<td><code>some $XDG_RUNTIME_DIR <⎮> none</code></td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td><code>some $XDG_STATE_HOME <⎮> some $HOME/".local"/"state"</code></td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td><code>audio</code></td>
+<td><code>some XDG_MUSIC_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Music"</code></td>
+</tr>
+<tr>
+<td><code>desktop</code></td>
+<td><code>some XDG_DESKTOP_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Desktop"</code></td>
+</tr>
+<tr>
+<td><code>document</code></td>
+<td><code>some XDG_DOCUMENTS_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Documents"</code></td>
+</tr>
+<tr>
+<td><code>download</code></td>
+<td><code>some XDG_DOWNLOAD_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Downloads"</code></td>
+</tr>
+<tr>
+<td><code>font</code></td>
+<td><code>some $XDG_DATA_HOME/"fonts" <⎮> some $HOME/".local"/"share"/"fonts"</code></td>
+<td><code>some $HOME/"Library"/"Fonts"</code></td>
+</tr>
+<tr>
+<td><code>picture</code></td>
+<td><code>some XDG_PICTURES_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Pictures"</code></td>
+</tr>
+<tr>
+<td><code>public</code></td>
+<td><code>some XDG_PUBLICSHARE_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Public"</code></td>
+</tr>
+<tr>
+<td><code>template</code></td>
+<td><code>some XDG_TEMPLATES_DIR <⎮> none</code></td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td><code>video</code></td>
+<td><code>some XDG_VIDEOS_DIR <⎮> none</code></td>
+<td><code>some $HOME/"Movies"</code></td>
+</tr>
+</tbody>
+</table>
 </article></div></main>
 </body>
 </html>
