@@ -1,0 +1,541 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>langfield/Cheat.lean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>langfield/Cheat.lean</h1>
+<p>A field guide to the operators and keywords of the Lean 4 functional programming language.</p>
+<a href="https://github.com/langfield/Cheat.lean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Cheat.lean</h3>
+<blockquote>
+<p dir="auto">Lean 4 has a type system roughly as strong as grain alcohol.</p>
+</blockquote>
+<p dir="auto"><code>Cheat.lean</code> is an early <strong>WIP</strong> field guide to the syntax, symbols, operators,
+and commands of the Lean 4 functional programming language. It is designed to
+be as friendly as possible to users unfamiliar with purely functional
+programming or type theory.</p>
+<p dir="auto">This guide will not teach you to how to program in Lean 4. It's sole purpose is
+to be an answer to the question:</p>
+<blockquote>
+<p dir="auto">What does this notation do?</p>
+</blockquote>
+<p dir="auto">This guide is currently very disorganized, and may have some imprecise or
+incorrect information, since I am writing it as I learn Lean 4 from scratch.</p>
+<p dir="auto"><strong>Internal note.</strong> It may prove better to put each operator/symbol/command in
+its own <code>.lean</code> file, and generate markdown from each of these, and then
+concatenate them into a <code>README</code>. This could be achieved with a fairly simple
+<code>Makefile</code>.</p>
+<h4 dir="auto">Symbols and operators</h4>
+<ul dir="auto">
+<li><a href="#---a-comment"><code>-- a</code></a> (comment)</li>
+<li><a href="#a--%CE%B1-type-declaration"><code>a : α</code></a> (type declaration)</li>
+<li><a href="#a--b-definition"><code>a := b</code></a> (definition)</li>
+<li><a href="#a--b-equality"><code>a = b</code></a> (equality)</li>
+<li><a href="#%CE%B1-%E2%86%92-%CE%B2-function-arrow"><code>α → β</code></a> (function arrow)</li>
+<li><a href="#sab"><code>s!"a{b}"</code></a> (string interpolation)</li>
+<li><a href="#ab-dot-notation"><code>a.b</code></a> (dot notation)</li>
+<li><a href="#ab-maps-to"><code>a => b</code></a> (dot notation)</li>
+<li><code>()</code> (<a href="#-unit-value">unit value</a>)</li>
+<li><a href="#bullet-notation"><code>. <tactic></code></a> (bullet notation)</li>
+</ul>
+<h4 dir="auto">Commands</h4>
+<ul dir="auto">
+<li><a href="#def"><code>def</code></a></li>
+<li><a href="#let"><code>let</code></a></li>
+<li>[<code>notation</code>]</li>
+<li>[<code>theorem</code>]</li>
+<li>[<code>class</code>]</li>
+<li>[<code>structure</code>]</li>
+<li>[<code>instance</code>]</li>
+<li>[<code>set_option</code>]</li>
+<li>[<code>example</code>]</li>
+<li>[<code>inductive</code>]</li>
+<li>[<code>coinductive</code>]</li>
+<li>[<code>axiom</code>]</li>
+<li>[<code>constant</code>]</li>
+<li>[<code>partial</code>]</li>
+<li>[<code>unsafe</code>]</li>
+<li>[<code>private</code>]</li>
+<li>[<code>protected</code>]</li>
+<li>[<code>if</code>]</li>
+<li>[<code>then</code>]</li>
+<li>[<code>else</code>]</li>
+<li>[<code>universe</code>]</li>
+<li>[<code>variable</code>]</li>
+<li>[<code>variables</code>]</li>
+<li>[<code>import</code>]</li>
+<li>[<code>open</code>]</li>
+<li>[<code>export</code>]</li>
+<li>[<code>theory</code>]</li>
+<li>[<code>prelude</code>]</li>
+<li>[<code>renaming</code>]</li>
+<li>[<code>hiding</code>]</li>
+<li>[<code>exposing</code>]</li>
+<li>[<code>calc</code>]</li>
+<li>[<code>match</code>]</li>
+<li>[<code>with</code>]</li>
+<li>[<code>do</code>]</li>
+<li>[<code>by</code>]</li>
+<li>[<code>extends</code>]</li>
+<li>[<code>for</code>]</li>
+<li>[<code>in</code>]</li>
+<li>[<code>unless</code>]</li>
+<li>[<code>try</code>]</li>
+<li>[<code>catch</code>]</li>
+<li>[<code>finally</code>]</li>
+<li>[<code>mutual</code>]</li>
+<li>[<code>mut</code>]</li>
+<li>[<code>return</code>]</li>
+<li>[<code>continue</code>]</li>
+<li>[<code>break</code>]</li>
+<li>[<code>where</code>]</li>
+<li>[<code>rec</code>]</li>
+<li>[<code>syntax</code>]</li>
+<li>[<code>macro_rules</code>]</li>
+<li>[<code>macro</code>]</li>
+<li>[<code>deriving</code>]</li>
+<li>[<code>fun</code>]</li>
+<li>[<code>section</code>]</li>
+<li>[<code>namespace</code>]</li>
+<li>[<code>end</code>]</li>
+<li>[<code>infix</code>]</li>
+<li>[<code>infixl</code>]</li>
+<li>[<code>infixr</code>]</li>
+<li>[<code>postfix</code>]</li>
+<li>[<code>prefix</code>]</li>
+<li>[<code>notation</code>]</li>
+<li>[<code>abbrev</code>]</li>
+</ul>
+<h4 dir="auto">#Commands</h4>
+<blockquote>
+<p dir="auto">In Lean, auxiliary commands that query the system for information typically
+begin with the hash (#) symbol.</p>
+</blockquote>
+<p dir="auto">- Theorem Proving in Lean 4</p>
+<ul dir="auto">
+<li><a href="#check"><code>#check</code></a></li>
+<li><a href="#check_failure"><code>#check_failure</code></a></li>
+<li><a href="#eval"><code>#eval</code></a></li>
+</ul>
+<h4 dir="auto">Attributes</h4>
+<blockquote>
+<p dir="auto">Objects in Lean can bear attributes, which are tags that are associated to them, sometimes with additional
+data. You can assign an attribute foo to a object by preceding its declaration with the annotation attribute
+[foo] or, more concisely, @[foo].</p>
+</blockquote>
+<p dir="auto">- The Lean Reference Manual, Release 3.3.0, §5.4, p. 40</p>
+<ul dir="auto">
+<li>[<code>[simp]</code>]</li>
+<li>[<code>[inline]</code>]</li>
+<li>[<code>[reducible]</code>]</li>
+<li>[<code>[irreducible]</code>]</li>
+<li>[<code>[specialize]</code>]</li>
+</ul>
+<h4 dir="auto">Types</h4>
+<ul dir="auto">
+<li><a href="#Unit"><code>Unit</code></a></li>
+</ul>
+<h3 dir="auto">Symbols and operators</h3>
+<h4 dir="auto"><code>-- a</code> (comment)</h4>
+<p dir="auto">Declares an inline comment.</p>
+<h6 dir="auto">Example</h6>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="-- This a comment."><pre><span class="pl-c"><span class="pl-c">--</span> This a comment.</span></pre></div>
+<h4 dir="auto"><code>a : α</code> (type declaration)</h4>
+<p dir="auto">Indicates the type of a one or more terms.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define a constant symbol <code>x</code> to have type <code>Nat</code> with value <code>0</code>.</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def x : Nat := 0"><pre><span class="pl-k">def</span> <span class="pl-en">x</span> : Nat := <span class="pl-c1">0</span></pre></div>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define a function <code>multiply</code> which takes two integers and returns their
+product:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def multiply (a b : Int) : Int := a * b
+#eval multiply 7 (-8)     ■ -56"><pre><span class="pl-k">def</span> <span class="pl-en">multiply</span> (a b : Int) : Int := a * b
+<span class="pl-k">#eval</span> multiply <span class="pl-c1">7</span> (-<span class="pl-c1">8</span>)     ■ -<span class="pl-c1">56</span></pre></div>
+<h4 dir="auto"><code>a := b</code> (definition)</h4>
+<p dir="auto">Defines the value of an identifier.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We declare the symbol/identifier <code>x</code> to be a term of type <code>Nat</code> whose value is
+<code>0</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def x : Nat := 0"><pre><span class="pl-k">def</span> <span class="pl-en">x</span> : Nat := <span class="pl-c1">0</span></pre></div>
+<h4 dir="auto"><code>a = b</code> (equality)</h4>
+<p dir="auto">Constructs a proposition (<code>Prop</code>) that asserts that the left-hand side is equal
+(in the mathematical sense) to the right hand side.</p>
+<h4 dir="auto"><code>α → β</code> (function arrow)</h4>
+<em dir="auto">Shortcuts: <code>\to, \r, \imp</code></em>
+<em dir="auto">ASCII: <code>-></code></em>
+<p dir="auto">Constructs a function type from the type <code>a</code> to the type <code>b</code>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define an identity function on natural numbers, and observe that the type of
+our function (displayed when we use the transitory command <code>#check</code> in our
+editor) is <code>Nat → Nat</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def identity (x : Nat) : Nat := x
+#check identity     ■ identity : Nat → Nat"><pre><span class="pl-k">def</span> <span class="pl-en">identity</span> (x : Nat) : Nat := x
+<span class="pl-k">#check</span> identity     ■ identity : Nat → Nat</pre></div>
+<h4 dir="auto"><code>a.b</code> (dot notation)</h4>
+<p dir="auto">Accesses the field <code>b</code> of the term <code>a</code>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We declare a structure, construct an instance of that structure, and access one
+of its fields:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="structure CarState where
+  wheels : Nat
+  doors : Nat
+  name : String
+
+def jeep := CarState.mk 4 2 "Larry"
+#eval jeep.name"><pre><span class="pl-k">structure</span> <span class="pl-en">CarState</span> <span class="pl-en">where</span>
+  <span class="pl-en">wheels</span> : Nat
+  doors : Nat
+  name : String
+
+<span class="pl-k">def</span> <span class="pl-en">jeep</span> := CarState.mk <span class="pl-c1">4</span> <span class="pl-c1">2</span> <span class="pl-s"><span class="pl-pds">"</span>Larry<span class="pl-pds">"</span></span>
+<span class="pl-k">#eval</span> jeep.name</pre></div>
+<h4 dir="auto"><code>a => b</code> (maps to)</h4>
+<p dir="auto">Indicates the term returned by a lambda function given its arguments. Can be
+read in English as "maps to", and is in most cases synonymous with the
+mathematical notation <math-renderer class="js-inline-math" data-static-url="https://github.githubassets.com/static" style="display: inline">$\mapsto$</math-renderer>.</p>
+<p dir="auto">Can be used in pattern-matching blocks.</p>
+<p dir="auto">When used with the <code>notation</code> keyword, makes the string literal on the
+left-hand side an alias for the term on the right-hand side. See the second
+example.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We construct a lambda function on the natural numbers that adds <code>5</code> to its
+argument:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="λ (x : Nat) => x + 5"><pre>λ (x : Nat) => x + <span class="pl-c1">5</span></pre></div>
+<p dir="auto">In English, we could say that this lambda function <em>maps the natural number
+parameter <code>x</code> to <code>x + 5</code></em>.</p>
+<p dir="auto">We could write this in mathematical notation as <math-renderer class="js-inline-math" data-static-url="https://github.githubassets.com/static" style="display: inline">$x \mapsto x + 5$</math-renderer>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We declare nice notation for the integers:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="notation "ℤ" => Int
+def identity (x : ℤ) : ℤ := x
+#check identity"><pre><span class="pl-k">notation</span> <span class="pl-s"><span class="pl-pds">"</span>ℤ<span class="pl-pds">"</span></span> => Int
+<span class="pl-k">def</span> <span class="pl-en">identity</span> (x : ℤ) : ℤ := x
+<span class="pl-k">#check</span> identity</pre></div>
+<h4 dir="auto"><code>s!"a{b}"</code> (string interpolation)</h4>
+<p dir="auto">Constructs an interpolated string. In plain English, this allows you to embed
+the string representation of a term inside a string. See
+<a href="https://leanprover.github.io/lean4/doc/stringinterp.html" rel="nofollow">https://leanprover.github.io/lean4/doc/stringinterp.html</a>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We construct a string containing an integer.</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def eight := 8
+#eval s!"The cube of two is {eight}"    ■ "The cube of two is 8""><pre><span class="pl-k">def</span> <span class="pl-en">eight</span> := <span class="pl-c1">8</span>
+<span class="pl-k">#eval</span> s!<span class="pl-s"><span class="pl-pds">"</span>The cube of two is {eight}<span class="pl-pds">"</span></span>    ■ <span class="pl-s"><span class="pl-pds">"</span>The cube of two is 8<span class="pl-pds">"</span></span></pre></div>
+<h4 dir="auto"><code>()</code> (unit value)</h4>
+<p dir="auto">Constructs a term of type <a href="#Unit"><code>Unit</code></a>. Used mainly at the end of a <code>do</code>
+block which exists purely to handle side-effects, e.g. in a function of type
+<code>IO Unit</code>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">Taken from the Lean 4 manual:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def isGreaterThan0 (x : Nat) : IO Bool := do
+  IO.println s!"value: {x}"
+  return x > 0
+
+def f (x : Nat) : IO Unit := do
+  let c ← isGreaterThan0 x
+  if c then
+    IO.println s!"{x} is greater than 0"
+  else
+    pure ()
+
+#eval f 10
+-- value: 10
+-- 10 is greater than 0"><pre><span class="pl-k">def</span> <span class="pl-en">isGreaterThan0</span> (x : Nat) : IO Bool := <span class="pl-k">do</span>
+  IO.println s!<span class="pl-s"><span class="pl-pds">"</span>value: {x}<span class="pl-pds">"</span></span>
+  return x > <span class="pl-c1">0</span>
+
+<span class="pl-k">def</span> <span class="pl-en">f</span> (x : Nat) : IO Unit := <span class="pl-k">do</span>
+  <span class="pl-k">let</span> c ← isGreaterThan0 x
+  <span class="pl-k">if</span> c <span class="pl-k">then</span>
+    IO.println s!<span class="pl-s"><span class="pl-pds">"</span>{x} is greater than 0<span class="pl-pds">"</span></span>
+  <span class="pl-k">else</span>
+    pure ()
+
+<span class="pl-k">#eval</span> f <span class="pl-c1">10</span>
+<span class="pl-c"><span class="pl-c">--</span> value: 10</span>
+<span class="pl-c"><span class="pl-c">--</span> 10 is greater than 0</span></pre></div>
+<p dir="auto">Note that our last action is <code>pure ()</code>, which is done to satisfy the return
+type of <code>f</code>. It makes the <code>else</code> branch essentially a no-op.</p>
+<h4 dir="auto"><code>. <tactic></code> (bullet notation)</h4>
+<p dir="auto">Increases indentation level for a subgoal during tactic mode. TPIL says that
+this is for "structuring" the proof. The dot is not an operator, and does not
+perform any transformation on the tactic(s) that follow it. Removing the
+dot/bullet as well as the identation will yield an identical proof.</p>
+<h4 dir="auto"><code>_</code></h4>
+<h4 dir="auto"><code>@a</code></h4>
+<p dir="auto">Makes all the arguments to <code>a</code> (e.g. theorem or definition) explicit.</p>
+<h4 dir="auto"><code>∀</code></h4>
+<p dir="auto">The "for all" quantifier.</p>
+<h4 dir="auto"><code>∃</code></h4>
+<p dir="auto">The "exists" quantifier.</p>
+<h4 dir="auto"><code>::</code></h4>
+<p dir="auto">The cons operator.</p>
+<h4 dir="auto"><code>(· + b)</code></h4>
+<p dir="auto">Creates a function from an arbitrary infix operator (<code>+</code> is used above as an
+example). Then <code>·</code> serves as a placeholder. The notation is activated with
+parentheses.</p>
+<h4 dir="auto"><code>..</code></h4>
+<p dir="auto">Provides missing explicit arguments as <code>_</code>.</p>
+<h4 dir="auto"><code>|</code></h4>
+<p dir="auto">Separates constructors within an inductive type declaration.</p>
+<h4 dir="auto"><code>(a : @& α)</code></h4>
+<p dir="auto">The symbol in in question is <code>@&</code>.</p>
+<p dir="auto">Indicates that an FFI function parameter is a "borrowed reference". This can be
+thought of as forcing the parameter to be 'passed-by-reference' instead of
+'passed-by-value'.</p>
+<p dir="auto">Ignored on pure Lean 4 functions, according to Sebastian.</p>
+<h4 dir="auto"><code>/- a -/</code></h4>
+<p dir="auto">Declares a multiline comment.</p>
+<h4 dir="auto"><code>/-- a -/</code></h4>
+<p dir="auto">Declares a multiline comment.</p>
+<h4 dir="auto"><code>(a)</code></h4>
+<h4 dir="auto"><code>@[a] b</code></h4>
+<p dir="auto">Assigns attribute <code>a</code> to the object <code>b</code>. This is shorthand for <code>attribute [a] b</code>.</p>
+<p dir="auto">Can also be used during a declaration, e.g. in <code>@[a] def b := c</code>.</p>
+<h4 dir="auto"><code>⟨a1, a2, ..., an⟩</code></h4>
+<em dir="auto">Shortcuts: <code>\<, \></code></em>
+<p dir="auto">Constructs an inductive type with arguments <code>a1, a2, ..., an</code> in cases where
+Lean can infer the type of the expression.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define <code>p</code> to be an ordered pair where the first element is a natural number
+and the second element is an integer. Our ordered pair is represented in Lean
+by a product, and since we explicitly give the type of <code>p</code> as <code>Nat × Int</code>, we're
+able to use the <code>⟨⟩</code> notation.</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def p : Nat × Int := ⟨1, 2⟩"><pre><span class="pl-k">def</span> <span class="pl-en">p</span> : Nat × Int := ⟨<span class="pl-c1">1</span>, <span class="pl-c1">2</span>⟩</pre></div>
+<h4 dir="auto"><code>{a}</code></h4>
+<h4 dir="auto"><code>"a"</code></h4>
+<h4 dir="auto"><code>[a, b, c]</code></h4>
+<p dir="auto">Groups hypotheses to be used as an argument to a tactic.</p>
+<h4 dir="auto"><code>‹a›</code></h4>
+<em dir="auto">Shortcuts: <code>\f<, \f></code></em>
+<p dir="auto">Fills in the proof of the proposition <code>a : Prop</code>.</p>
+<h4 dir="auto"><code>⦃a⦄</code></h4>
+<p dir="auto">Declares <code>a</code> as a weak implicit argument.</p>
+<h4 dir="auto"><code>|></code></h4>
+<p dir="auto">The forward pipeline operator.</p>
+<p dir="auto">Applies the function on the right-hand side to the argument on the left-hand
+side in such a way that functions can be chained/composed in a nice-looking
+way.</p>
+<h4 dir="auto"><code><|</code></h4>
+<p dir="auto">The backward pipeline operator.</p>
+<p dir="auto">Applies the function on the left-hand side to the argument on the right-hand
+side in such a way that functions can be chained/composed in a nice-looking
+way.</p>
+<h4 dir="auto"><code>×</code></h4>
+<h4 dir="auto"><code>Σ</code></h4>
+<h4 dir="auto"><code>∧</code></h4>
+<em dir="auto">ASCII: <code>/\</code></em>
+<em dir="auto">Shortcuts: <code>\and</code></em>
+<h4 dir="auto"><code>∨</code></h4>
+<em dir="auto">ASCII: <code>\/</code></em>
+<em dir="auto">Shortcuts: <code>\or</code></em>
+<h4 dir="auto"><code>↔</code></h4>
+<em dir="auto">ASCII: <code><-></code></em>
+<em dir="auto">Shortcuts: <code>\iff, \lr</code></em>
+<h4 dir="auto"><code>¬</code></h4>
+<em dir="auto">Shortcuts: <code>\not, \neg</code></em>
+<p dir="auto">Negates a term of type <code>Bool</code>.</p>
+<h3 dir="auto">Keywords</h3>
+<h4 dir="auto"><code>def</code></h4>
+<h6 dir="auto">Syntax: <code>def a := c</code></h6>
+<h6 dir="auto">Syntax: <code>def a : b := c</code></h6>
+<p dir="auto">Defines <code>a</code> to denote <code>c</code>, which should have type <code>b</code>. In other words, this
+gives the name <code>a</code> to the term <code>c</code>.</p>
+<h6 dir="auto">Syntax: <code>def a (a₁ : α₁) (a₂ : α₂) ... (aₙ : αₙ) : b := c</code></h6>
+<p dir="auto">Defines <code>a</code> to denote <code>c</code>, which should have type <code>b</code>, and take <math-renderer class="js-inline-math" data-static-url="https://github.githubassets.com/static" style="display: inline">$n$</math-renderer> arguments
+corresponding to the parameters <code>a₁, a₂, ..., aₙ</code>. The notation <code>(aᵢ : αᵢ)</code>
+indicates that the parameter <code>aᵢ</code> has type <code>αᵢ</code>. This list of parameters
+together with their types is called a <strong>context</strong>.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We declare the symbol/identifier <code>x</code> to be a term of type <code>Nat</code> whose value is
+<code>1</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def x : Nat := 1"><pre><span class="pl-k">def</span> <span class="pl-en">x</span> : Nat := <span class="pl-c1">1</span></pre></div>
+<h4 dir="auto"><code>example</code></h4>
+<h6 dir="auto">Syntax: <code>example : a := b</code></h6>
+<p dir="auto">Elaborates <code>b</code> and checks that it has type <code>a</code>, without adding it to the
+environment.</p>
+<p dir="auto">This is basically a way of declaring an anonymous definition or theorem. It
+exists because it is sometimes useful to be able to simulate a definition or
+theorem without naming it or adding it to the environment.</p>
+<h4 dir="auto"><code>by</code></h4>
+<p dir="auto">Proves a proposition by a tactic.</p>
+<h4 dir="auto"><code>match</code></h4>
+<h4 dir="auto"><code>with</code></h4>
+<h6 dir="auto">Syntax: <code>{ a with b := c}</code></h6>
+<p dir="auto">Returns a copy of the record <code>a</code> with the <code>b</code> field's value replaced with <code>c</code>.</p>
+<h4 dir="auto"><code>notation</code></h4>
+<p dir="auto">Declares new notation for a term in the form of a string literal.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We declare nice notation for the integers:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="notation "ℤ" => Int
+def identity (x : ℤ) : ℤ := x
+#check identity"><pre><span class="pl-k">notation</span> <span class="pl-s"><span class="pl-pds">"</span>ℤ<span class="pl-pds">"</span></span> => Int
+<span class="pl-k">def</span> <span class="pl-en">identity</span> (x : ℤ) : ℤ := x
+<span class="pl-k">#check</span> identity</pre></div>
+<h4 dir="auto"><code>import</code></h4>
+<h4 dir="auto"><code>attribute</code></h4>
+<h6 dir="auto">Syntax: <code>attribute [a] b</code></h6>
+<h6 dir="auto">Syntax: <code>attribute [a] <declaration> b := c</code></h6>
+<h4 dir="auto"><code>class</code></h4>
+<p dir="auto">Define a type class.</p>
+<h6 dir="auto">Example</h6>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="class Add (a : Type) where
+  add : a -> a -> a"><pre><span class="pl-k">class</span> <span class="pl-en">Add</span> (a : <span class="pl-k">Type</span>) where
+  add : a -> a -> a</pre></div>
+<h4 dir="auto"><code>instance</code></h4>
+<p dir="auto">Registers an instance of a type class.</p>
+<p dir="auto">Assigns attribute <code>a</code> to the object <code>b</code>.</p>
+<h4 dir="auto"><code>local</code></h4>
+<p dir="auto">Causes commands to only have effect until the current <code>section</code> or <code>namespace</code>
+is closed, or until the end of the file.</p>
+<h4 dir="auto"><code>let</code></h4>
+<h6 dir="auto">Syntax: <code>let x ← action1; action2</code></h6>
+<p dir="auto">Simulates a local variable definition within a <code>do</code> block. Defines a variable
+in a local scope (e.g. inside a function). Note that the semicolon <code>;</code> is
+semantically equivalent to a newline, so another way we could write this is:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="let x ← action1
+action2"><pre><span class="pl-k">let</span> x ← action1
+action2</pre></div>
+<p dir="auto">and when there are several lines after the line containing <code>let x ← action1</code>,
+all of them together constitute <code>action2</code>, so <code>x</code> remains "in-scope" for all
+subsequent lines.</p>
+<p dir="auto"><strong>Note.</strong> The <code>do</code> notation is an embedded domain-specific language used to
+write effectful code. See the <a href="https://leanprover.github.io/lean4/doc/do.html" rel="nofollow">Lean 4 manual</a> for details.</p>
+<h4 dir="auto"><code>inductive</code></h4>
+<p dir="auto">Defines an inductive type.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define an inductive type called <code>Weekday</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="inductive Weekday where
+  | sunday : Weekday
+  | monday : Weekday
+  | tuesday : Weekday
+  | wednesday : Weekday
+  | thursday : Weekday
+  | friday : Weekday
+  | saturday : Weekday"><pre><span class="pl-k">inductive</span> <span class="pl-en">Weekday</span> <span class="pl-en">where</span>
+  | sunday : Weekday
+  | monday : Weekday
+  | tuesday : Weekday
+  | wednesday : Weekday
+  | thursday : Weekday
+  | friday : Weekday
+  | saturday : Weekday</pre></div>
+<p dir="auto">The names after the <code>|</code> are called constructors or elements. We are defining
+them in this block, i.e. they need not be predefined elsewhere.</p>
+<h4 dir="auto"><code>where</code></h4>
+<p dir="auto">Defines the constructors of an <code>inductive</code> type, <code>structure</code>, <code>class</code>,
+<code>instance</code>, or the return type of a <code>def</code>.</p>
+<p dir="auto">The syntax for these use cases are:</p>
+<ul dir="auto">
+<li><code>inductive A (a₁ : α₁) ... (aₙ : αₙ) where</code></li>
+<li><code>structure A (a₁ : α₁) ... (aₙ : αₙ) where</code></li>
+<li><code>structure A (a₁ : α₁) ... (aₙ : αₙ) extends B₁, ..., Bₙ where</code></li>
+<li><code>class A (a₁ : α₁) ... (aₙ : αₙ) : β where</code></li>
+<li><code>instance : A₁ ... Aₙ where</code></li>
+<li><code>def a (b₁ : β₁) ... (bₙ : βₙ) : γ where</code></li>
+</ul>
+<h4 dir="auto"><code>deriving</code></h4>
+<p dir="auto">Instructs Lean to auto-generate an instance of a type class.</p>
+<h4 dir="auto"><code>extern</code></h4>
+<p dir="auto">An attribute declaring a definition as being defined via the Lean C FFI
+(foreign function interface).</p>
+<h4 dir="auto"><code>structure</code></h4>
+<p dir="auto">Defines an inductive type along with all of its projection functions and
+introduces a namespace with the same name.</p>
+<h3 dir="auto">Tactics</h3>
+<h4 dir="auto"><code>intro</code></h4>
+<h4 dir="auto"><code>have</code></h4>
+<p dir="auto">Introduces an auxiliary subgoal in a proof.</p>
+<h4 dir="auto"><code>calc</code></h4>
+<p dir="auto">Starts a calculational proof.</p>
+<h4 dir="auto"><code>sorry</code></h4>
+<h3 dir="auto">#Commands</h3>
+<h4 dir="auto"><code>#check</code></h4>
+<p dir="auto">Asks Lean to report the type of its argument inside our editor/IDE.</p>
+<h6 dir="auto">Example</h6>
+<p dir="auto">We define a function and then <code>#check</code> it in our editor:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def identity (x : Nat) : Nat := x
+#check identity     ■ identity : Nat → Nat"><pre><span class="pl-k">def</span> <span class="pl-en">identity</span> (x : Nat) : Nat := x
+<span class="pl-k">#check</span> identity     ■ identity : Nat → Nat</pre></div>
+<p dir="auto">The square denotes the beginning of the <code>#check</code> output.</p>
+<h4 dir="auto"><code>#check_failure</code></h4>
+<p dir="auto">Only succeeds when the given term is not type-correct.</p>
+<h4 dir="auto"><code>#eval</code></h4>
+<p dir="auto">Asks Lean to evaluate the given expression.</p>
+<h4 dir="auto"><code>#reduce</code></h4>
+<h4 dir="auto"><code>#print</code></h4>
+<p dir="auto">Prints information about an identifier.</p>
+<h3 dir="auto">Infoview</h3>
+<h4 dir="auto"><code>⊢</code></h4>
+<p dir="auto">Indicates the goal (e.g. the claim when proving a theorem).</p>
+<h4 dir="auto"><code>?a</code></h4>
+<p dir="auto">Indicates that the Lean does not have enough information to infer the type of
+<code>a</code>.</p>
+<h3 dir="auto">Types</h3>
+<h4 dir="auto"><code>Unit</code></h4>
+<blockquote>
+<p dir="auto">A unit type is a type that allows only one value.</p>
+</blockquote>
+<p dir="auto">In Lean 4, the <code>Unit</code> type is often seen in the type <code>IO Unit</code> of functions
+with the sole purpose of causing a side effect.</p>
+<p dir="auto">See <a href="https://en.wikipedia.org/wiki/Unit_type" rel="nofollow">wikipedia.org/wiki/Unit_type</a>.</p>
+<h3 dir="auto">Miscellaneous</h3>
+<h4 dir="auto"><code>a₁</code></h4>
+<p dir="auto">An identifier containing a subscript. Unicode subscripts do not carry any
+special syntactic meaning. They are simply another glyph that can be included
+in an identifier/variable name.</p>
+<h3 dir="auto">Glossary</h3>
+<h5 dir="auto">Command</h5>
+<p dir="auto">Lean 4 commands look like <code>#print</code>, <code>#check</code>, <code>#eval</code>, etc. They tell the
+compiler to perform a certain action.</p>
+<h5 dir="auto">Term</h5>
+<h4 dir="auto">Notes</h4>
+<ul dir="auto">
+<li>
+<p dir="auto">It may be necessary to use different dummy symbol sets for different terms.
+For example, <code>a</code> in <code>def a := b</code> must be an identifier, but we use <code>a</code>
+elsewhere as an arbitrary term (e.g. in <code>a = b</code>. One option is to use
+lowercase letters for identifiers, names, variables, and uppercase letters
+for terms. As is common in the Lean 4 docs, greek letter could be used for
+types. So we would write an arbitrary type declaration as <code>a : α</code>. The
+distinction between terms and types is crucial (even though, technically, all
+types are terms, since they have type <code>Type u</code>), especially for beginners.
+However, the distinction between which operators and keywords are applicable
+to identifiers and which are applicable to arbitrary terms may be clear
+enough from the examples given.</p>
+</li>
+<li>
+<p dir="auto">In anchors (links to markdown subsections of the form <code>#token1-token2</code>), the
+following symbols are filtered out, i.e. mapped to the empty string:</p>
+<ol dir="auto">
+<li><code>:</code></li>
+<li><code>=</code></li>
+<li><code>(</code></li>
+<li><code>)</code></li>
+</ol>
+</li>
+</ul>
+<h4 dir="auto">How to use this field guide</h4>
+</article></div></main>
+</body>
+</html>

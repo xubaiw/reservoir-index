@@ -1,6 +1,8 @@
 import Lean.Data.Json
+import Mathlib.Init.Data.List.Lemmas
 import Timelib.NanoPrecision.TimeZone.Basic
 import Timelib.NanoPrecision.DateTime.DateTime
+import Timelib.NanoPrecision.ClockTime.ClockTime
 import UsCourts.Defs
 
 open Lean
@@ -56,14 +58,22 @@ def District.observedNonstandardHolidays (d : District) : List Holiday := sorry
 def District.allRelevantHolidays (d : District) : List Holiday := 
   federalHolidays ++ d.observedNonstandardHolidays
 
---def District.clerksOfficeClosesAt (d : District) : ScalarDate → Option (DateTime d.timeOffset):= 
---  sorry
---
---def District.clerksOfficeInaccessible (d : District) (x : ScalarDate) (electronic : Bool) : Bool := 
---  sorry
---
---def District.firstAccessibleDayAfter (d : District) (x : ScalarDate) (electronic : Bool) : ScalarDate := 
---  sorry
+@[reducible]
+def District.isObservedHoliday (d : District) (date : ScalarDate) : Prop :=
+  sorry
+
+theorem federal_holiday_observed (d : District) (date : ScalarDate) : 
+  isFederalHoliday date → d.isObservedHoliday date := sorry
+
+def District.allRelevantHolidaysThisYear (d : District) (y : Year) : List ScalarDate := 
+  d.allRelevantHolidays.map (fun ⟨date⟩ => date y)
+/-
+Returns `none` if the clerk's office is inaccessible in the given hour
+as defined by FRCP 6(a)(3). For a period calculated in days, the time is irrelevant
+since 6(a)(3) is about availability "on the last day".
+-/
+def District.clerksOfficeScheduledToCloseAt (d : District) : ScalarDate → Option (ClockTime d.timeOffset.toTimeZone) := 
+  sorry
 
 def District.fullName (d : District) : String :=
   let pfx := ((d.identifier.map (fun i => s!"{i} ")).getD "").map Char.toUpper

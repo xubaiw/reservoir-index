@@ -42,6 +42,7 @@ With Lake, the package's configuration is written in Lean inside a dedicated <co
 <li><a href="#lean-libraries">Lean Libraries</a></li>
 <li><a href="#binary-executables">Binary Executables</a></li>
 <li><a href="#external-libraries">External Libraries</a></li>
+<li><a href="#custom-targets">Custom Targets</a></li>
 </ul>
 </li>
 <li><a href="#adding-dependencies">Adding Dependencies</a>
@@ -61,7 +62,7 @@ With Lake, the package's configuration is written in Lean inside a dedicated <co
 <p dir="auto">Lake is part of the <a href="https://github.com/leanprover/lean4">lean4</a> repository and is distributed along with its official releases (e.g., as part of the <a href="https://github.com/leanprover/elan">elan</a> toolchain). So if you have installed a semi-recent Lean 4 nightly, you should already have it!</p>
 <p dir="auto">Note that the Lake included with Lean is not updated as frequently as this repository, so some bleeding edge features may be missing. If you want to build the latest version from the source yourself, check out the <a href="#building-and-running-lake-from-the-source">build instructions</a> at the bottom of this README.</p>
 <h4 dir="auto">Creating and Building a Package</h4>
-<p dir="auto">To create a new package, either run <code>lake init <package-name></code> to setup the package in the current directory or <code>lake new <package-name></code> to create it in a new directory. For example, we could create the package <code>hello</code> like so:</p>
+<p dir="auto">To create a new package, either run <code>lake init <package-name> [<template>]</code> to setup the package in the current directory or <code>lake new <package-name> [<template>]</code> to create it in a new directory. For example, we could create the package <code>hello</code> like so:</p>
 <div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ mkdir hello
 $ cd hello
 $ lake init hello"><pre class="notranslate"><code>$ mkdir hello
@@ -125,7 +126,7 @@ Hello, world!"><pre class="notranslate"><code>$ lake build
 $ ./build/bin/hello
 Hello, world!
 </code></pre></div>
-<p dir="auto">Examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository.</p>
+<p dir="auto">Examples of different package configurations can be found in the <a href="examples"><code>examples</code></a> folder of this repository. You can also specified a particular configuration file template when using <code>lake init</code> or <code>lake new</code> to control what files Lake creates. See <code>lake help init</code> or <code>lake help new</code> for details.</p>
 <h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>
 <p dir="auto"><strong>Workspace Options</strong></p>
@@ -141,14 +142,14 @@ Hello, world!
 <li><code>irDir</code>: The build subdirectory to which Lake should output the package's intermediary results (e.g., <code>.c</code> and <code>.o</code> files). Defaults to <code>ir</code>.</li>
 <li><code>libDir</code>: The build subdirectory to which Lake should output the package's libraries. Defaults to <code>lib</code>.</li>
 <li><code>binDir</code>: The build subdirectory to which Lake should output the package's binary executables. Defaults to <code>bin</code>.</li>
-<li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>.</li>
 <li><code>precompileModules</code>:  Whether to compile each module into a native shared library that is loaded whenever the module is imported. This speeds up the evaluation of metaprograms and enables the interpreter to run functions marked <code>@[extern]</code>. Defaults to <code>false</code>.</li>
 <li><code>isLeanOnly</code>: Whether the package is "Lean-only". A Lean-only package does not produce native files for modules (e.g. <code>.c</code>, <code>.o</code>). Defaults to <code>false</code>. Setting <code>precompileModules</code> to <code>true</code> will override this setting and produce native files anyway (as they are needed to build module dynlibs).</li>
 <li><code>moreServerArgs</code>:  Additional arguments to pass to the Lean language server (i.e., <code>lean --server</code>) launched by <code>lake serve</code>.</li>
+<li><code>buildType</code>: The <code>BuildType</code> of targets in the package (see <a href="https://stackoverflow.com/a/59314670" rel="nofollow"><code>CMAKE_BUILD_TYPE</code></a>). One of <code>debug</code>, <code>relWithDebInfo</code>, <code>minSizeRel</code>, or <code>release</code>. Defaults to <code>release</code>.</li>
 <li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
-<li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes <code>-O3</code> and <code>-DNDEBUG</code> automatically, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
-<li><code>moreLibTargets</code>: An <code>Array</code> of additional library <code>FileTarget</code>s (beyond the package's and its dependencies' Lean libraries) to build and link to the package's binaries (and to dependent packages' binaries). <strong>DEPRECATED:</strong> Use separate <a href="#external-libraries"><code>extern_lib</code></a> targets instead.</li>
-<li><code>defaultFacet</code>: The <code>PackageFacet</code> to build on a bare <code>lake build</code> of the package. Can be one of <code>exe</code>, <code>leanLib</code>, <code>staticLib</code>, <code>sharedLib</code>, or <code>none</code>. Defaults to <code>exe</code>. See <code>lake help build</code> for more info on build facets. <strong>DEPRECATED:</strong> Package facets will be removed in a future version of Lake. Use a separate <a href="#lean-libraries"><code>lean_lib</code></a> or <a href="#binary-executables"><code>lean_exe</code></a> default target instead.</li>
+<li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes some flags based on the <code>buildType</code>, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
+<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> when linking (e.g., binary executables or shared libraries). These will come <em>after</em> the paths of <code>extern_lib</code> targets.</li>
+<li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>. <strong>DEPRECATED:</strong> Try to use separate <a href="#custom-targets">custom target declarations</a> instead. Otherwise, raise an issue here about your use case.</li>
 </ul>
 <h4 dir="auto">Defining Build Targets</h4>
 <p dir="auto">A Lake package can have many build targets, such as different Lean libraries and multiple binary executables. Any number of these declarations can be marked with the <code>@[defaultTarget]</code> attribute to tell Lake to build them on a bare <code>lake build</code> of the package.</p>
@@ -165,8 +166,9 @@ Hello, world!
 <li><code>roots</code>: The root module(s) of the library. Submodules of these roots (e.g., <code>Lib.Foo</code> of <code>Lib</code>) are considered part of the library. Defaults to a single root of the library's upper camel case name.</li>
 <li><code>globs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the library. Defaults to a <code>Glob.one</code> of each of the library's  <code>roots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the workspace) are also recursively built.</li>
 <li><code>libName</code>: The name of the library. Used as a base for the file names of its static and dynamic binaries. Defaults to the upper camel case name of the target.</li>
-<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while linking the shared library. These will come <em>after</em> the paths of libraries built with the package's
-<code>moreLibTargets</code>.</li>
+<li><code>nativeFacets</code>: An <code>Array</code> of module facets to build and combine into the library's static
+and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the object file compiled from the Lean source). <strong>PREVIEW:</strong> Module facets are in beta, unstable, and not yet documented. Use with care.</li>
+<li><code>precompileModules</code>, <code>buildType</code>, <code>moreLeanArgs</code>, <code>moreLinkArgs</code>, <code>moreLinkArgs</code>: Augments the package's corresponding configuration option. The library's arguments come after, modules are precompiled if either the library or package are precompiled, and the build type is the minimum of the two (<code>debug</code> is the lowest, and <code>release</code> is the highest)</li>
 </ul>
 <h5 dir="auto">Binary Executables</h5>
 <p dir="auto">A Lean executable target builds a binary executable from a Lean module with a <code>main</code> function.</p>
@@ -181,7 +183,7 @@ Hello, world!
 <li><code>root</code>: The root module of the binary executable. Should include a <code>main</code> definition that will serve as the entry point of the program. The root is built by recursively building its local imports (i.e., fellow modules of the workspace). Defaults to the name of the target.</li>
 <li><code>exeName</code>: The name of the binary executable. Defaults to the target name with any <code>.</code> replaced with a <code>-</code>.</li>
 <li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
-<li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> when linking the binary executable. These will come <em>after</em> the paths of libraries built with the package's <code>moreLibTargets</code>.</li>
+<li><code>buildType</code>, <code>moreLeanArgs</code>, <code>moreLinkArgs</code>, <code>moreLinkArgs</code>: Augments the package's corresponding configuration option. The executable's arguments come after and the build type is the minimum of the two (<code>debug</code> is the lowest, and <code>release</code> is the highest).</li>
 </ul>
 <h5 dir="auto">External Libraries</h5>
 <p dir="auto">A external library target is a non-Lean <strong>static</strong> library that will be linked to the binaries of the package and its dependents (e.g., their shared libraries and executables).</p>
@@ -189,16 +191,23 @@ Hello, world!
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="extern_lib «target-name» :=
   -- term of type `FileTarget` that builds the external library"><pre>extern_lib «<span class="pl-en">target-name</span>» :=
   <span class="pl-c"><span class="pl-c">--</span> term of type `FileTarget` that builds the external library</span></pre></div>
+<h5 dir="auto">Custom Targets</h5>
+<p dir="auto">A arbitrary target that can be built via <code>lake build <target-name></code>.</p>
+<p dir="auto"><strong>Syntax</strong></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="target «target-name» : α :=
+  -- term of type `BuildTarget α` that builds the target"><pre>target «<span class="pl-en">target-name</span>» : α :=
+  <span class="pl-c"><span class="pl-c">--</span> term of type `BuildTarget α` that builds the target</span></pre></div>
 <h4 dir="auto">Adding Dependencies</h4>
 <p dir="auto">Lake packages can have dependencies. Dependencies are other Lake packages the current package needs in order to function. They can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"@"master""><pre>package hello
+  "https://github.com/leanprover-community/mathlib4.git""><pre>package hello
 
 require mathlib <span class="pl-k">from</span> git
-  <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>master<span class="pl-pds">"</span></span></pre></div>
+  <span class="pl-s"><span class="pl-pds">"</span>https://github.com/leanprover-community/mathlib4.git<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto">The next run of <code>lake build</code> (or refreshing dependencies in an editor like VSCode) will clone the mathlib repository and build it. Information on the specific revision cloned will then be saved to <code>manifest.json</code> in the workspace's <code>packageDir</code> (by default, <code>lean_packages</code>) to enable reproducibility. To update <code>mathlib</code> after this, you will need to run <code>lake update</code> -- other commands do not update resolved dependencies.</p>
+<p dir="auto">For a theorem proving packages which depend on <code>mathlib</code>, you can also run <code>lake new <package-name> math</code> to generate a package configuration file that already has the <code>mathlib</code> dependency (and no binary executable target).</p>
 <h5 dir="auto">Syntax of <code>require</code></h5>
 <p dir="auto">The <code>require</code> command has two forms:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require foo from "path"/"to"/"local"/"package" with ["optional","args"]

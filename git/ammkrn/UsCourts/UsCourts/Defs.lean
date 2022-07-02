@@ -54,6 +54,23 @@ def federalHolidays : List Holiday := [
   ⟨christmasDay⟩
 ]
 
+@[reducible]
+def isFederalHoliday (d : ScalarDate) : Prop :=
+  let y := d.year
+  d = mlkDay y
+  ∨ d = washingtonDay y
+  ∨ d = memorialDay y
+  ∨ d = juneteenth y
+  ∨ d = independenceDay y
+  ∨ d = laborDay y
+  ∨ d = columbusDay y
+  ∨ d = veteransDay y
+  ∨ d = thanksgivingDay y
+  ∨ d = christmasDay y
+
+def federalHolidaysThisYear (y : Year) : List ScalarDate := 
+  federalHolidays.map (fun ⟨date⟩ => date y)
+
 def unCamelCase (s : String) : String := 
   s.foldl (fun sink next => sink ++ if next.isUpper then s!" {next}" else s!"{next}") ""
   
@@ -186,3 +203,9 @@ structure Entry where
   id : Option String
   notes : List String
 deriving DecidableEq, Repr, ToJson, FromJson
+
+
+@[reducible]
+def ScalarDate.isWeekend (d : ScalarDate) := 
+  let dow := d.dayOfWeek 
+  dow = saturday ∨ dow = sunday
