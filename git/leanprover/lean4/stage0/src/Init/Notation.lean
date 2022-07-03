@@ -219,7 +219,7 @@ macro_rules
       match i, skip with
       | 0,   _     => pure result
       | i+1, true  => expandListLit i false result
-      | i+1, false => expandListLit i true  (← ``(List.cons $(⟨elems.elemsAndSeps[i]⟩) $result))
+      | i+1, false => expandListLit i true  (← ``(List.cons $(⟨elems.elemsAndSeps[i]!⟩) $result))
     if elems.elemsAndSeps.size < 64 then
       expandListLit elems.elemsAndSeps.size false (← ``(List.nil))
     else
@@ -237,3 +237,5 @@ declare_syntax_cat rawStx
 
 instance : Coe Syntax (TSyntax `rawStx) where
   coe stx := ⟨stx⟩
+
+macro:max a:term noWs "[" i:term ", " h:term "]" : term => `($a[⟨$i, $h⟩])

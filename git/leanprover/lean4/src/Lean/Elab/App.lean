@@ -339,9 +339,9 @@ private def anyNamedArgDependsOnCurrent : M Bool := do
     return false
   else
     forallTelescopeReducing s.fType fun xs _ => do
-      let curr := xs[0]
+      let curr := xs[0]!
       for i in [1:xs.size] do
-        let xDecl ← getLocalDecl xs[i].fvarId!
+        let xDecl ← getLocalDecl xs[i]!.fvarId!
         if s.namedArgs.any fun arg => arg.name == xDecl.userName then
           if (← getMCtx).localDeclDependsOn xDecl curr.fvarId! then
             return true
@@ -583,7 +583,7 @@ private def resolveLValAux (e : Expr) (eType : Expr) (lval : LVal) : TermElabM L
     if idx - 1 < numFields then
       if isStructure env structName then
         let fieldNames := getStructureFields env structName
-        return LValResolution.projFn structName structName fieldNames[idx - 1]
+        return LValResolution.projFn structName structName fieldNames[idx - 1]!
       else
         /- `structName` was declared using `inductive` command.
            So, we don't projection functions for it. Thus, we use `Expr.proj` -/
@@ -620,9 +620,9 @@ private def resolveLValAux (e : Expr) (eType : Expr) (lval : LVal) : TermElabM L
       | none                => searchCtx ()
     else
       searchCtx ()
-  | some structName, LVal.getOp _ idx =>
+  | some structName, LVal.getOp _ idx kind =>
     let env ← getEnv
-    let fullName := Name.mkStr structName "getOp"
+    let fullName := Name.mkStr structName kind.opName
     match env.find? fullName with
     | some _ => return LValResolution.getOp fullName idx
     | none   => throwLValError e eType m!"invalid [..] notation because environment does not contain '{fullName}'"
@@ -631,7 +631,7 @@ private def resolveLValAux (e : Expr) (eType : Expr) (lval : LVal) : TermElabM L
       throwUnknownConstant (e.constName! ++ suffix)
     else
       throwInvalidFieldNotation e eType
-  | _, LVal.getOp _ _   => throwInvalidFieldNotation e eType
+  | _, LVal.getOp .. => throwInvalidFieldNotation e eType
   | _, _ => throwInvalidFieldNotation e eType
 
 /- whnfCore + implicit consumption.
@@ -706,7 +706,7 @@ private def addLValArg (baseName : Name) (fullName : Name) (e : Expr) (args : Ar
     let mut argIdx := 0 -- position of the next explicit argument
     let mut remainingNamedArgs := namedArgs
     for i in [:xs.size] do
-      let x := xs[i]
+      let x := xs[i]!
       let xDecl ← getLocalDecl x.fvarId!
       /- If there is named argument with name `xDecl.userName`, then we skip it. -/
       match remainingNamedArgs.findIdx? (fun namedArg => namedArg.name == xDecl.userName) with
@@ -724,7 +724,7 @@ private def addLValArg (baseName : Name) (fullName : Name) (e : Expr) (args : Ar
           /- If we can't add `e` to `args`, we try to add it using a named argument, but this is only possible
              if there isn't an argument with the same name occurring before it. -/
           for j in [:i] do
-            let prev := xs[j]
+            let prev := xs[j]!
             let prevDecl ← getLocalDecl prev.fvarId!
             if prevDecl.userName == xDecl.userName then
               throwError "invalid field notation, function '{fullName}' has argument with the expected type{indentExpr type}\nbut it cannot be used"
@@ -899,7 +899,9 @@ private partial def elabAppFn (f : Syntax) (lvals : List LVal) (namedArgs : Arra
     | `($e |>.$idx:fieldIdx) => elabFieldIdx e idx
     | `($(e).$field:ident) => elabFieldName e field
     | `($e |>.$field:ident) => elabFieldName e field
-    | `($e[%$bracket $idx]) => elabAppFn e (LVal.getOp bracket idx :: lvals) namedArgs args expectedType? explicit ellipsis overloaded acc
+    | `($e[%$bracket $idx]) => elabAppFn e (LVal.getOp bracket idx .safe :: lvals) namedArgs args expectedType? explicit ellipsis overloaded acc
+    | `($e[%$bracket $idx]!) => elabAppFn e (LVal.getOp bracket idx .panic :: lvals) namedArgs args expectedType? explicit ellipsis overloaded acc
+    | `($e[%$bracket $idx]?) => elabAppFn e (LVal.getOp bracket idx .optional :: lvals) namedArgs args expectedType? explicit ellipsis overloaded acc
     | `($_:ident@$_:term) =>
       throwError "unexpected occurrence of named pattern"
     | `($id:ident) => do
@@ -973,11 +975,11 @@ private def mergeFailures (failures : Array (TermElabResult Expr)) : TermElabM �
 private def elabAppAux (f : Syntax) (namedArgs : Array NamedArg) (args : Array Arg) (ellipsis : Bool) (expectedType? : Option Expr) : TermElabM Expr := do
   let candidates ← elabAppFn f [] namedArgs args expectedType? (explicit := false) (ellipsis := ellipsis) (overloaded := false) #[]
   if candidates.size == 1 then
-    applyResult candidates[0]
+    applyResult candidates[0]!
   else
     let successes ← getSuccesses candidates
     if successes.size == 1 then
-      applyResult successes[0]
+      applyResult successes[0]!
     else if successes.size > 1 then
       let msgs : Array MessageData ← successes.mapM fun success => do
         match success with
@@ -1032,6 +1034,8 @@ private def elabAtom : TermElab := fun stx expectedType? => do
 @[builtinTermElab choice] def elabChoice : TermElab := elabAtom
 @[builtinTermElab proj] def elabProj : TermElab := elabAtom
 @[builtinTermElab arrayRef] def elabArrayRef : TermElab := elabAtom
+@[builtinTermElab arrayRefOpt] def elabArrayRefOpt : TermElab := elabAtom
+@[builtinTermElab arrayRefPanic] def elabArrayRefPanic : TermElab := elabAtom
 
 builtin_initialize
   registerTraceClass `Elab.app
