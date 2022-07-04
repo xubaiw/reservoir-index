@@ -266,7 +266,7 @@ namespace TSyntax
 instance : Coe (TSyntax [k]) (TSyntax (k :: ks)) where
   coe stx := ⟨stx⟩
 
-instance [Coe (TSyntax [k]) (TSyntax ks)] : Coe (TSyntax [k]) (TSyntax (k' :: ks)) where
+instance : Coe (TSyntax ks) (TSyntax (k' :: ks)) where
   coe stx := ⟨stx⟩
 
 instance : Coe Ident Term where
@@ -285,6 +285,12 @@ instance : Coe NumLit Term where
   coe s := ⟨s.raw⟩
 
 instance : Coe CharLit Term where
+  coe s := ⟨s.raw⟩
+
+instance : Coe Ident Syntax.Level where
+  coe s := ⟨s.raw⟩
+
+instance : Coe NumLit Prio where
   coe s := ⟨s.raw⟩
 
 instance : Coe NumLit Prec where
@@ -862,7 +868,7 @@ class Quote (α : Type) (k : SyntaxNodeKind := `term) where
 
 export Quote (quote)
 
-instance [Quote α k] [CoeHTCT (TSyntax k) (TSyntax [k'])]: Quote α k' := ⟨fun a => quote (k := k) a⟩
+instance [Quote α k] [CoeHTCT (TSyntax k) (TSyntax [k'])] : Quote α k' := ⟨fun a => quote (k := k) a⟩
 
 instance : Quote Term := ⟨id⟩
 instance : Quote Bool := ⟨fun | true => mkCIdent `Bool.true | false => mkCIdent `Bool.false⟩
@@ -1014,7 +1020,7 @@ instance : Coe (TSepArray k sep) (TSyntaxArray k) where
   coe := TSepArray.getElems
 
 instance [Coe (TSyntax k) (TSyntax k')] : Coe (TSyntaxArray k) (TSyntaxArray k') where
-  coe a := .mk a.raw
+  coe a := a.map Coe.coe
 
 instance : Coe (TSyntaxArray k) (Array Syntax) where
   coe a := a.raw
