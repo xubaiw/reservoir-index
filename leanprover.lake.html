@@ -187,6 +187,7 @@ and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the objec
 </ul>
 <h5 dir="auto">External Libraries</h5>
 <p dir="auto">A external library target is a non-Lean <strong>static</strong> library that will be linked to the binaries of the package and its dependents (e.g., their shared libraries and executables).</p>
+<p dir="auto"><strong>Important:</strong> For the external library to link properly when <code>precompileModules</code> is on, the static library produced by an <code>extern_lib</code> target must following the platform's naming conventions for libraries (i.e., be named <code>foo.a</code> on Windows and <code>libfoo.a</code> on Unix). To make this easy, there is the <code>Lake.nameToStaticLib</code> utility function to convert a library name into its proper file name for the platform.</p>
 <p dir="auto"><strong>Syntax</strong></p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="extern_lib «target-name» :=
   -- term of type `FileTarget` that builds the external library"><pre>extern_lib «<span class="pl-en">target-name</span>» :=
