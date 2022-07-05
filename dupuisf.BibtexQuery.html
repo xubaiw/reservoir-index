@@ -1,0 +1,44 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>dupuisf/BibtexQuery</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>dupuisf/BibtexQuery</h1>
+<p>A simple command-line bibtex query utility written in Lean 4</p>
+<a href="https://github.com/dupuisf/BibtexQuery">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">BibtexQuery: a simple command-line bibtex query utility</h3>
+<p dir="auto">BibtexQuery is a command-line utility that reads in a bibtex file and performs simple queries. A query is a string
+of the form <code>t.querystring</code>, where <code>t</code> is either <code>a</code> for author, <code>t</code> for title or <code>k</code> for key, and <code>querystring</code>
+is a string (without spaces). BibtexQuery reads in a bibtex file, and returns the entries that match all the
+queries given a command-line parameters. Note that the entries are processed in such a way that strips diacritics,
+spaces and special characters before the queries are performed. In addition, the list of authors is normalized to
+<code>firstnamelastname</code>. Hence, for example, <code>Dupuis, Frédéric</code> will match the query <code>a.ericdup</code>.</p>
+<p dir="auto">Note that currently, only a subset of the official Bibtex format is supported; features such as predefined strings and concatenation using <code>#</code> are not supported. It is unclear whether this
+will ever be supported in the future; I only wrote this to learn how to do "normal programming" in <a href="https://github.com/leanprover/lean4/">Lean 4</a>, and I don't personally use these Bibtex features.</p>
+<h4 dir="auto">Installation instructions</h4>
+<p dir="auto">Make sure you have a working Lean 4 installation (see <a href="https://leanprover.github.io/lean4/doc/quickstart.html" rel="nofollow">here</a> for how to do that), and then type <code>lake build</code> in the main directory. The
+executable should appear in <code>build/bin</code>.</p>
+</article></div></main>
+</body>
+</html>

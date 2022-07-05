@@ -228,6 +228,9 @@ You can also disable auto-opening behavior using the setting <code>lean4.infoVie
 <p dir="auto"><code>lean4.toolchainPath</code>: specifies the location  of the Lean toolchain to be used when starting the Lean language server. Most users (i.e. those using <code>elan</code>) should not ever need to change this. If you are bundling Lean and <code>vscode-lean</code> with <a href="https://code.visualstudio.com/docs/editor/portable" rel="nofollow">Portable mode VS Code</a>, you might find it useful to specify a relative path to Lean. This can be done by starting this setting string with <code>%extensionPath%</code>; the extension will replace this with the absolute path of the extension folder. For example, with the default directory setup in Portable mode, <code>%extensionPath%/../../../lean</code> will point to <code>lean</code> in the same folder as the VS Code executable / application.</p>
 </li>
 <li>
+<p dir="auto"><code>lean4.lakePath</code>: specifies the location of the Lake executable to be used when starting the Lean language server (when possible). If left unspecified, the extension defaults to the Lake executable bundled with the Lean toolchain. Most users thus do not need to use this setting. It is only really helpful if you are building a Lake executable from the source and wish to use it with this extension.</p>
+</li>
+<li>
 <p dir="auto"><code>lean4.serverEnv</code>: specifies any Environment variables to add to the Lean 4 language server environment.  Note that when opening a <a href="https://code.visualstudio.com/docs/remote/ssh" rel="nofollow">remote folder</a> using VS Code the Lean 4 language server will be running on that remote machine.</p>
 </li>
 <li>
