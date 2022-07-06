@@ -1,0 +1,81 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>yatima-inc/ZKSnark.lean</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>yatima-inc/ZKSnark.lean</h1>
+<p>None Description</p>
+<a href="https://github.com/yatima-inc/ZKSnark.lean">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">zkSNARKs for lean</h3>
+<h4 dir="auto">Goals of the project</h4>
+<p dir="auto">The main goals for this project are to port some of the contents of the <a href="https://github.com/BoltonBailey/formal-snarks-project/">formal-snarks-project</a> repository to Lean 4, and implement a formalization for other Zk SNARK protocols.</p>
+<p dir="auto">In particular in this repository we will</p>
+<ul dir="auto">
+<li>Port the general lemmas and aspects of mathlib that are needed</li>
+<li>Port the verification for knowledge soundness of the <a href="https://github.com/initc3/babySNARK/blob/master/babysnark.pdf">BabySNARK</a> protocol</li>
+<li>Do the same for the <a href="https://eprint.iacr.org/2016/260.pdf" rel="nofollow">Groth16</a> protocol</li>
+<li>Verify for the first time knowledge soundness for the <a href="https://eprint.iacr.org/2021/370.pdf" rel="nofollow">NOVA</a> protocol.</li>
+</ul>
+<h4 dir="auto">Contributing</h4>
+<p dir="auto">There are two big aspects to this work: the formalization and documentation.</p>
+<h5 dir="auto">Formalization</h5>
+<p dir="auto">The formalization can be found in the <a href="/ZkSNARK/"><code>ZkSNARK</code></a> folder. As the project matures, there will likely be more structure to this aspect.</p>
+<h5 dir="auto">Documentation</h5>
+<p dir="auto">Contributing to the documentation can be done by editing the <code>.tex</code> files in the <a href="blueprint/src/content">blueprint</a> folder.</p>
+<p dir="auto">The blueprint is automatically generated from the links and references used in the <code>.tex</code> files in this contained folder. All lemmas, definitions, theorems, chapters, sections, etc. should be labeled.</p>
+<p dir="auto">In particular, <code>lemma</code>s, <code>definition</code>s, and <code>theorem</code>s will appear as nodes in the directed graph, and adding a <code>\uses{...}</code> tag in the proof of a <code>lemma</code> or <code>theorem</code> will add a directed edge to indicate the dependence.</p>
+<p dir="auto">Including <code>\leanok</code> in the statement will indicate in the blueprint graph that the definition has been implemented in lean, and adding <code>\leanok</code> to the proof will indicate that the proof has been formalized (by filling in the oval with green).</p>
+<h4 dir="auto">Building the blueprint</h4>
+<p dir="auto">It should not be necessary for anyone to have to rebuild the blueprint locally, as there is a Github workflow set up in this repository to rebuild the blueprint on every push to <code>main</code>.</p>
+<p dir="auto">If for some reason you want to test your changes locally follow the following steps (adapted from the Lean 3 project <a href="https://github.com/b-mehta/unit-fractions/">https://github.com/b-mehta/unit-fractions/</a>):</p>
+<p dir="auto">Building the blueprint requires <code>graphviz</code> and <code>libgraphviz-dev</code> which can be obtained on Debian based distros with</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="sudo apt install graphviz libgraphviz-dev"><pre class="notranslate"><code>sudo apt install graphviz libgraphviz-dev
+</code></pre></div>
+<p dir="auto">The build also has a few Python dependencies</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="pip3 install invoke pandoc"><pre class="notranslate"><code>pip3 install invoke pandoc
+</code></pre></div>
+<p dir="auto">Finally, the blueprint is built using a Python LaTeX compiler called <a href="https://github.com/plastex/plastex/">plasTeX</a> together with the <code>noleanblueprint</code> plugin:</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="git clone https://github.com/plastex/plastex
+pip3 install ./plastex
+git clone https://github.com/mpenciak/noleanblueprint
+pip3 install ./noleanblueprint"><pre class="notranslate"><code>git clone https://github.com/plastex/plastex
+pip3 install ./plastex
+git clone https://github.com/mpenciak/noleanblueprint
+pip3 install ./noleanblueprint
+</code></pre></div>
+<p dir="auto">The <code>noleanblueprint</code> is a fork of the original <a href="https://github.com/PatrickMassot/leanblueprint">leanblueprint</a> plasTeX plugin which was originally written to help organize Lean 3 formalization projects. The fork simply gets rid of the Lean 3 specific aspects of the original.</p>
+<p dir="auto">At the root of the project directory</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="inv all"><pre class="notranslate"><code>inv all
+</code></pre></div>
+<p dir="auto">should build the blueprint and</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="inv serve"><pre class="notranslate"><code>inv serve
+</code></pre></div>
+<p dir="auto">will create a local host for the generated website at <code>http://localhost:8000/</code></p>
+<h4 dir="auto">Using mathport</h4>
+<p dir="auto">This Lean package has <a href="https://github.com/leanprover-community/mathlib3port.git">mathlib3port</a> as a dependency.</p>
+<p dir="auto">The effect of this is that we can use Lean 4 <code>.olean</code>s which have been translated from Lean 3 compiled <a href="https://github.com/leanprover-community/mathlib">mathlib</a>. Check out the example <a href="mathporttest.lean">mathporttest.lean</a> for usage.</p>
+<p dir="auto">Furthermore, we can also look at the syntactically generated Lean 4 <code>.lean</code> files by jumping to definitions. The <code>synport</code> generated files almost certainly do not compile, but can still be used to cross-reference definitions and statements without having to keep a separate copy of Lean 3 open.</p>
+</article></div></main>
+</body>
+</html>
