@@ -164,8 +164,10 @@
  "yatima-inc/Radiya.lean",
  "yatima-inc/Spark.lean",
  "yatima-inc/YatimaStdLib.lean",
+ "yatima-inc/ZKSnark.lean",
  "yatima-inc/yatima-lang",
  "yatima-inc/yatima-prelude",
+ "ydewit/lean-markup",
  "zaxioms/LeanAlg",
  "zenna/LeanOmega",
  "zygi/lean4-sha3"]
