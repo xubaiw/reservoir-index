@@ -4,7 +4,8 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.Experiments.Tactics
 import Std
 import Lean
-open Lean Meta Elab Nat Term Std
+import Polylean.ProdSeq
+open Lean Meta Elab Nat Term Std ProdSeq
 
 
 def Lean.Expr.simplify(e: Expr) : MetaM Expr := do 
@@ -58,7 +59,7 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
 
 abbrev IndexAddTree := AddTree Nat 
 
-@[simp, reducible] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
+@[inline] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
   (accum : Array α := #[]) : 
       IndexAddTree × (Array α) := 
   match t with
@@ -79,6 +80,39 @@ abbrev IndexAddTree := AddTree Nat
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
 
+def AddTree.indexTreeM (t: AddTree Expr)(accumExpr : Expr) : 
+      TermElabM Expr := do
+  let accumL ← unpack accumExpr
+  let accum := accumL.toArray
+  match t with
+  | AddTree.leaf a => 
+    match ← accum.findIdxM? fun e => isDefEq e a with
+    | some i => 
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr i]) accumExpr
+    | none =>
+      let newAccum ← pack (accum.push a).toList 
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size]) newAccum
+  | AddTree.node l r =>
+    let lexpr ← indexTreeM l accumExpr
+    let (lIdx, lAccum) := (← split? lexpr).get!
+    let rexpr ← indexTreeM r lAccum
+    let (rIdx, rAccum) := (← split? rexpr).get!
+    mkPair (← mkAppM ``AddTree.node #[lIdx, rIdx]) (rAccum)
+  | AddTree.negLeaf a => 
+    match ← accum.findIdxM? fun e => isDefEq e a with
+    | some i => 
+        mkPair (← mkAppM ``AddTree.negLeaf #[ToExpr.toExpr i]) accumExpr
+    | none => 
+      let newAccum ← pack (accum.push a).toList 
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size]) newAccum
+  | AddTree.subNode l r => 
+    let lexpr ← indexTreeM l accumExpr
+    let (lIdx, lAccum) := (← split? lexpr).get!
+    let rexpr ← indexTreeM r lAccum
+    let (rIdx, rAccum) := (← split? rexpr).get!
+    mkPair (← mkAppM ``AddTree.subNode #[lIdx, rIdx]) (rAccum)
+
+
 lemma Array.size_pos_if_index {α : Type _} [DecidableEq α] {arr : Array α} {a : α} {i : ℕ} : arr.getIdx? a = some i → arr.size > 0 := by
   rw [getIdx?, findIdx?, findIdx?.loop]
   exact if h:0 < arr.size then
@@ -93,7 +127,8 @@ lemma Array.push_size_pos {α : Type _} (arr : Array α) (a : α) : (arr.push a)
         | nil => simp only [List.concat, List.length]
         | cons _ _ _ => simp only [List.concat, List.length, Nat.add_one]; apply Nat.succ_pos
 
-theorem pos_size {α : Type u}[Repr α][DecidableEq α] (t: AddTree α) : (arr : Array α) → (t.indexTree arr).2.size > 0 := by
+
+@[irreducible] theorem pos_size {α : Type u}[Repr α][DecidableEq α] (t: AddTree α) : (arr : Array α) → (t.indexTree arr).2.size > 0 := by
   induction t with
     | leaf a =>
       simp only [AddTree.indexTree]
@@ -143,6 +178,39 @@ partial def treeM (e : Expr) : MetaM Expr := do
   | none  =>
       mkAppM ``AddTree.leaf #[e]
 
+partial def addTreeM (e : Expr) : MetaM <| AddTree Expr := do
+  match ← hOp? ``HAdd.hAdd e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.node l r
+  | none  =>
+  match ← hOp? ``HMul.hMul e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.node l r
+  | none  =>
+    match ← hOp? ``HSub.hSub e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.subNode l r
+  | none  =>
+  match ← hOp? ``HDiv.hDiv e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.subNode l r
+  | none  =>
+  match ← invOp? ``Neg.neg e with
+  | some a => return AddTree.negLeaf a
+  | none  =>
+  match ← invOp? ``Inv.inv e with
+  | some a => return AddTree.negLeaf a
+  | none  =>
+      return AddTree.negLeaf e
+
 @[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
@@ -156,6 +224,122 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let lImage := foldMap l basisImages h
       let rImage := foldMap r basisImages h  
       lImage - rImage
+
+@[simp] def IndexAddTree.foldMap! {α : Type u}[AddCommGroup α][Repr α][Inhabited α] 
+  (t : IndexAddTree)(basisImages: Array α) : α :=
+  match t with
+  | AddTree.leaf i => basisImages.get! i
+  | AddTree.node l r =>
+      let lImage := foldMap! l basisImages 
+      let rImage := foldMap! r basisImages   
+      lImage + rImage
+  | AddTree.negLeaf i => -basisImages.get! i 
+  | AddTree.subNode l r => 
+      let lImage := foldMap! l basisImages 
+      let rImage := foldMap! r basisImages   
+      lImage - rImage
+
+def IndexAddTree.foldMapMAux 
+  (t : IndexAddTree)(basisImages: Array Expr) : TermElabM Expr := do
+  match t with
+  | AddTree.leaf i => return basisImages.get! i
+  | AddTree.node l r => 
+      let lImage ←  foldMapMAux l basisImages 
+      let rImage ←  foldMapMAux r basisImages   
+      mkAppM ``Add.add #[lImage, rImage]
+  | AddTree.negLeaf i => mkAppM ``Neg.neg #[basisImages.get! i] 
+  | AddTree.subNode l r => 
+      let lImage ←  foldMapMAux l basisImages 
+      let rImage ←  foldMapMAux r basisImages   
+      mkAppM ``Sub.sub #[lImage, rImage]
+
+
+partial def exprNatLeaf : Expr → TermElabM (Option Nat) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
+    let sExp' ← mkAppM ``AddTree.leaf #[mvar]
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      let index ← exprNat (← whnf mvar)
+      return some index
+    else 
+      return none
+  
+elab "leafIndex!" t: term : term => do
+  let e ← elabTerm t none
+  let e ← reduce e
+  let n? ← exprNatLeaf e
+  return (ToExpr.toExpr <| n?.get!)
+
+
+#eval leafIndex! (AddTree.leaf 7)
+
+partial def exprNode : Expr → TermElabM (Option (Expr × Expr)) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let mvar' ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let sExp' ← mkAppM ``AddTree.node #[mvar, mvar']
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      return some (mvar, mvar')
+    else 
+      return none
+
+partial def exprIndexTree : Expr → TermElabM IndexAddTree := fun expr => 
+  do
+    match ← exprNode expr with
+    | some (l, r) => do
+      let l ← exprIndexTree l
+      let r ← exprIndexTree r
+      return AddTree.node l r
+    | none  =>
+      match ← exprNatLeaf expr with
+      | some i => return AddTree.leaf i
+      | none => throwError s!"expression {expr} is not a leaf or node"
+
+def IndexAddTree.toString (t: IndexAddTree) : String := 
+  match t with
+  | AddTree.leaf i => s!"leaf {i}"
+  | AddTree.node l r => 
+    "node (" ++ toString l ++ ") (" ++ toString r ++ ")"
+  | AddTree.negLeaf i => s!"negLeaf {i}"
+  | AddTree.subNode l r => 
+    "subNode (" ++ toString l ++ ") (" ++ toString r ++")"
+
+instance : ToString IndexAddTree := ⟨IndexAddTree.toString⟩
+
+elab "checktree" t:term : term => do
+    let e ← elabTerm t none
+    let e ← reduce e
+    let tree ← exprIndexTree e
+    logInfo s!"got tree {tree}"
+    return e
+
+#eval checktree (AddTree.node (AddTree.leaf 7) (AddTree.leaf 8))
+
+def IndexAddTree.foldMapM
+  (tExp: Expr)(basisImages: Array Expr) : TermElabM Expr := do
+  let t ← exprIndexTree tExp
+  foldMapMAux t basisImages
+
+def IndexAddTree.foldMapAux {α : Type u}[AddCommGroup α][Repr α] 
+  (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
+  match t with
+  | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
+  | AddTree.node l r =>
+      let lImage := foldMap l basisImages h
+      let rImage := foldMap r basisImages h  
+      lImage + rImage
+  | AddTree.negLeaf i => -basisImages.get (Fin.ofNat' i h)
+  | AddTree.subNode l r => 
+      let lImage := foldMap l basisImages h
+      let rImage := foldMap r basisImages h  
+      lImage - rImage
+
 
 @[simp] def foldPair{α : Type u}[AddCommGroup α][Repr α] 
   (tb : IndexAddTree × Array α)(h: tb.snd.size > 0) : α  := 
@@ -186,21 +370,61 @@ partial def treeM (e : Expr) : MetaM Expr := do
 elab "indexTree#" t:term : term => do
   let e ← elabTerm t none
   let t ← treeM e
-  mkAppM ``AddTree.indexTree₀ #[t]
+  let res ← mkAppM ``AddTree.indexTree₀ #[t]
+  reduce res
 
-@[simp] def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
+def AddTree.indexTreeM' (t : AddTree Expr) : TermElabM Expr :=
+  do
+    let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
+    let res ← reduce res 
+    let (tree, lstIn) := (← split? res).get!
+    let lst ← unpack lstIn
+    let α ← inferType lst.head!
+    let nilList ←  mkAppOptM ``List.nil #[some α]
+    let lst ←  lst.foldrM (fun l i => do
+      mkAppOptM  ``List.cons #[some α, some l, some i]) nilList
+    mkAppM ``Prod.mk #[tree, lst]
+
+elab "indTree#" t:term : term => do
+  let e ← elabTerm t none
+  let t ← addTreeM e
+  AddTree.indexTreeM' t
+
+@[simp] noncomputable def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
     indexTree# (x + y + x - y)
 
 #print egInd
 
-@[simp] def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
-  (x y: α) :=
+@[simp] def egInd' {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]  (x y: α) := 
+    indTree# (x + y + x - y)
+
+#check @egInd'
+#print egInd'
+
+@[simp] def egInd'' {α : Type u}[ag : AddCommGroup α][r : Repr α][de : DecidableEq α][w : Inhabited α]  (x y: α) : IndexAddTree × (List α)  := @egInd' α ag r de w x y
+
+#print egInd''
+
+
+@[simp] noncomputable def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
+  (x y: α) : α  :=
         (egInd x y).fst.foldMap (egInd x y).snd.val (egInd x y).snd.property
 
 #print egIndMap
 
 theorem egIndMapInv{α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
   (x y: α) : egIndMap x y = x + y + x - y := by 
+      simp
+      admit
+    
+@[simp] def egIndMap'' {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+  (x y: α) : α  :=
+        let (tree, l) := egInd'' x y
+        let arr := l.toArray 
+        tree.foldMap! arr
+
+theorem egIndMapInv''{α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+  (x y: α) : egIndMap'' x y = x + y + x - y := by 
       simp 
       admit
       
