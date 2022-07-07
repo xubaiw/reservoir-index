@@ -1,3 +1,7 @@
+import Std.Data.HashMap
+
+open Std
+
 namespace Dta
 
 /-- Stata .dta specification version -/
@@ -48,7 +52,7 @@ abbrev Map := Array UInt64
 
 inductive VariableType
   | str (n : Fin 2045)
-  | strL
+  | strLIndex
   | double
   | float
   | long
@@ -57,15 +61,6 @@ inductive VariableType
   deriving Repr
 
 namespace VariableType
-
-def toLeanType : VariableType → Type
-  | str _  => String
-  | strL   => String
-  | double => Float
-  | float  => Float
-  | long   => UInt32
-  | int    => UInt16
-  | byte   => UInt8
 
 end VariableType
 
@@ -84,22 +79,34 @@ abbrev VariableLabels := Array String
 structure Characteristic where
   varname : String
   charname : String
-  contents : Array String
+  contents : String
   deriving Repr
 
 abbrev Characteristics := Array Characteristic
 
-inductive Observation
-  | str (n : Fin 2045) (vs : Array String)
-  | strL (vs : Array String)
-  | double (vs : Array Float)
-  | float (vs : Array Float)
-  | long (vs : Array UInt32)
-  | int (vs : Array UInt16)
-  | byte (vs : Array UInt8)
+inductive Value
+  | str (n : Fin 2045) (v : String)
+  | strLIndex (v : UInt32 × UInt64)
+  | double (v : Float)
+  | float (v : Float)
+  | long (v : UInt32)
+  | int (v : UInt16)
+  | byte (v : UInt8)
   deriving Repr
 
+abbrev Observation := Array Value
+
 abbrev Data := Array Observation
+
+structure GSO where
+  v : UInt32
+  o : UInt64
+  binary : Bool
+  len : UInt32
+  contents : String
+  deriving Repr
+
+abbrev StrLs := Array GSO
 
 structure Dta where
   header : Header
@@ -112,6 +119,7 @@ structure Dta where
   variableLabels : VariableLabels
   characteristics : Characteristics
   data : Data
+  strLs : StrLs
   deriving Repr
 
 end Dta

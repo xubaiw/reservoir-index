@@ -1,5 +1,5 @@
 {"version": 1,
  "packages":
  [{"url": "https://github.com/xubaiw/Parsec.lean",
-   "rev": "b6e8721c36bde18bca6a81e7b40d966b401cb329",
+   "rev": "4ff775a0b7c9baaec2dd74a2d5a79ab316b8a7cb",
    "name": "parsec"}]}

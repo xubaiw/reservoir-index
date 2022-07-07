@@ -28,7 +28,7 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Alloy</h3>
-<p dir="auto">Alloy is a Lean 4 library that allows one to embedded external FFI code (currently just C) within Lean definitions. For example, we can define an external C add function like so:</p>
+<p dir="auto">Alloy is a Lean 4 library that allows one to embed external FFI code (currently just C) directly within Lean. For example, we can define an external C add function like so:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="alloy c extern def my_add (x y : UInt32) : UInt32 := {
   return x + y;
 }"><pre>alloy c extern <span class="pl-k">def</span> <span class="pl-en">my_add</span> (x y : UInt32) : UInt32 := {
@@ -40,8 +40,27 @@
 }"><pre>LEAN_EXPORT <span class="pl-c1">uint32_t</span> <span class="pl-en">_impl_l_Foo_my__add</span>(<span class="pl-c1">uint32_t</span> x, <span class="pl-c1">uint32_t</span> y) {
   <span class="pl-k">return</span> x + y;
 }</pre></div>
-<p dir="auto">See <a href="examples/S.lean">S.lean</a> in the <code>examples</code> folder for a more complete example of Alloy's power.</p>
-<p dir="auto">Alloy is still a <strong>work-in-progress</strong>. Better Lake integration is needed before a proper stable version is released.</p>
+<h4 dir="auto">Building Shims</h4>
+<p dir="auto">Alloy exploits Lake's experimental (as of <a href="https://github.com/leanprover/lake/releases/tag/v3.2.0">v3.2.0</a>) module facets feature to automagically build the shim it produces when compiling the module. Combined with the new <code>precompileModules</code> feature, this allows the shim code to be directly used by importers in a interpreted context (e.g., for <code>#eval</code> or when editing).</p>
+<p dir="auto">To use Alloy with your project and build shims for a library, add the following to your Lakefile:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require alloy from git "https://github.com/tydeu/lean4-alloy.git"
+
+module_data alloy.c.o : ActiveFileTarget
+lean_lib <your-lib> {
+  precompileModules := true
+  nativeFacets := #[Module.oFacet, &`alloy.c.o]
+  -- and whatever other configuration options you wish to add
+}"><pre>require alloy <span class="pl-k">from</span> git <span class="pl-s"><span class="pl-pds">"</span>https://github.com/tydeu/lean4-alloy.git<span class="pl-pds">"</span></span>
+
+module_data alloy.c.o : ActiveFileTarget
+lean_lib <your-lib> {
+  precompileModules := true
+  nativeFacets := #[Module.oFacet, &<span class="pl-en">`alloy</span>.c.o]
+  <span class="pl-c"><span class="pl-c">--</span> and whatever other configuration options you wish to add</span>
+}</pre></div>
+<p dir="auto">Take a look at the <a href="examples">examples</a> to see how all of this works. The <a href="examples/my_add"><code>my_add</code></a> example provides a minimal setup whereas the <a href="examples/S"><code>S</code></a> example provides a more complete demonstration of Alloy's power.</p>
+<h4 dir="auto">Disclaimer</h4>
+<p dir="auto">Alloy is still a <strong>work-in-progress</strong>. However, it is now at the point where it can be feasible used to build FFIs. Its biggest TODOs are LSP support for the embedded C code and adding more utilities to help with common code patterns (e.g., defining wrapped C structures).</p>
 </article></div></main>
 </body>
 </html>
