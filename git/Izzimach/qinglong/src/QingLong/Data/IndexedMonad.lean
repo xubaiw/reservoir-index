@@ -33,6 +33,11 @@ macro_rules
 | `($l:term →→= $r:term) => `(bindIx $l $r)
 | `($l:term →→  $r:term) => `(bindIx $l (fun _ => $r))
 
+-- Specify the monad type and result type without specifying the index value, so that
+-- Lean will compute it automatically.
+--
+-- This is roughly equivalent to "show m _ a from $monad".
+--
 def checkedDo (m : Syntax) (ix : Syntax) (a : Syntax) (monad : Syntax) : TermElabM Expr := do
   let pureAdd ← `((@pureIx $ix $m _ Unit .Null ()) →→ $monad →→= (fun (z : $a) => pureIx .Null z))
   let elabResult ← elabTerm pureAdd Option.none

@@ -1,0 +1,106 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>AdrienChampion/experimentalean4</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>AdrienChampion/experimentalean4</h1>
+<p>Experimenting with lean4</p>
+<a href="https://github.com/AdrienChampion/experimentalean4">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><p dir="auto">Experimenting with lean4.</p>
+<p dir="auto">Below are very basic things to get you started like setup and basic docs/resources. The rest of this
+repo is readme-equipped folders containing lean4 projects trying to showcase something. They are
+discussed in Section <a href="#experimentalean4">Experimentalean4</a>.</p>
+<h4 dir="auto">Ecosystem and Setup</h4>
+<p dir="auto">The lean 4 ecosystem is composed of three things:</p>
+<ul dir="auto">
+<li><a href="https://github.com/leanprover/elan"><code>elan</code></a>:
+toolchain (versioning) manager. Similar to (fork of) rust's <code>rustup</code>, allows to
+download/update official toolchains, set a default, override the default toolchain in specific
+directories, set (pin) a toolchain name to a local build.</li>
+<li><a href="https://github.com/leanprover/lake"><code>lake</code></a>:
+project manager (also LSP). Similar to (but not a fork of) rust's <code>cargo</code>, compiles
+sources organized in a specific layout based on a project configuration file. Handles
+dependencies too, probably a bit experimental at this point.</li>
+<li><a href="https://github.com/leanprover/lean4"><code>lean</code>/<code>leanc</code></a>:
+compiler/LSP. It does compiling and LSP-ing.</li>
+<li>VS Code for editing with the <code>lean4</code> plugin. For anything else, have fun setting up LSP /
+proof-info view / UTF-8, failing, and then setting up VS Code.</li>
+</ul>
+<p dir="auto"><strong>Setup</strong> is basically just installing <code>elan</code> since it handles everything else. Support for Apple
+silicon is currently in nightly and is discussed last:</p>
+<ul dir="auto">
+<li>manual setup:
+<a href="https://github.com/leanprover/elan#manual-installation">https://github.com/leanprover/elan#manual-installation</a></li>
+<li>on x86 macos <code>brew install elan-init</code></li>
+<li>probably on <code>pacman</code> on ArchLinux</li>
+<li>probably installable with <code>apt-get</code> or whatever on windows-like broken systems (ubuntu <em>etc.</em>)</li>
+</ul>
+<p dir="auto">On Apple silicon, do <strong>not</strong> follow the M1-specific <a href="https://github.com/leanprover/elan#manual-installation">manual setup
+instructions</a>. Lean 4 supports Apple silicon
+(in nightly), installing <code>elan</code> as interpreted x86 is either completely out-of-date or utterly idiotic.</p>
+<p dir="auto">Basically, you need to install <code>elan</code> <strong>without</strong> actually installing a toolchain. Otherwise, <code>elan</code>
+will try to get the stable toolchain which will fail as Apple silicon is currently in nightly.
+Precise instructions are unstable (<strong>because nigthly</strong>), but <code>brew install elan-init</code> and then
+running <code>elan-init</code> should give you the opportunity to perform the init without installing stable.
+Then run <code>elan default leanprover/lean4:nightly</code>, though you can try <code>elan default leanprover/lean4:stable</code> in case Apple silicon reached stable.</p>
+<h4 dir="auto">Resources</h4>
+<p dir="auto"><strong>Official page</strong>: <code>github.io</code> lean 4 page</p>
+<ul dir="auto">
+<li><a href="https://leanprover.github.io" rel="nofollow">https://leanprover.github.io</a>
+Includes <em>ongoing</em> WIP <a href="https://leanprover.github.io/documentation" rel="nofollow">learning material</a></li>
+<li><em>Theorem Proving in Lean 4</em>: <a href="https://leanprover.github.io/theorem_proving_in_lean4" rel="nofollow">https://leanprover.github.io/theorem_proving_in_lean4</a></li>
+<li><em>Lean 4 Manual</em>: <a href="https://leanprover.github.io/lean4/doc" rel="nofollow">https://leanprover.github.io/lean4/doc</a></li>
+</ul>
+<p dir="auto"><strong>Mathlib4</strong>: documentation for lean 4's stdlib, and <em>mathlib4</em> which is the <em>ongoing</em> port of
+mathlib3, lean3's heavy-duty math stdlib:</p>
+<ul dir="auto">
+<li><a href="https://leanprover-community.github.io/mathlib4_docs" rel="nofollow">https://leanprover-community.github.io/mathlib4_docs</a></li>
+</ul>
+<p dir="auto"><strong>Coq/lean/cheatsheet</strong>: relates coq and lean 3~4 tactics:</p>
+<ul dir="auto">
+<li><a href="https://github.com/jldodds/coq-lean-cheatsheet">https://github.com/jldodds/coq-lean-cheatsheet</a>
+This is insanely useful as it allows finding lean tactics from coq-based resources; namely, the coq
+tactics</li>
+<li>cheatsheet <a href="https://www.cs.cornell.edu/courses/cs3110/2018sp/a5/coq-tactics-cheatsheet.html" rel="nofollow">https://www.cs.cornell.edu/courses/cs3110/2018sp/a5/coq-tactics-cheatsheet.html</a></li>
+<li>and index <a href="https://coq.inria.fr/refman/coq-tacindex.html" rel="nofollow">https://coq.inria.fr/refman/coq-tacindex.html</a></li>
+</ul>
+<p dir="auto"><strong>Beyond Notations</strong>: awesome readable paper about lean 4's <em>syntax extensions</em>. Absolute must-read:</p>
+<ul dir="auto">
+<li><a href="https://arxiv.org/abs/2001.10490" rel="nofollow">https://arxiv.org/abs/2001.10490</a></li>
+</ul>
+<h4 dir="auto">Experimentalean4</h4>
+<p dir="auto">Here are the projects of this repo, ordered from most to least basics with a short description.</p>
+<ul dir="auto">
+<li>
+<p dir="auto"><a href="./filesAndNamespaces"><code>filesAndNamespaces</code></a>:
+Lean 4 is a modern language so, in a project, the way sources are layed out on your filesystem
+carries meaning. You cannot do anything non-trivial without understanding this first, and then
+you need to understand how <em>namespaces</em> work. <em>"Namespace"</em> is exactly the same as <em>"module"</em>
+since lean does not have functors.</p>
+<p dir="auto">This project also discusses the <code>import</code> mecanics.</p>
+</li>
+</ul>
+</article></div></main>
+</body>
+</html>
