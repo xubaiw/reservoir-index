@@ -948,6 +948,10 @@ class specialize_fn {
         code = m_lctx.mk_lambda(new_let_decls, code);
         code = abstract_spec_ctx(ctx, code);
         lean_trace(name("compiler", "spec_info"), tout() << "specialized code " << n << "\n" << trace_pp_expr(code) << "\n";);
+        if (has_fvar(code)) {
+            /* This is yet another temporary hack. It addresses an assertion violation triggered by test 1293.lean for issue #1293 */
+            return optional<comp_decl>();
+        }
         lean_assert(!has_fvar(code));
         /* We add the auxiliary declaration `n` as a "meta" axiom to the environment.
            This is a hack to make sure we can use `csimp` to simplify `code` and
@@ -1037,9 +1041,23 @@ class specialize_fn {
         lean_unreachable();
     }
 
+    static unsigned num_parts(name fn) {
+        unsigned n = 0;
+        while (!fn.is_atomic()) {
+            n++;
+            fn = fn.get_prefix();
+        }
+        return n;
+    }
+
     optional<expr> specialize(expr const & fn, buffer<expr> const & args, spec_ctx & ctx) {
         if (!is_specialize_candidate(fn, args))
             return none_expr();
+        if (num_parts(const_name(fn)) > 32) {
+            // This is a big hack to fix a nontermination exposed by issue #1293.
+            // We need to move the code to Lean ASAP.
+            return none_expr();
+        }
         // lean_trace(name("compiler", "specialize"), tout() << "specialize: " << fn << "\n";);
         bool has_attr = has_specialize_attribute(const_name(fn));
         specialize_init_deps(fn, args, ctx);

@@ -42,12 +42,12 @@ partial def mkUnaryExpression : Lean.Syntax → Except String UnaryExpr
 --  | `(unary_expression| -- $u:unary_expression) => UnaryExpr.DecUnary <$> (mkUnaryExpression u)
   | `(unary_expression| $o:unary_operator $c:cast_expression) => UnaryExpr.UnaryOpCast <$> (mkUnaryOperator o) <*> (mkCastExpression c)
   | `(unary_expression| sizeof $u:unary_expression) => UnaryExpr.SizeOf <$> (mkUnaryExpression u)
---  | `(unary_expression| sizeof ( $t:type_name )) => UnaryExpr.SizeOfType <$> (mkTypeName t)
+  | `(unary_expression| sizeof ( $t:type_name )) => UnaryExpr.SizeOfType <$> (mkTypeName t)
   | _ => throw "unexpected syntax"
 
 partial def mkCastExpression : Lean.Syntax → Except String CastExpr
   | `(cast_expression| $u:unary_expression) => CastExpr.Unary <$> (mkUnaryExpression u)
---  | `(cast_expression| ( $t:type_name ) $c:cast_expression) => CastExpr.TypeNameCast <$> (mkTypeName t) <*> (mkCastExpression c)
+  | `(cast_expression| ( $t:type_name ) $c:cast_expression) => CastExpr.TypeNameCast <$> (mkTypeName t) <*> (mkCastExpression c)
   | _ => throw "unexpected syntax"
 
 partial def mkMultExpression : Lean.Syntax → Except String MultExpr
@@ -153,9 +153,9 @@ partial def mkDirAbstrDecl : Lean.Syntax → Except String DirAbstrDecl
   | `(direct_abstract_declarator| $d:direct_abstract_declarator [ ]) => DirAbstrDecl.DirAbDecDirSqr <$> (mkDirAbstrDecl d)
   | `(direct_abstract_declarator| $d:direct_abstract_declarator [ $c:constant_expression ]) => DirAbstrDecl.DirAbDecDirConst <$> (mkDirAbstrDecl d) <*> (mkConstExpr c)
   | `(direct_abstract_declarator| ( )) => return (DirAbstrDecl.DirAbDecRnd)
---  | `(direct_abstract_declarator| ( $p:parameter_type_list )) => DirAbstrDecl.DirAbDecParamList <$> (mkParamList p)
+  | `(direct_abstract_declarator| ( $p:parameter_type_list )) => DirAbstrDecl.DirAbDecParamList <$> (mkParamList p)
   | `(direct_abstract_declarator| $d:direct_abstract_declarator ( )) => DirAbstrDecl.DirAbDecDirRnd <$> (mkDirAbstrDecl d)
---  | `(direct_abstract_declarator| $d:direct_abstract_declarator ( $p:parameter_type_list )) => DirAbstrDecl.DirAbDecDirParamList <$> (mkDirAbstrDecl d) <*> (mkParamList p)
+  | `(direct_abstract_declarator| $d:direct_abstract_declarator ( $p:parameter_type_list )) => DirAbstrDecl.DirAbDecDirParamList <$> (mkDirAbstrDecl d) <*> (mkParamList p)
   | _ => throw "unexpected syntax"
 
 partial def mkAbstrDecl : Lean.Syntax → Except String AbstrDecl
@@ -232,30 +232,19 @@ partial def mkDeclList : Lean.Syntax → Except String DeclList
   | `(declaration_list| $dl:declaration_list $d:declaration) => DeclList.DeclListDecl <$> (mkDeclList dl) <*> (mkDeclaration d)
   | _ => throw "unexpected syntax"
 
-partial def mkDeclaration : Lean.Syntax → Except String _root_.Declaration
-  | `(declaration| $ds:declaration_specifiers ;) => Declaration.DeclSpec <$> (mkDeclSpec ds)
-  | `(declaration| $ds:declaration_specifiers $idl:init_declarator_list ;) => Declaration.DeclSpecInitDecList <$> (mkDeclSpec ds) <*> (mkInitDeclList idl)
-  | _ => throw "unexpected syntax"
-
-partial def mkInitDeclList : Lean.Syntax → Except String InitDeclList
-  | `(init_declarator_list| $i:init_declarator) => InitDeclList.InitDecl <$> (mkInitDecl i)
-  | `(init_declarator_list| $idl:init_declarator_list , $id:init_declarator) => InitDeclList.InitDeclListInitDecl <$> (mkInitDeclList idl) <*> (mkInitDecl id)
-  | _ => throw "unexpected syntax"
-
-partial def mkParamTypeList : Lean.Syntax → Except String ParamTypeList
-  | `(parameter_type_list| $p:parameter_list) => ParamTypeList.ParamList <$> (mkParamList p)
-  | `(parameter_type_list| $p:parameter_type_list , ...) => ParamTypeList.ParamListEllipsis <$> (mkParamList p)
-  | _ => throw "unexpected syntax"
-
-partial def mkParamList : Lean.Syntax → Except String ParamList
-  | `(parameter_list| $p:parameter_declaration) => ParamList.ParamDecl <$> (mkParamDecl p)
-  | `(parameter_list| $pl:parameter_list , $p:parameter_declaration) => ParamList.ParamListParamDecl <$> (mkParamList pl) <*> (mkParamDecl p)
-  | _ => throw "unexpected syntax"
-
-partial def mkParamDecl : Lean.Syntax → Except String ParamDecl
-  | `(parameter_declaration| $ds:declaration_specifiers $d:declarator) => ParamDecl.DeclSpecDecl <$> (mkDeclSpec ds) <*> (mkDeclarator d)
-  | `(parameter_declaration| $ds:declaration_specifiers $ad:abstract_declarator) => ParamDecl.DeclSpecAbsDecl <$> (mkDeclSpec ds) <*> (mkAbstrDecl ad)
-  | `(parameter_declaration| $ds:declaration_specifiers) => ParamDecl.DeclSpec <$> (mkDeclSpec ds)
+partial def mkTypeSpec : Lean.Syntax → Except String TypeSpec
+  | `(type_specifier| void) => return TypeSpec.Void
+  | `(type_specifier| char) => return TypeSpec.Char
+  | `(type_specifier| short) => return TypeSpec.Short
+  | `(type_specifier| int) => return TypeSpec.Int
+  | `(type_specifier| long) => return TypeSpec.Long
+  | `(type_specifier| float) => return TypeSpec.Float
+  | `(type_specifier| double) => return TypeSpec.Double
+  | `(type_specifier| signed) => return TypeSpec.Signed
+  | `(type_specifier| unsigned) => return TypeSpec.Unsigned
+  | `(type_specifier| $s:struct_or_union_specifier) => TypeSpec.SoUSpec <$> (mkStructOrUnionSpec s)
+  | `(type_specifier| $e:enum_specifier) => TypeSpec.EnumSpec <$> (mkEnumSpec e)
+  | `(type_specifier| typename) => return TypeSpec.TypeName
   | _ => throw "unexpected syntax"
 
 partial def mkDeclSpec : Lean.Syntax → Except String DeclSpec
@@ -267,6 +256,73 @@ partial def mkDeclSpec : Lean.Syntax → Except String DeclSpec
   | `(declaration_specifiers| $t:type_qualifier $d:declaration_specifiers) => DeclSpec.TypeQualDeclSpec <$> (mkTypeQual t) <*> (mkDeclSpec d)
   | _ => throw "unexpected syntax"
 
+partial def mkDeclaration : Lean.Syntax → Except String _root_.Declaration
+  | `(declaration| $ds:declaration_specifiers ;) => Declaration.DeclSpec <$> (mkDeclSpec ds)
+  | `(declaration| $ds:declaration_specifiers $idl:init_declarator_list ;) => Declaration.DeclSpecInitDecList <$> (mkDeclSpec ds) <*> (mkInitDeclList idl)
+  | _ => throw "unexpected syntax"
+
+partial def mkInitDeclList : Lean.Syntax → Except String InitDeclList
+  | `(init_declarator_list| $i:init_declarator) => InitDeclList.InitDecl <$> (mkInitDecl i)
+  | `(init_declarator_list| $idl:init_declarator_list , $id:init_declarator) => InitDeclList.InitDeclListInitDecl <$> (mkInitDeclList idl) <*> (mkInitDecl id)
+  | _ => throw "unexpected syntax"
+
+partial def mkParamTypeList : Lean.Syntax → Except String ParamTypeList
+  | `(parameter_type_list| $pl:parameter_list) => ParamTypeList.ParamList <$> (mkParamList pl)
+  | `(parameter_type_list| $pl:parameter_list , ... ) => ParamTypeList.ParamListEllipsis <$> (mkParamList pl)
+  | _ => throw "unexpected syntax"
+
+partial def mkParamDecl : Lean.Syntax → Except String ParamDecl
+  | `(parameter_declaration| $ds:declaration_specifiers $d:declarator) => ParamDecl.DeclSpecDecl <$> (mkDeclSpec ds) <*> (mkDeclarator d)
+  | `(parameter_declaration| $ds:declaration_specifiers $ad:abstract_declarator) => ParamDecl.DeclSpecAbsDecl <$> (mkDeclSpec ds) <*> (mkAbstrDecl ad)
+  | `(parameter_declaration| $ds:declaration_specifiers) => ParamDecl.DeclSpec <$> (mkDeclSpec ds)
+  | _ => throw "unexpected syntax"
+
+partial def mkParamList : Lean.Syntax → Except String ParamList
+  | `(parameter_list| $xs) => do
+      let listOfSyntaxNodes := xs[0].getArgs
+      let sarr : Array Syntax := listOfSyntaxNodes.getSepElems
+      let params <- sarr.mapM mkParamDecl
+      return ParamList.ParamList params.toList
+  | _ => throw "unexpected syntax"
+
+partial def mkStructOrUnion : Lean.Syntax → Except String StructOrUnion
+  | `(struct_or_union| struct) => return StructOrUnion.Struct
+  | `(struct_or_union| union) => return StructOrUnion.Union
+  | _ => throw "unexpected syntax"
+
+partial def mkStructDecl : Lean.Syntax → Except String StructDecl
+  | `(struct_declarator| $d:declarator) => StructDecl.Dec <$> (mkDeclarator d)
+  | `(struct_declarator| : $ce:constant_expression) => StructDecl.ConstExpr <$> (mkConstExpr ce)
+  | `(struct_declarator| $d:declarator : $ce:constant_expression) => StructDecl.DeclConstExpr <$> (mkDeclarator d) <*> (mkConstExpr ce)
+  | _ => throw "unexpected syntax"
+
+partial def mkStructDeclList : Lean.Syntax → Except String StructDeclList
+  | `(struct_declarator_list| $sd:struct_declarator) => StructDeclList.StructDecl <$> (mkStructDecl sd)
+  | `(struct_declarator_list| $sdl:struct_declarator_list , $sd:struct_declarator) => StructDeclList.StructDecListStructDec <$> (mkStructDeclList sdl) <*> (mkStructDecl sd)
+  | _ => throw "unexpected syntax"
+
+partial def mkSpecQualList : Lean.Syntax → Except String SpecQualList
+  | `(specifier_qualifier_list| $ts:type_specifier $sql:specifier_qualifier_list) => SpecQualList.TypeSpecSpecQualList <$> (mkTypeSpec ts) <*> (mkSpecQualList sql)
+  | `(specifier_qualifier_list| $ts:type_specifier) => SpecQualList.TypeSpec <$> (mkTypeSpec ts)
+  | `(specifier_qualifier_list| $tq:type_qualifier $sql:specifier_qualifier_list) => SpecQualList.TypeQualSpecQualList <$> (mkTypeQual tq) <*> (mkSpecQualList sql)
+  | `(specifier_qualifier_list| $tq:type_qualifier) => SpecQualList.TypeQual <$> (mkTypeQual tq)
+  | _ => throw "unexpected syntax"
+
+partial def mkStructDeclaration : Lean.Syntax → Except String StructDeclaration
+  | `(struct_declaration| $sql:specifier_qualifier_list $sdl:struct_declarator_list ; ) => StructDeclaration.SpecQualListStructDecList <$> (mkSpecQualList sql) <*> (mkStructDeclList sdl)
+  | _ => throw "unexpected syntax"
+
+partial def mkStructDeclarationList : Lean.Syntax → Except String StructDeclarationList
+  | `(struct_declaration_list| $sd:struct_declaration) => StructDeclarationList.StructDeclaration <$> (mkStructDeclaration sd)
+  | `(struct_declaration_list| $sdl:struct_declaration_list $sd:struct_declaration) => StructDeclarationList.StructDeclListStructDecl <$> (mkStructDeclarationList sdl) <*> (mkStructDeclaration sd)
+  | _ => throw "unexpected syntax"
+
+partial def mkStructOrUnionSpec : Lean.Syntax → Except String StructOrUnionSpec
+  | `(struct_or_union_specifier| $sou:struct_or_union $i:ident { $sdl:struct_declaration_list }) => StructOrUnionSpec.SoUIdentStructDeclarationList <$> (mkStructOrUnion sou) <*> (return i.getId.toString) <*> (mkStructDeclarationList sdl)
+  | `(struct_or_union_specifier| $sou:struct_or_union { $sdl:struct_declaration_list }) => StructOrUnionSpec.SoUStructDeclarationList <$> (mkStructOrUnion sou) <*> (mkStructDeclarationList sdl)
+  | `(struct_or_union_specifier| $sou:struct_or_union $i:ident) => StructOrUnionSpec.SoUIdent <$> (mkStructOrUnion sou) <*> (return i.getId.toString)
+  | _ => throw "unexpected syntax"
+
 partial def mkStorClassSpec : Lean.Syntax → Except String StorClassSpec
   | `(storage_class_specifier| typedef) => return StorClassSpec.TypeDef
   | `(storage_class_specifier| extern) => return StorClassSpec.Extern
@@ -275,25 +331,25 @@ partial def mkStorClassSpec : Lean.Syntax → Except String StorClassSpec
   | `(storage_class_specifier| register) => return StorClassSpec.Register
   | _ => throw "unexpected syntax"
 
-partial def mkTypeSpec : Lean.Syntax → Except String TypeSpec
-  | `(type_specifier| void) => return TypeSpec.Void
-  | `(type_specifier| char) => return TypeSpec.Char
-  | `(type_specifier| short) => return TypeSpec.Short
-  | `(type_specifier| int) => return TypeSpec.Int
-  | `(type_specifier| long) => return TypeSpec.Long
-  | `(type_specifier| float) => return TypeSpec.Float
-  | `(type_specifier| double) => return TypeSpec.Double
-  | `(type_specifier| signed) => return TypeSpec.Signed
-  | `(type_specifier| unsigned) => return TypeSpec.Unsigned
-  | `(type_specifier| $s:struct_or_union_specifier) => TypeSpec.SoUSpec <$> (mkSoUSpec s)
-  | `(type_specifier| $e:enum_specifier) => TypeSpec.EnumSpec <$> (mkEnumSpec e)
-  | `(type_specifier| typename) => return TypeSpec.TypeName
+partial def mkEnumerator : Lean.Syntax → Except String Enumerator
+  | `(enumerator| $s:ident) => return (Enumerator.Ident s.getId.toString)
+  | `(enumerator| $s:ident = $ce:constant_expression) => Enumerator.IdentAssignConst <$> (return s.getId.toString) <*> (mkConstExpr ce)
+  | _ => throw "unexpected syntax"
+
+partial def mkEnumList : Lean.Syntax → Except String EnumList
+  | `(enumerator_list| $e:enumerator) => EnumList.Enum <$> (mkEnumerator e)
+  | `(enumerator_list| $el:enumerator_list , $e:enumerator) => EnumList.EnumListEnum <$> (mkEnumList el) <*> (mkEnumerator e)
   | _ => throw "unexpected syntax"
 
 partial def mkEnumSpec : Lean.Syntax → Except String EnumSpec
   | `(enum_specifier| enum { $e:enumerator_list }) => EnumSpec.EnumList <$> (mkEnumList e)
   | `(enum_specifier| enum $i:ident { $e:enumerator_list }) => EnumSpec.IdentEnumList <$> (return i.getId.toString) <*> (mkEnumList e)
   | `(enum_specifier| enum $i:ident) => return EnumSpec.EnumIdent (i.getId.toString)
+  | _ => throw "unexpected syntax"
+
+partial def mkTypeName : Lean.Syntax → Except String TypeName
+  | `(type_name| $sql:specifier_qualifier_list) => TypeName.SpecQualList <$> (mkSpecQualList sql)
+  | `(type_name| $sql:specifier_qualifier_list $ad:abstract_declarator) => TypeName.SpecQualListAbsDec <$> (mkSpecQualList sql) <*> (mkAbstrDecl ad)
   | _ => throw "unexpected syntax"
 
 end

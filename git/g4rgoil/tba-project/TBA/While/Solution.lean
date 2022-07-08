@@ -5,6 +5,31 @@ import TBA.Util.AesopExts
 
 namespace While
 
+section task1
+
+theorem deterministic: ⟨c,σ⟩ ⇓ σ₁ : t₁ → ⟨c, σ⟩ ⇓ σ₂ : t₂ → t₁ = t₂ ∧ σ₁ = σ₂ := by
+  intro h1 h2
+  induction h1 generalizing σ₂ t₂ with
+  | skip => cases h2 <;> simp
+  | ass => cases h2 <;> simp
+  | seq _ _ ih₁ ih₂ => cases h2 with | seq hc1 hc2 => 
+    have h := ih₁ hc1
+    rw[And.right h] at ih₂
+    have h' := ih₂ hc2
+    simp_all
+  | ifTrue _ _ ih | ifFalse _ _ ih => cases h2 <;> simp_all [ih (by assumption)]
+  | whileTrue hexpr _ _ ih₁ ih₂ => 
+    cases h2 with 
+    | whileFalse => simp_all
+    | whileTrue _ hc₁' hw' =>
+      have h := ih₁ hc₁'
+      rw[And.right h] at ih₂
+      have h' := ih₂ hw'
+      simp_all
+  | whileFalse => cases h2 <;> simp_all
+
+end task1
+
 namespace Optimisation
 
 
