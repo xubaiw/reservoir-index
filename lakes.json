@@ -97,6 +97,7 @@
  "joehendrix/lean-arith-solver",
  "joehendrix/lean-crypto",
  "joehendrix/lean-sat-checker",
+ "jrr6/lean-tables",
  "justinfargnoli/koi",
  "langfield/Cheat.lean",
  "langfield/fpil",
