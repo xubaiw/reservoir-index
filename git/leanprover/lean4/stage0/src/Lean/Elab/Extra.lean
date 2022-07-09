@@ -38,9 +38,13 @@ private def throwForInFailure (forInInstance : Expr) : TermElabM Expr :=
         catch _ =>
           tryPostpone; throwError "failed to construct 'ForIn' instance for collection{indentExpr colType}\nand monad{indentExpr m}"
         match (← trySynthInstance forInInstance) with
-        | LOption.some _   =>
+        | LOption.some inst =>
           let forInFn ← mkConst ``forIn
-          elabAppArgs forInFn #[] #[Arg.stx col, Arg.stx init, Arg.stx body] expectedType? (explicit := false) (ellipsis := false) (coeAtOutParam := false)
+          elabAppArgs forInFn
+            (namedArgs := #[{ name := `m, val := Arg.expr m}, { name := `α, val := Arg.expr elemType }, { name := `self, val := Arg.expr inst }])
+            (args := #[Arg.stx col, Arg.stx init, Arg.stx body])
+            (expectedType? := expectedType?)
+            (explicit := false) (ellipsis := false) (resultIsOutParamSupport := false)
         | LOption.undef    => tryPostpone; throwForInFailure forInInstance
         | LOption.none     => throwForInFailure forInInstance
   | _ => throwUnsupportedSyntax
@@ -62,9 +66,13 @@ private def throwForInFailure (forInInstance : Expr) : TermElabM Expr :=
           catch _ =>
             tryPostpone; throwError "failed to construct `ForIn'` instance for collection{indentExpr colType}\nand monad{indentExpr m}"
         match (← trySynthInstance forInInstance) with
-        | LOption.some _   =>
+        | LOption.some inst  =>
           let forInFn ← mkConst ``forIn'
-          elabAppArgs forInFn #[] #[Arg.expr colFVar, Arg.stx init, Arg.stx body] expectedType? (explicit := false) (ellipsis := false) (coeAtOutParam := false)
+          elabAppArgs forInFn
+            (namedArgs := #[{ name := `m, val := Arg.expr m}, { name := `α, val := Arg.expr elemType}, { name := `self, val := Arg.expr inst }])
+            (args := #[Arg.expr colFVar, Arg.stx init, Arg.stx body])
+            (expectedType? := expectedType?)
+            (explicit := false) (ellipsis := false) (resultIsOutParamSupport := false)
         | LOption.undef    => tryPostpone; throwForInFailure forInInstance
         | LOption.none     => throwForInFailure forInInstance
   | _ => throwUnsupportedSyntax
@@ -195,7 +203,7 @@ where
                  modify fun s => { s with hasUncomparable := true }
 
 private def mkOp (f : Expr) (lhs rhs : Expr) : TermElabM Expr :=
-  elabAppArgs f #[] #[Arg.expr lhs, Arg.expr rhs] (expectedType? := none) (explicit := false) (ellipsis := false) (coeAtOutParam := false)
+  elabAppArgs f #[] #[Arg.expr lhs, Arg.expr rhs] (expectedType? := none) (explicit := false) (ellipsis := false) (resultIsOutParamSupport := false)
 
 private def toExpr (t : Tree) : TermElabM Expr := do
   match t with
@@ -325,7 +333,7 @@ def elabBinRelCore (noProp : Bool) (stx : Syntax) (expectedType? : Option Expr) 
       let rhs ← toBoolIfNecessary rhs
       let lhsType ← inferType lhs
       let rhs ← ensureHasType lhsType rhs
-      elabAppArgs f #[] #[Arg.expr lhs, Arg.expr rhs] expectedType? (explicit := false) (ellipsis := false) (coeAtOutParam := false)
+      elabAppArgs f #[] #[Arg.expr lhs, Arg.expr rhs] expectedType? (explicit := false) (ellipsis := false) (resultIsOutParamSupport := false)
     else
       let mut maxType := r.max?.get!
       /- If `noProp == true` and `maxType` is `Prop`, then set `maxType := Bool`. `See toBoolIfNecessary` -/

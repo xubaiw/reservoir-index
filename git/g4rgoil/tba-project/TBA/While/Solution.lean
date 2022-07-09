@@ -192,6 +192,12 @@ section task_4
 
 open Nat
 
+variable {c : Com} {e : Expr} {σ σ' ρ : State} {t t₁ t₂ : Nat}
+
+attribute [local simp] foldExpr
+attribute [local simp] Nat.le_add_left Nat.le_refl Nat.add_le_add_right Nat.add_le_add_left Nat.add_le_add Nat.zero_le
+
+
 -- TODO: Make nicer
 theorem foldExprTime : (Expr.time (foldExpr σ e)) ≤ (Expr.time e) := by
   induction e with simp only [foldExpr, Expr.time]
@@ -206,14 +212,63 @@ theorem foldExprTime : (Expr.time (foldExpr σ e)) ≤ (Expr.time e) := by
         simp only [Expr.time]
         exact (Nat.add_le_add_right (Nat.add_le_add h₁ h₂) 1)
 
+theorem foldCom_SoundTime (h : ConstMap σ ρ) (hc : ⟨c, σ⟩ ⇓ σ' : t)
+    : ∃ t', ⟨(foldCom ρ c).1, σ⟩ ⇓ σ' : t' ∧ t' ≤ t := by
+  induction hc generalizing ρ with
+    simp only [foldCom]
+  | skip => exact ⟨1, ⟨Bigstep.skip, Nat.le_refl 1⟩⟩
+  | ass =>
+    rw [foldExprSound h]
+    cases e' : foldExpr ρ ‹Expr› <;> exact ⟨_, ⟨Bigstep.ass, Nat.add_le_add_right (e' ▸ foldExprTime) 1⟩⟩
+  | seq hc₁ _ ih₁ ih₂ =>
+    match ih₁ h, ih₂ (foldCom_ConstMap h hc₁) with
+    | ⟨t₁, ⟨h₁, le₁⟩⟩, ⟨t₂, ⟨h₂, le₂⟩⟩ =>
+      have le := Nat.add_le_add_right (Nat.add_le_add le₁ le₂) 1
+      exact ⟨t₁ + t₂ + 1, ⟨Bigstep.seq h₁ h₂, le⟩⟩
+  | ifTrue hb _ ih | ifFalse hb _ ih =>
+    rename Expr => b
+    cases hfold : foldExpr ρ ‹Expr› using Expr.custom_rec with
+    | htrue | hfalse =>
+      have ⟨w, ⟨hw, hle⟩⟩ := ih h
+      have le := Nat.add_le_add (Nat.add_le_add (Nat.zero_le (Expr.time b)) hle) (Nat.zero_le 1)
+      simp at le
+      first | exact ⟨w, ⟨hw, le⟩⟩
+            | simp_all [ih h, foldExprSound h, foldExprTime, Expr.eval]
+    | _ =>
+      rw [foldExprSound h, hfold] at hb
+      have ⟨w, ⟨hw, hle⟩⟩ := ih h
+      have le : Expr.time (foldExpr ρ b) + w + 1 ≤ Expr.time b + _ + 1 := Nat.add_le_add (Nat.add_le_add foldExprTime hle) (Nat.le_refl 1)
+      rw [hfold] at le
+      first | exact ⟨_, ⟨Bigstep.ifTrue hb hw, le⟩⟩
+            | exact ⟨_, ⟨Bigstep.ifFalse hb hw, le⟩⟩
+  | whileTrue hb _ _ ihc ihind =>
+    rename Expr => b
+    cases hfold : foldExpr ρ b using Expr.custom_rec with
+    | hfalse => simp_all [foldExprSound h, Expr.eval]
+    | _ =>
+      cases hfold' : foldExpr Map.empty b using Expr.custom_rec with
+      | hfalse => simp_all [foldExprEmpty hfold']
+      | _ =>
+        have ⟨hct, hc⟩ := ihc empty_ConstMap
+        have ⟨hindt, hind⟩ := ihind empty_ConstMap
+        rw [foldCom, hfold'] at hind
+        simp at hind
+        have le := Nat.add_le_add (Nat.add_le_add (Nat.add_le_add (Nat.le_refl (Expr.time b)) hc.2) hind.2) (Nat.le_refl 1)
+        exact ⟨_, ⟨Bigstep.whileTrue hb hc.1 hind.1, le⟩⟩
+  | whileFalse hb =>
+    cases foldExpr ρ ‹Expr› using Expr.custom_rec with
+    | hfalse => exact ⟨_, ⟨Bigstep.skip, by simp⟩⟩
+    | _      => exact ⟨_, ⟨Bigstep.whileFalse hb, Nat.le_refl _⟩⟩
 
-variable {c : Com} {e : Expr} {σ σ' ρ : State} {t t₁ t₂ : Nat}
 
-attribute [local simp] foldExpr
+theorem optimise_SoundTime : ⟨c, σ⟩ ⇓ σ' : t → ∃ t', ⟨optimise c, σ⟩ ⇓ σ' : t' ∧ t' ≤ t := 
+  foldCom_SoundTime empty_ConstMap
 
--- TODO: Formalize and prove
-theorem foldComTime : Prop := by
-  sorry
+
+theorem optimiseTime (h₁ : ⟨c, σ⟩ ⇓ σ' : t₁) (h₂ : ⟨optimise c, σ⟩ ⇓ σ' : t₂) : t₂ ≤ t₁ := by
+  have ⟨_, ⟨h₂', leq⟩⟩ := optimise_SoundTime h₁
+  have ⟨eq, _⟩ := deterministic h₂ h₂'
+  exact eq ▸ leq
 
 end task_4
 
