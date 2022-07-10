@@ -39,7 +39,7 @@ def size : (@& ByteArray) → Nat
 
 @[extern "lean_byte_array_uget"]
 def uget : (a : @& ByteArray) → (i : USize) → i.toNat < a.size → UInt8
-  | ⟨bs⟩, i, h => bs.uget i h
+  | ⟨bs⟩, i, h => bs[i]
 
 @[extern "lean_byte_array_get"]
 def get! : (@& ByteArray) → (@& Nat) → UInt8
@@ -49,8 +49,8 @@ def get! : (@& ByteArray) → (@& Nat) → UInt8
 def get : (a : @& ByteArray) → (@& Fin a.size) → UInt8
   | ⟨bs⟩, i => bs.get i
 
-@[inline] def getOp (self : ByteArray) (idx : Nat) : UInt8 :=
-  self.get! idx
+instance : GetElem ByteArray Nat UInt8 fun xs i => LT.lt i xs.size where
+  getElem xs i h := xs.get ⟨i, h⟩
 
 @[extern "lean_byte_array_set"]
 def set! : ByteArray → (@& Nat) → UInt8 → ByteArray

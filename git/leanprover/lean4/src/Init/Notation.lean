@@ -100,6 +100,7 @@ macro_rules | `($x + $y)   => `(binop% HAdd.hAdd $x $y)
 macro_rules | `($x - $y)   => `(binop% HSub.hSub $x $y)
 macro_rules | `($x * $y)   => `(binop% HMul.hMul $x $y)
 macro_rules | `($x / $y)   => `(binop% HDiv.hDiv $x $y)
+macro_rules | `($x % $y)   => `(binop% HMod.hMod $x $y)
 macro_rules | `($x ++ $y)  => `(binop% HAppend.hAppend $x $y)
 
 -- declare ASCII alternatives first so that the latter Unicode unexpander wins
@@ -219,7 +220,7 @@ macro_rules
       match i, skip with
       | 0,   _     => pure result
       | i+1, true  => expandListLit i false result
-      | i+1, false => expandListLit i true  (← ``(List.cons $(⟨elems.elemsAndSeps[i]!⟩) $result))
+      | i+1, false => expandListLit i true  (← ``(List.cons $(⟨elems.elemsAndSeps.get! i⟩) $result))
     if elems.elemsAndSeps.size < 64 then
       expandListLit elems.elemsAndSeps.size false (← ``(List.nil))
     else

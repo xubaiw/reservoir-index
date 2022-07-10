@@ -427,3 +427,19 @@ end Lean
 `‹t›` resolves to an (arbitrary) hypothesis of type `t`. It is useful for referring to hypotheses without accessible names.
 `t` may contain holes that are solved by unification with the expected type; in particular, `‹_›` is a shortcut for `by assumption`. -/
 macro "‹" type:term "›" : term => `((by assumption : $type))
+
+syntax "get_elem_tactic_trivial" : tactic -- extensible tactic
+
+macro_rules | `(tactic| get_elem_tactic_trivial) => `(tactic| trivial)
+macro_rules | `(tactic| get_elem_tactic_trivial) => `(tactic| decide)
+macro_rules | `(tactic| get_elem_tactic_trivial) => `(tactic| assumption)
+
+macro "get_elem_tactic" : tactic =>
+  `(first
+    | get_elem_tactic_trivial
+    | fail "failed to prove index is valid, possible solutions:\n  - Use `have`-expressions to prove the index is valid\n  - Use `a[i]!` notation instead, runtime check is perfomed, and 'Panic' error message is produced if index is not valid\n  - Use `a[i]?` notation instead, result is an `Option` type\n  - Use `a[i]'h` notation instead, where `h` is a proof that index is valid"
+   )
+
+macro:max x:term noWs "[" i:term "]" : term => `(getElem $x $i (by get_elem_tactic))
+
+macro x:term noWs "[" i:term "]'" h:term:max : term => `(getElem $x $i $h)
