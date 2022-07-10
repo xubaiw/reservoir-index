@@ -1,0 +1,286 @@
+{
+    "proxies": {
+        "AR": {
+            "history": [],
+            "name": "AR",
+            "type": "Vmess",
+            "udp": false
+        },
+        "DIRECT": {
+            "history": [],
+            "name": "DIRECT",
+            "type": "Direct",
+            "udp": true
+        },
+        "GLOBAL": {
+            "all": [
+                "DIRECT",
+                "REJECT",
+                "HK1",
+                "JP1",
+                "HK2",
+                "JP2",
+                "HK3",
+                "JP3",
+                "HK4",
+                "JP4",
+                "HK5",
+                "JP5",
+                "HK6",
+                "JP6",
+                "HK7",
+                "JP7",
+                "HK8",
+                "JP8",
+                "HK9",
+                "JP9",
+                "HK10",
+                "JP10",
+                "HK11",
+                "JP11",
+                "TW1",
+                "SG",
+                "TW2",
+                "US",
+                "KR",
+                "UK",
+                "AR",
+                "RU",
+                "TR",
+                "SelectGroup"
+            ],
+            "history": [],
+            "name": "GLOBAL",
+            "now": "DIRECT",
+            "type": "Selector",
+            "udp": true
+        },
+        "HK1": {
+            "history": [],
+            "name": "HK1",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK10": {
+            "history": [],
+            "name": "HK10",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK11": {
+            "history": [],
+            "name": "HK11",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK2": {
+            "history": [],
+            "name": "HK2",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK3": {
+            "history": [],
+            "name": "HK3",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK4": {
+            "history": [],
+            "name": "HK4",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK5": {
+            "history": [],
+            "name": "HK5",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK6": {
+            "history": [],
+            "name": "HK6",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK7": {
+            "history": [],
+            "name": "HK7",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK8": {
+            "history": [],
+            "name": "HK8",
+            "type": "Vmess",
+            "udp": false
+        },
+        "HK9": {
+            "history": [],
+            "name": "HK9",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP1": {
+            "history": [],
+            "name": "JP1",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP10": {
+            "history": [],
+            "name": "JP10",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP11": {
+            "history": [],
+            "name": "JP11",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP2": {
+            "history": [],
+            "name": "JP2",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP3": {
+            "history": [],
+            "name": "JP3",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP4": {
+            "history": [],
+            "name": "JP4",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP5": {
+            "history": [],
+            "name": "JP5",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP6": {
+            "history": [],
+            "name": "JP6",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP7": {
+            "history": [],
+            "name": "JP7",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP8": {
+            "history": [],
+            "name": "JP8",
+            "type": "Vmess",
+            "udp": false
+        },
+        "JP9": {
+            "history": [],
+            "name": "JP9",
+            "type": "Vmess",
+            "udp": false
+        },
+        "KR": {
+            "history": [],
+            "name": "KR",
+            "type": "Vmess",
+            "udp": false
+        },
+        "REJECT": {
+            "history": [],
+            "name": "REJECT",
+            "type": "Reject",
+            "udp": true
+        },
+        "RU": {
+            "history": [],
+            "name": "RU",
+            "type": "Vmess",
+            "udp": false
+        },
+        "SG": {
+            "history": [],
+            "name": "SG",
+            "type": "Vmess",
+            "udp": false
+        },
+        "SelectGroup": {
+            "all": [
+                "HK1",
+                "JP1",
+                "HK2",
+                "JP2",
+                "HK3",
+                "JP3",
+                "HK4",
+                "JP4",
+                "HK5",
+                "JP5",
+                "HK6",
+                "JP6",
+                "HK7",
+                "JP7",
+                "HK8",
+                "JP8",
+                "HK9",
+                "JP9",
+                "HK10",
+                "JP10",
+                "HK11",
+                "JP11",
+                "TW1",
+                "SG",
+                "TW2",
+                "US",
+                "KR",
+                "UK",
+                "AR",
+                "RU",
+                "TR",
+                "DIRECT"
+            ],
+            "history": [],
+            "name": "SelectGroup",
+            "now": "JP1",
+            "type": "Selector",
+            "udp": false
+        },
+        "TR": {
+            "history": [],
+            "name": "TR",
+            "type": "Vmess",
+            "udp": false
+        },
+        "TW1": {
+            "history": [],
+            "name": "TW1",
+            "type": "Vmess",
+            "udp": false
+        },
+        "TW2": {
+            "history": [],
+            "name": "TW2",
+            "type": "Vmess",
+            "udp": false
+        },
+        "UK": {
+            "history": [],
+            "name": "UK",
+            "type": "Vmess",
+            "udp": false
+        },
+        "US": {
+            "history": [],
+            "name": "US",
+            "type": "Vmess",
+            "udp": false
+        }
+    }
+}

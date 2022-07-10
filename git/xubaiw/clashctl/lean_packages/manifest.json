@@ -1,0 +1,8 @@
+{"version": 1,
+ "packages":
+ [{"url": "https://github.com/mhuisi/lean4-cli",
+   "rev": "f7590ce072b0321752a7b9942892d0104dee4036",
+   "name": "Cli"},
+  {"url": "https://github.com/xubaiw/Socket.lean",
+   "rev": "9fc98bc24ccdb4471b2e38e94dccd18f75d2a293",
+   "name": "socket"}]}
