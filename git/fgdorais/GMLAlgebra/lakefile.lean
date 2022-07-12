@@ -8,4 +8,4 @@ package GMLAlgebra {
 @[defaultTarget]
 lean_lib GMLAlgebra {}
 
-require GMLInit from git "https://github.com/fgdorais/GMLInit.git"@"4e5230249bd8788a7880d11d05436ee4b70b6c33"
+require GMLInit from git "https://github.com/fgdorais/GMLInit.git"@"3015c29225907896289972f964bcc567352e9a60"

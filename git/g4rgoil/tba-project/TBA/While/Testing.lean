@@ -1,14 +1,20 @@
 import TBA.While.Solution
 
-namespace While
+namespace testing
 
-namespace Optimisation
+open While
+open Optimisation
+open Expr
+open Map
+open State
 
-#reduce foldExpr Map.empty `[Expr| 5 + 4 - 9 = 0]
-#reduce foldExpr Map.empty `[Expr| 1 - 4 < (5 + 5) - (10 + 3)]
-#reduce foldExpr Map.empty `[Expr| 1 + true]
+abbrev Γ : Ctxt := Map.empty["x" ↦ Ty.int]["y" ↦ Ty.int]["z" ↦ Ty.int]["b" ↦ Ty.bool]
 
-def com1 := `[Com| 
+#reduce foldExpr State.empty `[Expr| 5 + 4 - 9 = 0]
+#reduce foldExpr State.empty `[Expr| 1 - 4 < (5 + 5) - (10 + 3)]
+#reduce foldExpr State.empty `[Expr| 1 + 2]
+
+def com1 : Com Γ := `[Com|
   x := 7;
   y := 3;
   if (x = y) {
@@ -19,7 +25,7 @@ def com1 := `[Com|
   }]
 #reduce optimise com1
 
-def com2 := `[Com| 
+def com2 : Com Γ := `[Com|
   x := 2;
   y := x;
   b := x = y;
@@ -30,7 +36,7 @@ def com2 := `[Com|
   }]
 #reduce optimise com2
 
-def com3 := `[Com|
+def com3 : Com Γ := `[Com|
   x := 13;
   y := 7;
   while (y = x - 5) {
@@ -38,7 +44,7 @@ def com3 := `[Com|
   }]
 #reduce optimise com3
 
-def com4 := `[Com|
+def com4 : Com Γ := `[Com|
   x := 8;
   if (x < y) {
     x := x + 1;
@@ -49,7 +55,7 @@ def com4 := `[Com|
   y := x;]
 #reduce optimise com4
 
-def com5 := `[Com|
+def com5 : Com Γ := `[Com|
   if (x < y) {
     x := 9;
     y := x + 1;
@@ -60,6 +66,4 @@ def com5 := `[Com|
   z := x + y;]
 #reduce optimise com5
 
-end Optimisation
-
-end While
+end testing

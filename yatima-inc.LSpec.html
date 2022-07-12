@@ -132,7 +132,7 @@ def main : IO UInt32 := do
     test <span class="pl-s"><span class="pl-pds">"</span>fiveIO equals 5<span class="pl-pds">"</span></span> (five = <span class="pl-c1">5</span>)</pre></div>
 <h4 dir="auto">Setting up a testing infra</h4>
 <p dir="auto">The LSpec package also provides a binary that runs test files automatically.
-The binary becomes available by running <code>lake build LSpec</code>, which will generate the file <code>./lean_packages/LSpec/build/bin/lspec</code>.</p>
+The binary becomes available by running <code>lake build lspec</code>, which will generate the file <code>lean_packages/LSpec/build/bin/lspec</code>.</p>
 <p dir="auto">The <code>lspec</code> binary recursively searches for Lean files inside a <code>Tests</code> directory.
 For each Lean file present <code>Tests</code>, there must exist a corresponding <code>lean_exe</code> in your <code>lakefile.lean</code>.</p>
 <p dir="auto">For instance, suppose that the directory <code>Tests</code> contains the files <code>Tests/F1.lean</code> and <code>Tests/Some/Dir/F2.lean</code>.
@@ -160,8 +160,8 @@ jobs:
           ./elan-init -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
       - uses: actions/checkout@v2
-      - name: build LSpec
-        run: lake build LSpec
+      - name: build LSpec binary
+        run: lake build lspec
       - name: run LSpec
         run: ./lean_packages/LSpec/build/bin/lspec"><pre><span class="pl-ent">name</span>: <span class="pl-s"><span class="pl-pds">"</span>LSpec CI<span class="pl-pds">"</span></span>
 <span class="pl-ent">on</span>:
@@ -181,8 +181,8 @@ jobs:
 <span class="pl-s">          ./elan-init -y --default-toolchain none</span>
 <span class="pl-s">          echo "$HOME/.elan/bin" >> $GITHUB_PATH</span>
 <span class="pl-s"></span>      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v2</span>
-      - <span class="pl-ent">name</span>: <span class="pl-s">build LSpec</span>
-        <span class="pl-ent">run</span>: <span class="pl-s">lake build LSpec</span>
+      - <span class="pl-ent">name</span>: <span class="pl-s">build LSpec binary</span>
+        <span class="pl-ent">run</span>: <span class="pl-s">lake build lspec</span>
       - <span class="pl-ent">name</span>: <span class="pl-s">run LSpec</span>
         <span class="pl-ent">run</span>: <span class="pl-s">./lean_packages/LSpec/build/bin/lspec</span></pre></div>
 </article></div></main>
