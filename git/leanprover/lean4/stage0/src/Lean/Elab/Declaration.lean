@@ -17,12 +17,12 @@ open TSyntax.Compat
 
 private def ensureValidNamespace (name : Name) : MacroM Unit := do
   match name with
-  | Name.str p s _ =>
+  | .str p s =>
     if s == "_root_" then
       Macro.throwError s!"invalid namespace '{name}', '_root_' is a reserved namespace"
     ensureValidNamespace p
-  | Name.num _ .. => Macro.throwError s!"invalid namespace '{name}', it must not contain numeric parts"
-  | Name.anonymous => return ()
+  | .num .. => Macro.throwError s!"invalid namespace '{name}', it must not contain numeric parts"
+  | .anonymous => return ()
 
 /-- Auxiliary function for `expandDeclNamespace?` -/
 private def expandDeclIdNamespace? (declId : Syntax) : MacroM (Option (Name × Syntax)) := do
@@ -32,8 +32,8 @@ private def expandDeclIdNamespace? (declId : Syntax) : MacroM (Option (Name × S
     return none
   let scpView := extractMacroScopes id
   match scpView.name with
-  | Name.str Name.anonymous _ _ => return none
-  | Name.str pre s _            =>
+  | .str .anonymous _ => return none
+  | .str pre s        =>
     ensureValidNamespace pre
     let nameNew := { scpView with name := Name.mkSimple s }.review
     -- preserve "original" info, if any, so that hover etc. on the namespaced
@@ -136,13 +136,22 @@ private def inductiveSyntaxToView (modifiers : Modifiers) (decl : Syntax) : Comm
     addDocString' ctorName ctorModifiers.docString?
     addAuxDeclarationRanges ctorName ctor ctor[2]
     return { ref := ctor, modifiers := ctorModifiers, declName := ctorName, binders := binders, type? := type? : CtorView }
-  let classes ← getOptDerivingClasses decl[5]
+  let mut computedFields := #[]
+  let mut classes := #[]
+  if decl.getNumArgs == 6 then
+    -- TODO: remove after stage0 update
+    classes ← getOptDerivingClasses decl[5]
+  else
+    computedFields ← (decl[5].getOptional?.map (·[1].getArgs) |>.getD #[]).mapM fun cf => withRef cf do
+      return { ref := cf, modifiers := cf[0], fieldId := cf[1].getId, type := cf[3], matchAlts := cf[4] }
+    classes ← getOptDerivingClasses decl[6]
   return {
     ref             := decl
     shortDeclName   := name
     derivingClasses := classes
     declId, modifiers, declName, levelNames
     binders, type?, ctors
+    computedFields
   }
 
 private def classInductiveSyntaxToView (modifiers : Modifiers) (decl : Syntax) : CommandElabM InductiveView :=

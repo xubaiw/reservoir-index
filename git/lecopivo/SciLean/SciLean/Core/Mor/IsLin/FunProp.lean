@@ -3,6 +3,8 @@ import SciLean.Core.Mor.IsLin.Core
 
 namespace SciLean.FunProp
 
+open Lean.TSyntax.Compat -- makes old untyped syntax code compile
+
 syntax "isLin"   bracketedBinder* ":=" term : argProp
 syntax "isLin"   bracketedBinder*           : argProp
 
@@ -13,7 +15,7 @@ macro_rules
   let (preParms, parm, postParms) ← splitParms parms x.getId
 
   let preArgs  := getExplicitArgs preParms
-  let arg      := (getExplicitArgs #[parm])[0]
+  let arg      := (getExplicitArgs #[parm])[0]!
   let postArgs := getExplicitArgs postParms
 
   let funName  := funId.getId
@@ -30,5 +32,5 @@ macro_rules
       isLin $extraParms:bracketedBinder*) => do
 
   `(argument_property $x:ident $funId:ident $parms:bracketedBinder* : $retType:term where
-      isLin $extraParms:bracketedBinder* := by unfold $funId; infer_instance; done)
+      isLin $extraParms:bracketedBinder* := by unfold $funId; simp; infer_instance; done)
 

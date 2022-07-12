@@ -1,12 +1,25 @@
 Unreleased
 ---------
 
+* Add support for computed fields in inductives. Example:
+  ```lean
+  inductive Exp
+    | var (i : Nat)
+    | app (a b : Exp)
+  with
+    @[computedField] hash : Exp → Nat
+      | .var i => i
+      | .app a b => a.hash * b.hash + 1
+  ```
+  The result of the `Exp.hash` function is then stored as an extra "computed" field in the `.var` and `.app` constructors;
+  `Exp.hash` accesses this field and thus runs in constant time (even on dag-like values).
+
 * Update `a[i]` notation. It is now based on the typeclass
   ```lean
   class GetElem (Cont : Type u) (Idx : Type v) (Elem : outParam (Type w)) (Dom : outParam (Cont → Idx → Prop)) where
     getElem (xs : Cont) (i : Idx) (h : Dom xs i) : Elem
   ```
-  The notation `a[i]` is not defined as follows
+  The notation `a[i]` is now defined as follows
   ```lean
   macro:max x:term noWs "[" i:term "]" : term => `(getElem $x $i (by get_elem_tactic))
   ```

@@ -17,9 +17,9 @@ uint8_t l_Lean_isRecCore(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Lean_evalConst___at_Lean_Meta_evalExprCore___spec__12(lean_object*);
 LEAN_EXPORT lean_object* l_Lean_throwKernelException___at_Lean_Meta_evalExprCore___spec__3___boxed(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* l_Lean_stringToMessageData(lean_object*);
+lean_object* l_Lean_Name_str___override(lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Lean_throwError___at_Lean_Meta_evalExprCore___spec__14___rarg(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 lean_object* l_Lean_throwError___at_Lean_Meta_setInlineAttribute___spec__1(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
-lean_object* lean_name_mk_string(lean_object*, lean_object*);
 static lean_object* l_Lean_Meta_evalExpr_x27___rarg___lambda__1___closed__3;
 LEAN_EXPORT lean_object* l_Lean_Declaration_foldExprM___at_Lean_Meta_evalExprCore___spec__8(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 uint8_t l_Lean_isCasesOnRecursor(lean_object*, lean_object*);
@@ -96,7 +96,7 @@ LEAN_EXPORT lean_object* l_List_foldlM___at_Lean_Meta_evalExprCore___spec__9(lea
 lean_object* l_Lean_Meta_whnfD(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l_Lean_compileDecl___at_Lean_Meta_evalExprCore___spec__6(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
 LEAN_EXPORT lean_object* l___private_Lean_MonadEnv_0__Lean_checkUnsupported___at_Lean_Meta_evalExprCore___spec__7(lean_object*, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
-lean_object* lean_compile_decl(lean_object*, lean_object*, lean_object*);
+lean_object* l_Lean_Environment_compileDecl(lean_object*, lean_object*, lean_object*);
 uint8_t l_Std_PersistentArray_anyM___at_Lean_MessageLog_hasErrors___spec__1(lean_object*);
 uint8_t l_Lean_Declaration_foldExprM___at_Lean_Declaration_hasSorry___spec__1(lean_object*, uint8_t);
 LEAN_EXPORT lean_object* l_Lean_logAt___at_Lean_Meta_evalExprCore___spec__5(lean_object*, lean_object*, uint8_t, lean_object*, lean_object*, lean_object*, lean_object*, lean_object*);
@@ -2156,7 +2156,8 @@ lean_inc(x_10);
 lean_dec(x_8);
 x_11 = lean_ctor_get(x_4, 2);
 lean_inc(x_11);
-x_12 = lean_compile_decl(x_10, x_11, x_1);
+lean_inc(x_1);
+x_12 = l_Lean_Environment_compileDecl(x_10, x_11, x_1);
 lean_dec(x_11);
 if (lean_obj_tag(x_12) == 0)
 {
@@ -2421,7 +2422,7 @@ _start:
 lean_object* x_1; lean_object* x_2; lean_object* x_3; 
 x_1 = lean_box(0);
 x_2 = l_Lean_Meta_evalExprCore___rarg___closed__1;
-x_3 = lean_name_mk_string(x_1, x_2);
+x_3 = l_Lean_Name_str___override(x_1, x_2);
 return x_3;
 }
 }
