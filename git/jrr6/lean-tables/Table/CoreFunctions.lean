@@ -47,21 +47,30 @@ def Schema.certify (schema : @Schema η) : List (CertifiedHeader schema) :=
       ⟨(c, τ), Schema.HasCol.hd⟩ :: (certify_elts hs).map map_subproof;
   certify_elts schema
 
--- TODO: Lean 4 bug: can't do `induction schema` in tactic mode
 def Schema.colImpliesName :
       {schema : @Schema η} →
       {c : η} →
       {τ : Type u} →
-      (p : schema.HasCol (c, τ)) → schema.HasName c
-| [], c, τ, p => by contradiction
-| h :: hs, c, τ, p => by
-    cases p with
-    | hd => apply HasName.hd
-    | tl a => apply HasName.tl (colImpliesName a)
+      schema.HasCol (c, τ) → schema.HasName c
+| h :: hs, _, _, HasCol.hd => HasName.hd
+| h :: hs, c, τ, HasCol.tl p => HasName.tl (colImpliesName p)
+-- Can also be done in tactic mode:
+-- | h :: hs, c, τ, p => by
+--     cases p with
+--     | hd => apply HasName.hd
+--     | tl a => apply HasName.tl (colImpliesName a)
 
 def Schema.certifyNames (schema : @Schema η) : List (CertifiedName schema) :=
   schema.certify.map (λ (⟨(c, _), h⟩ : CertifiedHeader schema) =>
                         ⟨c, colImpliesName h⟩)
+
+def Schema.hasNameOfAppend : {sch : @Schema η} →
+                                 {nm : η} →
+                                 {hs : List Header} →
+                                 sch.HasName nm →
+  Schema.HasName nm (sch.append hs)
+| _, _, _, Schema.HasName.hd => Schema.HasName.hd
+| _, _, _, Schema.HasName.tl h => Schema.HasName.tl $ hasNameOfAppend h
 
 -- Schema functions
 def Schema.names {η : Type u_η} := List.map (@Prod.fst η (Type u))
@@ -91,20 +100,6 @@ def Schema.removeName {c : η} :
 | _::s, Schema.HasName.hd => s
 | s::ss, Schema.HasName.tl h => s :: removeName ss h
 
-theorem Schema.removeName_sublist :
-  ∀ (s : @Schema η) (c : η) (hc : HasName c s),
-    List.Sublist (s.removeName hc) s :=
-by intros s c hc
-   induction hc with
-   | hd =>
-     simp only [removeName]
-     apply List.Sublist.cons
-     apply List.sublist_self
-   | tl _ ih =>
-     simp only [removeName]
-     apply List.Sublist.cons2
-     exact ih
-
 -- TODO: Uniqueness is evil...
 -- TODO: new issue is that the input might have duplicate names...
 def Schema.removeNames {η : Type u_η} [DecidableEq η] :
@@ -125,6 +120,16 @@ def Schema.lookup {η : Type u_η} [DecidableEq η]
     : (s : @Schema η) → CertifiedName s → @Header η
 | hdr :: _, ⟨_, Schema.HasName.hd⟩ => hdr
 | _ :: hs, ⟨c, Schema.HasName.tl h'⟩ => lookup hs ⟨c, h'⟩
+
+-- TODO: figure out what's going on here -- these should be auto-generated
+-- (also the field syntax isn't working, so using underscores instead)
+theorem Schema.lookup_eq_1 {η : Type u_η} [DecidableEq η]
+  (hdr : @Header η) (hs : @Schema η) :
+  lookup (hdr :: hs) ⟨hdr.1, HasName.hd⟩ = hdr := rfl
+
+theorem Schema.lookup_eq_2 {η : Type u_η} [DecidableEq η]
+  (hd : @Header η) (tl : @Schema η) (c : η) {h : Schema.HasName c tl} :
+  lookup (hd :: tl) ⟨c, HasName.tl h⟩ = lookup tl ⟨c, h⟩ := rfl
 
 def Schema.pick {η : Type u_η} [DecidableEq η] (s : @Schema η)
     : List (CertifiedName s) → @Schema η
@@ -148,6 +153,31 @@ def Schema.renameColumns {η : Type u_η} [DecidableEq η]
     : (s : @Schema η) → List (CertifiedName s × η) → @Schema η
 | s, [] => []
 | s, (oldPf, nm') :: ccs => sorry --renameColumns (renameColumn s oldPf.snd nm') ccs
+
+theorem Schema.removeName_sublist :
+  ∀ (s : @Schema η) (c : η) (hc : HasName c s),
+    List.Sublist (s.removeName hc) s
+| _, _, HasName.hd => List.Sublist.cons _ _ _ (List.sublist_self _)
+| _, _, HasName.tl h => List.Sublist.cons2 _ _ _ (removeName_sublist _ _ h)
+
+theorem Schema.lookup_fst_eq_nm :
+  ∀ (sch : @Schema η) (c : CertifiedName sch),
+    (Schema.lookup sch c).fst = c.val
+| s :: ss, ⟨_, HasName.hd⟩ => rfl
+| s :: ss, ⟨c, HasName.tl h⟩ => lookup_fst_eq_nm ss ⟨c, h⟩
+
+theorem Schema.lookup_eq_lookup_append :
+  ∀ (s : @Schema η) (t : @Schema η) (c : η) (h : s.HasName c),
+  lookup s ⟨c, h⟩ = lookup (s.append t) ⟨c, Schema.hasNameOfAppend h⟩ :=
+by intros s t c h
+   induction h with
+   | hd =>
+     simp only [Schema.hasNameOfAppend, List.append]
+     rw [Schema.lookup_eq_1, Schema.lookup_eq_1]
+   | tl h' ih =>
+     simp only [Schema.hasNameOfAppend, List.append]
+     rw [Schema.lookup_eq_2, Schema.lookup_eq_2]
+     exact ih
 
 -- Row utilities
 def Row.singleCell {name τ} (x : τ) :=
@@ -189,6 +219,11 @@ def Row.toList {schema : @Schema η} {α} (f : ∀ {n β}, @Cell η dec_η n β 
     : Row schema → List α
 | Row.nil => []
 | Row.cons c rs => f c :: toList f rs
+
+def Row.hasEmpty {schema : @Schema η} : Row schema → Bool
+| Row.nil => false
+| Row.cons Cell.emp _ => true
+| Row.cons _ r' => hasEmpty r'
 
 -- TODO: probably makes more sense to move this to some general "collection"
 -- interface rather than reimplementing for every type -- wonder if this is
