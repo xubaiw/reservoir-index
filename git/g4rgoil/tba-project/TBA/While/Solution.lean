@@ -1,7 +1,6 @@
 import TBA.While.Semantics
 
 import Aesop
-import TBA.Util.AesopExts
 
 
 namespace While
@@ -127,7 +126,7 @@ theorem foldExprEmpty (hfold : foldExpr empty e = Expr.const v)
     | .const _, .const _ => simp_all [ihl hl, ihr hr]
     | .var .., _ | _, .var .. | .binop .., _ | _, .binop .. => simp_all
 
-theorem foldExprTime : (Expr.time (foldExpr ρ e)) ≤ (Expr.time e) := by
+theorem foldExprTime : Expr.time (foldExpr ρ e) ≤ Expr.time e := by
   induction e <;> aesop (add norm unfold Expr.time)
 
 theorem foldComSoundTime (h : ConstMap σ ρ) (hc : ⟨c, σ⟩ ⇓ σ' : t)
