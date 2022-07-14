@@ -1,6 +1,7 @@
 import { workspace } from 'vscode'
 import * as path from 'path';
 import * as fs from 'fs'
+import { logger } from './utils/logger'
 
 // TODO: does currently not contain config options for `./abbreviation`
 // so that it is easy to keep it in sync with vscode-lean.
@@ -61,7 +62,7 @@ export function addDefaultElanPath() : void {
 }
 
 function findToolchainBin(root:string) : string{
-    console.log(`Looking for toolchains in ${root}`)
+    logger.log(`Looking for toolchains in ${root}`)
     if (!fs.existsSync(root)) {
         return '';
     }
@@ -112,7 +113,7 @@ export function removeElanPath() : string {
     for (let i = 0; i < parts.length; ) {
          const part = parts[i]
          if (part.indexOf('.elan') > 0){
-            console.log(`removing path to elan: ${part}`)
+            logger.log(`removing path to elan: ${part}`)
             result = part;
             parts.splice(i, 1);
          } else {
@@ -198,6 +199,33 @@ export function getTestFolder() : string {
 
 export function isElanDisabled() : boolean {
     return typeof(process.env.DISABLE_ELAN) === 'string';
+}
+
+/** The editor line height, in pixels. */
+export function getEditorLineHeight(): number {
+    // The implementation
+    // (recommended by Microsoft: https://github.com/microsoft/vscode/issues/125341#issuecomment-854812591)
+    // is absolutely cursed. It's just to copy whatever VSCode does internally.
+    const fontSize = workspace.getConfiguration('editor').get<number>('fontSize') ?? 0;
+    let lineHeight = workspace.getConfiguration('editor').get<number>('lineHeight') ?? 0;
+
+    const GOLDEN_LINE_HEIGHT_RATIO = process.platform === 'darwin' ? 1.5 : 1.35;
+    const MINIMUM_LINE_HEIGHT = 8;
+
+    if (lineHeight === 0) {
+		lineHeight = GOLDEN_LINE_HEIGHT_RATIO * fontSize;
+    } else if (lineHeight < MINIMUM_LINE_HEIGHT) {
+		// Values too small to be line heights in pixels are in ems.
+		lineHeight = lineHeight * fontSize;
+    }
+
+    // Enforce integer, minimum constraints
+    lineHeight = Math.round(lineHeight);
+    if (lineHeight < MINIMUM_LINE_HEIGHT) {
+        lineHeight = MINIMUM_LINE_HEIGHT;
+    }
+
+    return lineHeight;
 }
 
 /**

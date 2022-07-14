@@ -7,12 +7,13 @@ import {
 } from 'vscode';
 import { EditorApi, InfoviewApi, LeanFileProgressParams, TextInsertKind, RpcConnectParams, RpcConnected, RpcKeepAliveParams } from '@lean4/infoview-api';
 import { LeanClient } from './leanclient';
-import { getInfoViewAllErrorsOnLine, getInfoViewAutoOpen, getInfoViewAutoOpenShowGoal,
+import { getEditorLineHeight, getInfoViewAllErrorsOnLine, getInfoViewAutoOpen, getInfoViewAutoOpenShowGoal,
     getInfoViewStyle, minIfProd, prodOrDev } from './config';
 import { Rpc } from './rpc';
 import { LeanClientProvider } from './utils/clientProvider'
 import * as ls from 'vscode-languageserver-protocol'
 import { c2pConverter, p2cConverter } from './utils/converters';
+import { logger } from './utils/logger'
 
 const keepAlivePeriodMs = 10000
 
@@ -33,7 +34,7 @@ class RpcSession implements Disposable {
             try {
                 await client.sendNotification('$/lean/rpc/keepAlive', params)
             } catch (e) {
-                console.log(`failed to send keepalive for ${uri}`, e)
+                logger.log(`failed to send keepalive for ${uri}: ${e}`)
                 if (this.keepAliveInterval) clearInterval(this.keepAliveInterval)
             }
         }, keepAlivePeriodMs)
@@ -293,14 +294,14 @@ export class InfoProvider implements Disposable {
         const folder = client.getWorkspaceFolder()
         if (this.clientsFailed.has(folder)) {
             this.clientsFailed.delete(folder) // delete from failed clients
-            console.log('Restarting server for workspace: ' + folder)
+            logger.log('Restarting server for workspace: ' + folder)
         }
         await this.initInfoView(window.activeTextEditor, client);
     }
 
     private async onClientAdded(client: LeanClient) {
 
-        console.log(`Adding client for workspace: ${client.getWorkspaceFolder()}`);
+        logger.log(`Adding client for workspace: ${client.getWorkspaceFolder()}`);
 
         this.clientSubscriptions.push(
             client.restarted(async () => {
@@ -334,7 +335,7 @@ export class InfoProvider implements Disposable {
             await this.webviewPanel?.api.serverStopped(msg);
         }
 
-        console.log(`client stopped: ${client.getWorkspaceFolder()}`)
+        logger.log(`client stopped: ${client.getWorkspaceFolder()}`)
 
         // remember this client is in a stopped state
         this.clientsFailed.set(client.getWorkspaceFolder(), msg)
@@ -379,15 +380,17 @@ export class InfoProvider implements Disposable {
     }
 
     private updateStylesheet() {
-        const fontFamily = workspace.getConfiguration('editor').get<string>('fontFamily')?.replace(/['"]/g, '');
-        const fontCodeCSS = `
-            .font-code {
-                font-family: ${fontFamily};
-                font-size: ${workspace.getConfiguration('editor').get('fontSize')}px;
+        // Here we add extra CSS variables which depend on the editor configuration,
+        // but are not exposed by default.
+        // Ref: https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content
+
+        const extraCSS = `
+            html {
+                --vscode-editor-line-height: ${getEditorLineHeight()}px;
             }
         `;
         const configCSS = getInfoViewStyle();
-        this.stylesheet = fontCodeCSS + configCSS;
+        this.stylesheet = extraCSS + configCSS;
     }
 
     private async autoOpen() : Promise<boolean> {

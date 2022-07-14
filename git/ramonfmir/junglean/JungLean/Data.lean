@@ -1,11 +1,17 @@
 import JungLean.Tabular
 
 def loadLabeled (labels : String) (features : String) : IO Examples := do
-  let features := (← loadFeatures features)
-  let labels := (← loadLabels labels)
+  let features ← loadFeatures features
+  let labels ← loadLabels labels
   let n := Array.size features
   let indices := List.range n
   return {indices := indices, features := features, labels := labels}
+
+def getLabels (examples : IO Examples) : IO (List String) := do
+  let labels := (← examples).labels
+  let indices := (← examples).indices
+  let labels := List.map (fun i => labels.get! i) indices
+  return labels
 
 def indices (e : Examples) : List Nat := e.indices
 
@@ -13,8 +19,8 @@ def print (e : Examples) : IO Unit := do
   let inds := indices e
   for i in inds do printExample e i
 
-def isEmpty (e : Examples) :=
-  e.indices = []
+def isEmpty (e : Examples) : Bool :=
+  e.indices.length = 0
 
 def firstLabel (e : Examples) :=
   match e.indices with
@@ -29,7 +35,7 @@ def randomSubset (e : Examples) : IO Examples := do
     let random_indices := ← sampleWithReplace e.indices (e.indices.length)
     return {e with indices := random_indices}
 
-def uniformLabels (e : Examples) :=
+def uniformLabels (e : Examples) : Bool :=
   let rec uniform inds :=
     match inds with
     | []            => True
