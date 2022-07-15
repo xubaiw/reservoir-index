@@ -135,7 +135,7 @@ Hello, world!
 <p dir="auto">A <strong>package</strong> is the <strong>fundamental unit of code distribution in Lake</strong>.  Packages can be sourced from the local file system or downloaded from the web (e.g., via Git). The <code>package</code> declaration in package's lakefile names it and <a href="#package-configuration-options">defines its basic properties</a>.</p>
 </li>
 <li>
-<p dir="auto">A <strong>lakefile</strong> is the Lean file that configures a package. It defines how to view, edit, build, and run the code within it and specifies what other packages it may require in order to do so.</p>
+<p dir="auto">A <strong>lakefile</strong> is the Lean file that configures a package. It defines how to view, edit, build, and run the code within it, and it specifies what other packages it may require in order to do so.</p>
 </li>
 <li>
 <p dir="auto">A <strong>dependency</strong> is a package required by another package and the package requiring it is its <strong>dependent</strong>. See the <a href="#adding-dependencies">Adding Dependencies section</a> for details on how to specify dependencies.</p>
@@ -144,10 +144,10 @@ Hello, world!
 <p dir="auto">A <strong>workspace</strong> is the <strong>broadest organizational unit in Lake</strong>. It bundles together a package (termed the <strong>root</strong>), its transitive dependencies, and Lake's environment. Every package can operate as the root of a workspace and the workspace will derive its configuration from this root.</p>
 </li>
 <li>
-<p dir="auto">A <strong>module</strong> is <strong>the smallest unit of code visible to Lake's build system</strong>. It is generally represented by a Lean source file and a set of binary libraries (i.e., a Lean <code>olean</code> and <code>ilean</code> plus a system shared library if <code>precompileModules</code> is turned on). Modules can import one another in order to use each other's code and Lake exists primarily to facilitate this process.</p>
+<p dir="auto">A <strong>module</strong> is the <strong>smallest unit of code visible to Lake's build system</strong>. It is generally represented by a Lean source file and a set of binary libraries (i.e., a Lean <code>olean</code> and <code>ilean</code> plus a system shared library if <code>precompileModules</code> is turned on). Modules can import one another in order to use each other's code and Lake exists primarily to facilitate this process.</p>
 </li>
 <li>
-<p dir="auto">A <strong>(Lean) library</strong> is a collection of modules that share a single configuration. Its modules are defined by its source directory, a set of <strong>module roots</strong>, and a set of <strong>module globs</strong>.  See the <a href="#lean-libraries">Lean Libraries section</a> for more details.</p>
+<p dir="auto">A <strong>Lean library</strong> is a collection of modules that share a single configuration. Its modules are defined by its source directory, a set of <strong>module roots</strong>, and a set of <strong>module globs</strong>.  See the <a href="#lean-libraries">Lean Libraries section</a> for more details.</p>
 </li>
 <li>
 <p dir="auto">A <strong>Lean binary executable</strong> is a binary executable (i.e., a program a user can run on their computer without Lean installed) built from a Lean module termed its <strong>root</strong> (which should have a <code>main</code> definition). See the <a href="#binary-executables">Binary Executables section</a> for more details.</p>
@@ -159,7 +159,10 @@ Hello, world!
 <p dir="auto">A <strong>target</strong> is the <strong>fundamental build unit of Lake</strong>. A package can defining any number of targets. Each target has a name, which is used to instruct Lake to build the target (e.g., through <code>lake buld <target></code>) and to keep track internally of a target's build status.  Lake defines a set of builtin target types -- <a href="#lean-libraries">Lean libraries</a>, <a href="#binary-executables">binary executables</a>, and <a href="#external-libraries">external libraries</a> -- but a user can <a href="#custom-targets">define their own custom targets as well</a>. Complex types (e.g., packages, libraries, modules) have multiple facets, each of which count as separate buildable targets. See the <a href="#defining-build-targets">Defining Build Targets section</a> for more details.</p>
 </li>
 <li>
-<p dir="auto">A <strong>facet</strong> is a element built from another organizational unit (e.g., a package, module, library, etc.). For instance, Lake produces <code>olean</code>, <code>ilean</code>, <code>c</code>, and <code>o</code> files all from a single module. Each of these components are thus termed a <em>facet</em> of the module. Similarly, Lake can build both static and shared binaries from a library. Thus libraries have both <code>static</code> and <code>shared</code> facets. Lake also allows users to define their own custom facets to build from modules and packages, but this feature is currently experimental and not yet documented.</p>
+<p dir="auto">A <strong>facet</strong> is an element built from another organizational unit (e.g., a package, module, library, etc.). For instance, Lake produces <code>olean</code>, <code>ilean</code>, <code>c</code>, and <code>o</code> files all from a single module. Each of these components are thus termed a <em>facet</em> of the module. Similarly, Lake can build both static and shared binaries from a library. Thus, libraries have both <code>static</code> and <code>shared</code> facets. Lake also allows users to define their own custom facets to build from modules and packages, but this feature is currently experimental and not yet documented.</p>
+</li>
+<li>
+<p dir="auto">A <strong>trace</strong> is a piece of data (generally a hash) which is used to verify whether a given target is up-to-date. If the trace stored with a built target matches the trace computed during build, then a target is considered up-to-date. A target's trace is derived from its various <strong>inputs</strong> (e.g., source file, Lean toolchain, imports, etc.).</p>
 </li>
 </ul>
 <h4 dir="auto">Package Configuration Options</h4>

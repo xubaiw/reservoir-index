@@ -16,16 +16,19 @@ Refactoring to consider:
 - Use an inductive type to store information about proof steps for reconstruction instead of using closures?
 
 Premature saturation instances:
-- PUZ082_8 achieves premature saturation because our current unificaiton algorithm cannot unify "says Peter #0" with
-  "says Peter (\forall X, says Peter X -> not X)". This is because unifying "#0" (which becomes a metavariable) and
-  "(\forall X, says Peter X -> not X)" is not supported as the latter is not an mvar, fvar, or constant.
-    - PUZ083_8 achieves premature saturation for a very similar reason (PUZ082_8 and PUZ083_8 are nearly identical puzzles)
 - PUZ137_8 achieves premature saturation because our current interpretation of $o/$oType in tff isn't correct. Currently, we interpreting $o/$oType
   as Prop, but there is an important sense in which we should at least sometimes be interpreting it as Bool. PUZ137_8 is one such instance.
     - Though at present, I don't know that fully interpreting $o/$oType as Bool would necessarily work either
 - Prior to changing superposition's side condition checks (commit 87a238ff1b76b041ef9df88557f3ceb9c4b6c89a), COM003_1 failed due to deterministic
   timeout, but did not visibly have any issue of premature saturation. After changing superposition's side condition checks, COM003_1 now results
   in premature saturation. Need to look into why this is the case.
+
+Other testing issues:
+- Error when reconstructing clausification in PUZ031_1_modified in PUZ_tests.lean
+- Determine what is causing "PANIC at Lean.MetavarContext.getDecl Lean.MetavarContext:343:17: unknown metavariable" error in PUZ012_1
+- Inconsistent behavior of PUZ012_1
+  - In PUZ_test.lean, if lines 4 through 9 are commented out, then PUZ012_1 will fail to find a contradiction due to deterministic timeout.
+    However, if lines 4 through 9 are not commented out, then PUZ012_1 quickly succeeds in finding a valid contradiction
 
 Other:
 - Although the current setup of using 'lake build' to run PUZ_tests, LCL_tests, and COM_tests is better than nothing, at some point, I'd like to make tests
@@ -35,7 +38,6 @@ Other:
 - Command line version of duper?
 - Why are some clauses repeated in the proofs that duper produces (e.g. clauses 6-8 in test0011 and almost all of the early clauses in iffClausificationTest1)?
     - Do repeated clauses indicate that we're unnecessarily reproving things, and if so, how much does that impact efficiency?
-- Determine the cause of the error in PUZ134_2_modified and similar tests in TPTP_test.lean (application type mismatch h rfl)
 - Look into whether it would be useful/more efficient to have a lhs/rhs convention so that clauses aren't duplicated up to symmetries (e.g. a = b and b = a)
 
 ## For later:

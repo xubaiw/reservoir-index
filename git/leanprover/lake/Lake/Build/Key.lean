@@ -9,10 +9,10 @@ namespace Lake
 
 /-- The type of keys in the Lake build store. -/
 inductive BuildKey
-| moduleFacet (module : WfName) (facet : WfName)
-| packageFacet (package : WfName) (facet : WfName)
-| targetFacet (package : WfName) (target : WfName) (facet : WfName)
-| customTarget (package : WfName) (target : WfName)
+| moduleFacet (module : Name) (facet : Name)
+| packageFacet (package : Name) (facet : Name)
+| targetFacet (package : Name) (target : Name) (facet : Name)
+| customTarget (package : Name) (target : Name)
 deriving Inhabited, Repr, DecidableEq, Hashable
 
 namespace BuildKey
@@ -99,5 +99,6 @@ quickCmp k k' = Ordering.eq → k = k' := by
       next => intro; contradiction
     all_goals (intro; contradiction)
 
-instance : EqOfCmp BuildKey quickCmp where
+instance : LawfulCmpEq BuildKey quickCmp where
   eq_of_cmp := eq_of_quickCmp
+  cmp_rfl {k} := by cases k <;> simp [quickCmp]
