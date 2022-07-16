@@ -1,24 +1,20 @@
 import Do.For  -- import `runCatch`
 import Lean
+import Aesop
 
 /-!
-==========================================
-Formalization of Extended `do` Translation
-==========================================
+# Formalization of Extended `do` Translation
 
-This is the supplement file to the paper "‘do’ Unchained: Embracing Local Imperativity in a Purely
-Functional Language".
-It contains an intrinsically typed representation of the paper's syntax of `do` statements as well
+An intrinsically typed representation of the paper's syntax of `do` statements as well
 of their translation functions and an equivalence proof thereof to a simple denotational semantics. -/
 
 /-!
-Contexts
---------
+## Contexts
 
 We represent contexts as lists of types and assignments of them as heterogeneous lists over these types.
 As is common with lists, contexts grow to the left in our presentation.
 The following encoding of heterogeneous lists avoids the universe bump of the usual inductive definition
-(https://lists.chalmers.se/pipermail/agda/2010/001826.html). -/
+(<https://lists.chalmers.se/pipermail/agda/2010/001826.html>). -/
 def HList : List (Type u) → Type u
   | []      => PUnit
   | α :: αs => α × HList αs
@@ -78,8 +74,7 @@ def Assg.dropBot : {Γ : _} → Assg (Γ ++ [α]) → Assg Γ
   | _ :: _, a :: as => a :: dropBot as
 
 /-!
-Intrinsically Typed Representation of `do` Statements
------------------------------------------------------
+## Intrinsically Typed Representation of `do` Statements
 
 where
 
@@ -127,8 +122,7 @@ macro:max (priority := high) e:term:max noWs "[" ρ:term "]" "[" σ:term "]" : t
 macro:max (priority := high) σ:term:max noWs "[" x:term " ↦ " v:term "]" : term => `(HList.set $σ $x $v)
 
 /-!
-Dynamic Evaluation Function
----------------------------
+## Dynamic Evaluation Function
 
 A direct encoding of the paper's operational semantics as a denotational function,
 generalized over an arbitrary monad.
@@ -143,7 +137,7 @@ and the length of the list in the `for` case secondarily.
   | expr e, σ => e[ρ][σ] >>= fun v => pure ⟨v, σ⟩
   | bind s s', σ =>
     -- defining this part as a separate definition helps Lean with the termination proof
-    let rec cont val
+    let rec @[simp] cont val
       | ⟨Neut.val v, σ'⟩ => val v σ'
       -- the `Neut` type family forces us to repeat these cases as the LHS/RHS indices are not identical
       | ⟨Neut.ret o, σ'⟩ => pure ⟨Neut.ret o, σ'⟩
@@ -157,7 +151,7 @@ and the length of the list in the `for` case secondarily.
   | ite e s₁ s₂, σ => if e[ρ][σ] then s₁.eval ρ σ else s₂.eval ρ σ
   | ret e, σ => pure ⟨Neut.ret e[ρ][σ], σ⟩
   | sfor e s, σ =>
-    let rec go σ
+    let rec @[simp] go σ
       | [] => pure ⟨(), σ⟩
       | a::as =>
         s.eval (a :: ρ) σ >>= fun
@@ -184,8 +178,7 @@ def Do.eval [Monad m] (s : Do m α) : m α :=  -- corresponds to the reduction r
 notation "⟦" s "⟧" => Do.eval s
 
 /-!
-Translation Functions
----------------------
+## Translation Functions
 
 We adjust the immutable context where necessary.
 The mutable context does not have to be adjusted. -/
@@ -317,7 +310,7 @@ theorem Stmt.numExts_S [Monad m] (s : Stmt m ω Γ (Δ ++ [α]) b c β) : numExt
     subst h
   | bind _ _ ih₁ ih₂ => simp [Nat.add_le_add, ih₁ rfl, ih₂ rfl]
   | letmut _ _ ih => simp [Nat.add_le_add, ih (List.cons_append ..).symm]
-  | assg => simp; split <;> simp
+  | assg => aesop
   | ite _ _ _ ih₁ ih₂ => simp [Nat.add_le_add, ih₁ rfl, ih₂ rfl]
   | sfor _ _ ih => simp [Nat.add_le_add, ih rfl]
   | _ => simp
@@ -357,15 +350,17 @@ decreasing_by D_tac
 def Do.trans [Monad m] (s : Do m α) : m α := runCatch (D (R s) ∅)
 
 /-!
-Equivalence Proof
------------------
+## Equivalence Proof
 
 Using the monadic dynamic semantics, we can modularly prove for each individual translation function that
 evaluating its output is equivalent to directly evaluating the input, modulo some lifting and adjustment
 of resulting values. After induction on the statement, the proofs are mostly concerned with case splitting,
-application of congruence theorems, and simplification.
+application of congruence theorems, and simplification. We can mostly offload these tasks onto
+[Aesop](https://github.com/JLimperg/aesop).
+
 -/
-attribute [local simp] map_eq_pure_bind
+attribute [local simp] map_eq_pure_bind ExceptT.run_bind
+attribute [aesop safe apply] bind_congr
 
 theorem eval_R [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ b c α) : (R s).eval ρ σ = (ExceptT.lift (s.eval ρ σ) >>= fun x => match (generalizing := false) x with
     | (Neut.ret o, _) => throw o
@@ -374,41 +369,18 @@ theorem eval_R [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ b c α) : (R s).ev
     | (Neut.rbreak, σ) => pure (Neut.rbreak, σ) : ExceptT ω m (Neut Empty α b c × Assg Δ)) := by
   apply ExceptT.ext
   induction s with
-    simp
-  | bind _ _ ih₁ ih₂ =>
-    simp [ExceptT.run_bind, ih₁, Stmt.eval.cont]
-    apply bind_congr; intro
-    split <;> simp [ih₂]
-  | letmut _ _ ih =>
-    simp [ExceptT.run_bind, ih]
-    apply bind_congr; intro ⟨r, (_ :: σ')⟩
-    cases r <;> simp
-  | ite e _ _ ih₁ ih₂ =>
-    by_cases h : e ρ σ <;> simp [ExceptT.run_bind, h, ih₁, ih₂]
-  | sfor e s ih =>
-    induction e ρ σ generalizing σ with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, ih, Stmt.eval.go]
-      apply bind_congr; intro
-      split <;> simp [ih']
+  | sfor e =>
+    simp only [Stmt.eval, R]
+    induction e ρ σ generalizing σ <;> aesop (add norm unfold Stmt.eval.go)
+  | _ => aesop (add unsafe cases Neut) (erase Aesop.BuiltinRules.destructProducts)
 
 @[simp] theorem eval_mapAssg [Monad m] [LawfulMonad m] (f : Assg Γ' → Assg Γ) : ∀ (s : Stmt m ω Γ Δ b c β), Stmt.eval ρ (Stmt.mapAssg f s) σ = Stmt.eval (f ρ) s σ := by
   intro s
   induction s generalizing Γ' with
-  | bind _ _ ih₁ ih₂ =>
-    simp [ih₁, Stmt.eval.cont]
-    apply bind_congr; intro ⟨r, σ'⟩
-    cases r <;> simp [ih₂]
   | sfor e s ih =>
-    simp
-    induction e (f ρ) σ generalizing σ with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, ih, Stmt.eval.go]
-      apply bind_congr; intro
-      split <;> simp [ih']
-  | _ => simp [*]
+    simp only [Stmt.eval, Stmt.mapAssg, Function.comp]
+    induction e (f ρ) σ generalizing σ <;> aesop (add norm unfold Stmt.eval.go)
+  | _ => aesop (add unsafe cases Neut)
 
 /-!
 We need one last helper function on context bottoms to be able to state the invariant of `S`, and then
@@ -474,86 +446,60 @@ def Assg.bot : {Γ : _} → Assg (Γ ++ [α]) → α
       apply False.elim (h (Nat.succ_lt_succ h''))
 
 theorem eval_S [Monad m] [LawfulMonad m] : ∀ (s : Stmt m ω Γ (Δ ++ [α]) b c β), StateT.run ((S s).eval (a :: ρ) σ) a = s.eval ρ (Assg.extendBot a σ) >>= fun
-    | r :: σ => pure ((r :: Assg.dropBot σ), Assg.bot σ)
-  | Stmt.expr e => by simp
-  | Stmt.bind s₁ s₂ => by
-    simp [eval_S s₁, Stmt.eval.cont]
-    apply bind_congr; intro ⟨r, σ⟩
-    cases r <;> simp [eval_S s₂]
-  | Stmt.letmut e s => by simp; rw [eval_S (Δ := _ :: Δ) s]; simp; rfl
-  | Stmt.assg x e => by
-    simp
-    split <;> simp [*]
-  | Stmt.ite e s₁ s₂ => by simp; split <;> simp [eval_S s₁, eval_S s₂]
-  | Stmt.ret e => by simp
-  | Stmt.sfor e s => by
+    | r :: σ => pure ((r :: Assg.dropBot σ), Assg.bot σ) := by
+  suffices {Δ': _ } → (s : Stmt m ω Γ Δ' b c β) → (h : Δ' = (Δ ++ [α])) → StateT.run ((S (h ▸ s)).eval (a :: ρ) σ) a = s.eval ρ (h ▸ Assg.extendBot a σ) >>= fun
+    | r :: σ => pure ((r :: Assg.dropBot (h ▸ σ)), Assg.bot (h ▸ σ))
+    from fun s => this s rfl
+  intro Δ' s h
+  induction s generalizing Δ a with
+    subst h
+  | bind s₁ s₂ ih₁ ih₂ =>
+    have ih₁ := @ih₁ (h := rfl)
+    have ih₂ := @ih₂ (h := rfl)
+    aesop (add safe cases Neut)
+  | letmut e s ih =>
+    have ih := @ih (Δ := _ :: Δ) (h := rfl)
+    aesop
+  | sfor e s ih =>
+    have ih := @ih (h := rfl)
     simp only [S, Stmt.eval, S.unmut]
+    -- surgical generalization
     generalize h : a = a'
     conv =>
       pattern HList.cons a' _
       rw [← h]
     clear h
-    induction e ρ _ generalizing σ a' with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, Stmt.eval.go, Stmt.eval.cont, eval_S s]
-      apply bind_congr; intro ⟨r, σ'⟩
-      cases r with
-      | val => simp at ih'; simp [ih']
-      | rcont => simp at ih'; simp [ih']
-      | _ => simp
-  | Stmt.sbreak => by simp
-  | Stmt.scont => by simp
+    induction e ρ _ generalizing σ a' <;> aesop (add safe cases Neut)
+  | _ => aesop
 
 theorem HList.eq_nil (as : HList ∅) : as = ∅ := rfl
 
+attribute [local simp] ExceptT.run_bind
+
 theorem eval_L [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ b c α) : (L s).eval ρ σ = ExceptT.lift (s.eval ρ σ) := by
+  apply ExceptT.ext
   induction s with
-    apply ExceptT.ext <;> simp
-  | bind _ _ ih₁ ih₂ =>
-    simp [ih₁, Stmt.eval.cont]
-    apply bind_congr; intro ⟨r, σ'⟩
-    cases r <;> simp [ih₂]
-  | letmut _ _ ih => simp [ih]
-  | ite e _ _ ih₁ ih₂ =>
-    by_cases h : e ρ σ <;> simp [h, ih₁, ih₂]
-  | sfor e s ih =>
-    induction e ρ σ generalizing σ with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, ih, Stmt.eval.go]
-      apply bind_congr; intro
-      split <;> simp [ih']
+  | sfor e =>
+    simp only [Stmt.eval, L]
+    induction e ρ σ generalizing σ <;> aesop
+  | _ => aesop (add safe cases Neut)
 
 theorem eval_B [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ b c α) : (B s).eval ρ σ = (ExceptT.lift (s.eval ρ σ) >>= fun x => match (generalizing := false) x with
     | (Neut.ret o, σ) => pure (Neut.ret o, σ)
     | (Neut.val a, σ) => pure (Neut.val a, σ)
     | (Neut.rcont, σ) => pure (Neut.rcont, σ)
-    | (Neut.rbreak, σ) => throw () : ExceptT Unit m (Neut ω α false c × Assg Δ)) := by
+    | (Neut.rbreak, _) => throw () : ExceptT Unit m (Neut ω α false c × Assg Δ)) := by
+  apply ExceptT.ext
   induction s with
-    apply ExceptT.ext <;> simp
-  | bind _ _ ih₁ ih₂ =>
-    simp [ih₁, Stmt.eval.cont]
-    apply bind_congr; intro
-    split <;> simp [ih₂]
-  | letmut _ _ ih =>
-    simp [ih]
-    apply bind_congr; intro
-    split <;> simp
-  | ite e _ _ ih₁ ih₂ =>
-    by_cases h : e ρ σ <;> simp [h, ih₁, ih₂]
-  | sfor e s ih =>
-    induction e ρ σ generalizing σ with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, ih, Stmt.eval.go, eval_L]
-      apply bind_congr; intro
-      split <;> simp [ih']
+  | sfor e =>
+    simp only [Stmt.eval, B]
+    induction e ρ σ generalizing σ <;> aesop (add norm simp eval_L)
+  | _ => aesop (erase Aesop.BuiltinRules.destructProducts)
 
 @[simp] def throwOnContinue [Monad m] : (Neut ω α false c × Assg Δ) → ExceptT Unit m (Neut ω α false false × Assg Δ)
   | (Neut.ret o, σ) => pure (Neut.ret o, σ)
   | (Neut.val a, σ) => pure (Neut.val a, σ)
-  | (Neut.rcont, σ) => throw ()
+  | (Neut.rcont, _) => throw ()
 
 theorem eval_C [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ false c α) : (C s).eval ρ σ = ExceptT.lift (s.eval ρ σ) >>= throwOnContinue := by
   revert s
@@ -561,67 +507,40 @@ theorem eval_C [Monad m] [LawfulMonad m] (s : Stmt m ω Γ Δ false c α) : (C s
     from fun s => this s rfl
   intro b' s h
   induction s with
-    (first | subst h | trivial) <;> apply ExceptT.ext <;> simp
-  | bind _ _ ih₁ ih₂ =>
-    simp [ih₁, Stmt.eval.cont]
-    apply bind_congr; intro
-    split <;> simp [ih₂]
-  | letmut _ _ ih =>
-    simp [ih]
-    apply bind_congr; intro
-    split <;> simp
-  | ite e _ _ ih₁ ih₂ =>
-    by_cases h : e ρ σ <;> simp [h, ih₁, ih₂]
-  | sfor e s ih =>
-    induction e ρ σ generalizing σ with
-    | nil => simp [Stmt.eval.go]
-    | cons _ _ ih' =>
-      simp [ExceptT.run_bind, ih, Stmt.eval.go, eval_L]
-      apply bind_congr; intro
-      split <;> simp [ih']
+    (first | subst h | trivial)
+  | sfor e =>
+    simp only [Stmt.eval, C]
+    induction e ρ σ generalizing σ <;> aesop (add norm simp eval_L, unsafe apply ExceptT.ext)
+  | _ => aesop (add unsafe apply ExceptT.ext)
 
 theorem D_eq [Monad m] [LawfulMonad m] : (s : Stmt m Empty Γ ∅ false false α) →
     D s ρ = s.eval ρ ∅ >>= fun (Neut.val a, _) => pure a
   | Stmt.expr e => by simp
   | Stmt.bind s₁ s₂ => by
-    simp [D_eq s₁, D_eq s₂, Stmt.eval.cont]
-    apply bind_congr; intro x
-    split <;> simp [HList.eq_nil]
+    have ih₁ := @D_eq (s := s₁)
+    have ih₂ := @D_eq (s := s₂)
+    aesop
   | Stmt.letmut e s => by
     have := Nat.lt_succ_of_le <| Stmt.numExts_S (Δ := []) s  -- for termination
-    simp [D_eq (S s), eval_S]
-    apply bind_congr; intro x
-    cases x.fst with
-    | val   => simp
-    | ret o => contradiction
+    have ih := (D_eq (ρ := ·) (S s))
+    aesop (add safe cases Neut, norm simp eval_S)
   | Stmt.ite e s₁ s₂ => by simp; split <;> simp [D_eq s₁, D_eq s₂]
   | Stmt.ret e => nomatch e ρ ∅
   | Stmt.sfor e s => by
     have := Nat.lt_succ_of_le <| Stmt.numExts_C_B (Δ := []) s  -- for termination
+    have ih := (D_eq (ρ := ·) (C (B s)))
     simp
-    induction e ρ ∅ with
-    | nil => simp [Stmt.eval.go, runCatch]
-    | cons _ _ ih' =>
-      simp [D_eq (C (B s)), runCatch, ExceptT.run_bind, eval_C, eval_B, Stmt.eval.go] at *
-      apply bind_congr; intro ⟨r, σ'⟩
-      cases r with
-      | ret => contradiction
-      | rbreak => simp
-      | _ => simp [ih']; simp [HList.eq_nil]
+    induction e ρ ∅ <;> aesop (add safe cases Neut, norm unfold runCatch, norm simp [eval_C, eval_B])
 termination_by _ s => (s.numExts, sizeOf s)
 decreasing_by D_tac
 
-/-! The equivalence proof cited in the paper follows from the invariants of `D` and `S`. -/
+/-! The equivalence proof cited in the paper follows from the invariants of `D` and `R`. -/
 
 theorem Do.trans_eq_eval [Monad m] [LawfulMonad m] : ∀ s : Do m α, Do.trans s = ⟦s⟧ := by
-  intro s
-  simp [D_eq, eval_R, runCatch, Do.trans, Do.eval]
-  apply bind_congr; intro
-  split <;> simp
+  aesop (add norm simp [D_eq, eval_R], norm unfold [runCatch, Do.trans, Do.eval])
 
 /-!
-Partial Evaluation
-------------------
+## Partial Evaluation
 
 We define a new term notation `simp [...] in e` that rewrites the term e using the given
 simplification theorems.
@@ -721,9 +640,7 @@ example [Monad m] [LawfulMonad m] (p : α → m Bool) (xss : List (List α)) :
   | nil => simp!
   | cons xs xss ih =>
     simp
-    induction xs with
-    | nil => simp [←ih]
-    | cons x xs ih => simp; apply byCases_Bool_bind <;> simp [ih]
+    induction xs <;> aesop (add safe apply byCases_Bool_bind)
 
 /-!
 While it would be possible to override our `do'` notation such that its named syntax
