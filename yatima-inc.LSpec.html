@@ -66,47 +66,14 @@ Such instances are automatically imported via <code>import LSpec</code>.</p>
   test "four equals four" (4 = 4) $
   test "five equals five" (5 = 5)
 -- ✓ four equals four
--- ✓ five equals five
-
-#lspec do
-  test "four equals four" (4 = 4)
-  test "five equals five" (5 = 5)
--- ✓ four equals four
 -- ✓ five equals five"><pre>#lspec
   test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>) $
   test <span class="pl-s"><span class="pl-pds">"</span>five equals five<span class="pl-pds">"</span></span> (<span class="pl-c1">5</span> = <span class="pl-c1">5</span>)
 <span class="pl-c"><span class="pl-c">--</span> ✓ four equals four</span>
-<span class="pl-c"><span class="pl-c">--</span> ✓ five equals five</span>
-
-#lspec <span class="pl-k">do</span>
-  test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>)
-  test <span class="pl-s"><span class="pl-pds">"</span>five equals five<span class="pl-pds">"</span></span> (<span class="pl-c1">5</span> = <span class="pl-c1">5</span>)
-<span class="pl-c"><span class="pl-c">--</span> ✓ four equals four</span>
 <span class="pl-c"><span class="pl-c">--</span> ✓ five equals five</span></pre></div>
 <p dir="auto">An important note is that a failing test will raise an error, interrupting the building process.</p>
-<p dir="auto">The fact that test execution happens in the <code>LSpec</code> monad allows the use of <code>do</code> notation, as seen above.
-So one can (ab)use the <code>do</code> notation run multiple tests without dollar signs.
-In such case, every call to <code>test</code> creates a <code>TestSeq</code> with a single test.</p>
 <h6 dir="auto">The <code>lspec</code> function</h6>
-<p dir="auto">The <code>lspec</code> function can be used for generic purposes inside other functions.
-It returns a term of type <code>Except String String</code>, representing success or failure, with a message for each case.</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def tests :=
-  test "four equals four" (4 = 4) $
-  test "five equals five" (5 = 5)
-
-def foo : IO Unit := do
-  match lspec tests with
-  | .ok    msg => IO.println msg
-  | .error msg => IO.eprintln msg"><pre><span class="pl-k">def</span> <span class="pl-en">tests</span> :=
-  test <span class="pl-s"><span class="pl-pds">"</span>four equals four<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>) $
-  test <span class="pl-s"><span class="pl-pds">"</span>five equals five<span class="pl-pds">"</span></span> (<span class="pl-c1">5</span> = <span class="pl-c1">5</span>)
-
-<span class="pl-k">def</span> <span class="pl-en">foo</span> : IO Unit := <span class="pl-k">do</span>
-  <span class="pl-k">match</span> lspec tests <span class="pl-k">with</span>
-  | .ok    msg => IO.println msg
-  | .error msg => IO.eprintln msg</pre></div>
-<h6 dir="auto">The <code>lspecIO</code> function</h6>
-<p dir="auto"><code>lspecIO</code> is meant to be used in files to be compiled and integrated in a testing infrastructure, as shown soon.</p>
+<p dir="auto"><code>lspec</code> is meant to be used in files to be compiled and integrated in a testing infrastructure, as shown soon.</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="def fourIO : IO Nat :=
   return 4
 
