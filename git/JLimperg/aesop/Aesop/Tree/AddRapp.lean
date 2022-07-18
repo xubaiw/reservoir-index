@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jannis Limperg
 -/
 
+import Aesop.Check
+import Aesop.RuleTac.RuleApplicationWithMVarInfo
 import Aesop.Tree.Traversal
 import Aesop.Tree.TreeM
 
@@ -13,15 +15,11 @@ open Std (HashMap HashSet)
 
 namespace Aesop
 
-structure AddRapp where
+structure AddRapp extends RuleApplicationWithMVarInfo where
   parent : GoalRef
   appliedRule : RegularRule
   successProbability : Percent
-  goals : Array (MVarId × Array MVarId)
-  introducedMVars : HashSet MVarId
-  metaState : Meta.SavedState
   branchState : BranchState
-  assignedMVars : HashSet MVarId
 
 private def clusterGoals (goals : Array Goal) : Array (Array Goal) := Id.run do
   let mut clusters := UnionFind.ofArray goals
@@ -37,11 +35,11 @@ private def clusterGoals (goals : Array Goal) : Array (Array Goal) := Id.run do
         mvarOccs := mvarOccs.insert m #[g]
   return clusters.sets.fst
 
-private def findPathForAssignedMVars (assignedMVars : HashSet MVarId)
+private def findPathForAssignedMVars (assignedMVars : UnorderedArraySet MVarId)
     (start : GoalRef) : TreeM (Array RappRef × HashSet GoalId) := do
   if assignedMVars.isEmpty then
     return (#[], {})
-  let unseen : IO.Ref (HashSet MVarId) ← IO.mkRef assignedMVars
+  let unseen : IO.Ref (UnorderedArraySet MVarId) ← IO.mkRef assignedMVars
   let pathRapps : IO.Ref (Array RappRef) ← IO.mkRef #[]
   let pathGoals : IO.Ref (HashSet GoalId) ← IO.mkRef {}
   let done ← IO.mkRef false
@@ -66,8 +64,8 @@ private def findPathForAssignedMVars (assignedMVars : HashSet MVarId)
     throwError "aesop: internal error: introducing rapps not found for these mvars: {(← unseen.get).toArray.map (·.name)}"
   return (← pathRapps.get, ← pathGoals.get)
 
-private def getGoalsToCopy (assignedMVars : HashSet MVarId) (start : GoalRef) :
-    TreeM (Array GoalRef) := do
+private def getGoalsToCopy (assignedMVars : UnorderedArraySet MVarId)
+    (start : GoalRef) : TreeM (Array GoalRef) := do
   let (pathRapps, pathGoals) ← findPathForAssignedMVars assignedMVars start
   let mut toCopy := #[]
   let mut toCopyIds := HashSet.empty
@@ -88,15 +86,16 @@ private def getGoalsToCopy (assignedMVars : HashSet MVarId) (start : GoalRef) :
           toCopyIds := toCopyIds.insert id
   return toCopy
 
-private unsafe def copyGoals (assignedMVars : HashSet MVarId)
+private unsafe def copyGoals (assignedMVars : UnorderedArraySet MVarId)
     (start : GoalRef) (parentMetaState : Meta.SavedState)
     (parentSuccessProbability : Percent) (depth : Nat) :
     TreeM (Array Goal) := do
   let toCopy ← getGoalsToCopy assignedMVars start
   toCopy.mapM λ gref => do
     let g ← gref.get
-    let mvars ← parentMetaState.runMetaM' $
-      g.mvars.concatMapM (getMVarsNoDelayed ∘ mkMVar)
+    have : Ord MVarId := ⟨λ m₁ m₂ => m₁.name.quickCmp m₂.name⟩
+    let mvars ← parentMetaState.runMetaM' $ .ofHashSet <$>
+      getUnassignedGoalMVarDependencies g.preNormGoal
     return Goal.mk {
       id := ← getAndIncrementNextGoalId
       parent := unsafeCast () -- will be filled in later
@@ -120,7 +119,7 @@ private unsafe def copyGoals (assignedMVars : HashSet MVarId)
       failedRapps := #[]
     }
 
-private def makeInitialGoal (goal : MVarId) (mvars : Array MVarId)
+private def makeInitialGoal (goal : MVarId) (mvars : UnorderedArraySet MVarId)
     (parent : MVarClusterRef) (depth : Nat) (successProbability : Percent)
     (branchState : BranchState) (origin : GoalOrigin):
     TreeM Goal :=
@@ -141,7 +140,12 @@ private def makeInitialGoal (goal : MVarId) (mvars : Array MVarId)
   }
 
 private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
-  -- Construct the new rapp
+  if ← Check.rules.isEnabled then
+    let (parentGoal, preState) ← (← r.parent.get).currentGoalAndMetaState
+    let (some msg) ← r.toRuleApplicationWithMVarInfo.check preState parentGoal
+      | pure ()
+    throwError "{Check.rules.name}: {msg}"
+
   let rref : RappRef ← IO.mkRef $ Rapp.mk {
     id := ← getAndIncrementNextRappId
     parent := r.parent
@@ -150,31 +154,27 @@ private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
     isIrrelevant := false
     appliedRule := r.appliedRule
     successProbability := r.successProbability
-    metaState := r.metaState
-    introducedMVars := #[] -- will be filled in later
-    assignedMVars := r.assignedMVars.toArray
+    metaState := r.postState
+    introducedMVars := {} -- will be filled in later
+    assignedMVars := r.assignedMVars
   }
 
   let parentGoal ← r.parent.get
   let goalDepth := parentGoal.depth + 1
 
-  -- Collect the mvars which occur in the reported subgoals.
-  let subgoalMVars := r.goals.foldl (init := HashSet.empty)
-    λ subgoalMVars (_, mvars) => subgoalMVars.insertMany mvars
-
   -- Check if the rapp dropped mvars. A dropped mvar is one that appears in the
   -- parent of the rapp but not in any of its subgoals. A dropped mvar is
   -- treated like an assigned mvar for the purposes of copying.
   let droppedMVars := parentGoal.mvars.filter λ m =>
-    ! subgoalMVars.contains m && ! r.assignedMVars.contains m
+    ! r.mvars.contains m && ! r.assignedMVars.contains m
 
   -- If the rapp assigned or dropped any mvars, copy the related goals.
-  let quasiAssignedMVars := r.assignedMVars.insertMany droppedMVars
+  let quasiAssignedMVars := r.assignedMVars ++ droppedMVars
   let copiedGoals : Array Goal ←
     if quasiAssignedMVars.isEmpty then
       pure #[]
     else
-      copyGoals quasiAssignedMVars r.parent r.metaState
+      copyGoals quasiAssignedMVars r.parent r.postState
         r.successProbability goalDepth
 
   -- Collect the mvars which occur in the copied goals.
@@ -183,12 +183,12 @@ private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
 
   -- If a dropped mvar does not occur in the copied goals, turn it into a
   -- regular subgoal.
-  let droppedGoals ← droppedMVars.filterMapM λ m => do
+  let droppedGoals ← droppedMVars.toArray.filterMapM λ m => do
     if copiedGoalMVars.contains m then
       return none
     else
-      let mvars ← r.metaState.runMetaM' $
-        return (← getGoalMVarsNoDelayed m).toArray
+      let mvars ← r.postState.runMetaM' $
+        .ofHashSet <$> getUnassignedGoalMVarDependencies m
       let g ← makeInitialGoal m mvars (unsafeCast ()) goalDepth
         r.successProbability r.branchState .droppedMVar
         -- The parent (`unsafeCast ()`) will be patched up later.
@@ -196,16 +196,16 @@ private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
 
   -- Turn proper goals into proper mvars if they appear in any of the copied
   -- goals.
-  let mut properGoals := Array.mkEmpty r.goals.size
-  let mut properMVars := r.introducedMVars.toArray
+  let mut goals := Array.mkEmpty r.goals.size
+  let mut introducedMVars := r.introducedMVars
   for (g, mvars) in r.goals do
     if copiedGoalMVars.contains g then
-      properMVars := properMVars.push g
+      introducedMVars := introducedMVars.insert g
     else
-      properGoals := properGoals.push (g, mvars)
+      goals := goals.push (g, mvars)
 
   -- Construct the subgoals
-  let subgoals ← properGoals.mapM λ (goal, mvars) =>
+  let subgoals ← goals.mapM λ (goal, mvars) =>
     makeInitialGoal goal mvars (unsafeCast ()) goalDepth
       r.successProbability r.branchState .subgoal
       -- The parent (`unsafeCast ()`) will be patched up later.
@@ -228,7 +228,7 @@ private unsafe def addRappUnsafe (r : AddRapp) : TreeM RappRef := do
 
   -- Patch up more information we left out earlier.
   rref.modify λ r =>
-    r.setChildren crefs |>.setIntroducedMVars properMVars
+    r.setChildren crefs |>.setIntroducedMVars introducedMVars
   r.parent.modify λ g => g.setChildren $ g.children.push rref
 
   -- Increment goal and rapp counters.

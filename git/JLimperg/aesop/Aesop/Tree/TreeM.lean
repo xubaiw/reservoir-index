@@ -19,7 +19,7 @@ structure Tree where
   nextRappId : RappId
 
 def mkInitialTree (goal : MVarId) : MetaM Tree := do
-  let mvars ← getGoalMVarsNoDelayed goal
+  let mvars ← getUnassignedGoalMVarDependencies goal
   unless mvars.isEmpty do
     throwError "aesop: the goal contains metavariables, which is not currently supported."
     -- TODO support this
@@ -40,7 +40,7 @@ def mkInitialTree (goal : MVarId) : MetaM Tree := do
     isForcedUnprovable := false
     preNormGoal := goal
     normalizationState := NormalizationState.notNormal
-    mvars := #[] -- TODO update when we allow metas in the inital goal
+    mvars := {} -- TODO update when we allow metas in the inital goal
     successProbability := Percent.hundred
     addedInIteration := Iteration.one
     lastExpandedInIteration := Iteration.none

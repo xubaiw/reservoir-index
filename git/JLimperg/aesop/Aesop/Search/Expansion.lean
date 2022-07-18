@@ -45,7 +45,7 @@ def runRuleTac (tac : RuleTac) (ruleName : RuleName)
   if ← Check.rules.isEnabled then
     if let (Sum.inr ruleOutput) := result then
       ruleOutput.applications.forM λ rapp => do
-        if let (some err) ← rapp.check input preState then
+        if let (some err) ← rapp.check then
           throwError "{Check.rules.name}: while applying rule {ruleName}: {err}"
   return result
 
@@ -76,12 +76,10 @@ def runNormRuleTac (bs : BranchState) (rule : NormRule) (input : RuleTacInput) :
     let #[rapp] := result.applications
       | err m!"rule did not produce exactly one rule application."
     restoreState rapp.postState
-    unless rapp.introducedMVars.isEmpty do
-      err m!"rule introduced metavariables {rapp.introducedMVars.toArray.map (·.name)}"
     if rapp.goals.isEmpty then
       aesop_trace[stepsNormalization] "Rule proved the goal."
       return .proven
-    let (#[(g, _)]) := rapp.goals
+    let (#[g]) := rapp.goals
       | err m!"rule produced more than one subgoal."
     let postBranchState := bs.update rule result.postBranchState?
     aesop_trace[stepsNormalization] do
@@ -93,8 +91,8 @@ def runNormRuleTac (bs : BranchState) (rule : NormRule) (input : RuleTacInput) :
       "aesop: error while running norm rule {rule.name}: {msg}\nThe rule was run on this goal:{indentD $ MessageData.ofGoal input.goal}"
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def runNormRuleCore (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
-    (rule : IndexMatchResult NormRule) :
+def runNormRuleCore (goal : MVarId) (mvars : UnorderedArraySet MVarId)
+    (bs : BranchState) (rule : IndexMatchResult NormRule) :
     MetaM NormRuleResult := do
   let branchState? := bs.find? rule.rule
   aesop_trace[stepsNormalization] do
@@ -108,8 +106,8 @@ def runNormRuleCore (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
   runNormRuleTac bs rule.rule ruleInput
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def runNormRule (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
-    (rule : IndexMatchResult NormRule) :
+def runNormRule (goal : MVarId) (mvars : UnorderedArraySet MVarId)
+    (bs : BranchState) (rule : IndexMatchResult NormRule) :
     ProfileT MetaM NormRuleResult :=
   profiling (runNormRuleCore goal mvars bs rule) λ result elapsed => do
     let successful :=
@@ -122,7 +120,7 @@ def runNormRule (goal : MVarId) (mvars : Array MVarId) (bs : BranchState)
     recordAndTraceRuleProfile ruleProfile
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def runFirstNormRule (goal : MVarId) (mvars : Array MVarId)
+def runFirstNormRule (goal : MVarId) (mvars : UnorderedArraySet MVarId)
     (branchState : BranchState) (rules : Array (IndexMatchResult NormRule)):
     ProfileT MetaM NormRuleResult := do
   for rule in rules do
@@ -135,7 +133,7 @@ def runFirstNormRule (goal : MVarId) (mvars : Array MVarId)
 
 def normSimpCore (useHyps : Bool) (ctx : Simp.Context)
     (localSimpRules : Array LocalNormSimpRule) (goal : MVarId)
-    (mvars : Array MVarId) : MetaM SimpResult := do
+    (mvars : UnorderedArraySet MVarId) : MetaM SimpResult := do
   withMVarContext goal do
     let lctx ← getLCtx
     let mut simpTheorems := ctx.simpTheorems
@@ -188,7 +186,7 @@ def normSimpCore (useHyps : Bool) (ctx : Simp.Context)
     return result
 
 -- NOTE: Must be run in the MetaM context of the relevant goal.
-def normSimp (goal : MVarId) (mvars : Array MVarId) (useHyps : Bool)
+def normSimp (goal : MVarId) (mvars : UnorderedArraySet MVarId) (useHyps : Bool)
     (ctx : Simp.Context) (localSimpRules : Array LocalNormSimpRule) :
     ProfileT MetaM SimpResult :=
   profiling go λ _ elapsed =>
@@ -215,7 +213,7 @@ def normSimp (goal : MVarId) (mvars : Array MVarId) (useHyps : Bool)
 -- NOTE: Must be run in the MetaM context of the relevant goal.
 partial def normalizeGoalMVar (rs : RuleSet) (normSimpUseHyps : Bool)
     (ctx : Simp.Context) (maxIterations : Nat) (goal : MVarId)
-    (mvars : Array MVarId) (bs : BranchState) :
+    (mvars : UnorderedArraySet MVarId) (bs : BranchState) :
     ProfileT MetaM (Option (MVarId × BranchState)) :=
   go 0 goal bs
   where
@@ -285,11 +283,11 @@ def normalizeGoalIfNecessary (gref : GoalRef) : SearchM Q Bool := do
     return true
 
 def addRapps (parentRef : GoalRef) (rule : RegularRule)
-    (output : RuleTacOutput) : SearchM Q RuleResult := do
+    (rapps : Array RuleApplicationWithMVarInfo)
+    (postBranchState? : Option RuleBranchState) : SearchM Q RuleResult := do
   let parent ← parentRef.get
-  let rapps := output.applications
   let postBranchState :=
-    rule.withRule λ r => parent.branchState.update r output.postBranchState?
+    rule.withRule λ r => parent.branchState.update r postBranchState?
   aesop_trace[stepsBranchStates] "Updated branch state: {rule.withRule λ r => postBranchState.find? r}"
   let successProbability := parent.successProbability * rule.successProbability
   let rrefs ← go postBranchState successProbability rapps
@@ -313,21 +311,17 @@ def addRapps (parentRef : GoalRef) (rule : RegularRule)
       aesop_trace![steps] "New rapps and goals:{MessageData.node rappMsgs}"
 
     go (postBranchState : BranchState) (successProbability : Percent)
-        (rapps : Array RuleApplication) : SearchM Q (Array RappRef) := do
+        (rapps : Array RuleApplicationWithMVarInfo) : SearchM Q (Array RappRef) := do
       let mut rrefs := Array.mkEmpty rapps.size
-      for h : i in [0:rapps.size] do
+      for h : i in [:rapps.size] do
         have h : i < rapps.size := by simp_all [Membership.mem]
-        let rapp := rapps.get ⟨i, h⟩
+        let rapp := rapps[i]
         let rref ← addRapp {
+          rapp with
           parent := parentRef
           appliedRule := rule
-          successProbability
-          goals := rapp.goals.map λ (goal, mvars) => (goal, mvars.toArray)
-          introducedMVars := rapp.introducedMVars
-          metaState := rapp.postState
           branchState := postBranchState
-          assignedMVars := rapp.assignedMVars
-        }
+          successProbability }
         rrefs := rrefs.push rref
         (← rref.get).children.forM λ cref => do
           enqueueGoals (← cref.get).goals
@@ -349,16 +343,17 @@ def runRegularRuleCore (parentRef : GoalRef) (rule : RegularRule)
       initialBranchState
   match ruleOutput? with
   | Sum.inl exc => onFailure exc.toMessageData
-  | Sum.inr { applications := #[], .. } => do
-    onFailure $ "Rule returned no rule applications."
+  | Sum.inr { applications := #[], .. } =>
+    onFailure "Rule returned no rule applications."
   | Sum.inr output =>
-    let rapps := output.applications
+    let rapps ← output.applications.mapM
+      (·.toRuleApplicationWithMVarInfo parent.mvars)
     if let (.safe rule) := rule then
       if rapps.any (! ·.assignedMVars.isEmpty) then
         aesop_trace[steps] "Safe rule assigned metavariables. Postponing it."
         return RuleResult.postponed ⟨rule, output⟩
     aesop_trace[steps] "Rule succeeded, producing {rapps.size} rule application(s)."
-    addRapps parentRef rule output
+    addRapps parentRef rule rapps output.postBranchState?
   where
     onFailure (msg : MessageData) : SearchM Q RuleResult := do
       aesop_trace[stepsRuleFailures] "Rule failed with message:{indentD msg}"
@@ -435,8 +430,12 @@ partial def runFirstUnsafeRule (postponedSafeRules : Array PostponedSafeRule)
         | .failed => loop queue
       | .postponedSafeRule r =>
         aesop_trace[steps] "Applying postponed safe rule {r.rule}"
+        let parentMVars := (← parentRef.get).mvars
+        let postBranchState? := r.output.postBranchState?
+        let rapps ← r.output.applications.mapM
+          (·.toRuleApplicationWithMVarInfo parentMVars)
         let result ←
-          addRapps parentRef (.«unsafe» r.toUnsafeRule) r.output
+          addRapps parentRef (.«unsafe» r.toUnsafeRule) rapps postBranchState?
         return (queue, result)
 
 def expandGoal (gref : GoalRef) : SearchM Q Unit := do

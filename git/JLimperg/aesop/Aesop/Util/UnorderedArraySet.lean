@@ -7,6 +7,7 @@ Authors: Jannis Limperg
 import Aesop.Util.Basic
 
 open Lean
+open Std (HashSet PersistentHashSet)
 
 namespace Aesop
 
@@ -51,12 +52,23 @@ protected def ofArray [ord : Ord α] [Inhabited α] (xs : Array α) :
 protected def ofArraySlow (xs : Array α) : UnorderedArraySet α :=
   xs.foldl (init := {}) λ s x => s.insert x
 
+protected def ofHashSet [Hashable α] (xs : HashSet α) : UnorderedArraySet α :=
+  ⟨xs.toArray⟩
+
+protected def ofPersistentHashSet [Hashable α] (xs : PersistentHashSet α) : UnorderedArraySet α :=
+  ⟨xs.toArray⟩
+
 protected def toArray (s : UnorderedArraySet α) : Array α :=
   s.rep
 
 /-- O(n) -/
 def erase (x : α) (s : UnorderedArraySet α) : UnorderedArraySet α :=
   ⟨s.rep.erase x⟩
+
+/-- O(n) -/
+def filterM [Monad m] (p : α → m Bool) (s : UnorderedArraySet α) :
+    m (UnorderedArraySet α) :=
+  return ⟨← s.rep.filterM p⟩
 
 /-- O(n) -/
 def filter (p : α → Bool) (s : UnorderedArraySet α) : UnorderedArraySet α :=
@@ -97,6 +109,26 @@ def size (s : UnorderedArraySet α) : Nat :=
 /-- O(1) -/
 def isEmpty (s : UnorderedArraySet α) : Bool :=
   s.rep.isEmpty
+
+/-- O(n) -/
+def anyM [Monad m] (p : α → m Bool) (s : UnorderedArraySet α) (start := 0)
+    (stop := s.size) : m Bool :=
+  s.rep.anyM p start stop
+
+/-- O(n) -/
+def any (p : α → Bool) (s : UnorderedArraySet α) (start := 0) (stop := s.size) :
+    Bool :=
+  s.rep.any p start stop
+
+/-- O(n) -/
+def allM [Monad m] (p : α → m Bool) (s : UnorderedArraySet α) (start := 0)
+    (stop := s.size) : m Bool :=
+  s.rep.allM p start stop
+
+/-- O(n) -/
+def all (p : α → Bool) (s : UnorderedArraySet α) (start := 0) (stop := s.size) :
+    Bool :=
+  s.rep.all p start stop
 
 instance : BEq (UnorderedArraySet α) where
   beq s t := s.rep.equalSet t.rep
