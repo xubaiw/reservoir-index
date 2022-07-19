@@ -28,18 +28,15 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">yatima-lang</h3>
-<p dir="auto">A verifiable computing language</p>
-<h4 dir="auto">Usage</h4>
-<ul dir="auto">
-<li><code>yatima build <file.lean></code> triggers the compilation of a Lean file to Yatima.
-<ul dir="auto">
-<li>Adding <code>-pl</code> will print the Lean constants (input)</li>
-<li>Adding <code>-py</code> will print the Yatima constants (output)</li>
-</ul>
-</li>
-</ul>
+<p dir="auto">A compiler and typechecker for the Yatima language.</p>
 <h4 dir="auto">Build</h4>
-<p dir="auto">Build it with <code>lake build</code></p>
+<p dir="auto">Build it with <code>lake build</code>.</p>
+<h4 dir="auto">Usage</h4>
+<h5 dir="auto">Storing Lean objects</h5>
+<p dir="auto">Call <code>yatima store arg1 arg2 ...</code>, where each <code>argN</code> is either a Lean file or a directory of Lean files.
+The command must be triggered from within a Lean project that uses Lake.</p>
+<p dir="auto">The <code>store</code> subcommand accepts an optional <code>--log</code> (or <code>-l</code>) flag to trigger the compilation logs.</p>
+<p dir="auto"><strong>Important</strong>: If file <code>A</code> imports file <code>B</code> and you want to compile <code>A</code>, the <code>olean</code> file for <code>B</code> must be available.</p>
 </article></div></main>
 </body>
 </html>
