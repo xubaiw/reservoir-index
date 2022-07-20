@@ -14,18 +14,18 @@ The type former comes with the following
 natural introduction rule:
 
 ```
-$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type
+$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  : Type
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  Q(t) : Type
 ```
 
 The lower-case `q(·)` macro serves
 as the modal inference rule,
 allowing us to construct values in `Q(·)`:
 ```
-$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)
+$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  :   β
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  q(t) : Q(β)
 ```
 
 ## Example
@@ -50,7 +50,7 @@ q($f $a)
 ```
 
 There are many things going on here:
-1. The `betterApp` function compiles to a single `mkApp` call.
+1. The `betterApp` function compiles to a single `betaRev` call.
 1. It does not require the `MetaM` monad (in contrast to
    `AppBuilder.lean` in the Lean 4 code).
 1. `Q(…)` is definitionally equal to `Expr`, so each variable
@@ -155,5 +155,8 @@ def turnExistsIntoForall : Q(Prop) → MetaM Q(Prop)
   commutes ∀ n, OfNat α n
   a + a defEq 0)
 ```
+
+- Matching on types should be possible, that is,
+  `match (e : Expr) with | ~q($p ∧ $q) => ...`.
 
 - Other bug fixes, documentation, and assorted polishing.

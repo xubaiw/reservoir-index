@@ -39,20 +39,20 @@ The <code>Q(·)</code> modality quotes types:
 <code>Q(α)</code> denotes an expression of type <code>α</code>.
 The type former comes with the following
 natural introduction rule:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type"><pre class="notranslate"><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  : Type
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ Q(t) : Type
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  : Type
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  Q(t) : Type"><pre class="notranslate"><code>$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  : Type
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  Q(t) : Type
 </code></pre></div>
 <p dir="auto">The lower-case <code>q(·)</code> macro serves
 as the modal inference rule,
 allowing us to construct values in <code>Q(·)</code>:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)"><pre class="notranslate"><code>$a₁ :   α₁,  …, $aₙ :   αₙ  ⊢   t  :   β
------------------------------------------
- a₁ : Q(α₁), …,  aₙ : Q(αₙ) ⊢ q(t) : Q(β)
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  :   β
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  q(t) : Q(β)"><pre class="notranslate"><code>$a₁ :   α₁,   …,  $aₙ :   αₙ   ⊢    t  :   β
+---------------------------------------------
+ a₁ : Q(α₁),  …,   aₙ : Q(αₙ)  ⊢  q(t) : Q(β)
 </code></pre></div>
 <h4 dir="auto">Example</h4>
 <p dir="auto">Let us write a type-safe version of <code>mkApp</code>:</p>
@@ -85,7 +85,7 @@ q($f $a)
 <span class="pl-k">#eval</span> betterApp q(Int.toNat) q(<span class="pl-c1">42</span>)</pre></div>
 <p dir="auto">There are many things going on here:</p>
 <ol dir="auto">
-<li>The <code>betterApp</code> function compiles to a single <code>mkApp</code> call.</li>
+<li>The <code>betterApp</code> function compiles to a single <code>betaRev</code> call.</li>
 <li>It does not require the <code>MetaM</code> monad (in contrast to
 <code>AppBuilder.lean</code> in the Lean 4 code).</li>
 <li><code>Q(…)</code> is definitionally equal to <code>Expr</code>, so each variable
@@ -186,7 +186,13 @@ Maybe something like this:</p>
   commutes ∀ n, OfNat α n
   a + a defEq <span class="pl-c1">0</span>)</pre></div>
 <ul dir="auto">
-<li>Other bug fixes, documentation, and assorted polishing.</li>
+<li>
+<p dir="auto">Matching on types should be possible, that is,
+<code>match (e : Expr) with | ~q($p ∧ $q) => ...</code>.</p>
+</li>
+<li>
+<p dir="auto">Other bug fixes, documentation, and assorted polishing.</p>
+</li>
 </ul>
 </article></div></main>
 </body>
