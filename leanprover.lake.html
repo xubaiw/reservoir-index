@@ -202,9 +202,9 @@ Hello, world!
 <p dir="auto"><strong>Configuration Options</strong></p>
 <ul dir="auto">
 <li><code>srcDir</code>: The subdirectory of the package' source directory containing the library's source files. Defaults simply to said <code>srcDir</code>. (This will be passed to <code>lean</code> as the <code>-R</code> option.)</li>
-<li><code>roots</code>: The root module(s) of the library. Submodules of these roots (e.g., <code>Lib.Foo</code> of <code>Lib</code>) are considered part of the library. Defaults to a single root of the library's upper camel case name.</li>
+<li><code>roots</code>: An <code>Array</code> of root module <code>Name</code>(s) of the library. Submodules of these roots (e.g., <code>Lib.Foo</code> of <code>Lib</code>) are considered part of the library. Defaults to a single root of the library's upper camel case name.</li>
 <li><code>globs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the library. Defaults to a <code>Glob.one</code> of each of the library's  <code>roots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the workspace) are also recursively built.</li>
-<li><code>libName</code>: The name of the library. Used as a base for the file names of its static and dynamic binaries. Defaults to the upper camel case name of the target.</li>
+<li><code>libName</code>: The <code>String</code> name of the library. Used as a base for the file names of its static and dynamic binaries. Defaults to the upper camel case name of the target.</li>
 <li><code>nativeFacets</code>: An <code>Array</code> of module facets to build and combine into the library's static
 and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the object file compiled from the Lean source). <strong>PREVIEW:</strong> Module facets are in beta, unstable, and not yet documented. Use with care.</li>
 <li><code>precompileModules</code>, <code>buildType</code>, <code>moreLeanArgs</code>, <code>moreLinkArgs</code>, <code>moreLinkArgs</code>: Augments the package's corresponding configuration option. The library's arguments come after, modules are precompiled if either the library or package are precompiled, and the build type is the minimum of the two (<code>debug</code> is the lowest, and <code>release</code> is the highest)</li>
@@ -219,8 +219,8 @@ and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the objec
 }</pre></div>
 <p dir="auto"><strong>Configuration Options</strong></p>
 <ul dir="auto">
-<li><code>root</code>: The root module of the binary executable. Should include a <code>main</code> definition that will serve as the entry point of the program. The root is built by recursively building its local imports (i.e., fellow modules of the workspace). Defaults to the name of the target.</li>
-<li><code>exeName</code>: The name of the binary executable. Defaults to the target name with any <code>.</code> replaced with a <code>-</code>.</li>
+<li><code>root</code>: The root module <code>Name</code> of the binary executable. Should include a <code>main</code> definition that will serve as the entry point of the program. The root is built by recursively building its local imports (i.e., fellow modules of the workspace). Defaults to the name of the target.</li>
+<li><code>exeName</code>: The <code>String</code> name of the binary executable. Defaults to the target name with any <code>.</code> replaced with a <code>-</code>.</li>
 <li><code>supportInterpreter</code>: Whether to expose symbols within the executable to the Lean interpreter. This allows the executable to interpret Lean files (e.g., via <code>Lean.Elab.runFrontend</code>). Implementation-wise, this passes <code>-rdynamic</code> to the linker when building on a non-Windows systems. Defaults to <code>false</code>.</li>
 <li><code>buildType</code>, <code>moreLeanArgs</code>, <code>moreLinkArgs</code>, <code>moreLinkArgs</code>: Augments the package's corresponding configuration option. The executable's arguments come after and the build type is the minimum of the two (<code>debug</code> is the lowest, and <code>release</code> is the highest).</li>
 </ul>
