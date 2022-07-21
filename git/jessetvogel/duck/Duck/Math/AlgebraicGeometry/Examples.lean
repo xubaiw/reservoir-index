@@ -9,10 +9,10 @@ namespace Math.AlgebraicGeometry
 
 @[aesop 99%] axiom Spec : Ring → Scheme
 @[aesop 99%] axiom SpecMap {R S : Ring} (f : R ⟶ S) : Spec S ⟶ Spec R
-instance : ContraFunctor Spec where
+noncomputable instance : ContraFunctor Spec where
   map := SpecMap
-  id := sorryAx
-  comp := sorryAx
+  id := sorry
+  comp := sorry
 
 -- The empty scheme $\varnothing = \Spec(\{ 0 \})$.
 @[aesop 99%] noncomputable def empty_scheme := Spec zero_ring
@@ -176,7 +176,7 @@ instance : ContraFunctor Spec where
 -- The disjoint union $X \sqcup Y$ is ¬connected whenever $X$ and $Y$ are non-empty.
 @[aesop 99%] axiom du_not_cn {X Y : Scheme} (h₁ : ¬ X.empty) (h₂ : ¬ Y.empty) : ¬(disjoint_union X Y).connected
 -- Whenever a local property of schemes $P$ holds for $X$ and $Y$, it also holds for the disjoint union $X \sqcup Y$.
-@[aesop 99%] axiom du_zar_lc {X Y : Scheme} {P : Scheme → Prop} (h₁ : P X) (h₂ : P Y) (h₃ : Scheme.zariski_local P) : P (disjoint_union X Y)
+@[aesop 10%] axiom du_zar_lc {X Y : Scheme} {P : Scheme → Prop} (h₁ : P X) (h₂ : P Y) (h₃ : Scheme.zariski_local P) : P (disjoint_union X Y)
 -- Whenever $X$ is non-empty, the disjoint union $X \sqcup Y$ is also non-empty
 @[aesop 99%] axiom du_empty_X {X : Scheme} (Y : Scheme) (h : ¬X.empty) : ¬((disjoint_union X Y).empty)
 -- Whenever $Y$ is non-empty, the disjoint union $X \sqcup Y$ is also non-empty

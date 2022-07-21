@@ -39,6 +39,33 @@ analyze it and put the result in <code>./build/doc</code>.</p>
 the tool produce <code>Alectryon</code> style rendered output along the usual documentation.</p>
 <p dir="auto">You could e.g. host the files locally with the built-in Python webserver:</p>
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ cd build/doc && python -m http.server"><pre>$ <span class="pl-c1">cd</span> build/doc <span class="pl-k">&&</span> python -m http.server</pre></div>
+<h5 dir="auto">Multi stage</h5>
+<p dir="auto">You can also use <code>doc-gen4</code> in multiple separate stages to generate the whole documentation.
+For example <code>mathlib4</code> consists out of 4 modules, the 3 Lean compiler ones and itself:</p>
+<ul dir="auto">
+<li><code>Init</code></li>
+<li><code>Std</code></li>
+<li><code>Lean</code></li>
+<li><code>Mathlib</code>
+The first build stage is to run doc-gen for all modules separately:</li>
+</ul>
+<ol dir="auto">
+<li><code>doc-gen4 single Init Mathlib</code></li>
+<li><code>doc-gen4 single Std Mathlib</code></li>
+<li><code>doc-gen4 single Lean Mathlib</code></li>
+<li><code>doc-gen4 single Mathlib Mathlib</code>
+We have to pass the <code>Mathlib</code> top level module on each invocation here so
+it can generate the navbar on the left hand side properly, it will only
+generate documentation for its first argument module.</li>
+</ol>
+<p dir="auto">Furthermore one can use the <code>--ink</code> flag here to also generate LeanInk
+documentation in addition.</p>
+<p dir="auto">The second and last stage is the finalize one which zips up some
+information relevant for the search:</p>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ doc-gen4 finalize Mathlib"><pre>$ doc-gen4 finalize Mathlib</pre></div>
+<p dir="auto">Now <code>build/doc</code> should contain the same files with the same context as if one had run</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ doc-gen4 Mathlib"><pre class="notranslate"><code>$ doc-gen4 Mathlib
+</code></pre></div>
 </article></div></main>
 </body>
 </html>
