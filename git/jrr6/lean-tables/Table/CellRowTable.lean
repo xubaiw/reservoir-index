@@ -150,7 +150,7 @@ def dropColumn (t : Table schema) (c : CertifiedName schema)
 {rows := t.rows.map (Row.removeColumn c.property)}
 
 def dropColumns (t : Table schema)
-                (cs : Schema.ActionList Schema.removeCertifiedName schema)
+                (cs : ActionList Schema.removeCertifiedName schema)
     : Table (schema.removeNames cs) :=
 {rows := t.rows.map (Row.removeColumns cs)}
 
@@ -169,7 +169,7 @@ def tsort {τ} [Ord τ]
   | false, Ordering.gt => Ordering.lt
   | _    , ordering    => ordering
 {rows :=
-  t.rows.merge_sort_with (λ r₁ r₂ => 
+  t.rows.mergeSortWith (λ r₁ r₂ => 
     let ov₁ := getValue r₁ c.1 c.2
     let ov₂ := getValue r₂ c.1 c.2
     match (ov₁, ov₂) with
@@ -182,7 +182,6 @@ def tsort {τ} [Ord τ]
 
 -- TODO: Worth creating a `CertifiedOrdHeader` type? Also, would be nice if the
 -- τ in the header could be fully implicit (can still be inferred using `_`)
--- TODO: Appears to be working? Double-check stability of `merge_sort_with`.
 def sortByColumns (t : Table schema)
                   (cs : List ((h : Header) × Schema.HasCol h schema × Ord h.2))
     : Table schema :=
@@ -221,7 +220,7 @@ def bin [ToString η]
     : Table [("group", String), ("count", Nat)] :=
   let col := getColumn2 t c.1 c.2
   let sorted := col |> List.filterMap id  -- get rid of empty cells
-                    |> List.merge_sort_with compare
+                    |> List.mergeSortWith compare
   -- match sorted with
   -- | [] => {rows := []}
   -- | s :: ss =>
@@ -428,24 +427,24 @@ def groupBy {η'} [DecidableEq η']
 termination_by group xs => xs.length
 
 -- TODO: probably a more elegant/functorial/monadic way to do this
-def flattenOne {τ}
-               (t : Table schema)
-               (c : ((c : η) × schema.HasCol (c, List τ)))
-    : Table (schema.retypeColumn (Schema.colImpliesName c.2) τ) :=
-    -- : Table (schema.flattenList ⟨c.1, τ, c.2⟩) :=
+def flattenOne (t : Table schema)
+               (c : ((c : η) × (τ : Type u) × schema.HasCol (c, List τ)))
+    : Table (schema.flattenList c) :=
 {rows :=
   t.rows.flatMap (λ (r : Row schema) =>
-      match getValue r c.1 c.2 with
+      match getValue r c.1 c.2.2 with
       | none => []
-      | some xs => xs.foldr (λ x acc => r.retypeCell c.2 (Cell.val x) :: acc) []
+      | some xs => xs.foldr (λ x acc => r.retypeCell c.2.2 (Cell.val x) :: acc)
+                            []
   )
 }
 
--- def flatten (t : Table schema)
---             (cs : List ((c : η) × (τ : Type u) × schema.HasCol (c, List τ)))
---             : Table (schema.flattenLists cs) := sorry
-
--- def flatten (t : Table schema) (cs : List (CertifiedName schema)) : Table _ := sorry
+def flatten {schema : @Schema η} :
+  Table schema →
+  (cs : ActionList Schema.flattenList schema) →
+  Table (schema.flattenLists cs)
+| t, ActionList.nil => t
+| t, ActionList.cons c cs => flatten (flattenOne t c) cs
 
 def transformColumn {τ₁ τ₂}
                     (t : Table schema)
@@ -456,9 +455,10 @@ def transformColumn {τ₁ τ₂}
     r.retypeCell c.snd (Cell.fromOption (f (getValue r c.fst c.snd)))
   )}
 
--- TODO: same issue as with removing columns...
-def renameColumns (t : Table schema) (ccs : List (CertifiedName schema × η))
-    : Table (schema.renameColumns ccs) := sorry
+def renameColumns (t : Table schema)
+                  (ccs : ActionList Schema.renameColumnCN schema)
+    : Table (schema.renameColumns ccs) :=
+{rows := t.rows.map (Row.renameCells ccs)}
 
 -- TODO: do we need decidable equality of τ, or will the row lookup figure that
 -- out for us?
@@ -617,13 +617,13 @@ groupBy t (λ r => getValue r c.1 c.2)
 --       let remainingCells := r₁.pick remainingNames;
 --       Row.append remainingCells r₂)
 
-def pivotWider [inst : Inhabited η]
-               (t : Table schema)
-               (c1 : (c : η) × Schema.HasCol (c, η) schema)
-               (c2 : CertifiedHeader schema)
-    : Table (List.append
-      (schema.removeNames [⟨c1.fst, Schema.colImpliesName c1.snd⟩,
-                           ⟨c2.fst.fst, Schema.colImpliesName c2.snd⟩])
-      (t.rows.map (λ (r : Row schema) =>
-        (Option.orDefault (getValue r c1.fst c1.snd), η)
-      ))) := sorry
+-- def pivotWider [inst : Inhabited η]
+--                (t : Table schema)
+--                (c1 : (c : η) × Schema.HasCol (c, η) schema)
+--                (c2 : CertifiedHeader schema)
+--     : Table (List.append
+--       (schema.removeNames [⟨c1.fst, Schema.colImpliesName c1.snd⟩,
+--                            ⟨c2.fst.fst, Schema.colImpliesName c2.snd⟩])
+--       (t.rows.map (λ (r : Row schema) =>
+--         (Option.orDefault (getValue r c1.fst c1.snd), η)
+--       ))) := sorry
