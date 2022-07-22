@@ -19,14 +19,14 @@ open Lean (Json toJson fromJson?)
 
 namespace Lake
 
--- ## General options for top-level `lake`
+/-! ## General options for top-level `lake` -/
 
 structure LakeOptions where
   rootDir : FilePath := "."
   configFile : FilePath := defaultConfigFile
   leanInstall? : Option LeanInstall := none
   lakeInstall? : Option LakeInstall := none
-  configOptions : NameMap String := {}
+  configOpts : NameMap String := {}
   subArgs : List String := []
   wantsHelp : Bool := false
 
@@ -51,17 +51,20 @@ def LakeOptions.computeEnv (opts : LakeOptions) : EIO CliError Lake.Env := do
   Env.compute (← opts.getLakeInstall) (← opts.getLeanInstall)
 
 /-- Make a `LoadConfig` from a `LakeOptions`. -/
-def LakeOptions.mkLoadConfig (opts : LakeOptions) : EIO CliError LoadConfig :=
+def LakeOptions.mkLoadConfig
+(opts : LakeOptions) (updateDeps := false) : EIO CliError LoadConfig :=
   return {
-    rootDir := opts.rootDir,
-    configFile := opts.rootDir / opts.configFile,
     env := ← opts.computeEnv
-    options := opts.configOptions
+    rootDir := opts.rootDir
+    configFile := opts.rootDir / opts.configFile
+    configOpts := opts.configOpts
+    leanOpts := Lean.Options.empty
+    updateDeps
   }
 
 export LakeOptions (mkLoadConfig)
 
--- ## Monad
+/-! ## Monad -/
 
 abbrev CliMainM := ExceptT CliError MainM
 abbrev CliStateM := StateT LakeOptions CliMainM
@@ -73,7 +76,7 @@ def CliM.run (self : CliM α) (args : List String) : BaseIO ExitCode := do
   let main := main.run >>= fun | .ok a => pure a | .error e => error e.toString
   main.run
 
--- ## Argument Parsing
+/-! ## Argument Parsing -/
 
 def takeArg (arg : String) : CliM String := do
   match (← takeArg?) with
@@ -94,7 +97,7 @@ def noArgsRem (act : CliStateM α) : CliM α := do
   if args.isEmpty then act else
     throw <| CliError.unexpectedArguments args
 
--- ## Option Parsing
+/-! ## Option Parsing -/
 
 def getWantsHelp : CliStateM Bool :=
   (·.wantsHelp) <$> get
@@ -103,7 +106,7 @@ def setLean (lean : String) : CliStateM PUnit := do
   let leanInstall? ← findLeanCmdInstall? lean
   modify ({·  with leanInstall?})
 
-def setConfigOption (kvPair : String) : CliM PUnit :=
+def setConfigOpt (kvPair : String) : CliM PUnit :=
   let pos := kvPair.posOf '='
   let (key, val) :=
     if pos = kvPair.endPos then
@@ -111,13 +114,13 @@ def setConfigOption (kvPair : String) : CliM PUnit :=
     else
       (kvPair.extract 0 pos |>.toName, kvPair.extract (kvPair.next pos) kvPair.endPos)
   modifyThe LakeOptions fun opts =>
-    {opts with configOptions := opts.configOptions.insert key val}
+    {opts with configOpts := opts.configOpts.insert key val}
 
 def lakeShortOption : (opt : Char) → CliM PUnit
 | 'h' => modifyThe LakeOptions ({· with wantsHelp := true})
 | 'd' => do let rootDir ← takeOptArg "-d" "path"; modifyThe LakeOptions ({· with rootDir})
 | 'f' => do let configFile ← takeOptArg "-f" "path"; modifyThe LakeOptions ({· with configFile})
-| 'K' => do setConfigOption <| ← takeOptArg "-K" "key-value pair"
+| 'K' => do setConfigOpt <| ← takeOptArg "-K" "key-value pair"
 | opt => throw <| CliError.unknownShortOption opt
 
 def lakeLongOption : (opt : String) → CliM PUnit
@@ -135,7 +138,7 @@ def lakeOption :=
     longShort := shortOptionWithArg lakeShortOption
   }
 
--- ## Actions
+/-! ## Actions -/
 
 /-- Verify the Lean version Lake was built with matches that of the give Lean installation. -/
 def verifyLeanVersion (leanInstall : LeanInstall) : Except CliError PUnit := do
@@ -219,11 +222,11 @@ def parseTemplateSpec (spec : String) : Except CliError InitTemplate :=
   else
     throw <| CliError.unknownTemplate spec
 
--- ## Commands
+/-! ## Commands -/
 
 namespace lake
 
--- ### `lake script` CLI
+/-! ### `lake script` CLI -/
 
 namespace script
 
@@ -277,7 +280,7 @@ def scriptCli : (cmd : String) → CliM PUnit
 | "help"  => script.help
 | cmd     => throw <| CliError.unknownCommand cmd
 
--- ### `lake` CLI
+/-! ### `lake` CLI -/
 
 protected def new : CliM PUnit := do
   processOptions lakeOption
@@ -308,8 +311,8 @@ protected def build : CliM PUnit := do
 
 protected def update : CliM PUnit := do
   processOptions lakeOption
-  let config ← mkLoadConfig (← getThe LakeOptions)
-  noArgsRem <| discard <| loadWorkspace config (updateDeps := true)
+  let config ← mkLoadConfig (← getThe LakeOptions) (updateDeps := true)
+  noArgsRem <| discard <| loadWorkspace config
 
 protected def printPaths : CliM PUnit := do
   processOptions lakeOption

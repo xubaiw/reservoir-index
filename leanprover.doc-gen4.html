@@ -46,23 +46,21 @@ For example <code>mathlib4</code> consists out of 4 modules, the 3 Lean compiler
 <li><code>Init</code></li>
 <li><code>Std</code></li>
 <li><code>Lean</code></li>
-<li><code>Mathlib</code>
-The first build stage is to run doc-gen for all modules separately:</li>
+<li><code>Mathlib</code></li>
 </ul>
+<p dir="auto">The first build stage is to run doc-gen for all modules separately:</p>
 <ol dir="auto">
-<li><code>doc-gen4 single Init Mathlib</code></li>
-<li><code>doc-gen4 single Std Mathlib</code></li>
-<li><code>doc-gen4 single Lean Mathlib</code></li>
-<li><code>doc-gen4 single Mathlib Mathlib</code>
-We have to pass the <code>Mathlib</code> top level module on each invocation here so
-it can generate the navbar on the left hand side properly, it will only
-generate documentation for its first argument module.</li>
+<li><code>doc-gen4 single Init</code></li>
+<li><code>doc-gen4 single Std</code></li>
+<li><code>doc-gen4 single Lean</code></li>
+<li><code>doc-gen4 single Mathlib</code></li>
 </ol>
-<p dir="auto">Furthermore one can use the <code>--ink</code> flag here to also generate LeanInk
-documentation in addition.</p>
-<p dir="auto">The second and last stage is the finalize one which zips up some
+<p dir="auto">Note that you can also just make a call to submodules so <code>Mathlib.Algebra</code>
+will work standalone as well. Furthermore one can use the <code>--ink</code> flag
+here to also generate LeanInk documentation in addition.</p>
+<p dir="auto">The second and last stage is the index one which zips up some
 information relevant for the search:</p>
-<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ doc-gen4 finalize Mathlib"><pre>$ doc-gen4 finalize Mathlib</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ doc-gen4 index Mathlib"><pre>$ doc-gen4 index Mathlib</pre></div>
 <p dir="auto">Now <code>build/doc</code> should contain the same files with the same context as if one had run</p>
 <div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ doc-gen4 Mathlib"><pre class="notranslate"><code>$ doc-gen4 Mathlib
 </code></pre></div>
