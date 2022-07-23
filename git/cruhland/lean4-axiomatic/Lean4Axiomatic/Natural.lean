@@ -55,6 +55,6 @@ export Order (
   lt_defn lt_defn_add ltOp lt_split lt_step lt_step_le lt_zero lt_zero_pos
   trichotomy
 )
-export Sign (Positive positive_add positive_defn positive_step)
+export Sign (positive_add positive_defn positive_step)
 
 end Lean4Axiomatic.Natural

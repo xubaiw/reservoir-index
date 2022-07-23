@@ -144,7 +144,7 @@ inductive Nonzero (a : ℤ) : Prop :=
     (sign : ℤ)
     (magnitude : ℕ)
     (sqrt_1 : SquareRootOfUnity sign)
-    (pos : Natural.Positive magnitude)
+    (pos : Positive magnitude)
     (prod : a ≃ sign * ↑magnitude)
 
 /--
@@ -217,8 +217,8 @@ theorem natural_sqrt_1 {n : ℕ} : n * n ≃ 1 ↔ n ≃ 1 := by
       show AA.TwoOfThree (n < 1) (n ≃ 1) (n > 1)
       have : step 0 < n := AA.substLFn Natural.literal_step ‹1 < n›
       have : 0 < n := Rel.trans Natural.lt_step ‹step 0 < n›
-      have : Natural.Positive n := Natural.lt_zero_pos.mpr ‹0 < n›
-      have : 1 * n < n * n := AA.substLC ‹Natural.Positive n› ‹1 < n›
+      have : Positive n := Natural.lt_zero_pos.mpr ‹0 < n›
+      have : 1 * n < n * n := AA.substLC ‹Positive n› ‹1 < n›
       have : n < n * n := AA.substLFn AA.identL ‹1 * n < n * n›
       have : n < 1 := AA.substRFn ‹n * n ≃ 1› ‹n < n * n›
       exact AA.TwoOfThree.oneAndThree ‹n < 1› ‹n > 1›
@@ -259,7 +259,7 @@ theorem sqrt_1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 :=
         0       ≃ _ := Rel.refl
       exact absurd ‹(1 : ℤ) ≃ 0› Core.one_neqv_zero
     | AA.OneOfThree.second
-        (Exists.intro n (And.intro (_ : Natural.Positive n) (_ : a ≃ ↑n))) =>
+        (Exists.intro n (And.intro (_ : Positive n) (_ : a ≃ ↑n))) =>
       apply Or.inl
       show a ≃ 1
       have : ↑(n * n) ≃ ↑(1 : ℕ) := calc
@@ -276,7 +276,7 @@ theorem sqrt_1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 :=
         ↑1      ≃ _ := Rel.refl
         (1 : ℤ) ≃ _ := Rel.refl
     | AA.OneOfThree.third
-        (Exists.intro n (And.intro (_ : Natural.Positive n) (_ : a ≃ -↑n))) =>
+        (Exists.intro n (And.intro (_ : Positive n) (_ : a ≃ -↑n))) =>
       apply Or.inr
       show a ≃ -1
       have : ↑(n * n) ≃ ↑(1 : ℕ) := calc
@@ -323,8 +323,8 @@ obtain this result.
 theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
   have tri : AA.ExactlyOneOfThree
       (a ≃ 0)
-      (∃ n, Natural.Positive n ∧ a ≃ ↑n)
-      (∃ n, Natural.Positive n ∧ a ≃ -↑n)
+      (∃ n, Positive n ∧ a ≃ ↑n)
+      (∃ n, Positive n ∧ a ≃ -↑n)
       :=
     Base.trichotomy a
   apply And.intro
@@ -333,9 +333,8 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
     match tri.atLeastOne with
     | AA.OneOfThree.first (_ : a ≃ 0) =>
       exact Or.inl ‹a ≃ 0›
-    | AA.OneOfThree.second (a_pos : ∃ n, Natural.Positive n ∧ a ≃ ↑n) =>
-      have (Exists.intro n (And.intro (_ : Natural.Positive n) (_ : a ≃ ↑n)))
-        := a_pos
+    | AA.OneOfThree.second (a_pos : ∃ n, Positive n ∧ a ≃ ↑n) =>
+      have (Exists.intro n (And.intro (_ : Positive n) (_ : a ≃ ↑n))) := a_pos
       apply Or.inr
       show Nonzero a
       apply Nonzero.intro 1 n
@@ -343,17 +342,16 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
         show SquareRootOfUnity 1
         exact sqrt_1_cases.mpr (Or.inl Rel.refl)
       case h.pos =>
-        show Natural.Positive n
-        exact ‹Natural.Positive n›
+        show Positive n
+        exact ‹Positive n›
       case h.prod =>
         show a ≃ 1 * ↑n
         calc
           a      ≃ _ := ‹a ≃ ↑n›
           ↑n     ≃ _ := Rel.symm AA.identL
           1 * ↑n ≃ _ := Rel.refl
-    | AA.OneOfThree.third (a_neg : ∃ n, Natural.Positive n ∧ a ≃ -↑n) =>
-      have (Exists.intro n (And.intro (_ : Natural.Positive n) (_ : a ≃ -↑n)))
-        := a_neg
+    | AA.OneOfThree.third (a_neg : ∃ n, Positive n ∧ a ≃ -↑n) =>
+      have (Exists.intro n (And.intro (_ : Positive n) (_ : a ≃ -↑n))) := a_neg
       apply Or.inr
       show Nonzero a
       apply Nonzero.intro (-1) n
@@ -361,8 +359,8 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
         show SquareRootOfUnity (-1)
         exact sqrt_1_cases.mpr (Or.inr Rel.refl)
       case h.pos =>
-        show Natural.Positive n
-        exact ‹Natural.Positive n›
+        show Positive n
+        exact ‹Positive n›
       case h.prod =>
         show a ≃ -1 * ↑n
         calc
@@ -376,10 +374,10 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
     apply tri.atMostOne
     show AA.TwoOfThree
       (a ≃ 0)
-      (∃ n, Natural.Positive n ∧ a ≃ ↑n)
-      (∃ n, Natural.Positive n ∧ a ≃ -↑n)
+      (∃ n, Positive n ∧ a ≃ ↑n)
+      (∃ n, Positive n ∧ a ≃ -↑n)
     have (Nonzero.intro s m
-        (_ : SquareRootOfUnity s) (_ : Natural.Positive m) (_ : a ≃ s * ↑m))
+        (_ : SquareRootOfUnity s) (_ : Positive m) (_ : a ≃ s * ↑m))
       := ‹Nonzero a›
     have : s ≃ 1 ∨ s ≃ -1 := sqrt_1_cases.mp ‹SquareRootOfUnity s›
     match ‹s ≃ 1 ∨ s ≃ -1› with
@@ -389,9 +387,9 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
         s * ↑m ≃ _ := AA.substL ‹s ≃ 1›
         1 * ↑m ≃ _ := AA.identL
         ↑m     ≃ _ := Rel.refl
-      have : ∃ n, Natural.Positive n ∧ a ≃ ↑n :=
-        Exists.intro m (And.intro ‹Natural.Positive m› ‹a ≃ ↑m›)
-      exact AA.TwoOfThree.oneAndTwo ‹a ≃ 0› ‹∃ n, Natural.Positive n ∧ a ≃ ↑n›
+      have : ∃ n, Positive n ∧ a ≃ ↑n :=
+        Exists.intro m (And.intro ‹Positive m› ‹a ≃ ↑m›)
+      exact AA.TwoOfThree.oneAndTwo ‹a ≃ 0› ‹∃ n, Positive n ∧ a ≃ ↑n›
     | Or.inr (_ : s ≃ -1) =>
       have : a ≃ -↑m := calc
         a           ≃ _ := ‹a ≃ s * ↑m›
@@ -399,10 +397,10 @@ theorem zero? (a : ℤ) : ExactlyOneOfTwo (a ≃ 0) (Nonzero a) := by
         (-1) * ↑m   ≃ _ := Rel.symm AA.scompatL
         (-(1 * ↑m)) ≃ _ := AA.subst₁ AA.identL
         (-↑m)       ≃ _ := Rel.refl
-      have : ∃ n, Natural.Positive n ∧ a ≃ -↑n :=
-        Exists.intro m (And.intro ‹Natural.Positive m› ‹a ≃ -↑m›)
+      have : ∃ n, Positive n ∧ a ≃ -↑n :=
+        Exists.intro m (And.intro ‹Positive m› ‹a ≃ -↑m›)
       exact
-        AA.TwoOfThree.oneAndThree ‹a ≃ 0› ‹∃ n, Natural.Positive n ∧ a ≃ -↑n›
+        AA.TwoOfThree.oneAndThree ‹a ≃ 0› ‹∃ n, Positive n ∧ a ≃ -↑n›
 
 /--
 The product of nonzero integers is nonzero.
@@ -418,9 +416,9 @@ theorem mul_preserves_nonzero
     {a b : ℤ} : Nonzero a → Nonzero b → Nonzero (a * b)
     := by
   intro (Nonzero.intro as am
-      (_ : SquareRootOfUnity as) (_ : Natural.Positive am) (_ : a ≃ as * ↑am))
+      (_ : SquareRootOfUnity as) (_ : Positive am) (_ : a ≃ as * ↑am))
   intro (Nonzero.intro bs bm
-      (_ : SquareRootOfUnity bs) (_ : Natural.Positive bm) (_ : b ≃ bs * ↑bm))
+      (_ : SquareRootOfUnity bs) (_ : Positive bm) (_ : b ≃ bs * ↑bm))
   show Nonzero (a * b)
   apply Nonzero.intro (as * bs) (am * bm)
   case sqrt_1 =>
@@ -435,8 +433,8 @@ theorem mul_preserves_nonzero
       1 * 1                 ≃ _ := AA.identL
       1                     ≃ _ := Rel.refl
   case pos =>
-    show Natural.Positive (am * bm)
-    exact Natural.mul_positive ‹Natural.Positive am› ‹Natural.Positive bm›
+    show Positive (am * bm)
+    exact Natural.mul_positive ‹Positive am› ‹Positive bm›
   case prod =>
     show a * b ≃ (as * bs) * ↑(am * bm)
     calc

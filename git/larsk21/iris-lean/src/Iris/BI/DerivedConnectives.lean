@@ -66,10 +66,10 @@ delab_rule bi_intuitionistically
   | `($_ $P) => do `(`[iprop| □ $(← unpackIprop P)])
 
 -- conditional modalities
-syntax:max "<pers>?"   term:max term:40 : term
-syntax:max "<affine>?" term:max term:40 : term
-syntax:max "<absorb>?" term:max term:40 : term
-syntax:max "□?"        term:max term:40 : term
+syntax:max "<pers>?"   term:max ppHardSpace term:40 : term
+syntax:max "<affine>?" term:max ppHardSpace term:40 : term
+syntax:max "<absorb>?" term:max ppHardSpace term:40 : term
+syntax:max "□?"        term:max ppHardSpace term:40 : term
 
 def bi_persistently_if       [BIBase PROP] (p : Bool) (P : PROP) : PROP := `[iprop| if p then <pers> P else P]
 def bi_affinely_if           [BIBase PROP] (p : Bool) (P : PROP) : PROP := `[iprop| if p then <affine> P else P]
@@ -81,6 +81,23 @@ macro_rules
   | `(`[iprop| <affine>?$p $P]) => `(bi_affinely_if $p `[iprop| $P])
   | `(`[iprop| <absorb>?$p $P]) => `(bi_absorbingly_if $p `[iprop| $P])
   | `(`[iprop| □?$p $P])        => `(bi_intuitionistically_if $p `[iprop| $P])
+
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <pers>?false P] ≟ `[iprop| P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <pers>?true P] ≟ `[iprop| <pers> P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <affine>?false P] ≟ `[iprop| P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <affine>?true P] ≟ `[iprop| <affine> P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <absorb>?false P] ≟ `[iprop| P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| <absorb>?true P] ≟ `[iprop| <absorb> P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| □?false P] ≟ `[iprop| P]
+unif_hint [BIBase PROP] (P : PROP) where
+  |- `[iprop| □?true P] ≟ `[iprop| □ P]
 
 delab_rule bi_persistently_if
   | `($_ $p $P) => do `(`[iprop| <pers>?$p $(← unpackIprop P)])

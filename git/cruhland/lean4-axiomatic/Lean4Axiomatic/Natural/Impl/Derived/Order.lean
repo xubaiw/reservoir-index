@@ -286,8 +286,8 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
-    have : Sign.Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
-    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Sign.Positive d›
+    have : Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
+    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Positive d›
     show step n ≤ m
     apply Order.Base.le_defn.mpr
     exists d'
@@ -330,15 +330,15 @@ between `n` and `m` -- that, when added to `n`, results in `m`.
 **Intuition**: This is already quite intuitive, as it's clear that for one
 number to be less than another, there must be a nonzero gap between them.
 -/
-theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n + k := by
+theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k := by
   apply Iff.intro
   · intro (_ : n < m)
-    show ∃ k, Sign.Positive k ∧ m ≃ n + k
+    show ∃ k, Positive k ∧ m ≃ n + k
     have : step n ≤ m := Derived.lt_step_le.mp ‹n < m›
     have ⟨k, (_ : step n + k ≃ m)⟩ := Base.le_defn.mp ‹step n ≤ m›
     exists step k
     apply And.intro
-    · show Sign.Positive (step k)
+    · show Positive (step k)
       apply Sign.positive_defn.mpr
       show step k ≄ 0
       exact Axioms.step_neq_zero
@@ -348,13 +348,13 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n +
         step n + k   ≃ _ := Addition.step_add
         step (n + k) ≃ _ := Rel.symm Addition.add_step
         n + step k   ≃ _ := Rel.refl
-  · intro ⟨k, (_ : Sign.Positive k), (_ : m ≃ n + k)⟩
+  · intro ⟨k, (_ : Positive k), (_ : m ≃ n + k)⟩
     show n < m
     apply Derived.lt_step_le.mpr
     show step n ≤ m
     apply Base.le_defn.mpr
     show ∃ k, step n + k ≃ m
-    have ⟨k', (_ : step k' ≃ k)⟩ := Sign.positive_step ‹Sign.Positive k›
+    have ⟨k', (_ : step k' ≃ k)⟩ := Sign.positive_step ‹Positive k›
     exists k'
     show step n + k' ≃ m
     calc
@@ -382,25 +382,24 @@ A natural number is positive iff it's greater than zero.
 positive difference between its two arguments. If the left argument is zero,
 then the right argument must be positive.
 -/
-theorem lt_zero_pos {n : ℕ} : Sign.Positive n ↔ 0 < n := by
+theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
   apply Iff.intro
-  · intro (_ : Sign.Positive n)
+  · intro (_ : Positive n)
     show 0 < n
     apply Derived.lt_defn_add.mpr
-    show ∃ k, Sign.Positive k ∧ n ≃ 0 + k
+    show ∃ k, Positive k ∧ n ≃ 0 + k
     exists n
     apply And.intro
-    · show Sign.Positive n
-      exact ‹Sign.Positive n›
+    · show Positive n
+      exact ‹Positive n›
     · show n ≃ 0 + n
       exact Rel.symm Addition.zero_add
   · intro (_ : 0 < n)
-    show Sign.Positive n
-    have ⟨k, ⟨(_ : Sign.Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
+    show Positive n
+    have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
       Derived.lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› Addition.zero_add)
-    have pos_k := ‹Sign.Positive k›
-    exact AA.subst₁ (f := Sign.Positive) (rβ := (· → ·)) ‹k ≃ n› pos_k
+    exact AA.subst₁ (rβ := (· → ·)) ‹k ≃ n› ‹Positive k›
 
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)

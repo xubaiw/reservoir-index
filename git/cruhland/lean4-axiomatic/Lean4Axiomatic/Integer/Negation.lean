@@ -39,8 +39,8 @@ class Negation.Base
   trichotomy (a : ℤ)
     : AA.ExactlyOneOfThree
       (a ≃ ↑(0 : ℕ))
-      (∃ (n : ℕ), Natural.Positive n ∧ a ≃ n)
-      (∃ (n : ℕ), Natural.Positive n ∧ a ≃ -n)
+      (∃ (n : ℕ), Positive n ∧ a ≃ n)
+      (∃ (n : ℕ), Positive n ∧ a ≃ -n)
 
   /-- An integer added to its negation is always zero. -/
   neg_inverse : AA.Inverse (α := ℤ) (-·) (· + ·)

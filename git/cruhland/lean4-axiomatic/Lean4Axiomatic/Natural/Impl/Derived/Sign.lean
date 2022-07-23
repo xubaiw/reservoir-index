@@ -9,10 +9,8 @@ variable [Addition.Derived ℕ]
 variable [Sign.Base ℕ]
 
 namespace Base
-export Sign (Positive positive_add positive_step)
+export Sign (positive_add positive_step)
 end Base
-
-open Base (Positive)
 
 theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → Positive n₂ := by
   intro (_ : n₁ ≃ n₂) (_ : Positive n₁)

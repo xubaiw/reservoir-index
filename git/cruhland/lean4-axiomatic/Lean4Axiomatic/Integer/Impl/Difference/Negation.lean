@@ -69,37 +69,37 @@ theorem trichotomy
     (a : Difference ℕ)
     : AA.ExactlyOneOfThree
       (a ≃ 0)
-      (∃ (k : ℕ), Natural.Positive k ∧ a ≃ k)
-      (∃ (k : ℕ), Natural.Positive k ∧ a ≃ -k)
+      (∃ (k : ℕ), Positive k ∧ a ≃ k)
+      (∃ (k : ℕ), Positive k ∧ a ≃ -k)
     := by
   revert a; intro (n——m)
   show AA.ExactlyOneOfThree
     (n——m ≃ 0——0)
-    (∃ (k : ℕ), Natural.Positive k ∧ n——m ≃ k——0)
-    (∃ (k : ℕ), Natural.Positive k ∧ n——m ≃ 0——k)
+    (∃ (k : ℕ), Positive k ∧ n——m ≃ k——0)
+    (∃ (k : ℕ), Positive k ∧ n——m ≃ 0——k)
   have natOrderTri : AA.ExactlyOneOfThree (n < m) (n ≃ m) (n > m) :=
     Natural.trichotomy n m
   apply AA.ExactlyOneOfThree.mk
   case atLeastOne =>
     show AA.OneOfThree
       (n + 0 ≃ 0 + m)
-      (∃ (k : ℕ), Natural.Positive k ∧ n + 0 ≃ k + m)
-      (∃ (k : ℕ), Natural.Positive k ∧ n + k ≃ 0 + m)
+      (∃ (k : ℕ), Positive k ∧ n + 0 ≃ k + m)
+      (∃ (k : ℕ), Positive k ∧ n + k ≃ 0 + m)
     match natOrderTri.atLeastOne with
     | AA.OneOfThree.first (_ : n < m) =>
-      have : ∃ k, Natural.Positive k ∧ n + k ≃ 0 + m := lt_eqv.mp ‹n < m›
+      have : ∃ k, Positive k ∧ n + k ≃ 0 + m := lt_eqv.mp ‹n < m›
       exact AA.OneOfThree.third this
     | AA.OneOfThree.second (_ : n ≃ m) =>
       have : n + 0 ≃ 0 + m := eq_eqv.mp ‹n ≃ m›
       exact AA.OneOfThree.first this
     | AA.OneOfThree.third (_ : n > m) =>
-      have : ∃ k, Natural.Positive k ∧ n + 0 ≃ k + m := gt_eqv.mp ‹n > m›
+      have : ∃ k, Positive k ∧ n + 0 ≃ k + m := gt_eqv.mp ‹n > m›
       exact AA.OneOfThree.second this
   case atMostOne =>
     intro (h : AA.TwoOfThree
       (n + 0 ≃ 0 + m)
-      (∃ (k : ℕ), Natural.Positive k ∧ n + 0 ≃ k + m)
-      (∃ (k : ℕ), Natural.Positive k ∧ n + k ≃ 0 + m))
+      (∃ (k : ℕ), Positive k ∧ n + 0 ≃ k + m)
+      (∃ (k : ℕ), Positive k ∧ n + k ≃ 0 + m))
     have twoOfThree : AA.TwoOfThree (n < m) (n ≃ m) (n > m) := match h with
       | AA.TwoOfThree.oneAndTwo h₁ h₂ =>
           AA.TwoOfThree.twoAndThree (eq_eqv.mpr h₁) (gt_eqv.mpr h₂)
@@ -133,55 +133,55 @@ where
 
   lt_eqv
       {n m : ℕ}
-      : n < m ↔ ∃ (k : ℕ), Natural.Positive k ∧ n + k ≃ 0 + m
+      : n < m ↔ ∃ (k : ℕ), Positive k ∧ n + k ≃ 0 + m
       := by
     apply Iff.intro
     case mp =>
       intro (_ : n < m)
-      show ∃ (k : ℕ), Natural.Positive k ∧ n + k ≃ 0 + m
-      have (Exists.intro k (p : Natural.Positive k ∧ m ≃ n + k)) :=
+      show ∃ (k : ℕ), Positive k ∧ n + k ≃ 0 + m
+      have (Exists.intro k (p : Positive k ∧ m ≃ n + k)) :=
         Natural.lt_defn_add.mp ‹n < m›
-      have (And.intro (_ : Natural.Positive k) (_ : m ≃ n + k)) := p
+      have (And.intro (_ : Positive k) (_ : m ≃ n + k)) := p
       have : 0 + m ≃ n + k := Rel.trans Natural.zero_add ‹m ≃ n + k›
       exists k
-      show Natural.Positive k ∧ n + k ≃ 0 + m
-      exact And.intro ‹Natural.Positive k› (Rel.symm ‹0 + m ≃ n + k›)
+      show Positive k ∧ n + k ≃ 0 + m
+      exact And.intro ‹Positive k› (Rel.symm ‹0 + m ≃ n + k›)
     case mpr =>
-      intro (Exists.intro k (p : Natural.Positive k ∧ n + k ≃ 0 + m))
-      have (And.intro (_ : Natural.Positive k) (_ : n + k ≃ 0 + m)) := p
+      intro (Exists.intro k (p : Positive k ∧ n + k ≃ 0 + m))
+      have (And.intro (_ : Positive k) (_ : n + k ≃ 0 + m)) := p
       show n < m
       apply Natural.lt_defn_add.mpr
       exists k
-      show Natural.Positive k ∧ m ≃ n + k
+      show Positive k ∧ m ≃ n + k
       have : n + k ≃ m := Rel.trans ‹n + k ≃ 0 + m› Natural.zero_add
-      exact And.intro ‹Natural.Positive k› (Rel.symm ‹n + k ≃ m›)
+      exact And.intro ‹Positive k› (Rel.symm ‹n + k ≃ m›)
 
   gt_eqv
       {n m : ℕ}
-      : n > m ↔ ∃ (k : ℕ), Natural.Positive k ∧ n + 0 ≃ k + m
+      : n > m ↔ ∃ (k : ℕ), Positive k ∧ n + 0 ≃ k + m
       := by
     apply Iff.intro
     case mp =>
       intro (_ : m < n)
-      show ∃ (k : ℕ), Natural.Positive k ∧ n + 0 ≃ k + m
-      have (Exists.intro k (p : Natural.Positive k ∧ m + k ≃ 0 + n)) :=
+      show ∃ (k : ℕ), Positive k ∧ n + 0 ≃ k + m
+      have (Exists.intro k (p : Positive k ∧ m + k ≃ 0 + n)) :=
         lt_eqv.mp ‹m < n›
-      have (And.intro (_ : Natural.Positive k) (_ : m + k ≃ 0 + n)) := p
+      have (And.intro (_ : Positive k) (_ : m + k ≃ 0 + n)) := p
       exists k
-      show Natural.Positive k ∧ n + 0 ≃ k + m
+      show Positive k ∧ n + 0 ≃ k + m
       have : k + m ≃ n + 0 :=
         Rel.trans AA.comm (Rel.trans ‹m + k ≃ 0 + n› AA.comm)
-      exact And.intro ‹Natural.Positive k› (Rel.symm ‹k + m ≃ n + 0›)
+      exact And.intro ‹Positive k› (Rel.symm ‹k + m ≃ n + 0›)
     case mpr =>
-      intro (Exists.intro k (p : Natural.Positive k ∧ n + 0 ≃ k + m))
-      have (And.intro (_ : Natural.Positive k) (_ : n + 0 ≃ k + m)) := p
+      intro (Exists.intro k (p : Positive k ∧ n + 0 ≃ k + m))
+      have (And.intro (_ : Positive k) (_ : n + 0 ≃ k + m)) := p
       show m < n
       apply lt_eqv.mpr
       exists k
-      show Natural.Positive k ∧ m + k ≃ 0 + n
+      show Positive k ∧ m + k ≃ 0 + n
       have : 0 + n ≃ m + k :=
         Rel.trans AA.comm (Rel.trans ‹n + 0 ≃ k + m› AA.comm)
-      exact And.intro ‹Natural.Positive k› (Rel.symm ‹0 + n ≃ m + k›)
+      exact And.intro ‹Positive k› (Rel.symm ‹0 + n ≃ m + k›)
 
 /--
 The negation of a natural number difference is that difference's left additive

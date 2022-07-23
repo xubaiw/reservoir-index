@@ -1,4 +1,5 @@
 import Lean4Axiomatic.Natural.Addition
+import Lean4Axiomatic.Sign
 
 namespace Lean4Axiomatic.Natural
 
@@ -14,22 +15,13 @@ Definition of positive natural numbers.
 
 All other properties of positive natural numbers can be derived from this.
 -/
-class Sign.Base (ℕ : Type) [Core ℕ] where
-  /-- Predicate that holds of a natural number iff it is positive. -/
-  Positive (n : ℕ) : Prop
-
+class Sign.Base (ℕ : Type) [Core ℕ] extends Positivity.Base ℕ :=
   /-- A natural number is positive iff it is nonzero. -/
   positive_defn {n : ℕ} : Positive n ↔ n ≄ 0
 
 /-- Properties that follow from those provided in `Sign.Base`. -/
 class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
-    extends Sign.Base ℕ where
-  /--
-  Positivity respects equality: if two natural numbers are equal and one of
-  them is positive, then the other one must be positive.
-  -/
-  positive_substitutive : AA.Substitutive₁ Positive (· ≃ ·) (· → ·)
-
+    extends Sign.Base ℕ, Positivity.Properties ℕ :=
   /--
   Every positive natural number is the successor of another natural number.
   -/
@@ -41,10 +33,8 @@ class Sign.Derived (ℕ : Type) [Core ℕ] [Addition.Base ℕ]
   -/
   positive_add {n m : ℕ} : Positive n → Positive (n + m)
 
-attribute [instance] Sign.Derived.positive_substitutive
-
 namespace Sign
-export Sign.Base (Positive positive_defn)
+export Sign.Base (positive_defn)
 export Sign.Derived (positive_add positive_step)
 end Sign
 

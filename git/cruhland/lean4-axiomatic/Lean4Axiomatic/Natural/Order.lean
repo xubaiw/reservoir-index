@@ -109,7 +109,7 @@ class Order.Derived
   lt_zero {n : ℕ} : n ≮ 0
 
   /-- A natural number is positive iff it's greater than zero. -/
-  lt_zero_pos {n : ℕ} : Sign.Positive n ↔ 0 < n
+  lt_zero_pos {n : ℕ} : Positive n ↔ n > 0
 
   /-- A natural number is always less than its successor. -/
   lt_step {n : ℕ} : n < step n
@@ -125,7 +125,7 @@ class Order.Derived
   equivalent to there being a positive natural number -- the _difference_
   between `n` and `m` -- that, when added to `n`, results in `m`.
   -/
-  lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Sign.Positive k ∧ m ≃ n + k
+  lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k
 
   /--
   Useful result when needing to decrement the larger number in a _less than_

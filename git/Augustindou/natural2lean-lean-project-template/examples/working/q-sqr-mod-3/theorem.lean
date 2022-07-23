@@ -4,7 +4,7 @@ open Nat
 theorem square_mod_3 (q : Nat) : (¬divisible 3 q) → (q^2 % 3 = 1) := by
   intros h₁
   apply mod_rewrite.mpr
-  have h2 : q % 3 = 0 ∨ q % 3 = 1 ∨ q % 3 = 2 := mod_3_poss _
+  have h2 : q % 3 = 0 ∨ q % 3 = 1 ∨ q % 3 = 2 := by (first | exact mod_2_poss _ | exact mod_3_poss _ | exact mod_4_poss _ | exact mod_5_poss _)
 
   -- divide cases into 3 goals
   rcases h2 with h2 | h2 | h2
