@@ -66,7 +66,7 @@ equal to
 The whole proof is just translating from one form of trichotomy into the other.
 -/
 theorem trichotomy
-    {a : Difference ℕ}
+    (a : Difference ℕ)
     : AA.ExactlyOneOfThree
       (a ≃ 0)
       (∃ (k : ℕ), Natural.Positive k ∧ a ≃ k)

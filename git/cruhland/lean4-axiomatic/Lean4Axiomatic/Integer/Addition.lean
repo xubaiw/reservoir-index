@@ -16,11 +16,9 @@ All other properties of addition can be derived from these.
 - `ℤ`: The type of integers.
 
 **Class parameters**
-- `Equality ℤ`: Required to express most properties of addition.
+- `Core.Base ℤ`: Required to express most properties of addition.
 -/
-class Addition.Base
-    (ℕ : Type) [Natural ℕ] (ℤ : Type) [Equality ℤ] [Conversion ℕ ℤ]
-    :=
+class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core.Base ℕ ℤ] :=
   /-- Definition of and syntax for addition. -/
   addOp : Add ℤ
 
@@ -37,7 +35,7 @@ class Addition.Base
   add_associative : AA.Associative (α := ℤ) (· + ·)
 
   /-- Adding zero to an integer produces the same integer. -/
-  add_identity : AA.Identity (α := ℤ) ↑(0 : ℕ) (· + ·)
+  add_identity : AA.Identity (α := ℤ) 0 (· + ·)
 
 attribute [instance] Addition.Base.addOp
 attribute [instance] Addition.Base.add_associative

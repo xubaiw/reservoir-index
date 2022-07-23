@@ -67,6 +67,7 @@ attribute [instance] Addition.Derived.add_associative
 attribute [instance] Addition.Derived.add_cancellative
 attribute [instance] Addition.Derived.add_commutative
 attribute [instance] Addition.Derived.add_identity
+attribute [instance] Addition.Derived.add_semicompatible_step
 attribute [instance] Addition.Derived.add_substitutive
 
 namespace Addition

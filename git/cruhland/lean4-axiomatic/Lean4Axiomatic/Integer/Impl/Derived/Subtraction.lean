@@ -8,8 +8,7 @@ namespace Lean4Axiomatic.Integer.Impl.Derived
 variable {ℕ : Type}
 variable [Natural ℕ]
 variable {ℤ : Type}
-variable [Equality ℤ]
-variable [Conversion ℕ ℤ]
+variable [Core.Base ℕ ℤ]
 variable [Addition.Base ℕ ℤ]
 variable [Negation.Base ℕ ℤ]
 

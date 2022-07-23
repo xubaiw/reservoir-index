@@ -1,3 +1,5 @@
+import Lean4Axiomatic.Integer.Impl.Derived.Core
+import Lean4Axiomatic.Integer.Impl.Derived.Negation
 import Lean4Axiomatic.Integer.Impl.Derived.Subtraction
 import Lean4Axiomatic.Integer.Impl.Difference.Addition
 import Lean4Axiomatic.Integer.Impl.Difference.Core
@@ -15,10 +17,9 @@ variable [Natural ℕ]
 
 instance integer : Integer ℕ (Difference ℕ) := {
   toAddition := addition
-  toConversion := conversion
-  toEquality := equality
+  toCore := Derived.core
   toMultiplication := multiplication
-  toNegation := negation
+  toNegation := Derived.negation
   toSubtraction := Derived.subtraction (ℕ := ℕ)
 }
 

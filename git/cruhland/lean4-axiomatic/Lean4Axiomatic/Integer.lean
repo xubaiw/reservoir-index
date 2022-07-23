@@ -11,7 +11,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic
 
 open Integer (
-  Addition.Base Conversion Equality Multiplication.Base Negation.Base
+  Addition.Base Core.Derived Multiplication.Base Negation.Derived
   Subtraction.Base
 )
 
@@ -36,20 +36,18 @@ construct an instance.
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
 class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
-  toEquality : Equality ℤ
-  toConversion : Conversion ℕ ℤ
+  toCore : Core.Derived ℕ ℤ
   toAddition : Addition.Base ℕ ℤ
-  toNegation : Negation.Base ℕ ℤ
   toMultiplication : Multiplication.Base ℕ ℤ
+  toNegation : Negation.Derived ℕ ℤ
   toSubtraction : Subtraction.Base ℤ
 
 namespace Integer
 
-attribute [instance] toConversion
-attribute [instance] toEquality
+attribute [instance] toCore
 
 export Addition (addOp)
-export Equality (eqvOp)
+export Core (eqvOp)
 export Multiplication (mulOp)
 export Negation (negOp)
 

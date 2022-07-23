@@ -20,6 +20,7 @@ required to construct an instance.
 -/
 class Natural (ℕ : Type) where
   toCore : Core ℕ
+  toAxioms : Axioms.Derived ℕ
   toAddition : Addition.Derived ℕ
   toSign : Sign.Derived ℕ
   toOrder : Order.Derived ℕ
@@ -29,6 +30,7 @@ class Natural (ℕ : Type) where
 namespace Natural
 
 attribute [instance] toAddition
+attribute [instance] toAxioms
 attribute [instance] toCore
 attribute [instance] toMultiplication
 attribute [instance] toOrder
@@ -45,8 +47,8 @@ export Exponentiation (powOp pow_step pow_zero)
 export Literals (literal literal_step literal_zero)
 export Multiplication (
   mul_associative mul_cancellative mul_commutative mul_distributive mulOp
-  mul_positive mul_split_zero mul_substitutive_eq mul_substitutive_lt step_mul
-  zero_mul
+  mul_positive mul_split_zero mul_step mul_substitutive_eq mul_substitutive_lt
+  step_mul zero_mul
 )
 export Order (
   le_antisymm le_defn le_reflexive le_split le_transitive leOp

@@ -110,7 +110,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     apply Order.Base.le_defn.mpr
     exists e
     show n + e ≃ m
-    apply AA.inject (β := ℕ) (f := step) (rβ := (· ≃ ·))
+    apply AA.inject (β := ℕ) (rβ := (· ≃ ·))
     show step (n + e) ≃ step m
     calc
       step (n + e) ≃ _ := Rel.symm Addition.add_step
@@ -153,7 +153,7 @@ theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
     | Or.inl (_ : m ≤ k) =>
       exact le_step (ih ‹m ≤ k›)
     | Or.inr (_ : m ≃ step k) =>
-      exact AA.substR (rβ := (· → ·)) ‹m ≃ step k› ‹n ≤ m›
+      exact AA.substRFn ‹m ≃ step k› ‹n ≤ m›
 
 instance le_transitive : Relation.Transitive (α := ℕ) (· ≤ ·) where
   trans := le_trans
@@ -231,8 +231,8 @@ theorem lt_subst_eqv {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ < m → n₂ <
   intro (_ : n₁ ≃ n₂) (_ : n₁ < m)
   show n₂ < m
   have ⟨(_ : n₁ ≤ m), (_ : n₁ ≄ m)⟩ := Order.Base.lt_defn.mp ‹n₁ < m›
-  have : n₂ ≤ m := AA.substL (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≤ m›
-  have : n₂ ≄ m := AA.substL (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ m›
+  have : n₂ ≤ m := AA.substLFn ‹n₁ ≃ n₂› ‹n₁ ≤ m›
+  have : n₂ ≄ m := AA.substLFn (f := (· ≄ ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ m›
   apply Order.Base.lt_defn.mpr
   exact ⟨‹n₂ ≤ m›, ‹n₂ ≄ m›⟩
 
@@ -244,8 +244,8 @@ theorem lt_eqv_subst {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → m < n₁ → m < n�
   intro (_ : n₁ ≃ n₂) (_ : m < n₁)
   show m < n₂
   have ⟨(_ : m ≤ n₁), (_ : m ≄ n₁)⟩ := Order.Base.lt_defn.mp ‹m < n₁›
-  have : m ≤ n₂ := AA.substR (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹m ≤ n₁›
-  have : m ≄ n₂ := AA.substR (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹m ≄ n₁›
+  have : m ≤ n₂ := AA.substRFn ‹n₁ ≃ n₂› ‹m ≤ n₁›
+  have : m ≄ n₂ := AA.substRFn (f := (· ≄ ·)) ‹n₁ ≃ n₂› ‹m ≄ n₁›
   apply Order.Base.lt_defn.mpr
   exact ⟨‹m ≤ n₂›, ‹m ≄ n₂›⟩
 
@@ -406,7 +406,7 @@ theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)
   show n ≤ m
   have : n ≤ n := Rel.refl
-  exact AA.substR (rβ := (· → ·)) ‹n ≃ m› ‹n ≤ n›
+  exact AA.substRFn ‹n ≃ m› ‹n ≤ n›
 
 theorem le_from_lt {n m : ℕ} : n < m → n ≤ m := by
   intro (_ : n < m)

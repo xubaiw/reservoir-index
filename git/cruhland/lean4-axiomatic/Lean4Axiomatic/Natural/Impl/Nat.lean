@@ -80,6 +80,7 @@ instance exponentiation_base : Exponentiation.Base Nat := {
 
 instance : Natural Nat where
   toCore := core
+  toAxioms := Natural.Derived.axioms_derived
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Derived.sign_derived
   toOrder := Natural.Derived.order_derived

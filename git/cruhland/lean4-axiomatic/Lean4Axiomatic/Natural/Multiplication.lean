@@ -80,17 +80,19 @@ class Multiplication.Derived
   /-- Multiplying a natural number by one produces the same natural number. -/
   mul_identity : AA.Identity (α := ℕ) 1 (· * ·)
 
+attribute [instance] Multiplication.Derived.mul_absorbing
 attribute [instance] Multiplication.Derived.mul_associative
 attribute [instance] Multiplication.Derived.mul_commutative
 attribute [instance] Multiplication.Derived.mul_distributive
 attribute [instance] Multiplication.Derived.mul_identity
 attribute [instance] Multiplication.Derived.mul_substitutive_eq
+attribute [instance] Multiplication.Derived.mul_substitutive_lt
 
 namespace Multiplication
 export Multiplication.Base (mulOp step_mul zero_mul)
 export Multiplication.Derived (
   mul_associative mul_cancellative mul_commutative mul_distributive
-  mul_positive mul_split_zero mul_substitutive_eq mul_substitutive_lt
+  mul_positive mul_split_zero mul_step mul_substitutive_eq mul_substitutive_lt
 )
 end Multiplication
 

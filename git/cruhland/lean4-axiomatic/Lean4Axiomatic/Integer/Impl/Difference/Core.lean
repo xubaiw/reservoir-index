@@ -146,7 +146,7 @@ instance from_prod_substitutive
     k + j ≃ _ := AA.substR (Rel.symm ‹m ≃ j›)
     k + m ≃ _ := Rel.refl
 
-instance equality : Equality (Difference ℕ) := {
+instance equivalence : Equivalence (Difference ℕ) := {
   eqvOp := eqvOp
 }
 
@@ -155,19 +155,75 @@ instance equality : Equality (Difference ℕ) := {
 /--
 Every natural number can be represented as a difference.
 
-Frequently used to convert natural number literals into differences, so it's
-defined as an `abbrev` so the typechecker will always expand it.
-
 **Definition intuition**: Taking nothing away from a natural number preserves
 its value.
 -/
-abbrev from_natural : Coe ℕ (Difference ℕ) := {
+instance from_natural : Coe ℕ (Difference ℕ) := {
   coe := (·——0)
+}
+
+/--
+The conversion operation from natural numbers to differences respects
+equivalence of natural numbers: if two natural numbers are equivalent they will
+also be equivalent as differences.
+
+**Property intuition**: This must be true if we want the conversion operation
+to be a legitimate function `ℕ → Difference ℕ`.
+
+**Proof intuition**: Viewing differences as pairs, the proof follows directly
+from the substitution property on pairs.
+-/
+theorem from_ℕ_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → (↑n₁ : Difference ℕ) ≃ ↑n₂ := by
+  intro (_ : n₁ ≃ n₂)
+  show n₁——0 ≃ n₂——0
+  show from_prod (n₁, 0) ≃ from_prod (n₂, 0)
+  apply AA.subst₁
+  show (n₁, 0) ≃ (n₂, 0)
+  exact AA.substL ‹n₁ ≃ n₂›
+
+def from_natural_substitutive
+    : AA.Substitutive₁ (α := ℕ) (β := Difference ℕ) (↑·) (· ≃ ·) (· ≃ ·)
+    := {
+  subst₁ := from_ℕ_subst
+}
+
+/--
+If we know that two differences converted from natural numbers are equivalent,
+then we also know that they came from the same natural numbers: the conversion
+operation is one-to-one, i.e. injective.
+
+**Property intuition**: We know intuitively that the natural numbers correspond
+to the nonnegative integers. This property ensures that's the case, by
+requiring the conversion operation to assign a unique difference to every
+natural number.
+
+**Proof intuition**: The result follows from the "reversibility" of the
+conversion operation: it acts on each natural number in the same way, so that
+obtaining the original natural numbers from the resulting differences is easy.
+-/
+theorem from_ℕ_inject {n₁ n₂ : ℕ} : (↑n₁ : Difference ℕ) ≃ ↑n₂ → n₁ ≃ n₂ := by
+  intro (_ : n₁——0 ≃ n₂——0)
+  show n₁ ≃ n₂
+  have : n₁ + 0 ≃ n₂ + 0 := ‹n₁——0 ≃ n₂——0›
+  calc
+    n₁     ≃ _ := Rel.symm AA.identR
+    n₁ + 0 ≃ _ := ‹n₁ + 0 ≃ n₂ + 0›
+    n₂ + 0 ≃ _ := AA.identR
+    n₂     ≃ _ := Rel.refl
+
+instance from_natural_injective
+    : AA.Injective (α := ℕ) (β := Difference ℕ) (↑·) (· ≃ ·) (· ≃ ·)
+    := {
+  inject := from_ℕ_inject
 }
 
 instance conversion : Conversion ℕ (Difference ℕ) := {
   from_natural := from_natural
+  from_natural_injective := from_natural_injective
+  from_natural_substitutive := from_natural_substitutive
 }
+
+instance core : Core.Base ℕ (Difference ℕ) := Core.Base.mk
 
 end Difference
 

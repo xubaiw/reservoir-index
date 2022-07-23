@@ -451,6 +451,57 @@ def semicompatibleR_from_semicompatibleL
     g x (f y) ≃ _ := Rel.refl
 
 /--
+Class for types and operations that satisfy the binary compatibility property.
+
+This property does not have a standard name in abstract algebra. However, it is
+a key part of what it means to have a
+[homomorphism](https://en.wikipedia.org/wiki/Homomorphism) between algebraic
+structures.
+
+**Named parameters**
+- `α`:
+    The `Sort` that is the input of `f` and that the operation `g` is defined
+    over.
+- `β`:
+    The `Sort` that is the output of `f` and that the operation `h` is defined
+    over.
+- `f`:
+    An unary operation mapping `α` to `β`, that is "compatible" with operations
+    `g` and `h`.
+- `g`:
+    A binary operation on `α`.
+- `h`:
+    A binary operation on `β`.
+
+**Class parameters**
+- `EqvOp β`: Necessary because the property expresses an equivalence on `β`.
+-/
+class Compatible₂
+    {α β : Sort u} [EqvOp β] (f : α → β) (g : outParam (α → α → α)) (h : outParam (β → β → β))
+    :=
+  /--
+  The compatibility property of an unary operation `f` with two binary
+  operations `g` and `h` that are defined over sorts `α` and `β`, respectively.
+
+  Typically, `g` and `h` represent a similar operation on each of their sorts,
+  and we say that `f` _is compatible with_ that operation, or that `f`
+  _preserves_ the operation. In particular, `α` and `β` are often the same
+  sort, and `g` and `h` are often the same operation.
+
+  An example instance of the property is that negation is compatible with
+  addition on the integers: `-(a + b) ≃ (-a) + (-b)` for all integers `a` and
+  `b`.
+
+  **Named parameters**
+  - See `Compatible` for the class parameters.
+  - `x`: The left-hand argument to `g`.
+  - `y`: The right-hand argument to `g`.
+  -/
+  compat₂ {x y : α} : f (g x y) ≃ h (f x) (f y)
+
+export Compatible₂ (compat₂)
+
+/--
 Class for types and operations that satisfy either the left- or right-handed
 distributive property.
 

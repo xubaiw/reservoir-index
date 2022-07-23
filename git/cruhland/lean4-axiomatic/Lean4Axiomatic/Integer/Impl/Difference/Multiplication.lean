@@ -184,9 +184,9 @@ theorem mul_identL {a : Difference ℕ} : 1 * a ≃ a := by
   show (1 * n + 0 * m, 1 * m + 0 * n) ≃ (n, m)
   calc
     (1 * n + 0 * m, 1 * m + 0 * n) ≃ _ := AA.substL (AA.substL AA.identL)
-    (n + 0 * m, 1 * m + 0 * n)     ≃ _ := AA.substL (AA.substR Natural.zero_mul)
+    (n + 0 * m, 1 * m + 0 * n)     ≃ _ := AA.substL (AA.substR AA.absorbL)
     (n + 0, 1 * m + 0 * n)         ≃ _ := AA.substR (AA.substL AA.identL)
-    (n + 0, m + 0 * n)             ≃ _ := AA.substR (AA.substR Natural.zero_mul)
+    (n + 0, m + 0 * n)             ≃ _ := AA.substR (AA.substR AA.absorbL)
     (n + 0, m + 0)                 ≃ _ := AA.substL AA.identR
     (n, m + 0)                     ≃ _ := AA.substR AA.identR
     (n, m)                         ≃ _ := Rel.refl
@@ -264,13 +264,47 @@ def mul_distributive : AA.Distributive (α := Difference ℕ) (· * ·) (· + ·
   distributiveR := AA.distributiveR_from_distributiveL mul_distributiveL
 }
 
-def multiplication : Multiplication.Base ℕ (Difference ℕ) := {
+/--
+Conversion from `ℕ` to `Difference ℕ` is compatible with multiplication.
+
+**Proprty intuition**: One would hope this is true, otherwise we could not say
+that the set of differences (integers) is a superset of the natural numbers.
+
+**Proof intuition**: Expand definitions to see that we only need to prove
+equivalence of differences element-wise. And then it's just a matter of
+reducing terms to zero and removing them.
+-/
+theorem mul_compat_natural
+    {n m : ℕ} : ↑(n * m) ≃ (↑n : Difference ℕ) * ↑m
+    := by
+  show (n * m)——0 ≃ (n * m + 0 * 0)——(n * 0 + 0 * m)
+  show from_prod (n * m, 0) ≃ from_prod (n * m + 0 * 0, n * 0 + 0 * m)
+  apply AA.subst₁
+  show (n * m, 0) ≃ (n * m + 0 * 0, n * 0 + 0 * m)
+  apply Rel.symm (α := ℕ × ℕ)
+  show (n * m + 0 * 0, n * 0 + 0 * m) ≃ (n * m, 0)
+  calc
+    (n * m + 0 * 0, n * 0 + 0 * m) ≃ _ := AA.substL (AA.substR AA.absorbL)
+    (n * m + 0, n * 0 + 0 * m)     ≃ _ := AA.substL Natural.add_zero
+    (n * m, n * 0 + 0 * m)         ≃ _ := AA.substR (AA.substL AA.absorbR)
+    (n * m, 0 + 0 * m)             ≃ _ := AA.substR Natural.zero_add
+    (n * m, 0 * m)                 ≃ _ := AA.substR AA.absorbL
+    (n * m, 0)                     ≃ _ := Rel.refl
+
+def mul_compatible_from_natural
+    : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· * ·) (· * ·)
+    := {
+  compat₂ := mul_compat_natural
+}
+
+instance multiplication : Multiplication.Base ℕ (Difference ℕ) := {
   mulOp := mulOp
   mul_commutative := mul_commutative
   mul_substitutive := mul_substitutive
   mul_associative := mul_associative
   mul_identity := mul_identity
   mul_distributive := mul_distributive
+  mul_compatible_from_natural := mul_compatible_from_natural
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

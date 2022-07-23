@@ -30,8 +30,9 @@ For more information see `Substitutive₁.subst₁`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class Substitutive₁
-    {α : Sort u} {β : Sort v}
-    (f : α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+    {α : outParam (Sort u)} {β : Sort v}
+    (f : outParam (α → β)) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    :=
   /--
   The generalized substitution property of an unary operation `f`.
 
@@ -65,8 +66,9 @@ For more information see `Injective.inject`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class Injective
-    {α : Sort u} {β : Sort v} (f : α → β)
-    (rα : outParam (α → α → Prop)) (rβ : β → β → Prop) where
+    {α : Sort u} {β : Sort v}
+    (f : outParam (α → β)) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    :=
   /--
   The generalized injective property of an unary operation `f`.
 
@@ -181,8 +183,8 @@ See `SubstitutiveOn.subst₂` for detailed documentation.
 -/
 abbrev substL
     {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
-    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.L f tc rα rβ]
-    {x₁ x₂ y : α} :=
+    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.L f tc rα rβ] {x₁ x₂ y : α}
+    :=
   @subst₂ Hand.L α α β f tc rα rβ self x₁ x₂ y True.intro
 
 /--
@@ -213,9 +215,53 @@ See `SubstitutiveOn.subst₂` for detailed documentation.
 -/
 abbrev substR
     {α : Sort u} {β : Sort v} {f : α → α → β} {rα : α → α → Prop}
-    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.R f tc rα rβ]
-    {x₁ x₂ y : α} :=
+    {rβ : β → β → Prop} [self : SubstitutiveOn Hand.R f tc rα rβ] {x₁ x₂ y : α}
+    :=
   @subst₂ Hand.R α α β f tc rα rβ self x₁ x₂ y True.intro
+
+/--
+Convenience function for the left-handed binary generalized substitution
+property, for a homogeneous predicate `f` without a constraint on `y`.
+
+Type inference for `substL` gets stuck when the output relation is `(· → ·)`;
+this helper works around that issue by hardcoding the argument.
+
+See `substL` for further documentation.
+
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s input parameters.
+- `f`:
+    The homogeneous binary predicate that obeys the left-handed generalized
+    substitution property.
+- `rα`:
+    A binary relation on `f`'s input values.
+- See `substL` for documentation on the remaining parameters.
+-/
+abbrev substLFn {α : Sort u} {f : α → α → Prop} {rα : α → α → Prop} :=
+  @substL α (β := Prop) f rα (rβ := (· → ·))
+
+/--
+Convenience function for the right-handed binary generalized substitution
+property, for a homogeneous predicate `f` without a constraint on `y`.
+
+Type inference for `substR` gets stuck when the output relation is `(· → ·)`;
+this helper works around that issue by hardcoding the argument.
+
+See `substR` for further documentation.
+
+**Named parameters**
+- `α`:
+    The `Sort` of `f`'s input parameters.
+- `f`:
+    The homogeneous binary predicate that obeys the right-handed generalized
+    substitution property.
+- `rα`:
+    A binary relation on `f`'s input values.
+- See `substR` for documentation on the remaining parameters.
+-/
+abbrev substRFn {α : Sort u} {f : α → α → Prop} {rα : α → α → Prop} :=
+  @substR α (β := Prop) f rα (rβ := (· → ·))
 
 /--
 Convenience function for the left-handed binary generalized substitution
@@ -436,8 +482,8 @@ def substR_from_substL_swap
   intro x₁ x₂ y (_ : C y) (_ : rα x₁ x₂)
   show rβ (f y x₁) (f y x₂)
   have : rβ (f x₁ y) (f x₂ y) := AA.substLC ‹C y› ‹rα x₁ x₂›
-  have : rβ (f y x₁) (f x₂ y) := AA.substL (rβ := (· → ·)) Fn.swap this
-  have : rβ (f y x₁) (f y x₂) := AA.substR (rβ := (· → ·)) Fn.swap this
+  have : rβ (f y x₁) (f x₂ y) := AA.substLFn Fn.swap this
+  have : rβ (f y x₁) (f y x₂) := AA.substRFn Fn.swap this
   exact this
 
 /--
@@ -621,7 +667,7 @@ class CancellativeOn
     (hand : Hand) {α : Sort u} {β : Sort v}
     (f : α → α → β) (C : outParam (α → Prop))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    where
+    :=
   /--
   The left- or right-handed generalized cancellation property of a binary
   operation `f`.
@@ -712,10 +758,9 @@ right-handed) generalized cancellation property.
 See `CancellativeOn` for detailed documentation.
 -/
 class Cancellative
-    {α : Sort u} {β : Sort v}
-    (f : α → α → β) (C : outParam (α → Prop))
+    {α : Sort u} {β : Sort v} (f : α → α → β) (C : outParam (α → Prop))
     (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
-    where
+    :=
   cancellativeL : CancellativeOn Hand.L f C rα rβ
   cancellativeR : CancellativeOn Hand.R f C rα rβ
 
@@ -756,10 +801,8 @@ def cancelR_from_cancelL
   constructor
   intro x y₁ y₂ (_ : C x) (_ : rβ (f y₁ x) (f y₂ x))
   show rα y₁ y₂
-  have : rβ (f x y₁) (f y₂ x) :=
-    AA.substL (rβ := (· → ·)) AA.comm ‹rβ (f y₁ x) (f y₂ x)›
-  have : rβ (f x y₁) (f x y₂) :=
-    AA.substR (rβ := (· → ·)) AA.comm ‹rβ (f x y₁) (f y₂ x)›
+  have : rβ (f x y₁) (f y₂ x) := AA.substLFn AA.comm ‹rβ (f y₁ x) (f y₂ x)›
+  have : rβ (f x y₁) (f x y₂) := AA.substRFn AA.comm ‹rβ (f x y₁) (f y₂ x)›
   exact AA.cancelLC ‹C x› ‹rβ (f x y₁) (f x y₂)›
 
 end Lean4Axiomatic.AA
