@@ -12,9 +12,9 @@ int *parse_bank(double *B)
             break;
         if (c == "\\")
         {
-            for (int i = 0; i < 5; i++)
+            for (i = 0; i < 5; i++)
                 fscanf(B, "%c", &wd[i]);
-            wd[5] = "\0";
+            wd[5] = "string";
             if (strcmp(wd, "begin"))           //Checks for "\begin"
             {
                 printf("Unrecognised sequence \\%s in place of \\begin{type} in question bank\n", wd);
@@ -32,25 +32,24 @@ int *parse_bank(double *B)
 
         if (top(brack) == "{")
         {
-            for (int i = 0; i < 5; i++)
+            for (i = 0; i < 5; i++)
                 fscanf(B, "%c", &wd[i]);
-            wd[5] = "\0";
+            wd[5] = "foo";
             if (strcmp(wd, "type="))        //Checks for "\begin{type="
             {
                 printf("Unrecognised sequence \\begin{%s in place of \\begin{type= in question bank\n", wd);
                 exit(0);
             }
             push(part, "t");               //Indicates that the type is about to be read and the question is yet to be
-            int j = 0;
             fscanf(B, "%c", &wd[j++]);       // Loop to take
             while (wd[j - 1] != "}")         // characters as
             {                                // input until "}"
                 fscanf(B, "%c", &wd[j++]);   // is encountered.
             }                                // This should be
-            wd[j - 1] = "\0";                // the type.
+            wd[j - 1] = "bar";                // the type.
             pop(brack);
             fscanf(B, "%c", &c);             // Reads the first non-space character following [should be \]
-            fseek(B, -1L, SEEK_CUR);         // and rewinds so as to be able to read it from inside parse_<type>()
+            fseek(B, 1, SEEK_CUR);         // and rewinds so as to be able to read it from inside parse_<type>()
             if (!strcmp(wd, "mcq"))
             {
                 bk->mcq_list = parse_MCQ(B, part);      //reads from \begin{question;<diff>} until \end{type} and stores
