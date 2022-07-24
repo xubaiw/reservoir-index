@@ -22,6 +22,7 @@ namespace Lake
 inductive BuildInfo
 | moduleFacet (module : Module) (facet : Name)
 | packageFacet (package : Package) (facet : Name)
+| leanLib (lib : LeanLib)
 | staticLeanLib (lib : LeanLib)
 | sharedLeanLib (lib : LeanLib)
 | leanExe (exe : LeanExe)
@@ -44,6 +45,9 @@ abbrev Package.facetBuildKey (facet : Name) (self : Package) : BuildKey :=
 abbrev Package.targetBuildKey (target : Name) (self : Package) : BuildKey :=
   .customTarget self.name target
 
+abbrev LeanLib.leanBuildKey (self : LeanLib) : BuildKey :=
+  .targetFacet self.pkg.name self.name leanFacet
+
 abbrev LeanLib.staticBuildKey (self : LeanLib) : BuildKey :=
   .targetFacet self.pkg.name self.name staticFacet
 
@@ -65,6 +69,7 @@ abbrev ExternLib.sharedBuildKey (self : ExternLib) : BuildKey :=
 abbrev BuildInfo.key : (self : BuildInfo) → BuildKey
 | moduleFacet m f => m.facetBuildKey f
 | packageFacet p f => p.facetBuildKey f
+| leanLib l => l.leanBuildKey
 | staticLeanLib l => l.staticBuildKey
 | sharedLeanLib l => l.sharedBuildKey
 | leanExe x => x.buildKey
@@ -84,6 +89,10 @@ instance [FamilyDef PackageData f α]
 
 instance [FamilyDef CustomData (p.name, t) α]
 : FamilyDef BuildData (BuildInfo.key (.customTarget p t)) α where
+  family_key_eq_type := by unfold BuildData; simp
+
+instance [FamilyDef TargetData LeanLib.leanFacet α]
+: FamilyDef BuildData (BuildInfo.key (.leanLib l)) α where
   family_key_eq_type := by unfold BuildData; simp
 
 instance [FamilyDef TargetData LeanLib.staticFacet α]
@@ -118,6 +127,9 @@ abbrev IndexBuildFn (m : Type → Type v) :=
 /-- A transformer to equip a monad with a build function for the Lake index. -/
 abbrev IndexT (m : Type → Type v) := EquipT (IndexBuildFn m) m
 
+/-- The monad for build functions that are part of the index. -/
+abbrev IndexBuildM := IndexT RecBuildM
+
 /-- Build the given info using the Lake build index. -/
 @[inline] def BuildInfo.recBuild (self : BuildInfo) [FamilyDef BuildData self.key α] : IndexT m α :=
   fun build => cast (by simp) <| build self
@@ -136,12 +148,12 @@ Defined here because they need to import configurations, whereas the definitions
 there need to be imported by configurations.
 -/
 
-abbrev Module.importFacet := `lean.imports
-
 /-- The direct × transitive imports of the Lean module. -/
+abbrev Module.importFacet := `lean.imports
 module_data lean.imports : Array Module × Array Module
 
 /-- The package's complete array of transitive dependencies. -/
+abbrev Package.depsFacet := `deps
 package_data deps : Array Package
 
 
@@ -174,13 +186,17 @@ end Module
 abbrev Package.facet (facet : Name) (self : Package) : BuildInfo :=
   .packageFacet self facet
 
-/-- Build info for the package's `extraDepTarget`. -/
+/-- Build info for the package and its dependencies collective `extraDepTarget`. -/
 abbrev Package.extraDep (self : Package) : BuildInfo :=
   self.facet `extraDep
 
 /-- Build info for a custom package target. -/
 abbrev Package.customTarget (target : Name) (self : Package) : BuildInfo :=
   .customTarget self target
+
+/-- Build info of the Lean library's Lean binaries. -/
+abbrev LeanLib.lean (self : LeanLib) : BuildInfo :=
+  .leanLib self
 
 /-- Build info of the Lean library's static binary. -/
 abbrev LeanLib.static (self : LeanLib) : BuildInfo :=

@@ -70,7 +70,7 @@ structure PackageConfig extends WorkspaceConfig, LeanConfig where
 
   **DEPRECATED:** Use separate custom `target` declarations instead?
   -/
-  extraDepTarget : Option OpaqueTarget.{0} := none
+  extraDepTarget : Option OpaqueTarget := none
 
   /--
   The optional `PackageFacet` to build on a bare `lake build` of the package.
@@ -239,6 +239,7 @@ end PackageConfig
 --------------------------------------------------------------------------------
 
 abbrev DNameMap α := DRBMap Name α Lean.Name.quickCmp
+@[inline] def DNameMap.empty : DNameMap α := DRBMap.empty
 
 /-- A Lake package -- its location plus its configuration. -/
 structure Package where

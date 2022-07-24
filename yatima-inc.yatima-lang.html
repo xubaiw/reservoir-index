@@ -31,12 +31,26 @@
 <p dir="auto">A compiler and typechecker for the Yatima language.</p>
 <h4 dir="auto">Build</h4>
 <p dir="auto">Build it with <code>lake build</code>.</p>
+<h4 dir="auto">Install</h4>
+<p dir="auto">Run <code>lake script run setup</code>, which will build the <code>yatima</code> binary and ask you where to place it.
+You can choose a directory that's already in your path, for example.</p>
 <h4 dir="auto">Usage</h4>
 <h5 dir="auto">Storing Lean objects</h5>
-<p dir="auto">Call <code>yatima store arg1 arg2 ...</code>, where each <code>argN</code> is either a Lean file or a directory of Lean files.
-The command must be triggered from within a Lean project that uses Lake.</p>
-<p dir="auto">The <code>store</code> subcommand accepts an optional <code>--log</code> (or <code>-l</code>) flag to trigger the compilation logs.</p>
-<p dir="auto"><strong>Important</strong>: If file <code>A</code> imports file <code>B</code> and you want to compile <code>A</code>, the <code>olean</code> file for <code>B</code> must be available.</p>
+<p dir="auto">Call <code>yatima store arg1 arg2 ...</code>, where each <code>argN</code> is either a Lean file or a directory of Lean files.</p>
+<p dir="auto">Optional flags:</p>
+<ul dir="auto">
+<li><code>--prelude</code> (or <code>-p</code>) optimizes the compilation of prelude files without imports.
+All files to be compiled must follow this rule</li>
+<li><code>--log</code> (or <code>-l</code>) logs compilation progress</li>
+<li><code>--summary</code> (or <code>-s</code>) prints a compilation summary at the end of the process</li>
+</ul>
+<p dir="auto">Constraints:</p>
+<ul dir="auto">
+<li>The <code>store</code> command must be triggered from within a Lean project that uses Lake</li>
+<li>The compiled code must use the same toolchain as the one used to compile the <code>yatima</code> binary.
+To see the needed toolchain, call <code>yatima --version</code> and check the content before the pipe <code>|</code></li>
+<li>To compile a file that imports others, the imported <code>olean</code> files must be available</li>
+</ul>
 </article></div></main>
 </body>
 </html>
