@@ -14,6 +14,8 @@ namespace Base
 export Negation (trichotomy)
 end Base
 
+open Signed (Positive)
+
 /--
 Zero is a left absorbing element for multiplication.
 

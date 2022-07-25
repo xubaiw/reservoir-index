@@ -4,6 +4,8 @@ import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural
 
+open Signed (Positive)
+
 /-!
 # Definition and properties of natural number multiplication
 -/

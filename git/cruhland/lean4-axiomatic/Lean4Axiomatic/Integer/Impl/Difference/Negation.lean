@@ -7,6 +7,8 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 variable {ℕ : Type}
 variable [Natural ℕ]
 
+open Signed (Positive)
+
 /--
 Negation of differences.
 

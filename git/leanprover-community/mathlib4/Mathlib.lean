@@ -61,6 +61,7 @@ import Mathlib.Tactic.Alias
 import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Cache
 import Mathlib.Tactic.Cases
+import Mathlib.Tactic.Clear!
 import Mathlib.Tactic.ClearExcept
 import Mathlib.Tactic.Clear_
 import Mathlib.Tactic.Coe
@@ -68,6 +69,7 @@ import Mathlib.Tactic.CommandQuote
 import Mathlib.Tactic.Constructor
 import Mathlib.Tactic.Conv
 import Mathlib.Tactic.Core
+import Mathlib.Tactic.Expect
 import Mathlib.Tactic.Ext
 import Mathlib.Tactic.Find
 import Mathlib.Tactic.GuardGoalNums

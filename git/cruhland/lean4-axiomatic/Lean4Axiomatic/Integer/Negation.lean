@@ -4,6 +4,8 @@ import Lean4Axiomatic.Integer.Core
 
 namespace Lean4Axiomatic.Integer
 
+open Signed (Positive)
+
 /-!
 # Definition and properties of integer negation
 -/

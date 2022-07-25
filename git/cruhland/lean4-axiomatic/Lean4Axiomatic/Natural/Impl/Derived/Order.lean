@@ -14,6 +14,8 @@ namespace Base
 export Order (le_defn)
 end Base
 
+open Signed (Positive)
+
 theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n₂ := by
   intro (_ : n₁ ≤ n₂)
   show step n₁ ≤ step n₂

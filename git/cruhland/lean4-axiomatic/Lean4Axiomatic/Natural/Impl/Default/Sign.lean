@@ -8,9 +8,11 @@ namespace Default
 variable {ℕ : Type}
 variable [Core ℕ]
 
-instance sign_base : Sign.Base ℕ where
-  Positive (n : ℕ) := n ≄ 0
+instance sign_base : Sign.Base ℕ := {
+  Positive := λ n => n ≄ 0
+  positive_neqv_zero := id
   positive_defn := Iff.intro id id
+}
 
 end Default
 

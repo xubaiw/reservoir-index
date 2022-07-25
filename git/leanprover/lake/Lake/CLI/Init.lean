@@ -11,9 +11,6 @@ import Lake.Load.Config
 namespace Lake
 open Git System
 
-/-- The default module of an executable in `std` package. -/
-def defaultExeRoot : Name := `Main
-
 /-- `elan` toolchain file name -/
 def toolchainFileName : FilePath :=
   "lean-toolchain"
@@ -28,7 +25,7 @@ def libFileContents :=
   s!"def hello := \"world\""
 
 def mainFileName : FilePath :=
-  s!"{defaultExeRoot}.lean"
+  s!"{defaultBinRoot}.lean"
 
 def mainFileContents (libRoot : Name) :=
 s!"import {libRoot}

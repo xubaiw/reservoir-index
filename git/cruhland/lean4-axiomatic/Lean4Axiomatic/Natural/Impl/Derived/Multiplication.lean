@@ -23,6 +23,8 @@ namespace Base
 export Multiplication (step_mul zero_mul)
 end Base
 
+open Signed (Positive)
+
 /--
 Multiplying by zero on the right always gives zero.
 
