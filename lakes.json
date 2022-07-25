@@ -168,6 +168,7 @@
  "xubaiw/lean4-terminal",
  "xubaiw/sjtu-math2501-ode",
  "yatima-inc/Http.lean",
+ "yatima-inc/Ipld.lean",
  "yatima-inc/LSpec",
  "yatima-inc/Megaparsec.lean",
  "yatima-inc/Radiya.lean",
