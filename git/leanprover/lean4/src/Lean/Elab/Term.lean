@@ -5,6 +5,7 @@ Authors: Leonardo de Moura, Sebastian Ullrich
 -/
 import Lean.ResolveName
 import Lean.Log
+import Lean.Deprecated
 import Lean.Util.Sorry
 import Lean.Util.ReplaceExpr
 import Lean.Structure
@@ -561,7 +562,7 @@ def logUnassignedUsingErrorInfos (pendingMVarIds : Array MVarId) (extraMsg? : Op
     -- To sort the errors by position use
     -- let sortedErrors := errors.qsort fun e₁ e₂ => e₁.ref.getPos?.getD 0 < e₂.ref.getPos?.getD 0
     for error in errors do
-      withMVarContext error.mvarId do
+      error.mvarId.withContext do
         error.logError extraMsg?
     return hasNewErrors
 
@@ -716,7 +717,7 @@ def synthesizeInstMVarCore (instMVar : MVarId) (maxResultSize? : Option Nat := n
   let result ← trySynthInstance type maxResultSize?
   match result with
   | LOption.some val =>
-    if (← isExprMVarAssigned instMVar) then
+    if (← instMVar.isAssigned) then
       let oldVal ← instantiateMVars (mkMVar instMVar)
       unless (← isDefEq oldVal val) do
         if (← containsPendingMVar oldVal <||> containsPendingMVar val) then
@@ -1484,7 +1485,7 @@ where
     match mvarIds with
     | [] => return result
     | mvarId :: mvarIds => do
-      if (← isExprMVarAssigned mvarId) then
+      if (← mvarId.isAssigned) then
         go mvarIds result
       else if result.contains (mkMVar mvarId) || except mvarId then
         go mvarIds result
@@ -1670,9 +1671,10 @@ def mkConst (constName : Name) (explicitLevels : List Level := []) : TermElabM E
     return Lean.mkConst constName (explicitLevels ++ us)
 
 private def mkConsts (candidates : List (Name × List String)) (explicitLevels : List Level) : TermElabM (List (Expr × List String)) := do
-  candidates.foldlM (init := []) fun result (constName, projs) => do
-    -- TODO: better suppor for `mkConst` failure. We may want to cache the failures, and report them if all candidates fail.
-   let const ← mkConst constName explicitLevels
+  candidates.foldlM (init := []) fun result (declName, projs) => do
+   -- TODO: better suppor for `mkConst` failure. We may want to cache the failures, and report them if all candidates fail.
+   checkDeprecated declName -- TODO: check is occurring too early if there are multiple alternatives. Fix if it is not ok in practice
+   let const ← mkConst declName explicitLevels
    return (const, projs) :: result
 
 def resolveName (stx : Syntax) (n : Name) (preresolved : List (Name × List String)) (explicitLevels : List Level) (expectedType? : Option Expr := none) : TermElabM (List (Expr × List String)) := do
@@ -1689,15 +1691,16 @@ def resolveName (stx : Syntax) (n : Name) (preresolved : List (Name × List Stri
     process (← resolveGlobalName n)
   else
     process preresolved
-where process (candidates : List (Name × List String)) : TermElabM (List (Expr × List String)) := do
-  if candidates.isEmpty then
-    if (← read).autoBoundImplicit &&
-         !(← read).autoBoundImplicitForbidden n &&
-         isValidAutoBoundImplicitName n (relaxedAutoImplicit.get (← getOptions)) then
-      throwAutoBoundImplicitLocal n
-    else
-      throwError "unknown identifier '{Lean.mkConst n}'"
-  mkConsts candidates explicitLevels
+where
+  process (candidates : List (Name × List String)) : TermElabM (List (Expr × List String)) := do
+    if candidates.isEmpty then
+      if (← read).autoBoundImplicit &&
+           !(← read).autoBoundImplicitForbidden n &&
+           isValidAutoBoundImplicitName n (relaxedAutoImplicit.get (← getOptions)) then
+        throwAutoBoundImplicitLocal n
+      else
+        throwError "unknown identifier '{Lean.mkConst n}'"
+    mkConsts candidates explicitLevels
 
 /--
   Similar to `resolveName`, but creates identifiers for the main part and each projection with position information derived from `ident`.
@@ -1705,7 +1708,7 @@ where process (candidates : List (Name × List String)) : TermElabM (List (Expr 
   `(v.head, id, [f₁, f₂])` where `id` is an identifier for `v.head`, and `f₁` and `f₂` are identifiers for fields `"bla"` and `"boo"`. -/
 def resolveName' (ident : Syntax) (explicitLevels : List Level) (expectedType? : Option Expr := none) : TermElabM (List (Expr × Syntax × List Syntax)) := do
   match ident with
-  | Syntax.ident _    _      n preresolved =>
+  | .ident _ _ n preresolved =>
     let r ← resolveName ident n preresolved explicitLevels expectedType?
     r.mapM fun (c, fields) => do
       let ids := ident.identComponents (nFields? := fields.length)
@@ -1714,7 +1717,7 @@ def resolveName' (ident : Syntax) (explicitLevels : List Level) (expectedType? :
 
 def resolveId? (stx : Syntax) (kind := "term") (withInfo := false) : TermElabM (Option Expr) :=
   match stx with
-  | Syntax.ident _ _ val preresolved => do
+  | .ident _ _ val preresolved => do
     let rs ← try resolveName stx val preresolved [] catch _ => pure []
     let rs := rs.filter fun ⟨_, projs⟩ => projs.isEmpty
     let fs := rs.map fun (f, _) => f
@@ -1775,7 +1778,7 @@ def exprToSyntax (e : Expr) : TermElabM Term := withFreshMacroScope do
   let result ← `(?m)
   let eType ← inferType e
   let mvar ← elabTerm result eType
-  assignExprMVar mvar.mvarId! e
+  mvar.mvarId!.assign e
   return result
 
 end Term
