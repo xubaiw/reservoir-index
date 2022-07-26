@@ -1,0 +1,59 @@
+<html>
+<head>
+<meta charset="utf-8"></meta><title>kmill/lean4-raytracer</title>
+<link rel="stylesheet" href="./static/style.css"></link></head>
+<body>
+<header>
+<h1>
+<a href="./">Reservoir</a>
+</h1>
+<input placeholder="Text in here to navigate!"></input><ul>
+<li>
+<a href="#">About</a>
+</li>
+<li>
+<a href="#">New</a>
+</li>
+<li>
+<a href="#">Trending</a>
+</li>
+</ul>
+</header>
+<main>
+<h1>kmill/lean4-raytracer</h1>
+<p>A simple raytracer written in Lean 4</p>
+<a href="https://github.com/kmill/lean4-raytracer">GitHub Link</a>
+<a href="#" title="Missing now!">Documentation</a>
+<h2>Pick a version!</h2>
+<p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
+<h2>README</h2>
+<div id="readme" class="md" data-path="readme.md"><article class="markdown-body entry-content container-lg" itemprop="text"><h1 dir="auto"><a id="user-content-simple-raytracer-in-lean-4" class="anchor" aria-hidden="true" href="#simple-raytracer-in-lean-4"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Simple raytracer in Lean 4</h1>
+<p dir="auto"><a href="https://github.com/leanprover/lean4">Lean 4</a> is a dependently typed programming language, and
+it can be used both as a proof assistant and for practical programs.</p>
+<p dir="auto">This repository implements the ray tracer described in
+<a href="https://raytracing.github.io/books/RayTracingInOneWeekend.html" rel="nofollow"><em>Ray Tracing in One Weekend</em></a>.
+Code for writing PPM files originally came from
+<a href="https://github.com/TOTBWF/lean4-raytrace">TOTBWF/lean4-raytrace</a>.</p>
+<p dir="auto">The raytracer uses <code>Task</code>s to render in parallel.  Part of a raytracer is using supersampling
+to better estimate the amount of light entering each pixel, so it is trivial to parallelize:
+the entire image is rendered multiple times, and the results are averaged together.
+The following execution times are with respect to an older version of the code, and the new one is
+somewhat faster, for example the first test image now takes about 8.5 minutes with the same setup.</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="https://github.com/kmill/lean4-raytracer/blob/master/test13.png?raw=true"><img src="https://github.com/kmill/lean4-raytracer/raw/master/test13.png?raw=true" alt="final test image" style="max-width: 100%;"></a></p>
+<p dir="auto">(10 minutes with 8 threads on an Intel Xeon E5-2665. 500x333 pixels, 80 total samples per pixel, max depth 30.)</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="https://github.com/kmill/lean4-raytracer/blob/master/test13.bigger.png?raw=true"><img src="https://github.com/kmill/lean4-raytracer/raw/master/test13.bigger.png?raw=true" alt="final test image, higher resolution" style="max-width: 100%;"></a></p>
+<p dir="auto">(2 hours with 16 threads on an Intel Xeon E5-2665. 800x533 pixels, 480 total samples per pixel, max depth 50.)</p>
+<h2 dir="auto"><a id="user-content-running-the-code" class="anchor" aria-hidden="true" href="#running-the-code"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>Running the code</h2>
+<p dir="auto">Assuming you already have Lean 4 setup, this builds an executable and runs it:</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="$ lake build &amp;&amp; time ./build/bin/render test.ppm"><pre class="notranslate"><code>$ lake build &amp;&amp; time ./build/bin/render test.ppm
+</code></pre></div>
+<p dir="auto">The rendering settings are hard-coded in <code>writeTestImage</code> in <code>render.lean</code>.</p>
+<h2 dir="auto"><a id="user-content-c-benchmark" class="anchor" aria-hidden="true" href="#c-benchmark"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"></path></svg></a>C benchmark</h2>
+<p dir="auto">The <code>c</code> folder contains an implementation of the raytracer in C, hand translated from Lean using C idioms.
+This is not meant to be a fair comparison, and I spent more time thinking about optimizing the C version.
+The only purpose here is to get some idea of the relative speed of my Lean code.</p>
+<p dir="auto">The first test image in C took 20 seconds with the same configuration, and the second test image took 3 minutes 30 seconds with the same configuration.  This means my Lean program takes about 32x as long to run as the C version. (This was using the earlier version of the Lean program. The new one is about 25x.)</p>
+<p dir="auto">The current version incorporates optimizations from the <a href="https://github.com/kmill/lean4-raytracer/tree/optimize-lean">optimize-lean</a> branch.</p>
+</article></div></main>
+</body>
+</html>

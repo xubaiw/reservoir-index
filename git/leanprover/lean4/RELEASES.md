@@ -1,6 +1,11 @@
 Unreleased
 ---------
 
+* "jump-to-definition" now works for function names embedded in the following attributes
+  `@[implementedBy funName]`, `@[tactic parserName]`, `@[termElab parserName]`, `@[commandElab parserName]`,
+  `@[builtinTactic parserName]`, `@[builtinTermElab parserName]`, and `@[builtinCommandElab parserName]`.
+   See [issue #1350](https://github.com/leanprover/lean4/issues/1350).
+
 * Improve `MVarId` methods discoverability. See [issue #1346](https://github.com/leanprover/lean4/issues/1346).
   We still have to add similar methods for `FVarId`, `LVarId`, `Expr`, and other objects.
   Many existing methods have been marked as deprecated.
@@ -9,13 +14,17 @@ Unreleased
   ```lean
   def g (x : Nat) := x + 1
 
-  -- Whenever `f` is used, a warning message is generated suggestiong to use `g` instead.
+  -- Whenever `f` is used, a warning message is generated suggesting to use `g` instead.
   @[deprecated g]
   def f (x : Nat) := x + 1
+
+  #check f 0 -- warning: `f` has been deprecated, use `g` instead
 
   -- Whenever `h` is used, a warning message is generated.
   @[deprecated]
   def h (x : Nat) := x + 1
+
+  #check h 0 -- warning: `h` has been deprecated
   ```
 
 * Add type `LevelMVarId` (and abbreviation `LMVarId`) for universe level metavariable ids.

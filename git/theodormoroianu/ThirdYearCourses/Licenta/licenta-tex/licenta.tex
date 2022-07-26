@@ -1,0 +1,1762 @@
+\documentclass[11pt, a4paper]{report}
+\usepackage{a4wide}
+
+\usepackage[english]{babel}
+%\usepackage[backend=bibtex]{biblatex}
+%\addbibresource{bibliography.bib}
+
+% Setează spațiere inter-linie la 1.5
+\usepackage{setspace}
+%\onehalfspacing
+
+% Modificarea geometriei paginii
+\usepackage{geometry}
+% Include funcțiile de grafică
+\usepackage{graphicx}
+% Încarcă imaginile din directorul `images`
+\graphicspath{{./images/}}
+% Listări de cod
+\usepackage{listings}
+
+\usepackage[table]{xcolor}
+
+
+% Linkuri interactive în PDF
+\usepackage[
+    colorlinks,
+    linkcolor={black},
+    menucolor={black},
+    citecolor={black},
+    urlcolor={blue}
+]{hyperref}
+
+
+% Suport pentru rezumat în două limbi
+% Bazat pe https://tex.stackexchange.com/a/70818
+\newenvironment{abstractpage}
+  {\cleardoublepage\vspace*{\fill}\thispagestyle{empty}}
+  {\vfill\cleardoublepage}
+\renewenvironment{abstract}[1]
+  {\bigskip
+  \begin{center}\bfseries\abstractname\end{center}}
+  {\par\bigskip}
+
+
+% Suport pentru anexe
+\usepackage{appendix}
+
+% Stiluri diferite de headere și footere
+\usepackage{fancyhdr}
+
+\fancypagestyle{front}{
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \cfoot{}
+}
+\fancypagestyle{main}{
+  \fancyhf{}
+  \renewcommand\headrulewidth{0pt}
+  \fancyhead[C]{}
+  \fancyfoot[C]{\thepage}
+}
+
+% for code snipets
+\usepackage{minted}
+
+% for multiple columns
+\usepackage{multicol}
+\usepackage{subfigure}
+\usepackage{rotating}
+\usepackage{subfloat}
+
+\def\code#1{\texttt{#1}}
+
+\title{\emph{SmartForms API}: an automated tool for form generation and parsing}
+\author{Theodor Pierre Moroianu}
+
+% Generează variabilele cu @
+\makeatletter
+
+\begin{document}
+
+% Front matter
+\cleardoublepage
+\pagestyle{front}
+\let\ps@plain\ps@front
+
+% Pagina de titlu
+\begin{titlepage}
+
+  % Redu marginile
+  \newgeometry{left=2cm,right=2cm,bottom=1cm}
+  
+  \begin{figure}[!htb]
+      \centering
+      \begin{minipage}{0.2\textwidth}
+          \includegraphics[height=4.8cm]{logo-ub.png}
+%          \includegraphics[width=\linewidth]{logo-ub.png}
+      \end{minipage}
+      \begin{minipage}{0.5\textwidth}
+          \large
+          \vspace{0.2cm}
+          \begin{center}
+%              \textbf{UNIVERSITATEA DIN BUCUREȘTI}
+              \textbf{UNIVERSITY OF BUCHAREST}
+          \end{center}
+          \vspace{0.3cm}
+          \begin{center}
+              \textbf{
+                  FACULTY OF\\
+                  MATHEMATICS\\AND\\ COMPUTER SCIENCE
+              }
+%       		  \textbf{
+%		          FACULTATEA DE \\
+%		          MATEMATICĂ ȘI INFORMATICĂ
+%		      }
+          \end{center}
+      \end{minipage}
+      \begin{minipage}{0.2\textwidth}
+          \includegraphics[height=5cm]{logo-fmi.png}
+%          \includegraphics[width=\linewidth]{logo-fmi.png}
+      \end{minipage}
+  \end{figure}
+  
+  \begin{center}
+%  \textbf{SPECIALIZAREA INFORMATICĂ}
+\textbf{COMPUTER SCIENCE SPECIALIZATION}
+  \end{center}
+  
+  \vspace{1cm}
+  
+  \begin{center}
+%  \Large \textbf{Lucrare de licență}
+  \Large \textbf{Bachelor thesis}
+  \end{center}
+  
+  \begin{center}
+  \huge \textbf{\MakeUppercase{\@title}}
+  \end{center}
+  
+  \vspace{3cm}
+  
+  \begin{center}
+%  \large \textbf{Absolvent \\ \@author}
+  \large \textbf{Student \\ \@author}
+  \end{center}
+  
+  \vspace{0.25cm}
+  
+  \begin{center}
+  \large \textbf{Thesis Coordinator \\ Prof.~dr.~Alin \c{S}tef\u{a}nescu}
+  \end{center}
+  
+  \vspace{2cm}
+  
+  \begin{center}
+%  \Large \textbf{București, Iunie 2022}
+  \Large \textbf{Bucharest, June 2022}
+  \end{center}
+\end{titlepage}
+
+\restoregeometry
+%\restoregeometry
+\newgeometry{
+    margin=2.5cm
+}
+
+\addtocounter{page}{1}
+
+% Rezumatul
+\begin{abstractpage}
+
+  \begin{abstract}{}
+  Am dezvoltat un framework care extrage \^ in format text con\c tinutul unor formulare completate de m\^an\u a \c si fotografiate.
+  %Am g\u{a}ndit \c{s}i implementat serverul unei aplica\c{t}ii de creare, gestionare \c{s}i parsare automat\u{a} a formularelor.
+  Produsul complet este API-ul utilizat de o aplica\c{t}ie web modern\u{a} (\textit{Web 2.0}) numit\u{a} ``\textit{SmartForms}", care ofer\u a urm\u atoarele functionalit\u a\c{t}i: autentificarea utilizatorilor folosind \textit{OAuth2}, generarea formularelor \c{s}i desc\u arcarea acestora \^{i}n format \textit{PDF}, completarea formularelor online \c si extragerea automat\u{a} a r\u aspunsurilor \^ in format editabil din pozele unui formular completat de m\^an\u a. Aplica\c tia ofer\u a de asemenea control deplin (citire, creare, modificare \c si \c{s}tergere) asupra formularelor \c{s}i a r\u{a}spunsurilor.
+  
+  \^{I}mpreun\u{a} cu o aplica\c{t}ie client (implementat\u{a} \^ in cadrul proiectului de licen\c ta al unui coleg de an), produsul rezultat constituie o alternativ\u a la serviciiile precum \textit{Google Forms} sau \textit{Survery Monkey}. Aplica\c tia este accesibil\u a pe internet la adresa \url{https://smartforms.ml/}, dar poate fi \c si g\u azduit\u a local de utilizatori, codul fiind open-source, disponibil la adresa \url{https://github.com/TeamUnibuc/SmartForms} \c si distribuit sub o licen\c t\u a \textit{MIT} permisiv\u a. Prin capacitatea acesteia de a citi \c si parsa formulare imprimate \c si completate de m\^ an\u a, aplica\c tia poate fi util\u a pentru profesori, secretariate sau institu\c tii care doresc s\u a digitalizeze automat cantit\u a\c ti mari de date completate de m\^an\u a. 
+  
+  \end{abstract}
+  
+  \begin{abstract}{}
+  
+  We developped a framework able to extract in text format the content of hand-filled forms. The final product is the API used by a modern web application (\textit{Web 2.0}), called ``\textit{SmartForms}", offering the following functionalities: authenticating users using \textit{OAuth2}, generating forms and making them downloadable in \textit{PDF} format, allowing users to fill forms online, and the ability to automatically parse answers written by hand on printed forms. The framework offers complete control (create, read, update and delete) over forms and answers.
+  
+  Together with the client application (implemented within the thesis project of a colleague), the resulting product can replace services such as \textit{Google Forms} or \textit{Survey Monkey}. The application is available online at \url{https://smartforms.ml/}, but can be also hosted locally, as the code is open-source, available at \url{https://github.com/TeamUnibuc/SmartForms}, and distributed under a permissive MIT licence. Thanks to its ability to parse handwritten forms, the application can be useful to teachers, front-desk workers, or institutions needing to automatically digitize large amounts of hand-filled data. 
+  
+  \end{abstract}
+  
+\end{abstractpage}
+
+\tableofcontents
+
+% Main matter
+\cleardoublepage
+\pagestyle{main}
+\let\ps@plain\ps@main
+
+
+% explic pe scurt ce face aplicatia.
+% explic din perspectiva userului, fara
+% sa dau detalii despre tech side
+\chapter{Introduction}
+\label{chapter-introduction}
+
+\section{Functionality}
+
+\textit{SmartForms}, our project, is centered around creating and digitizing forms with minimal human intervention. By using our software, users can:
+\begin{itemize}
+    \item Create simple forms, downloadable as a \textit{PDF} document (\code{.pdf} format), allowing either multiple-choice or personalized answers.
+    \item Upload scans of filled forms that are automatically parsed by the framework and added to the database.
+    \item Share a link for users to fill out the form online on our website, similar to modern survey websites like \textit{Google forms}.
+    \item Fully control (Create, View, Edit, and Delete) forms and answers.
+\end{itemize}
+
+\section{Use Case and Target Audience}
+
+The main use case of this software is in situations where massive amounts of physical data need to be digitized and further processed, and also whenever commercial online services like \textit{Google Forms} or \textit{Survey Monkey} are not envisageable for legal reasons or because of connectivity issues.
+
+Thanks to its flexibility, our framework can solve the following scenarios:
+
+\subsection*{Scenario 1: Written Exams}
+
+A teacher organizes an exam for a large number of students.
+The exam is comprised of questions which are either multiple-choice, or require answers among a well-defined set of expected answers (e.g., for a geography course, the question ``What is the capital city of Uganda?'' has as admissible answer ``Kampala''; similarly, in a mathematics exam, the question ``What are the first 5 decimals in $\pi$'' requires the answer ``$3.1415$").
+
+The teacher doesn't want to allow the students access to the internet, to avoid fraud, so using an online form is not an option. On the other hand, a written exam means that the evaluator has to manually go through each exam paper.
+
+Our software gives the teacher two options:
+\begin{enumerate}
+    \item Create and print the exam using our form-generation tool, and have the students fill their answers on paper copies of the form. The teacher then scans and uploads the papers in the application. 
+    \item Self-host the server locally, letting students connect to the local network without them accessing the internet, and having them submit their answers via our online form-submission service.
+\end{enumerate}
+
+\subsection*{Scenario 2: Routine medical questionnaires}
+
+While accessing institutions such as hospitals, for legal reasons people may be required to fill out a simple form with their name, address, contact information, and health status.
+The front office has to manually go through each form and enter the details into the hospital management tool.
+
+Using our software, the hospital can instead upload scans of the filled forms and extract automatically the content with minimal human intervention.
+
+\subsection*{Scenario 3:  Legal Issues concerning Data Protection}
+
+With GDPR (\textbf{G}eneral \textbf{D}ata \textbf{P}rotection \textbf{R}egulation), privacy has become a top priority for many companies.
+
+In this scenario, our software aims to replace online forms or large email mailing lists, providing a simple, self-contained and self-hosted solution for companies not wanting to use third-party questionnaire solutions.
+
+\subsection*{Scenario 4: Street Surveys or Petitions}
+
+A group of volunteers asks passers-by to fill in a certain questionnaire. At the end of the day, the volunteers have to manually transcribe all of the filled questionnaires to a spreadsheet document.
+
+Using our software, the tedious task of manually entering the information can be automated, and volunteers only have to load the questionnaires to a self-feed scanner and upload the scanned documents.
+
+\section{Scope of the Project}
+
+Our framework consists of the following components:
+\begin{itemize}
+	\item The API routes exposing its functionalities.
+	\item The form-generation pipeline.
+	\item The parsing pipeline, extracting answers from scanned forms.
+	\item The database management system connector.
+	\item The authentication mechanism, to allow for different confidentiality levels.
+\end{itemize}
+
+Note that our framework does not have an UI, as its main focus is exposing the forms-manipulating engine via the API. An example of using the framework through an UI was offered by a student colleague \cite{felix}. He showcased our framework via the following two components:
+\begin{itemize}
+	\item The \textit{SmartForms} client, a modern web application written in \textit{React}.
+	\item A complete server setup, exposing both the client and the API at \url{https://smartforms.ml}.
+\end{itemize}
+As mentioned above, these components can be found in \cite{felix}.
+
+
+%The software is one of the components of a complete project built in collaboration with another student from my cohort \cite{felix}.
+%The complete software consists of two components:
+%\begin{itemize}
+%    \item The API server, receiving and answering to requests, which makes the object of the present graduation thesis.
+%    \item The Client, running on the users' browsers as a modern web application \cite{felix}.
+%\end{itemize}
+%My project's scope is the API server and the services behind it. It includes:
+%\begin{itemize}
+%    \item Implementing the API routes.
+%    \item Implementing the form-generation pipeline.
+%    \item Setting up the database management system.
+%    \item Implementing the parsing pipeline, extracting answers from scanned forms.
+%    \item Implementing the authentication mechanism, to allow for different confidentiality levels.
+%\end{itemize}
+%The current project does \emph{not} include:
+%\begin{itemize}
+%    \item Implement any user-facing elements.
+%    \item Connecting the two services, or exposing the application to the internet.
+%\end{itemize}
+%As mentioned above, these components can be found in \cite{felix}.
+
+\section{Related Work}
+
+We were unable to find another software for generating forms, downloading them as \textit{PDF} files or similar formats, and parsing manually filled documents within the same solution. \textit{SmartForms} seems to be the first software with those functionalities freely available on the internet.
+
+We have found many tools for conducting surveys online. The most known are \textit{Google Forms}, \textit{Microsoft Forms} or \textit{Survey Monkey}, and a notable mention is \textit{Lime Surveys}, which is one of the only FOSS (\textbf Free \textbf Open \textbf Source \textbf Software) survey software we were able to find \cite {limesurveys}. These tools however lack the parsing abilities of SmartForms.
+
+There also exist tools with parsing abilities, like for instance \textit{Docparser} \cite{docparser}. However, \textit{Docparser} does not support generating forms or parsing handwritten text, which makes it unfit for our use cases. 
+
+In conclusion, even by combining several existing tools, one cannot achieve all of the capabilities of \textit{SmartForms}.
+
+A comparison of the features provided by each tool is given in the following table:
+
+\begin{center}
+	\begin{tabular}{ | l | l | l | l | l | l |}
+		\hline
+		& \textit{Google Forms} & \textit{SurveyMonkey} & \textit{Lime Surveys} & \textit{DocParser} & \textit{SmartForms} \\
+		\hline
+		Create Forms & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		Fill Online & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		View Results & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		Export as \textit{PDF} & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		Parse Scans & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		Open-Source & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+		Self-Hostable & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes & \cellcolor[rgb]{1,0.5,0.5}No & \cellcolor[rgb]{0.5,1,0.5}Yes \\
+		\hline
+	\end{tabular}
+\end{center}
+
+
+\section{Overview of this Thesis}
+
+This thesis is divided into several chapters:
+\begin{itemize}
+	\item In \autoref{chapter-introduction} we describe the functionalities and use cases of the SmartForms application.
+	\item In \autoref{chapter-tech-stack} we present the main technologies used by SmartForms.
+	\item In \autoref{chapter-design-of-the-application}, \autoref{chapter-detailed-overview-of-the-api}, and \autoref{chapter-storage-system} we present the internal design of the application, the list of functionalities exposed by \textit{SmartForms API} and the database system used.
+	\item Chapters \ref{chapter-pdf-form-creation}, \ref{chapter-form-parsing}, and \ref{chapter-ocr-neural-network} are the core of the project. They contain the main innovations of our software, and describe the process of creating, parsing and digitizing \textit{PDF} forms.
+	\item In \autoref{chapter-tests-source-control} we describe the development process of \textit{SmartForms}.
+	\item Chapter \ref{chapter-conclusions-future-work} contains our conclusions and possible areas for future development.
+\end{itemize}
+
+As stressed above, the sections containing the most innovative content are  \autoref{chapter-pdf-form-creation}, \autoref{chapter-form-parsing}, and \autoref{chapter-ocr-neural-network}. In these sections is presented the \textit{PDF} form creation and parsing pipeline, which is in our opinion the most interesting functionality of the framework. Building the pipeline posed many difficulties, such as acquiring a relevant dataset for training our OCR neural network, testing the pipeline in real-world scenarios, or making the pipeline resistant to invalid or malicious data. 
+
+
+\section{Acknowledements}
+
+I would like to express my gratitude to my advisor, Prof.~Alin \c Stef\u anescu, without whom this project would not have been possible. I also want to thank Lucian Bicsi, who helped me improve the parsing functionalities of \textit{SmartForms}, and Emma Chirlomez for her kind help in proofreading this thesis.
+
+% Explic toate tehnologiile folosite, si
+% la ce ne ajuta.
+\chapter{Tech Stack}
+\label{chapter-tech-stack}
+
+\section{Programming Language}
+
+The primary programming language used in the backend of SmartForms is \textit{Python 3}.
+\textit{Python 3} offers great flexibility, native support for essential data structures used in web development such as \textit{JSON} (JavaScript Object Notation), and easy-to-follow syntax.
+
+The main reason we chose \textit{Python} over more conventional languages for web servers is the abundance of packages available to install via \textit{Pip}, the \textit{Python} Package Manager.
+
+The main drawback of \textit{Python} is its relatively low speed. Being an interpreted language, it is slower than traditional programming languages such as \textit{C/C}++ or \textit{Java}.
+
+To illustrate the speed difference, we ran a simple program in both \textit{Python} and \textit{C}++.
+
+The \textit{Python} code is:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Python}
+N = 300000
+
+primes = []
+
+for i in range(2, N):
+    is_prime = True
+    for d in primes:
+        is_prime = is_prime and i % d != 0
+    if is_prime:
+        primes.append(i)
+
+print(f"There are {len(primes)} prime numbers up to {N}")
+\end{minted}
+
+The \textit{C}++ code, encoding the exact same algorithm, is:
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{C++}
+#include <bits/stdc++.h>
+using namespace std;
+
+int main()
+{
+    int N = 300'000;
+    vector <int> primes;
+
+    for (int i = 2; i < N; i++) {
+        bool is_prime = true;
+        for (auto d : primes)
+            is_prime = is_prime && (i % d);
+        if (is_prime)
+            primes.push_back(i);
+    }
+
+    cout << "There are " << primes.size()
+        << " prime numbers up to " << N << '\n';
+}
+\end{minted}
+
+Running them gives us:
+\begin{minted}[bgcolor=bg]{Shell}
+teo@fedora ~/P/T/L/tech-stack> time python ciur.py
+There are 25997 prime numbers up to 300000
+________________________________________________________
+Executed in  173.56 secs    fish           external
+   usr time  173.12 secs  992.00 micros  173.12 secs
+   sys time    0.03 secs    0.00 micros    0.03 secs
+
+teo@fedora ~/P/T/L/tech-stack> g++ -O2 ciur.cpp -o ciur-cpp
+teo@fedora ~/P/T/L/tech-stack> time ./ciur-cpp
+There are 25997 prime numbers up to 300000
+________________________________________________________
+Executed in    2.57 secs    fish           external
+   usr time    2.56 secs  896.00 micros    2.56 secs
+   sys time    0.00 secs    0.00 micros    0.00 secs
+\end{minted}
+
+In other words, the \textit{C}++ code executes our (quite naive) prime counting algorithm $60$ times faster than \textit{Python}!
+
+While this speed discrepancy might seem at first problematic, in practice the difference is less noticeable, and most of our software's computing time is spent by libraries like \textit{OpenCV} or \textit{Numpy}, which are under the hood implemented in \textit{C}++ (and used within \textit{Python} thanks to language bindings).
+
+\section{Web Server Framework}
+
+The framework we used for implementing the API server is \textit{FastAPI} \cite{FastAPI}. \textit{FastAPI} is a scalable, lightweight and efficient \textit{Python} framework, whose main advantages are:
+\begin{itemize}
+    \item Automatic validation, serialization, and deserialization of the data sent and received by the API endpoints.
+    \item Automatic generation of the \textit{OpenAPI} \cite{open-api} (Swagger) specifications, which can then be used as a reference point for using the API in the frontend.
+    \item Asynchronous programming and multithreading, making it fit for CPU-intensive tasks.
+\end{itemize}
+
+\section{Database Management System}
+
+As our application has to store in a persistent medium information such as existing users, already created forms and answers, we had to integrate a database management system into it.
+
+We decided to use \textit{MongoDB}, a document-oriented \textit{NoSQL} system.
+
+\section{Image Manipulation Framework}
+
+For parsing scanned documents, correctly identifying the location of the answers on them, and manipulating the images we chose \textit{OpenCV}, one of the best computer vision frameworks available, together with \textit{Numpy}, the industry standard for data manipulation in \textit{Python}.
+
+While \textit{OpenCV} and \textit{Numpy} are written in \textit{C}++ for performance reasons, \textit{Python} bindings allow us to fully use their extensive set of functionalities without leaving \textit{Python} land.
+
+\section{Machine Learning Framework}
+
+The character recognition functionality of \textit{SmartForms} is achieved by means of machine learning techniques, using a convolutional neural network.
+This neural network is implemented and trained in \textit{PyTorch}, one of the best deep learning libraries currently available \cite{pytorch}.
+
+\vspace{1em}
+
+The necessity and usage of each of the mentioned tools and frameworks are further discussed in the following sections.
+
+
+% dau detalii tehnice, cu o explicatie
+% printr-o diagrama cum se misca datele
+% in aplicatie
+\chapter{Design of the Application}
+\label{chapter-design-of-the-application}
+
+%\section{Application Modules}
+
+To simplify the structure of the project and make the code easier to understand, the server is divided into different modules, each one having a different scope (single-responsibility principle). The modules, illustrated in Figure \ref{smart-forms-modules}, are:
+\begin{itemize}
+    \item The database module, handling the connection with the \textit{MongoDB} database.
+    \item The OCR module, taking care of the neural network and character prediction.
+    \item The PDF processor module, which generates and parses the PDF forms.
+    \item The router module, handling the API calls.
+    \item The storage module, in which internal data types are defined.
+    \item The testing module, where unit and integration tests are defined.
+\end{itemize}
+
+
+Each module is designed to act as an independent unit, interacting with the others only with the help of a reduced number of function calls or Singleton interfaces.
+
+The modules are written according to the standard \textit{Python} conventions:
+\begin{itemize}
+    \item The source files for each module are located in a folder with the module's name.
+    \item At the root of the folder, a file named \code{\_\_init\_\_.py} is created. This file is then populated with all of the functionalities the module needs to export.
+\end{itemize}
+
+A sample \code{\_\_init\_\_.py} file is:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Python}
+# backend/sources/smart_forms_types/__init__.py
+"""
+Types used for storing / processing documents.
+"""
+
+import uuid
+
+def generate_uuid():
+    """
+    generates a unique ID.
+    the probability of collisions between different
+    uuids is beyond negligible.
+    """
+    return str(uuid.uuid1())
+
+from smart_forms_types.pdf_form import *
+from smart_forms_types.models import *
+from smart_forms_types.user import *
+from smart_forms_types.inference_dataset import *
+\end{minted}
+
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=37em]{images/diagrams/ProjectModulesDiagram.png}
+	\caption{UML Diagram Of SmartForms's Backend Modules}
+	\label{smart-forms-modules}
+\end{figure}
+
+
+% explic cum functioneaza aplicatia
+\chapter{Detailed Overview of the API}
+\label{chapter-detailed-overview-of-the-api}
+
+\section{What is an API, and why do we need one?}
+
+The \textit{API} -- or \textbf{A}pplication \textbf{P}rogramming \textbf{I}nterface -- is an interface acting as a bridge between applications, essentially allowing for an over-the-network communication between them.
+
+The most common \textit{API} implementations are made with the help of the \textit{HTTP} protocol, an application-layer protocol on top of the \textit{TCP/IP} stack. For showcasing the utility of using an \textit{API}, we can make a simple request to get the current time:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+teom@lapttop ~> curl "http://worldtimeapi.org/api/timezone/Europe/Bucharest"\
+                 | python -m json.tool
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   395  100   395    0     0   1220      0 --:--:-- --:--:-- --:--:--  1222
+{
+    "abbreviation": "EEST",
+    "client_ip": "5.12.1.116",
+    "datetime": "2022-05-20T12:17:44.160367+03:00",
+    "day_of_week": 5,
+    "day_of_year": 140,
+    "dst": true,
+    "dst_from": "2022-03-27T01:00:00+00:00",
+    "dst_offset": 3600,
+    "dst_until": "2022-10-30T01:00:00+00:00",
+    "raw_offset": 7200,
+    "timezone": "Europe/Bucharest",
+    "unixtime": 1653038264,
+    "utc_datetime": "2022-05-20T09:17:44.160367+00:00",
+    "utc_offset": "+03:00",
+    "week_number": 20
+}
+\end{minted}
+
+This shell script uses the \textit{curl} program, used for querying content over the network, which:
+\begin{enumerate}
+    \item Breaks down the \textit{URL} we requested (\url{http://worldtimeapi.org/api/timezone/Europe/Bucharest}) into two components:
+    \begin{itemize}
+        \item The domain -- \url{http://worldtimeapi.org}, which in turn is changed into an \textit{IP} address with the help of a \textit{DNS} server.
+        \item The resource path (or route) -- \code{/api/timezone/Europe/Bucharest}, used by the API server to determine what information we want to receive.
+    \end{itemize}
+    \item Sends the request to the \textit{API} server.
+    \item Receives back a payload, which is piped into the \textit{Python} \textit{JSON} displaying tool to be easier to read.
+\end{enumerate}
+
+In the example above, the \textit{API} function we called does not have any side-effects -- it doesn't change the internal state of the server. However, in most practical cases, the \textit{API} exposes functions mutating the stored information.
+
+\section{SmartForms \textit{API}}
+
+The entire \textit{SmartForms} backend software is aimed at being able to respond to \textit{API} calls.\\
+In this section we will go over all of the available endpoints of the \textit{API}, presenting all of the user-facing functionalities of the application. They are divided into categories, each one determined by its path and served by a different router.
+
+Note that we will only give a short description of the available endpoints (the \textit{HTTP Verb} and the path used). To see additional details such as parameters or security restrictions, please check the resources mentioned in the appendix.
+
+\subsection{User Router}
+
+This router exposes functionalities relating to the authentication, registration, and deletion of accounts from the platform.
+
+Its endpoints are:
+\begin{itemize}
+    \item \code{GET /api/user} -- shows a simple message informing users whether they are logged in or not, and prompts them to sign in/out.
+    \item \code{GET /api/user/login} and \code{GET /api/user/auth} -- both endpoints help the user to sign-in and sign-up.
+    \item \code{GET /api/logout} -- signs out the user.
+    \item \code{DELETE /api/delete-account} -- deletes users' accounts, forms, and answers.
+\end{itemize}
+
+\subsection{Form Router}
+
+This router handles the creation, modification, deletion, and retrieval of forms. Its endpoints are:
+\begin{itemize}
+    \item \code{POST /api/form/preview} -- receives a description of a form (questions, title, author, etc.) and returns a preview of the final \textit{PDF} form. This is particularly handy since users tend to try out multiple formats before settling for a final form.
+    \item \code{POST /api/form/create} -- similar to the \textit{preview} endpoint, but commits the created form to the database.
+    \item \code{POST /api/form/list} -- returns a list of available forms, depending on filtering criteria.
+    \item \code{GET /api/description/\{formId\}} -- returns the description of a given form.
+    \item \code{GET /api/form/pdf/\{formId\}} -- returns the \textit{Base64} encoding of the \textit{PDF} representation of a given form.
+    \item \code{DELETE /api/form/delete/\{formId\}} -- deletes the form and all of its associated answers.
+    \item \code{PUT /api/form/online-access/\{formId\}} -- updates the visibility of the form (for instance whether one can submit an answer to it or not).
+\end{itemize}
+
+Note that once a form is created, it is no longer possible to change its content. This is by design, as having multiple versions of the same form would be a hassle. The \textit{update} of a form is done on the client side, by simply cloning the description of the initial form and creating a new one.
+
+\subsection{Entry Router}
+
+Similarly to the \textit{Form Router}, the \textit{Entry Router} contains \textit{API} endpoints manipulating entries (or answers). Its endpoints are:
+\begin{itemize}
+    \item \code{POST /api/entry/create} -- adds a new answer to a given form.
+    \item \code{DELETE /api/entry/delete/\{entryId\}} -- deletes the entry with the given ID.
+    \item \code{PUT /api/entry/edit} -- deletes the entry with the given ID.
+    \item \code{GET /api/entry/view-entry/\{entryId\}} -- returns the information provided in the given answer.
+    \item \code{POST /api/entry/view-form-entries} -- returns a list of forms respecting a set of given criteria.
+\end{itemize}
+
+\subsection{Inference Router}
+
+The purpose of the \textit{Inference Router} is to receive pictures of forms filled by hand, which are then parsed.
+When the software detects a form, it parses it and extracts the answer, which is then added to the database. The endpoint is \code{POST /api/inference/infer}.
+\\ \\
+Another functionality of the \textit{Inference Router} is to extract character data, in order to generate a character dataset:
+\begin{enumerate}
+    \item When an answer is uploaded, the \code{infer} endpoint saves for each character the corresponding sub-image containing its pixels.
+    \item If the answer is later modified, then an annotated character datapoint is generated.
+    \item The OCR neural network is trained on the generated dataset.
+\end{enumerate}
+
+In other words, the inference may fail, leading to a character being wrongly identified. In such cases, if the user updates the answer field by providing a corrected answer, then the software spots the difference and  generates a new labeled character image which will subsequently be used to fine-tune the OCR neural network.
+
+\subsection{Statistics Router}
+
+The \textit{Statistics Router} is aimed at providing additional information about \textit{SmartForms}.
+
+Currently, the only available endpoint is \code{GET /api/statistics/global}, which returns information about the total number of forms and entries, but the router is designed to make possible the addition of more advanced statistics in future versions of the application.
+
+\section{Usage Scenario}
+
+We will now present a simple usage scenario. We will communicate with the \textit{API} using the \code{curl} command to better illustrate its functionality, however, note that in normal circumstances users only interact with the client, which performs the \textit{API} calls on their behalf using the \code{fetch API}.
+
+Let us create a new form with the title "\textit{Sample Form}" consisting of two questions, one asking for the user's gender and the second prompting for his/her name:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+teo@fedora ~> curl -X 'POST' \
+                    'http://smartforms.ml:5000/api/form/create' \
+                    -H 'accept: application/json' \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                "title": "Sample Form",
+                "description": "Sample form to showcase the API.",
+                "questions": [
+                  {
+                    "title": "Gender",
+                    "description": "Boy or Girl",
+                    "choices": [
+                      "Boy",
+                      "Girl"
+                    ]
+                  },
+                  {
+                    "title": "Name",
+                    "description": "Enter your name, in uppercase.",
+                    "maxAnswerLength": 36,
+                    "allowedCharacters": "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+                  }
+                ],
+                "canBeFilledOnline": true,
+                "needsToBeSignedInToSubmit": true,
+                "creationDate": "2022-05-24T07:29:36.216Z"
+              }'
+\end{minted}
+
+We get back from the \textit{API} the following \textit{JSON} object:
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+{
+    "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+    "formPdfBase64": "JVBERi0xLjMKMyAwIG9iago8PC9UeXBl...."
+}
+\end{minted}
+
+We have now added the form to the database and received back its ID and a \textit{Base64} encoding of its \textit{PDF} representation. To decode it, we first have to manually copy the content of the \code{formPdfBase64} field, and we can then run:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+    teo@fedora ~> pbpaste | base64 -d > form.pdf
+    teo@fedora ~> open form.pdf
+\end{minted}
+
+Here \code{pbpaste} is a non-standard utility outputting the content of the clipboard. The \code{open} command opened a \textit{PDF} viewer with our form, as illustrated in Figure \ref{simple-form-preview}.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=20em]{images/screenshoots/sample_form.png}
+    \caption{Sample form created with the SmartForms API}
+    \label{simple-form-preview}
+\end{figure}
+
+The features of this \textit{PDF} document are:
+\begin{itemize}
+    \item The questions, where users are prompted to either write an '\code{X}', '\code{*}' or a similar symbol for multiple-choice questions, and words for regular questions, one character per box.
+    \item Lateral markers, forming a binary grid of randomly generated small squares, which are added to maximize the number of features we can rely on when matching a scan or a picture of the form with the original document.
+    \item The QR code (top right corner), playing a double role:
+    \begin{itemize}
+        \item Users can scan the form, being thus redirected to a webpage where they can fill the form online.
+        \item The parsing software uses the QR code to extract the ID of the form, allowing it to retrieve the original form from the database.
+    \end{itemize}
+\end{itemize}
+
+We can now add an answer directly using the \textit{API} (the \code{/api/entry/create} route):
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+teo@fedora ~> curl -X 'POST' \
+                    'http://smartforms.ml:5000/api/entry/create' \
+                    -H 'accept: application/json' \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                "answerId": "",
+                "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+                "authorEmail": "",
+                "answers": [
+                  "X ",
+                  "Theodor Moroianu"
+                ]
+              }'
+# the command returns the following JSON:
+{
+    "entryId":"entry-04896360-db67-11ec-a6ed-dca6325bcf52"
+}
+\end{minted}
+
+We can alternately print the form, fill it by hand and scan it. We can then pass to the inference \textit{API} the scan showed in Figure \ref{scan-of-filled-form}.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=30em]{images/screenshoots/sample_form_scan.png}
+    \caption{Scan of a manually filled form}
+    \label{scan-of-filled-form}
+\end{figure}
+
+
+We then get back the following data:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+{
+  "entries": [
+    {
+      "answerId": "entry-b7ef7ca8-db69-11ec-a510-704d7ba4fc42",
+      "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+      "authorEmail": "theodor.moroianu@gmail.com",
+      "answers": [
+        "X ",
+        "THEODOR MOROIANU                    "
+      ],
+      "creationDate": "2022-05-24T16:59:24.561788"
+    }
+  ],
+  "errors": []
+}
+\end{minted}
+
+SmartForms is able to:
+\begin{enumerate}
+    \item Correctly detect, from the QR code, the ID of the form present in the scan.
+    \item Extract each individual answer square.
+    \item Run the squares through an OCR neural network, to predict the most plausible character.
+    \item Add the answers to the database and return them to the user.
+\end{enumerate}
+
+It should be noted that the process is not entirely flawless. This aspect is discussed in  detail in Chapter \ref{chapter-form-parsing} dealing with Form Parsing.
+\\
+
+
+We can now query the \textit{API} to retrieve our two entries:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+teo@fedora ~> curl -X 'POST' \
+                    'http://smartforms.ml:5000/api/entry/view-form-entries' \
+                    -H 'accept: application/json' \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+                "offset": 0,
+                "count": 2
+              }' | python -m json.tool
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   568  100   485  100    83   1473    252 --:--:-- --:--:-- --:--:--  1726
+{
+    "entries": [
+        {
+            "answerId": "entry-04896360-db67-11ec-a6ed-dca6325bcf52",
+            "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+            "authorEmail": "theodor.moroianu@gmail.com",
+            "answers": [
+                "X ",
+                "Theodor Moroianu"
+            ],
+            "creationDate": "2022-05-24T13:40:04.586000"
+        },
+        {
+            "answerId": "entry-b7ef7ca8-db69-11ec-a510-704d7ba4fc42",
+            "formId": "af61ce94-db35-11ec-a6ed-dca6325bcf52",
+            "authorEmail": "theodor.moroianu@gmail.com",
+            "answers": [
+                "X ",
+                "THEDDOR MOROIANU                    "
+            ],
+            "creationDate": "2022-05-24T16:59:24.561000"
+        }
+    ],
+    "totalFormsCount": 2
+}
+\end{minted}
+
+In a similar fashion, the \textit{API} allows us to edit or delete answers and forms.
+
+
+% dau mai multe detalii despre cum 
+% functioneaza baza de date mongodb
+\chapter{Storage System}
+\label{chapter-storage-system}
+
+\section{Choosing MongoDB}
+We explored multiple database systems for our application. For choosing the most suited one, we established a list of requirements:
+
+\begin{itemize}
+    \item We need an easy to set-up and efficient system we can install on relatively small devices.
+    \item We need a system well integrated within the \textit{Python} ecosystem.
+    \item We need a system able to run both locally and in the cloud, to accommodate the different working scenarios of \textit{SmartForms}.
+\end{itemize}
+
+On the other hand, we do not need:
+\begin{itemize}
+    \item A system able to process massive amounts of data, as the database is mainly used for storing form descriptions and form answers.
+    \item A system able to perform complex \code{joins} or similar operations typically done with the help of a \textit{DML} (Data Manipulation Language). 
+\end{itemize}
+
+The database system we decided to use within \textit{SmartForms} is \textit{MongoDB}, a document-based, No-SQL database storing data as \textit{JSON} objects.
+
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=35em]{images/screenshoots/mongo-compas.png}
+    \caption{Compass -- the official MongoDB viewer}
+    \label{fig:label}
+\end{figure}
+
+The connection to \textit{MongoDB} is done in the \code{database} module. The URI, username and password are specified with the help of the \code{.env} secrets file, which in the current configuration connects \textit{SmartForms} to a database stored in the cloud:
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+# Connect to Mongo Cloud
+MONGO_USER='smart-forms-user'
+MONGO_PASSWORD='*********'
+MONGO_CLUSTER='cluster0.t96gc.mongodb.net'
+MONGO_DB_NAME='SmartForms'
+\end{minted}
+
+\section{Information Stored in MongoDB}
+
+MongoDB databases contain multiple collections storing entries, similar to SQL databases containing tables storing rows.
+
+We created multiple databases:
+\begin{itemize}
+    \item A database used for production.
+    \item Another one used for the \textit{CI/CD} pipelines.
+    \item Databases used for local development and testing without disturbing the other environments. 
+\end{itemize}
+
+Databases store the information used by \textit{SmartForms}. As forms and answers requested by the users are unpredictable, and \textit{SmartForms} is built to be able to run on relatively low-end devices, locally caching data for lower latency didn't make sense. As such, any CRUD (\textbf{C}reate, \textbf{R}ead, \textbf{U}pdate or \textbf{D}elete) operations performed on forms, answers or users are directly committed to the database.
+\\
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=35em]{images/diagrams/ER_diagram.png}
+    \caption{Diagram of the MongoDB Database}
+    \label{fig:label}
+\end{figure}
+
+
+The database stores:
+\begin{itemize}
+    \item The registered users. The information saved is the name, email, date of registration, and last sign-in, and an URL to a profile picture if available. To be compliant with data-protection laws like the GDPR, we only use the personal data for authentication purposes and delete all records of deleted accounts.
+    \item The created forms, for which we store the description, owner, creation date, and the internal representation of the corresponding PDF document.
+    \item The answers, both added directly with the API or uploaded as a scan or a picture.
+    \item Images of the individual characters extracted from pictures and scans.
+    \item A dataset of labeled characters that can be used for improving the OCR neural network.
+\end{itemize}
+
+
+The last two collections -- namely the \code{DatasetCharacters} and the \code{InferedCharacters} -- are used for automatically labeling characters, thus generating a dataset we can then use for fine-tuning the OCR neural network. A more detailed explanation of the process is done in the \textit{Form Parsing} section.
+
+
+% Arat cum generez pdf-ul, si cum
+% salvez un pdf generat.
+\chapter{PDF Forms Creation}
+\label{chapter-pdf-form-creation}
+
+\section{Objective and Constraints}
+
+Forms are not internally stored as \textit{PDF} documents. Users do not actually need to use \textit{PDF} documents at all, as one can create, share, and fill forms from the application itself. However, being able to have a printed copy of the form can be useful.
+
+The primary objective when generating a \textit{PDF} form is getting a concise, easy to understand and professional-looking document, which can then be efficiently parsed and digitized.
+
+The main constraints and details we have to consider are:
+\begin{itemize}
+    \item While in most use-cases users want to print their forms on \code{A4} paper, we should also make forms printable on smaller or larger paper.
+    \item We want to allow both scans and pictures, made by a wide range of devices, in which brightness, color saturation, and contrast differ.
+    \item Modern smartphone cameras, because of the shrinkage of the size of their optical instruments, add slight distortions to the pictures (lines become curves). As each camera is different, fixing the distortions internally is not feasible.
+    \item Even though most printers advertise the ability to print edge-to-edge, most modern printers are not able to print anything too close to the edges of the paper.
+    \item As most office printers only print in black and white for efficiency reasons, we should not include color in our documents.
+    \item People have extremely diverse styles of handwriting, which makes parsing cursive text with high accuracy difficult, even with modern technology.
+    \item Forms can vary in length from a simple question to multiple pages.
+\end{itemize}
+
+\section{Layout of a PDF Form}
+
+To conform to the constraints mentioned above, we embed multiple components in the documents.
+
+\subsection{Questions}
+
+Questions are the most obvious element of the forms. They consist of a question title (or the question \emph{per se}), an optional question subtitle (or explanation), and input zones depending on the type of question.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=8em]{images/screenshoots/sample-multiple-choice-question.png}
+    \caption{Sample multiple-choice question}
+    \label{multiple-choice-question}
+\end{figure}
+
+If the question is multiple choice as in Figure \ref{multiple-choice-question}, where the user has to select a subset of the given possibilities (e.g. "Boy" or "Girl"), each option is printed on a different line, with a square the user can tick to select the answer.
+
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=40em]{images/screenshoots/sample-text-question.png}
+    \caption{Sample text question}
+    \label{text-question}
+\end{figure}
+
+If the question is a text question as in Figure \ref{text-question}, then a user-specified number of squares are printed. People filling the form can then write one letter per square.
+
+The main advantages of this approach are:
+\begin{itemize}
+    \item Multiple-choice and text questions can be processed similarly, as we simply want to check if boxes from the multiple-choice questions contain an '\code{X}', '\code{V}', '\code{*}', or a similar marker.
+    \item This format is writing-style agnostic, as users are forced to write each letter to a specific location in a specific format.
+    \item The forms are intuitive and easy to fill.
+\end{itemize}
+
+Note that the exact location of each square is saved in the database, to allow for later pinpointing the exact pixels of each character.
+
+\subsection{Markers}
+
+Lateral matching helpers, or markers, are irregular patterns we print on the corners.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=10em]{images/screenshoots/top-left-marker.png}
+    \caption{Top left marker}
+    \label{fig:label2}
+\end{figure}
+
+Similar shapes are often printed on objects that robots or software agents need to be able to identify, due to their vast number of descriptors. \textit{SmartForms} uses an \textit{ORB} feature extractor \cite{rublee2011orb}, which relies on intensity differences between adjacent pixels.
+
+With the help of the \textit{ORB} feature extractor, we can then match extracted features of the blank PDF document with a picture or scan, to get an accurate rectangular representation of the scanned image.
+
+\subsection{QR Code}
+
+QR codes (shorthand for Quick Response codes) are visual machine barcodes. QR codes are machine-readable, use a powerful correction algorithm \cite{wicker1999reed} which makes them readable even when damaged, and can store arbitrary content, from Wi-Fi details to binary data to simple text.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=13em]{images/screenshoots/sample-qr-code.png}
+    \caption{QR code with content "\textit{https://smartforms.ml/view-form/af61...}"}
+    \label{qr-code-image}
+\end{figure}
+
+We use QR codes for several reasons:
+\begin{itemize}
+    \item Due to their apparent randomness, they help the matching process similarly to lateral markers.
+    \item They offer an easy-to-follow link to the \textit{SmartForms} website, which users can open to fill out the form online.
+    \item It allows the matching software to extract the form ID, to figure out which form is being parsed.
+\end{itemize}
+
+\subsection{Preview Notice}
+
+Users tend to commit their work more often than is strictly required: people writing documents save them every few minutes, and developers writing code compile it to check for mistakes. Similarly, people generating forms tend to preview intermediate results.
+
+As such, adding each intermediate result to the database doesn't make much sense. On the other hand, users have to easily see if a form is valid or not. This is why, on forms that are only made for preview, we print an additional "\textit{PREVIEW}" watermark.
+
+
+\begin{figure}[!h]
+    \centering
+    \fbox{\includegraphics[width=30em]{images/screenshoots/sample-preview-form.png}}
+    \caption{Form with "\textit{PREVIEW}" watermark}
+    \label{fig:label3}
+\end{figure}
+
+\subsection{Multi-page Support}
+
+If the form contains many questions, then the \textit{PDF} document might spread among multiple pages. In such situations, each page gets a unique ID encoded within the QR code, to allow the parsing pipeline to order them accordingly.
+
+The lateral markers and the optional preview notice are present on all the pages.
+
+
+
+% Arat cum fac matchingul si ocr-ul.
+% tot aici vorbesc despre CNN
+\chapter{Form Parsing}
+\label{chapter-form-parsing}
+
+When users have a batch of hand-filled documents to digitize, they just have to upload the files to \textit{SmartForms API} and let it parse the documents automatically.
+
+\section{How Data is Loaded}
+
+The API relies on the \code{multipart/form-data} \cite{masinter1998rfc2388} format to process larger files than usually permitted over the \textit{HTTP} protocol.
+
+To facilitate the uploading of filled forms, we accept:
+\begin{itemize}
+    \item Images in any standard image format (\code{.jpeg}, \code{.png}, \code{.webp} etc).
+    \item \textit{PDF} documents.
+    \item \textit{ZIP} archives, the content of which is processed recursively.
+\end{itemize}
+
+Due to the high flexibility and permissive formats supported by \textit{SmartForms}, virtually any structured folder of forms can be zipped, uploaded, and parsed.
+
+Once the backend receives the files, it automatically deflates all \textit{ZIP} files, and:
+\begin{enumerate}
+    \item Considers each \textit{PDF} as a folder, whose content is the pages of the document (each page is considered as a single picture).
+    \item Splits all the images into groups, according to their containing folder.
+    \item Parses each group as a list of forms (possibly only one).
+\end{enumerate}
+
+\section{Finding the Template}
+
+Given a set of images (obtained directly from the user, from a \textit{ZIP} file, or extracted from a page of a \textit{PDF} document), the backend has to figure out which form is being parsed.
+
+To do this quickly and reliably, we look for the QR code inserted on each document. Finding the QR code is itself a challenge, as most libraries used for scanning QR codes (like the ones used on mobile phones) expect a close-up picture of the code. However, because we can't know the orientation, size, or location of the form in the received picture, we can't reliably determine the exact location of the QR code.
+
+For solving this issue, we use \code{Zbar}, an open-source bar reading library written in \textit{C}. While the application isn't written in \textit{Python} for compatibility and performance reasons, the \code{pyzbar} package provides \textit{Python} bindings we can use.
+
+\textit{Zbar} is highly optimized for real-time barcodes and QR codes scanning, and can be also used from a terminal. We illustrate below the action of \textit{Zbar} on a scanned form:
+
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg]{Shell}
+teo@fedora ~> zbarimg Scanned\ Document.pdf 
+QR-Code:
+https://smartforms.ml/view-form/af61ce94-db35-11ec-a6ed-dca6325bcf52
+
+scanned 1 barcode symbols from 1 images in 0.02 seconds
+\end{minted}
+
+Note that the text extracted by \textit{Zbar} is not the actual ID of the form, but rather an URL to the \textit{SmartForms} website, where, depending on permissions, users may fill the form online. To extract the actual ID, we simply have to remove the "\textit{https://smartforms.ml/view-form/}" prefix. \textit{Pyzbar} operates in a similar way as its command-line counterpart, but can be called from within \textit{Python} code.
+
+With the form ID, we can query the \textit{MongoDB} database to extract all the required details about the form.
+
+\section{Grayscale and Binary Threshold}
+
+Most image processing algorithms rely on grayscale or binary images. As such, we first have to convert our colored image to grayscale, and then apply a binary threshold.
+
+To convert an image to grayscale, we can independently transform each pixel from an \code{RGB} value to a single channel. \textit{OpenCV}, the machine vision framework we are using, converts an image to grayscale using the following formula \cite{opencv-color-convention}:
+
+\[Y = 0.299*R+0.587*G+0.114*B\]
+
+However, even for grayscale images we cannot simply apply a standard binary threshold, due to possible differences in brightness. 
+Figure \ref{checker-illusion} is an optical illusion, where squares marked with \textbf{A} and \textbf{B} seem different (one is black and the other white), but their pixels have the same color, which makes it impossible to separate them using a binary threshold. Generally, separating dark and light regions is not a trivial task, if we want to take into account lighting and brightness. Similarly, applying a binary threshold considering pixel intensities larger than a fixed $K$ black and intensities smaller than $K$ white in our scanned forms will lead to misclassified pixels, where darker empty regions of the form might be classified as black, and lighter text or graphics of the form might get classified as white.
+
+
+%However, even for grayscale images we cannot simply apply a standard binary threshold, due to possible differences in brightness. 
+%As ilustrated in Figure \ref{checker-illusion}, where squares marked with \textbf{A} and \textbf{B} seem different even though the color is the same, separating dark and light regions is not a trivial task, if we want to take into account lighting and brightness. Similarly, applying a binary threshold considering pixel intensities larger than a fixed $K$ black and intensities smaller than $K$ white will lead to misclassified pixels, where darker empty regions of the form might be classified as black, and similarly lighter text or graphics of the form might get classified as white.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=40em]{images/other/Checker_shadow_illusion.svg.png}
+	\caption{Checker Shadow Illusion \cite{checker-illusion}}
+	\label{checker-illusion}
+\end{figure}
+
+Figure \ref{original-vs-processed-image} (a) shows what an unprocessed picture or scan of our form might look like. Our first step is converting it into grayscale. 
+To further convert the resulting grayscale image to binary, we use an adaptive thresholding technique \cite{opencv-image-threshold}, which for each pixel determines, based on a small region around it, if it should be black or white. Applying such an algorithm over our grayscale image gives us an image similar to Figure \ref{original-vs-processed-image} (b).
+
+\begin{figure}[!h]
+	\hfill
+	\subfigure[Original]{\includegraphics[width=6cm]{images/graphs/original_image_fixed.jpg}}
+	% \hfill
+	\subfigure[Processed]{\includegraphics[width=6cm]{images/graphs/parser_processed_image_fixed.jpg}}
+	\hfill
+	\caption{Picture converted to binary}
+	\label{original-vs-processed-image}
+\end{figure}
+
+
+
+%Ca in figura \ref{etichetaTT}
+
+\section{Changing Image Perspective}
+
+% \begin{figure}[!h]%
+%     \centering
+%     \subfloat[\centering label 1]{{
+%     \rotatebox[origin=c]{90}{\includegraphics[width=5cm]{images/graphs/original_image.jpg}} }}%
+%     \qquad
+%     \subfloat[\centering label 2]{{\includegraphics[width=5cm]{images/graphs/parser_processed_image.jpg} }}%
+%     \caption{2 Figures side by side}%
+%     %\label{fig:example}%
+% \end{figure}
+
+ \begin{figure}[!h]
+     \centering
+     \fbox{\includegraphics[width=35em]{images/graphs/parser_image_matches_fixed.jpg}}
+     \caption{Matches found with ORB}
+     \label{orb-matches}
+ \end{figure}
+
+For parsing the form, we have to be able to match specific pixels of the picture / scan of the form with the template, to figure out where locations we are interested in are. Further in this section, we will call the picture / scan of the form the \textit{picture}, and the original form, retrieved from the database, the \textit{template}.
+
+Matching the picture with the template is not trivial, as several issues arise:
+\begin{itemize}
+    \item If the picture keeps the same proportions, orientation, and scaling as the template, then we have a perfect 1-1 match between the two.
+    \item If the picture keeps the same proportions and orientation, but the scaling is not $1:1$, then a scaling factor is needed in order to be able to match the picture and the template.
+    \item If the picture only preserves proportions, then, in addition to the scaling factor,  rotation and translation transformations (Euclidean isometries) are also required.
+    \item If the picture does not keep the same proportions, then we have to find a homography between the two.
+\end{itemize}
+
+As finding homographies between two images is a common task in Computer Vision, \textit{OpenCV} offers the ORB feature extractor \cite{rublee2011orb}, which is able to extract and match features of the two images, as seen in Figure \ref{orb-matches}. If enough matches are found, we can change the image's perspective, to get a frontal view of the form.
+
+\begin{figure}[!h]
+	\hfill
+	\subfigure[Original]{\includegraphics[height=8cm]{images/graphs/original_image_fixed.jpg}}
+	% \hfill
+	\subfigure[Corrected]{\fbox{\includegraphics[height=8cm]{images/graphs/parser_corrected_image.jpg}}}
+	\hfill
+%	\caption{Picture converted to binary}
+%	\label{original-vs-processed-image}
+%	\centering
+%	\fbox{\includegraphics[width=15em]{images/graphs/parser_corrected_image.jpg}}
+	\caption{Original and Corrected Picture}
+	\label{parser-corrected-image}
+\end{figure}
+
+In Figure \ref{parser-corrected-image} we can see the result of our perspective transformation over the binary picture. We can observe that:
+
+\begin{itemize}
+	\item The thresholding is not perfect, as some white areas have a few black pixels and black text has a few white spots, which means that our OCR network has to be resistant to small noise.
+	\item Straight lines (more specifically the boundaries of the text boxes) seem slightly curved. This is actually the case, as phone cameras add small distortions to the images. This phenomenon does not appear for scanned documents.
+\end{itemize}
+
+\section{Extracting Answer Squares}
+
+Extracting squares containing an answer from a form is straightforward once we have a corrected image. As we save the position of squares where users write their answers when we generate the form, we simply have to extract said squares.
+
+For each form, we store in the database a list with the absolute position of each answer square. A sample of the stored information is:
+
+\begin{minted}[bgcolor=bg]{yaml}
+    answer_squares_location:
+        - 0:
+            - 0:
+                - width: 8
+                - x: 23.5
+                - y: 49.5
+                - page: 0
+            - 1:
+                - width: 8
+                - x: 32.5
+                - y: 49.5
+                - page: 0
+            ...
+        - 1:
+            - 0:
+                - width: 8
+                - x: 23.5
+                - y: 89.5
+                - page: 0
+            ...
+\end{minted}
+
+\begin{figure}[!h]
+	\centering
+	\fbox{\includegraphics[width=18em]{images/graphs/fixed_image_squares.jpg}}
+	\caption{Marked Answer Squares}
+	\label{answer-squares-red}
+\end{figure}
+
+
+With the help of the information mentioned above and a corrected image similar to Figure \ref{parser-corrected-image}, we can mark and extract each answer square of the form. We marked in red in Figure \ref{answer-squares-red} the extracted answer squares.
+
+Figure \ref{parsing-flow} is a flowchart of the entire parsing pipeline. As one can see, each step is independent and self-contained, which adds stability to the software and makes the source code easier to follow. 
+
+\begin{figure}[!h]
+	\centering
+	\fbox{\includegraphics[width=24em]{images/diagrams/parsing-flow.png}}
+	\caption{Parsing flowchart}
+	\label{parsing-flow}
+\end{figure}
+
+
+
+% cum antrenez reteaua
+\chapter{OCR Neural Network Design and Training}
+\label{chapter-ocr-neural-network}
+
+\section{Why Use a CNN}
+
+We use a neural network in order to extract the characters written inside small squares, as the ones marked in Figure \ref{answer-squares-red}.
+
+While traditional methods (such as the HOG \cite{HOG} approach) perform reasonably well, we decided to design, train and use a convolutional neural network (CNN) \cite{CNN}, as it often outperforms classical classificators.
+
+We use \textit{Pytorch}, ``\textit{an optimized tensor library for deep learning using GPUs and CPU}" \cite{pytorch}. \textit{Pytorch} allows us to design, train, save, and evaluate a convolutional neural network we then use to identify characters.
+
+\section{CNN Architecture}
+
+We played with various common architectures, both pretrained and untrained, such as the \textit{VGG} \cite{VGG} or the \textit{Resnet} \cite{resnet} architectures.
+However, such architectures are to complex for our relativly simple task of classifying around $100$ characters. We therefore decided to build and train our own convolutional neural network, using the \textit{Pytorch} framework.
+
+The layers definition of our network is:
+
+\begin{minted}[bgcolor=bg]{python}
+# backend/sources/ocr/network.py
+model = nn.Sequential(
+    nn.Conv2d(1, 16, kernel_size=(5, 5), padding=(2, 2)),
+    nn.ReLU(),
+    
+    nn.Conv2d(16, 32, kernel_size=(3, 3), padding=(1, 1)),
+    nn.ReLU(),
+    
+    nn.BatchNorm2d(32),
+    nn.MaxPool2d((2, 2)),
+    
+    nn.Conv2d(32, 64, kernel_size=(3, 3), padding=(1, 1)),
+    nn.ReLU(),
+    
+    nn.Conv2d(64, 64, kernel_size=(3, 3), padding=(1, 1)),
+    nn.ReLU(),
+    
+    nn.Conv2d(64, 64, kernel_size=(3, 3), padding=(1, 1)),
+    nn.ReLU(),
+
+    nn.BatchNorm2d(64),
+    nn.MaxPool2d((2, 2)),
+
+    nn.Flatten(),
+    nn.Dropout(0.2),
+
+    nn.Linear((IMAGE_SIZE // 4)**2 * 64, 1024),
+    nn.ReLU(),
+
+    nn.Linear(1024, len(CHARACTERS))
+)
+\end{minted}
+
+Our network consists of:
+\begin{itemize}
+	\item Six layers of two-dimensional convolutions, with square kernels of sizes $3$ and $5$, over $16$, $32$ and $64$ channels.
+	\item A \textit{ReLU} \cite{ReLU} activation layer after each convolution.
+	\item Batch normalization and dimensionality reduction (max pools) layers.
+	\item Two linear layers, acting as the classificator part of the model.
+\end{itemize}
+
+As we will show in the \textit{Training} section, this architecture is more than enough to accurately perform our classification task. Its small size also allows it to load and run fast. The total size of the model is under $14$Mb, which, by today's standards, is quite light. This allows our model to run smoothly on the \textit{CPU} as well as the \textit{GPU}, which in turn allows \textit{SmartForms} to run on low-end devices and reduces the power usage. 
+
+\section{Dataset Used}
+
+An easy solution to get a dataset would have been to simply create one. This has however major drawbacks:
+\begin{itemize}
+	\item We have to create over $62$ classes ($26*2$ lowercase and uppercase letters, and $10$ digits, not counting special characters such as '\code{@}', '\code{!}', '\code{+}', spaces, etc.). Making from scratch a dataset large enough to correctly train a network would be extremely time-consuming.
+	\item The network is meant to recognize any handwriting. Training it on a dataset made by only a handful of people means that characters won't have a large enough diversity to correctly generalize (different people write characters such as '\code{1}', '\code{7}', '\code{a}', '\code{e}', etc.~differently).
+	\item Similarly, the dataset would be dependent on the type of pen and ink used (which can have different thickness and darkness), the scanning device or phone camera model (due to post-processing all modern capturing devices do), etc. Making a robust dataset would mean spending a lot of time, effort, and resources to vary as many different parameters as possible. 
+\end{itemize}
+
+To fix this issue, the obvious solution is to use an already made dataset.
+We chose the \textit{EMNIST} \cite{emnist} dataset, which contains over $600.000$ handwritten digits and lowercase and uppercase letters. Sadly, we were unable to find a dataset containing non-alphanumeric characters.
+
+To account for whitespaces, we enhanced the EMNIST dataset with $10.000$ peppered (with random black noise) blank images. This is necessary as the network needs to be able to detect if a certain square contains or not a character.
+
+For optimization reasons, we pre-processed the entire dataset, resizing images to the size our network expects as input and adding the whitespaces. A small overview of the dataset pre-processing is the following:
+
+
+\begin{minted}[bgcolor=bg]{python}
+# backend/sources/ocr/generate_dataset.py
+
+images: np.ndarray, labels: np.ndarray = [], []
+
+# importing and loading the entire dataset
+# we do NOT use tensorflow, tensorflow_datasets
+# is a separate package for managing datasets
+import tensorflow_datasets as t_d
+ds = t_d.load('emnist', shuffle_files=True)
+
+# resizing images from the dataset and adding them
+# to the `images` and `labels` lists
+# [...]
+
+# generating a list of 10000 blank images
+# and adding them to the `images` and `labels` list
+whitespaces = []
+for i in range(10000):
+    whitespaces.append((np.zeros((28, 28), dtype=np.uint8), 62))
+# [...]
+
+# saving the entire dataset as a numpy binary file
+# at the location `DATASET_PATH`
+os.makedirs(DATASET_PATH)
+
+imgs = np.stack(imgs)
+labels = np.stack(labels)
+
+np.save(IMAGES_PATH, imgs)
+np.save(LABELS_PATH, labels)
+\end{minted}
+
+This preprocessing helps with the loading time by greatly reducing the size of the dataset. While adding the whitespace images might seem redundant at this stage, it greatly simplifies the future processing of the dataset, and barely affects its size, increasing it by a mere $\sim1.6\%$.
+
+\section{Data Preprocessing and Augmentation}
+
+The main issue we had to fight against is that images from the EMNIST dataset do not look completely similar to the ones we need to process. This means the data we train on is not the same as the data we want our model to predict.
+
+To fix this issue, we heavily rely on data augmentation and post-processing. The augmentation techniques we use are:
+\begin{itemize}
+	\item Image erosion and dilation (increasing / reducing the white zone).
+	\item Image resizing -- randomly cropping borders of the images or padding it, essentially zooming into / out of the image.
+	\item Random translations. This is especially useful as most EMNIST data is perfectly centered in the image, but ours is not.
+	\item Random rotations by a small angle.
+	\item Salt and pepper random noise.
+\end{itemize}
+
+For post-processing, we apply the Canny edge detector, which returns a smoothed contour of the image. After applying data augmentation on the EMNIST dataset and post-processing on both EMNIST and our images we found no visual difference between the two. We built a small handmade dataset and confirmed that the accuracy of our model on this dataset is similar to the EMNIST data.
+ 
+
+
+\begin{figure}[!h]
+	\begin{center}
+%		\hspace{1cm}
+		\subfigure[Raw Data]{\includegraphics[width=5cm]{images/graphs/raw-emnist-data.png}}
+%		\hfill
+		\hspace{1cm}
+		\subfigure[Augmented Data]{\includegraphics[width=5cm]{images/graphs/augmented-emnist-data.png}}
+%		\hspace{2cm}
+		\\
+%		\hspace{1cm}
+		\subfigure[Processed Raw Data]{\includegraphics[width=5cm]{images/graphs/processed-emnist-data.png}}
+%		\hfill
+		\hspace{1cm}
+		\subfigure[Processed Augmented Data]{\includegraphics[width=5cm]{images/graphs/processed-augmented-emnist-data.png}}
+%		\hspace{1cm}
+	\end{center}
+	\caption{Data Augmentation of the EMNIST dataset}
+	\label{emnist-transformation}
+\end{figure}
+
+In Figure \ref{emnist-transformation} we can see the different stages of pre-processing of our dataset. We train the network on the processed augmented data (d), but validate against and expect real-world data to be similar to (c). Blank characters represent whitespaces (' ').
+
+\section{Training}
+
+We trained the network using the standard \textit{Pytorch} method (defining a loss function, an optimizer, and looping throughout mini-batches to train the network). A notable observation is that we had to tweak our loss function (i.e., the cross-entropy loss function) to take into account the weight of each class, as our data is not balanced.
+
+The classification task we want our model to perform is ambiguous (for e.g., '\code{o}', '\code{O}', and '\code{0}' are written similarly). To counter this issue, we define a \textit{per-class accuracy}, where for a given character we only consider characters in the same class (digits, lowercase, or uppercase) -- note that whitespaces are considered to belong to all $3$ classes. In other words, a given character is correctly determined in our \textit{per-class accuracy} metric iff the correct label has the highest score among all characters of the same class.
+
+This metric is the one most relevant to the problem at hand, as questions we have to parse contain a list of allowed characters set by users (for instance, a phone number field will only allow digits). The network obtains an error rate of less than $1.5\%$, with which we are comfortable, as the misclassified characters are for the most part poorly written characters. Figure \ref{ocr-results} shows the evolution of loss and accuracy over the course of training. 
+
+
+\begin{figure}[!h]
+	\begin{center}
+		\subfigure{\includegraphics[width=10cm]{images/ocr/accuracy.png}}
+		\\
+		\subfigure{\includegraphics[width=10cm]{images/ocr/loss.png}}
+	\end{center}
+	\caption{Training results of the CNN network}
+	\label{ocr-results}
+\end{figure}
+
+\section{Self-Training}
+
+As mentioned above, the \textit{EMNIST} dataset we are using only contains alphanumeric characters. We manually added whitespaces, but special characters such as '\code{!}', '\code{?}', '\code{+}', '\code{-}', '\code{@}' etc. are still not present in the dataset.
+\\
+To mitigate this issue, we have the following approach:
+\begin{enumerate}
+	\item When a form is uploaded in order to be parsed, we save an image of the characters we extracted alongside the answer.
+	\item If a user edits a parsed form, we assume the user corrected a mistake made by the OCR network, and, for each modified character, save it in a separate database as a labeled image. An example would be the following situation:
+	\begin{enumerate}
+		\item A user sends to \textit{SmartForms API} a form to parse.
+		\item The OCR network detects a character as an '\code{O}'.
+		\item The user later updates the answer, changing, among others, the '\code{O}' into a '\code{Q}'.
+		\item \textit{SmartForms API} then knows that the image it originally labeled as a '\code{O}' is in fact a '\code{Q}', and adds the labeled image to the database.
+	\end{enumerate}
+	\item Maintainers of the application can train the network again, taking into account the newly created dataset.
+\end{enumerate}
+
+This approach is ideal, as SmartForms generates a dataset from the same universe as the characters it has to parse, and over time less and less mistakes are made due to the larger and larger dataset.
+
+% Aici vorbesc despre fastapi, si cum il folosesc in aplicatie
+\chapter{HTTP/S Server and Secure Authentication}
+\label{chapter-https-server}
+
+\section{FastAPI Session Middleware}
+
+Our entire API backend service is written using FastAPI, \textit{a modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints} \cite{FastAPI}.
+\\
+FastAPI helps us to validate data received, and automatically generates the OpenAPI \cite{open-api} specification of our service.
+
+In order to authenticate users, we use a session middleware. This allows us to use a stateless authentication mechanism, where all the authentication data is stored within an encrypted cookie on the user's browser.
+
+An API endpoint looks similar to this one, which shows a short message to the users and allows them to log in and logout of their accounts:
+
+\begin{minted}[bgcolor=bg]{python}
+@app.get('/')
+async def home(request: Request):
+    """
+    Shows the user its authentication status, and allows him to
+    check the documentation, login or logout.
+    """
+    # retrieve the user's details from the session
+    # if the user is not logged in, then the `user` object is None
+    user = request.session.get('user')
+    email = user['email'] if user is not None else 'Not signed in'
+
+    html = (
+        f"<pre>Email: {email}</pre><br>" +
+        "<a href='/api/docs'>documentation</a><br>" +
+        ("<a href='/api/user/logout'>logout</a>"
+            if user is not None else
+            "<a href='/api/user/login/'>login</a>")
+    )
+    return HTMLResponse(html)
+\end{minted}
+
+By default, \textit{FastAPI} only handles requests over \textit{HTTP}, but one can use a web-server such as \textit{Nginx} \cite{nginx} to act as a HTTP endpoint and proxy for our service.
+
+The setup currently running on the \url{https://smartforms.ml} website, made as part of a different project \cite{felix}, is the following:
+\begin{itemize}
+	\item \textit{SmartForms API} is running on \code{0.0.0.0:5000}.
+	\item \textit{Nginx} is binded to \code{0.0.0.0:443} and \code{0.0.0.0:80}, and proxies any requests made to the \code{/api/} route to \code{localhost:5000}, which is the API server. 
+\end{itemize}
+
+Please note that both services are binded to the meta-address \code{0.0.0.0}, which makes them accessible over all networking interfaces. This means in particular that the API server is exposed to the internet by accessing the \url{http://smartforms.ml:5000} URL (please note the connection is \code{HTTP} and not \code{HTTPS}). The unsecure connection might seem problematic, but, as it can only be used by users forging requests, this is not a security issue, and can be stopped by binding the API service to \code{localhost} instead. Figure \ref{smartformsml-diagram} shows a diagram of the entire service.
+
+
+\begin{figure}[!h]
+	\centering
+	\fbox{\includegraphics[width=13cm]{images/diagrams/smartformsmlsetup.png}}
+	\caption{\url{https://smartforms.ml/} service diagram}
+	\label{smartformsml-diagram}
+\end{figure}
+
+
+\section{Oauth2 Authentication Framework}
+
+As SmartForms is a small application, requiring users to create an account with a username and password is tedious. We decided to use the \textit{OAuth v2.0} \cite{oauth2} (\textbf{O}pen \textbf{Auth}entication) protocol, which allows users to log in using a third-party account, such as a Facebook, Google, or Microsoft account.
+
+Due to the difficulty to register SmartForms as an OAuth service on most platforms (we need to show a proof we own a domain, ask for human verification, add a credit card, etc.) we have only registered our application on Google Cloud.
+
+This means that in its current state SmartForms only allows authentication using a Google account, but allowing additional authentication services only requires a few lines of code besides registering SmartForms on said services.
+
+
+% Vorbesc despre cum a functionat git, CI/CD, sincronizare cu Felix
+\chapter{Tests, Source Control, and CI/CD}
+\label{chapter-tests-source-control}
+
+\section{Testing}
+
+To ensure the stability of the application and speed up the development process we decided to use the \textit{TDD} (\textbf{T}est \textbf{D}riven \textbf{D}evelopment) approach: each API endpoint and all features of SmartForms are thoroughly tested by unit tests.
+
+We also have integration tests, running the application end-to-end (generating forms, creating, modifying and uploading answers).
+
+The only components of the application which are not tested by unit tests are:
+\begin{itemize}
+	\item The CNN training module, which is technically part of the software, but is only runned manually or if the network model is not found, which only happens due to human intervention.
+	\item The \code{user} router, which can hardly be tested as it performs requests to Google Cloud. Testing the endpoints would require creating a test account on Google, extracting its authentication cookies, and manually forging a request to authenticate it on SmartForms, which is almost impossible and forbidden by the Google terms \& conditions. 
+\end{itemize}
+
+The total coverage of our unit tests is $85\%$, which might seem low, but most of the untested lines of code live either in the two modules mentioned above, or hard to reach sections which were manually tested during development.
+
+\section{Git}
+
+We are using Git\cite{Git} as a source control software, and use the Github platform as a remote. The source code can be viewed online at \url{https://github.com/TeamUnibuc/SmartForms/tree/main/backend}, where the complete history of the project (commits, pull requests, and issues) is public. The repository contains \textit{SmartForms API} (our project), as well as the \textit{SmartForms} client \cite{felix}, due to their tight connection.
+
+At the time of writing, the repository (backend and frontend combined) has over $340$ PRs and commits on the main branch, $38$ active branches, and a total of $39.000$ added and $14.000$ deleted lines of code throughout its history. 
+
+
+\section{CI/CD}
+
+The \textit{SmartForms} repository is set up using \textbf{C}ontinuous \textbf{I}ntegration and \textbf{C}ontiguous \textbf{D}eployment pipelines. They are used in the following scenario:
+\begin{enumerate}
+	\item A developer wants to add a new feature to the project. He branches off from the master branch and implements the feature on the newly created branch.
+	\item Once the feature is finished, the developer makes a \textit{pull request} -- also called \textit{merge request}, asking for his/her squashed commits to be applied to the master branch (instead of applying the squashed commits, a rebase or a simple merge are also possible, but less common).
+	\item The \textbf{CI} pipeline kicks in, automatically running a series of checks and tests.
+	\item If the tests succeed, and the branch is merged, the \textbf{CD} pipeline starts, pushing the entire code from the master branch to production.
+\end{enumerate}
+
+The contiguous deployment pipeline is written and mantained as part of another project \cite{felix}, but the integration one is written by us:
+
+\begin{minted}[bgcolor=bg]{yaml}
+# .github/workflows/backend.yml
+
+name: Run Backend Unittests
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+        types: [ opened, synchronize ]
+jobs:
+    build:
+        # avoids running AFTER a merged PR
+        if: "!contains(github.event.head_commit.message,
+                                         'Merge pull request #')"
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.10
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.10"
+            - name: Install dependencies
+              run: |
+                sudo apt-get install -y libzbar0 poppler-utils
+                python -m pip install --upgrade pip
+                pip install flake8 pytest
+                pip install -r backend/requirements.txt
+            - name: Lint with flake8
+                ...
+            - name: Test with unittest
+              env:
+                MONGO_USER: ${{ secrets.MONGO_USER }} 
+                MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+                ...
+              run: |
+                (cd backend/sources/tests/ && python -m unittest)
+\end{minted}
+
+The code shown above does the following:
+\begin{enumerate}
+	\item Checks if the code being tested is part of a PR, and stops if not. 
+	\item Installs required packages on the machine -- both \textit{Debian} packages with \code{apt}, and \textit{Python} packages with \code{pip}.
+	\item Syntactically checks the code with \code{flake8}, a \textit{Python} linter.
+	\item Runs the backend unit and integration tests.
+\end{enumerate}
+
+% vorbesc de ce poate fi adaugat in plus
+\chapter{Conclusion and Future Work}
+\label{chapter-conclusions-future-work}
+
+\section{Possible Enhancements}
+
+The framework presented in this project is an MVP of a modern online forms and surveys generation and parsing tool. There are many directions in which the project can be extended.
+
+\subsection{User Roles}
+
+The \textit{SmartForms} API does not currently have any support for user roles, such as moderators or administrators. This is purely by design, as we did not consider it essential for our product: as we use MongoDB, any modifications to users, forms, or answers can easily be made directly from the database.
+
+Adding user roles would however make the application more attractive to large corporations, where each employee has a specific set of attributions and authorizations.
+
+\subsection{Stateless PDF Forms}
+
+An important improvement we could have made, but decided against due to the centralized design of our application, is to save any form-related information directly on QR codes.
+
+Currently, QR codes store the ID of the form they are printed onto, which is then used to retrieve from the database details about the form, in order to parse it. We can shortcut and completely eliminate the need for a database (in the matching process) by storing on the QR codes all the details of the form.
+
+While the amount of information to store might seem excessive, people already managed to fit an entire GUI game on a single QR code\cite{game-qr-code}, which offers up to a few kilobytes of storage, depending on the error-correction level.
+
+\subsection{Multithreading}
+
+An important improvement speed-wise would be introducing multi-threading to our parsing pipeline. While the OCR model is hard to be run in parallel as it might be running on the GPU, preprocessing such as QR code extraction, adaptive thresholding, feature extraction \& matching and even dataloaders for the CNN could be run in parallel, to fully utilize more than one CPU core. 
+
+
+\subsection{Offline Login System}
+
+\textit{SmartForms} relies on online third-party authentication. While authentication checks can be disabled altogether by editing the '\code{.env}' file, being able to manage the access to forms and answers could be useful, even in offline scenarios.
+
+\subsection{Additional Input Formats}
+
+Another addition to \textit{SmartForms} could be the introduction of additional input formats, such as a large square for a signature, or a more advanced question format, mimicking questionnaires of the form ``\textit{When I go to school I have to walk ..... km and it takes ..... minutes}", in which text and answer boxes are mixed.
+
+\section{Conclusions}
+
+\textit{SmartForms} was an idea that I came up with while helping a front desk worker transcribe a form I had just filled into his computer, one of the situations \textit{SmartFroms} aims to solve. The API, form generation, and form parsing modules went through multiple iterations of approaches and technologies used before ending up in the current state, which we hope is the perfect balance of simplicity and usability, as \textit{SmartForms API} aims to offer a simple yet effective interface for managing questionnaires and surveys.
+
+The hardest part of the project has been by far the form parsing pipeline, due to many reasons, such as:
+\begin{itemize}
+	\item As data is coming from users, we cannot assume that the file format is recognized, files are not corrupted, images contain a valid form, the form exists, etc.
+	\item The process uses real-world images that cannot be accurately created digitally, which translated into a lot of printed forms, scans with various settings, pictures under different lighting conditions, and angles and so forth.
+	\item We had to make the existing dataset used for training the OCR CNN mimic our data. To check the real accuracy of the network, we had to also create a small verification dataset from scratch.
+\end{itemize}
+
+We have not talked too much about the client of \textit{SmartForms}, as it is not part of this project, but the two components (\textit{SmartForms API} and the \textit{SmartForms} client) work perfectly together, making the inner workings of the API completely transparent to the user.
+
+
+While the framework can still be improved, we believe it is already fit for being used by people or institutions for which \textit{SmartForms} presents attractive features.
+
+\begin{thebibliography}{99}	
+
+\bibitem{checker-illusion}
+E.~H.~Adelson, Pbroks13, \emph{checker shadow illusion}, n.d., accessed 29 May 2022, \url{https://commons.wikimedia.org/w/index.php?curid=75000950}.
+
+\bibitem{ReLU}
+A.F.~Agarap,
+\emph{Deep learning using rectified linear units (relu)}, preprint arXiv:1803.08375, 2018.
+
+\bibitem{emnist}
+G.~Cohen, S.~Afshar, J.~Tapson, A.~Schaik,
+\emph{EMNIST: an extension of MNIST to handwritten letters}, preprint arXiv:1702.05373, 2017.
+
+\bibitem{HOG}
+N.~Dalal, B.~Triggs,
+\emph{Histograms of oriented gradients for human detection},
+2005 IEEE computer society conference on computer vision and pattern recognition, IEEE (2005), Vol. 1, 886--893.
+
+\bibitem{oauth2}
+D.~Hardt,
+\emph{RFC 6749: The OAuth 2.0 authorization framework}, RFC Editor, 2012.
+
+\bibitem{resnet}
+K.~He, X.~Zhang, S.~Ren, J.~Sun, 2016,
+\emph{Deep residual learning for image recognition},
+2016 IEEE conference on computer vision and pattern recognition, IEEE (2016), 770--778.
+
+\bibitem{masinter1998rfc2388}
+L.~Masinter, 
+\emph{RFC2388: Returning Values from Forms: multipart/form-data},
+RFC Editor, 1998.
+
+\bibitem{game-qr-code}
+MattKC, \emph{Can you fit a whole game into a QR code?}, accessed 2 June 2022, \url{https://www.youtube.com/watch?v=ExwqNreocpg}, 2020.
+
+\bibitem{authentication-cookies}
+J.S.~Murdoch,
+\emph{Hardened stateless session cookies},
+International Workshop on Security Protocols, Springer (2008),  93--101.
+
+\bibitem{CNN}
+K.~O'Shea, R.~Nash,
+\emph{An introduction to convolutional neural networks}, arXiv preprint
+arXiv:1511.08458, 2015.
+
+\bibitem{felix}
+F.~Pu\c sca\c su, \emph{Design and implementation of an application for generating and parsing forms with modern methodologies of software development},
+University of Bucharest, 2022.
+
+\bibitem{rublee2011orb}
+E.~Rublee, V.~Rabaud, K.~Konolige, G.~Bradski,
+\emph{ORB: An efficient alternative to SIFT or SURF},
+2011 International conference on computer vision, IEEE (2011),
+2564--2571.
+
+\bibitem{VGG}
+K.~Simonyan, A.~Zisserman,
+\emph{Very deep convolutional networks for large-scale image recognition}, preprint arXiv:1409.1556, 2014.
+
+\bibitem{wicker1999reed}
+S.~B.~Wicker, V.~K.~Bhargava,
+\emph{Reed-Solomon codes and their applications},
+John Wiley \& Sons, 1999.
+
+\bibitem{docparser}
+\emph{Convert PDF Forms to Excel, CSV or Webhooks}, n.d., accessed 5 June 2022,
+\url{https://docparser.com/solutions/form-pdf-to-text/}.
+
+\bibitem{FastAPI}
+\emph{FastAPI}, n.d., accessed 31 May 2022,
+\url{https://fastapi.tiangolo.com/}.
+
+\bibitem{Git}
+\emph{Git}, n.d., accessed 30 May 2022,
+\url{https://git-scm.com/}.
+
+\bibitem{limesurveys}
+\emph{Lime Survey}, n.d., accessed 5 June 2022,
+\url{https://github.com/LimeSurvey/LimeSurvey}.
+
+\bibitem{nginx}
+\emph{Nginx}, n.d., accessed 1 June 2022, 
+\url{https://nginx.org/en/}.
+
+\bibitem{opencv-color-convention}
+\emph{OpenCV: Color Conversions}, n.d., accessed 29 May 2022,  \url{https://docs.opencv.org/3.4/de/d25/imgproc\_color\_conversions.html}.
+
+\bibitem{opencv-image-threshold}
+\emph{OpenCV: Image Thresholding}, n.d., accessed 29 May 2022,
+\url{https://docs.opencv.org/4.x/d7/d4d/tutorial\_py\_thresholding.html}.
+
+\bibitem{open-api}
+\emph{OpenAPI Specification}, 20 February 2020, accessed 31 May 2022,
+\url{https://swagger.io/specification/}.
+
+\bibitem{pytorch}
+\emph{Pytorch documentation}, n.d., accessed 30 May 2022,
+\url{https://pytorch.org/docs/stable/index.html}.
+
+\end{thebibliography}
+%\printbibliography
+%\printbibliography[heading=bibintoc]
+
+
+\appendix
+\chapter{Manual Deployment of SmartForms}
+\label{appendix-links}
+
+\textit{SmartForms API} is currently deployed at \url{http://smartforms.ml:5000}, and the companion \textit{SmartForms} client is deployed at \url{https://smartforms.ml:443} -- or \url{https://smartforms.ml}.
+
+It is however possible to host both the client and the API server locally. The steps to do so are:
+\begin{enumerate}
+	\item Download the \textit{SmartForms} repository.
+	\item Install dependencies.
+	\item Set-up the environment file.
+	\item Start the services.
+\end{enumerate}
+
+\subsection*{Step 1: Download the repository}
+
+There are two ways to download the repository:
+\begin{itemize}
+	\item Clone the repository with \textit{Git}: \code{git clone https://github.com/TeamUnibuc/SmartForms}.
+	\item Manually download and deflate a \textit{ZIP} archive of the repository by visiting \url{https://github.com/TeamUnibuc/SmartForms/archive/refs/heads/main.zip}.
+\end{itemize}
+
+
+\subsection*{Step 2: Install dependencies}
+
+The dependencies usually not available out-of-the-box on most systems of \textit{SmartForms} are:
+\begin{itemize}
+	\item A \textit{Conda} distribution, such as \textit{Anaconda} or \textit{Miniconda}.
+	\item The \textit{Zbar} library, downloadable from \url{http://zbar.sourceforge.net/}, and installable as \code{libzbar0} on most UNIX systems.
+\end{itemize}
+
+Note that you may have additional unresolved dependencies, which will need to be manually installed.
+
+\subsection*{Step 3: Set-up the environment}
+
+To set-up the \textit{SmartForms API} environment, you need to create the file \code{backend/.env}, which can be done by renaming the \code{backend/.env.sample} file.
+
+The required fields of the \code{.env} file are:
+\begin{itemize}
+	\item \code{MONGO\_USER}, \code{MONGO\_PASSWORD}, \code{MONGO\_CLUSTER}, and \code{MONGO\_DB\_NAME} which are the username and password of the \textit{MongoDB} user, URI of the database, and the database name. The database itself can be either installed locally by following the steps described at \url{https://www.mongodb.com/docs/manual/installation/} or on the cloud (\url{https://www.mongodb.com/cloud}).
+	\item \code{GOOGLE\_CLIENT\_ID} and \code{GOOGLE\_CLIENT\_SECRET}, which are provided by Google when registering an \textit{OAuth} application (\url{https://console.cloud.google.com/apis/credentials/}).
+	\item \code{COOKIES\_SECRET}, a secret passphrase to encrypt and decrypt session cookies (which are stored on the client-side due to our stateless design), allowing among others to not sign out users when restarting the server.
+	\item \code{FRONTEND\_URL}, the URL the client is available at (for e.g. \url{https://smartforms.ml}). If you are not planning to use a client, please use the address of the backend instead. This variable is used to redirect the user through login.
+	\item \code{FORM\_ID\_PREFIX}, the prefix added to form IDs when generating QR codes, which can be useful when users scan the QR code.
+\end{itemize}
+
+\subsection*{Step 4: Start the services}
+
+To build and start \textit{SmartForms API}, you have to:
+\begin{enumerate}
+	\item Install the \textit{SmartForms} conda environment.
+	\item Enable the environment.
+	\item Build and start the API.
+\end{enumerate}
+
+The steps can be done on a UNIX system with the following commands:
+
+\begin{minted}[bgcolor=bg]{shell}
+$ conda env create -f conda_environment.yaml
+$ conda activate SmartForms
+$ ./deploy_script.sh
+\end{minted}
+
+Note that only the API server is started. The client service is built into static files, which need to be served with a server such as \textit{Nginx}.
+
+\end{document}
