@@ -676,9 +676,9 @@ partial def visit (e : Expr) : M Unit := do
     | .mdata _ b         => visit b
     | .proj _ _ b        => visit b
     | .fvar fvarId ..    =>
-      match (← getLocalDecl fvarId) with
+      match (← fvarId.getDecl) with
       | .cdecl .. => return ()
-      | LocalDecl.ldecl (value := v) .. => visit v
+      | .ldecl (value := v) .. => visit v
     | .mvar mvarId ..    =>
       let e' ← instantiateMVars e
       if e' != e then
@@ -1511,7 +1511,7 @@ where
     | [] =>
       for auto in autos do
         if auto.isFVar then
-          let localDecl ← getLocalDecl auto.fvarId!
+          let localDecl ← auto.fvarId!.getDecl
           for x in xs do
             if (← localDeclDependsOn localDecl x.fvarId!) then
               throwError "invalid auto implicit argument '{auto}', it depends on explicitly provided argument '{x}'"

@@ -104,7 +104,7 @@ where
 
   hasExplicitDiff? (xs as bs : Array Expr) : MetaM (Option (Array Expr × Array Expr)) := do
     for i in [:xs.size] do
-      let localDecl ← getLocalDecl xs[i]!.fvarId!
+      let localDecl ← xs[i]!.fvarId!.getDecl
       if localDecl.binderInfo.isExplicit then
          unless (← isDefEq as[i]! bs[i]!) do
            let (ai, bi) ← visit as[i]! bs[i]!
@@ -163,10 +163,10 @@ where
       xs.forM fun x => do
         let xDecl ← getFVarLocalDecl x;
         match xDecl with
-        | LocalDecl.cdecl (type := t) .. =>
+        | .cdecl (type := t) .. =>
           ensureType t
           check t
-        | LocalDecl.ldecl (type := t) (value := v) .. =>
+        | .ldecl (type := t) (value := v) .. =>
           ensureType t
           check t
           let vType ← inferType v
