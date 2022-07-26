@@ -1,5 +1,4 @@
 import Iris.Std.Classes
-import Iris.Std.Prod
 import Iris.Std.Tactic
 
 import Lean.Elab.Tactic
@@ -30,6 +29,33 @@ private def parseRewriteRule (rule : TSyntax ``rwRule) : TacticM <| RewriteDirec
   | _ => throwUnsupportedSyntax
 
 
+initialize monoRulesExt : SimplePersistentEnvExtension Name NameSet ← registerSimplePersistentEnvExtension {
+  name := `rwMonoRules,
+  addEntryFn := NameSet.insert,
+  addImportedFn := fun es => mkStateFromImportedEntries NameSet.insert {} es
+}
+
+initialize registerBuiltinAttribute {
+  name := `rwMonoRule,
+  descr := "monotonicity rule used to destruct terms during rewriting",
+  add := fun name _ kind => do
+    if !kind matches .global then
+      throwError "only global definitions are allowed as monotonicity rules"
+    setEnv <| monoRulesExt.addEntry (← getEnv) name
+}
+
+
+private def normalizeGoal (goal : MVarId) : TacticM MVarId := do
+  if (← getMVarType goal).isForall then
+    let (_, goal) ← intro goal `_
+    return goal
+  else
+    return goal
+
+private def getMonotonicityRules : TacticM <| Array Name := do
+  return monoRulesExt.getState (← getEnv) |>.toArray
+
+
 private def rewriteConventional (rule : TSyntax ``rwRule) : TacticM Bool := do
   try
     evalTactic (← `(tactic| rewrite [$rule]))
@@ -38,8 +64,10 @@ private def rewriteConventional (rule : TSyntax ``rwRule) : TacticM Bool := do
     return false
 
 private partial def rewriteTMR (direction : RewriteDirection) (rule : TSyntax `term) : TacticM Bool := do
+  let goal ← getMainGoal
+
   -- apply transitivity
-  let some (goalL, goalR) ← applyTransitivity
+  let some (goalL, goalR) ← applyTransitivity goal
     | return false
 
   -- select the correct goal based on the rewrite direction
@@ -52,63 +80,34 @@ private partial def rewriteTMR (direction : RewriteDirection) (rule : TSyntax `t
       pure goalR
 
   -- try to rewrite with the given rule
-  withFocus goal <| go rule
+  go goal rule
 where
-  applyTransitivity : TacticM <| Option <| MVarId × MVarId := do
-    let tagL ← mkFreshUserName `l
-    let tagR ← mkFreshUserName `r
-
+  applyTransitivity (goal : MVarId) : TacticM <| Option <| MVarId × MVarId := do
     try
-      withoutRecover <| evalTactic (← `(tactic|
-        refine' transitivity ?$(mkIdent tagL) ?$(mkIdent tagR)
-      ))
+      let some <| goalL :: goalR :: [] ← apply' goal ``transitivity
+        | return none
+      return some (goalL, goalR)
     catch _ =>
       return none
 
-    return (← (tagL, tagR).mapAllM findGoalFromTag?).allSome?
-
-  applyMonotonicity : TacticM <| Option <| Array MVarId := do
-    -- try to apply binary monotonicity rules
-    try
-      let tagL ← mkFreshUserName `l
-      let tagR ← mkFreshUserName `r
-
-      withoutRecover <| evalTactic (← `(tactic|
-        first
-        | refine' monotonicity_binary                    ?$(mkIdent tagL) ?$(mkIdent tagR)
-        | refine' monotonicity_left_contravariant_binary ?$(mkIdent tagL) ?$(mkIdent tagR)
-      ))
-      return (← #[tagL, tagR].mapM findGoalFromTag?).sequenceMap id
-    catch _ =>
-      pure ()
-
-    -- try to apply unary monotonicity rules
-    try
-      let tag ← mkFreshUserName `g
-
-      withoutRecover <| evalTactic (← `(tactic|
-        first
-        | refine' monotonicity_unary                     ?$(mkIdent tag)
-        | refine' monotonicity_pointwise_unary (fun _ => ?$(mkIdent tag))
-      ))
-      return (← #[tag].mapM findGoalFromTag?).sequenceMap id
-    catch _ =>
-      pure ()
-
-    -- no applicable monotonicity rule found
+  applyMonotonicity (goal : MVarId) : TacticM <| Option <| List MVarId := do
+    for rule in (← getMonotonicityRules) do
+      try
+        if let some goals ← apply' goal rule then
+          return ← goals.mapM normalizeGoal
+      catch _ =>
+        continue
     return none
 
-  applyReflexivity : TacticM Unit := do
+  applyReflexivity (goal : MVarId) : TacticM Unit := do
     try
-      withoutRecover <| evalTactic (← `(tactic|
-        refine' reflexivity
-      ))
+      discard <| apply' goal ``reflexivity
     catch _ => pure ()
 
-  go (rule : TSyntax `term) : TacticM Bool := do
+  go (goal : MVarId) (rule : TSyntax `term) : TacticM Bool := do
     -- try to rewrite with the given rule
     try
-      withoutRecover <| evalTactic (← `(tactic|
+      withFocus goal <| withoutRecover <| evalTactic (← `(tactic|
         exact $rule
       ))
       return true
@@ -116,27 +115,27 @@ where
 
     -- try to apply any monotonicity rule
     let state ← saveState
-    if let some goals ← applyMonotonicity then
+    if let some goals ← applyMonotonicity goal then
       let mut rule? := some rule
 
-      -- try to rewrite in one subterm
+      -- try to rewrite in exactly one subterm
       for goal in goals do
         match rule? with
         | some rule =>
-          if ← withFocus goal <| go rule then
+          if ← go goal rule then
             rule? := none
         | none =>
-          withFocus goal <| applyReflexivity
+          applyReflexivity goal
 
-      -- if the term is unchanged, restore the state to avoid unfolding definitions
+      -- if the term is unchanged, restore the state to reduce the proof term size
       if rule?.isSome then
         state.restore
-        applyReflexivity
+        applyReflexivity goal
 
       return rule?.isNone
     else
       -- do not rewrite in the term
-      applyReflexivity
+      applyReflexivity goal
       return false
 
 
