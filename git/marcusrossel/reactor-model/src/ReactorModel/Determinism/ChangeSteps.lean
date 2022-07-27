@@ -2,9 +2,6 @@ import ReactorModel.Determinism.ChangeListEquiv
 
 open Classical
 
-theorem List.filterMap_nil {l : List α} : (l.filterMap f = []) → ∀ a ∈ l, f a = none := by
-  sorry
-
 namespace Execution
 
 theorem ChangeStep.preserves_ctx : (s₁ -[rcn:c]→ s₂) → s₁.ctx = s₂.ctx := 
@@ -73,11 +70,46 @@ theorem ChangeStep.preserves_port_role {i : ID} :
   case' state h, action h => simp [←h.preserves_ne_cmp_or_id (cmp' := .prt) (i' := i) (by simp) (by simp) (by simp), ho]
   all_goals exact ho
   
+theorem schedule_preserves_unchanged_time :
+  (t ≠ t') → a ⟨t', m⟩ = (schedule a t v) ⟨t', m⟩ := by
+  intro h 
+  unfold schedule
+  split
+  all_goals
+    apply Eq.symm
+    apply Finmap.update_ne
+    simp [h]
+
 theorem ChangeStep.preserves_action_at_unchanged_times {i : ID} : 
   (s₁ -[rcn:c]→ s₂) → (∀ v, .action i t v ≠ c) → 
   (s₁.rtr.obj? .act i = some a₁) → (s₂.rtr.obj? .act i = some a₂) →
-  (∀ m, a₁ ⟨t, m⟩ = a₂ ⟨t, m⟩) :=
-  sorry
+  (∀ m, a₁ ⟨t, m⟩ = a₂ ⟨t, m⟩) := by
+  intro hs hc ho₁ ho₂ m
+  cases hs
+  case action i' t' v' σ₂ h =>
+    by_cases hi : i = i'
+    case neg =>
+      rw [h.preserves_ne_cmp_or_id (cmp' := .act) (.inr hi) (by simp) (by simp)] at ho₁
+      simp [ho₁] at ho₂
+      simp [ho₂]
+    case pos =>
+      have ht : t ≠ t' := by     
+        by_contra ht
+        rw [hi, ht] at hc
+        have := hc v'
+        contradiction
+      have ⟨_, hv₁, hv₂⟩ := h.change'
+      simp [←hi, ho₁] at hv₁
+      simp [←hi, ho₂] at hv₂
+      simp [hv₁, hv₂]
+      exact schedule_preserves_unchanged_time ht.symm
+  case' port h, state h =>
+    have ha := h.preserves_ne_cmp_or_id (cmp' := .act) (i' := i) (by simp) (by simp) (by simp)
+    simp [ho₁, ho₂] at ha
+    simp [ha]
+  all_goals
+    simp [ho₁] at ho₂
+    simp [ho₂]
 
 theorem ChangeStep.port_change_mem_rtr {i : ID} : (s -[rcn:.port i v]→ s') → (∃ p, s.rtr.obj? .prt i = some p) 
   | .port hu => hu.obj?_target
@@ -200,9 +232,19 @@ theorem ChangeListStep.preserves_actions_at_unchanged_times {i : ID} :
   (s₁.rtr.obj? .act i = some a₁) → (s₂.rtr.obj? .act i = some a₂) →
   (∀ m, a₁ ⟨t, m⟩ = a₂ ⟨t, m⟩) := by
   intro hs hc ha₁ ha₂ m  
-  induction hs 
-  case nil => sorry
-  case cons => sorry
+  induction hs generalizing a₁ a₂
+  case nil =>
+    simp [ha₁] at ha₂
+    simp [ha₂]  
+  case cons hd _ tl hs₁₂ _ hi =>
+    have ⟨_, haₘ⟩ := hs₁₂.preserves_Equiv.obj?_iff.mp ⟨_, ha₁⟩
+    have hhd : ∀ v, .action i t v ≠ hd := by 
+      intro v
+      exact mt List.mem_cons.mpr (hc v) |> (not_or _ _).mp |>.left 
+    have htl : ∀ v, .action i t v ∉ tl := by 
+      intro v
+      exact mt List.mem_cons.mpr (hc v) |> (not_or _ _).mp |>.right
+    simp [hs₁₂.preserves_action_at_unchanged_times hhd ha₁ haₘ m, hi htl haₘ ha₂]
 
 theorem ChangeListStep.equiv_changes_eq_result :
   (s -[rcn₁:cs₁]→* s₁) → (s -[rcn₂:cs₂]→* s₂) → (cs₁ ⋈ cs₂) → s₁ = s₂ := by

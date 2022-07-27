@@ -1,55 +1,75 @@
 /-
-## Undefined Behavior events
+## Undefined Behavior
 
-This event models undefined behavior. It is emitted in a variety of situations,
-such as operations that don't satisfy their invariants, or usual runtime UB
-situations such as integer overflow, division by zero, etc. For debug purposes,
-it comes with a warning message that is displayed on stderr.
+This file models undefined behavior, the runtime condition of reaching a state
+for which semantics are undefined. This captures errors that are dependent on
+runtime data, eg. division by zero.
 
-There is another interpreter which eliminates them entirely provided a proof
-that the entire program's behavior is defined. (But building that proof is not
-practical yet.)
+
+Undefined behavior is interpreted in the exception monad, with generic string-
+based error messages. An execution that runs into UB is stopped; determinism
+is preserved.
+
+TODO: Consider an UB interpreter directly into results from a proof of non-UB
 -/
 
 import MLIR.Semantics.Fitree
-import MLIR.Dialects
-import MLIR.AST
-open MLIR.AST
+
+-- The monad for UB records exceptions based on strings
+abbrev UBT := ExceptT String
 
 inductive UBE: Type → Type :=
-  | UB: UBE Unit
-  | DebugUB: String → UBE Unit
+  | UB {α: Type} [Inhabited α]: Option String → UBE α
 
 @[simp_itree]
-def UBE.handle {E}: UBE ~> OptionT (Fitree E) := fun _ e =>
+def UBE.handle {E}: UBE ~> UBT (Fitree E) := fun _ e =>
   match e with
-  | UB => Fitree.Ret none
-  | DebugUB str => do panic! str; Fitree.Ret none
+  | UB none => throw "<UB>"
+  | UB (some msg) => throw s!"<UB: {msg}>"
 
 @[simp_itree]
 def UBE.handle! {E}: UBE ~> Fitree E := fun _ e =>
   match e with
-  | UB => panic! "Undefined Behavior raised!"
-  | DebugUB str => panic! str
+  | UB none => panic! "<UB>"
+  | UB (some msg) => panic! s!"<UB: {msg}>"
 
-@[simp_itree]
-def UBE.handleSafe {E}: UBE ~> Fitree E := fun _ e =>
-  match e with
-  | UB => return ()
-  | DebugUB str => return ()
+def raiseUB (msg: String) {E α} [Member UBE E] [Inhabited α]: Fitree E α :=
+  Fitree.trigger <| UBE.UB (some msg)
 
--- We interpret (UBE +' E ~> E)
+def interpUB (t: Fitree UBE R): UBT (Fitree Void1) R :=
+  t.interpExcept UBE.handle
 
-@[simp_itree]
-private def optionT_defaultHandler: E ~> OptionT (Fitree E) :=
-  fun _ e => OptionT.lift $ Fitree.trigger e
+def interpUB! (t: Fitree UBE R): Fitree Void1 R :=
+  t.interp UBE.handle!
 
-def interp_ub {E} (t: Fitree (UBE +' E) R): OptionT (Fitree E) R :=
-  interp (Fitree.case_ UBE.handle optionT_defaultHandler) t
+def interpUB' {E} (t: Fitree (UBE +' E) R): UBT (Fitree E) R :=
+  t.interpExcept (Fitree.case UBE.handle Fitree.liftHandler)
 
-def interp_ub! {E} (t: Fitree (UBE +' E) R): Fitree E R :=
-  interp (Fitree.case_ UBE.handle! (fun T => @Fitree.trigger E E T _)) t
+def interpUB'! {E} (t: Fitree (UBE +' E) R): Fitree E R :=
+  t.interp (Fitree.case UBE.handle! (fun T => @Fitree.trigger E E T _))
 
-def interp_ub_safe {E} (t: Fitree (UBE +' E) R)
-    (H: Fitree.no_event_l t): Fitree E R :=
-  interp (Fitree.case_ UBE.handleSafe (fun T => @Fitree.trigger E E T _)) t
+@[simp] theorem interpUB'_Vis_right:
+  interpUB' (Fitree.Vis (Sum.inr e) k) =
+  Fitree.Vis e (fun x => interpUB' (k x)) := rfl
+
+@[simp] theorem interpUB'_ret:
+  @interpUB' _ E (Fitree.ret r) = Fitree.ret (Except.ok r) := rfl
+
+theorem interpUB'_bind (k: T → Fitree (UBE +' E) R):
+  interpUB' (Fitree.bind t k) =
+  Fitree.bind (interpUB' t) (fun x =>
+    match x with
+    | .error ε => Fitree.ret (.error ε)
+    | .ok x => interpUB' (k x)) := by
+  -- Can't reuse `Fitree.interpExcept_bind` because the match statements are
+  -- considered different by isDefEq for some reason
+  induction t with
+  | Ret _ => rfl
+  | Vis _ _ ih =>
+      simp [interpUB', Fitree.interpExcept] at *
+      simp [Fitree.interp, Fitree.bind, Bind.bind]
+      simp [ExceptT.bind, ExceptT.mk, ExceptT.bindCont]
+      have fequal2 α β (f g: α → β) x y: f = g → x = y → f x = g y :=
+        fun h₁ h₂ => by simp [h₁, h₂]
+      apply fequal2; rfl; funext x
+      cases x <;> simp [ih]

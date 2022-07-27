@@ -17,10 +17,10 @@ def Test.name: Test → String
 def Test.run (t: Test): String :=
   let (@Test.mk α σ ε δ S _ r) := t
   let t := semanticsRegion 99 r []
-  let t := interp_ub! t
-  let t := interp_ssa t SSAEnv.empty
-  let t := interp' S.handle t
-  let t := interp ControlFlowOp.handleLogged t
+  let t := interpUB'! t
+  let t := interpSSA' t SSAEnv.empty
+  let t := t.interp' S.handle
+  let t := t.interp ControlFlowE.handleLogged
   t.run.run.snd
 
 def trueval := Test.mk (func_ + arith) "trueval.mlir" [mlir_region| {

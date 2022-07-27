@@ -18,16 +18,16 @@ open MLIR.AST
 abbrev TypedArgs (δ: Dialect α σ ε) := List ((τ: MLIRType δ) × MLIRType.eval τ)
 
 -- | TODO: throw error if we don't have enough names
-def denoteTypedArgs (args: TypedArgs Δ) (names: List SSAVal): Fitree (UBE +' SSAEnvE Δ) PUnit :=
- match args with 
+def denoteTypedArgs [Member (SSAEnvE Δ) E] (args: TypedArgs Δ) (names: List SSAVal): Fitree E Unit :=
+ match args with
  | [] => return ()
  | ⟨τ, val⟩::args =>
-    match names with 
+    match names with
     | [] => return ()
-    | name :: names => do 
+    | name :: names => do
         Fitree.trigger (SSAEnvE.Set τ name val)
         return ()
-    
+
 
 -- TODO: Consider changing BlockResult.Branch.args into
 --       a TypedArgs (?)
@@ -37,7 +37,7 @@ inductive BlockResult {α σ ε} (δ: Dialect α σ ε)
 | Next (val: (τ: MLIRType δ) × τ.eval)
 
 def BlockResult.toTypedArgs {δ: Dialect α σ ε} (blockResult: BlockResult δ) :=
-  match blockResult with 
+  match blockResult with
   | .Branch bb args => []
   | .Ret rets => rets
   | .Next val => []
@@ -90,11 +90,26 @@ class Semantics (δ: Dialect α σ ε)  where
   -- TODO: Allow dialect handlers to emit events into other dialects
   handle: E ~> Fitree Void1
 
-
--- The memory of a smaller dialect can be injected into a larger one.
+-- This attribute allows matching explicit effect families like `ArithE`, which
+-- often appear from bottom-up inference like in `Fitree.trigger`, with their
+-- implicit form like `Semantics.E arith`, which often appears from top-down
+-- type inference due to the type signatures in this module. Without this
+-- attribute, instances of `Member` could not be derived, preventing most
+-- lemmas about `Fitree.trigger` from applying.
+attribute [reducible] Semantics.E
 
 mutual
 variable (Δ: Dialect α' σ' ε') [S: Semantics Δ]
+
+def interpRegion
+    (regions: List <|
+      TypedArgs Δ → Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ)):
+    RegionE Δ +' UBE +' Semantics.E Δ ~>
+    Fitree (UBE +' SSAEnvE Δ +' Semantics.E Δ) := fun _ e =>
+  match e with
+  | Sum.inl (RegionE.RunRegion i xs) => regions.get! i xs
+  | Sum.inr <| Sum.inl ube => Fitree.trigger ube
+  | Sum.inr <| Sum.inr se => Fitree.trigger se
 
 def denoteOp (op: Op Δ):
     Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ) :=
@@ -112,20 +127,11 @@ def denoteOp (op: Op Δ):
       -- Use the dialect-provided semantics, and substitute regions
       match S.semantics_op iop with
       | some t =>
-          interp (fun _ e =>
-            match e with
-            | Sum.inl (RegionE.RunRegion i xs) => 
-                 regions.get! i xs
-            | Sum.inr <| Sum.inl ube => Fitree.trigger ube
-            | Sum.inr <| Sum.inr se => Fitree.trigger se
-          ) t
-      | none => do
-          Fitree.trigger <| UBE.DebugUB s!"invalid op: {op}"
-          return default
+          t.interp (interpRegion regions)
+      | none =>
+          raiseUB s!"invalid op: {op}"
 
-  | _ => do
-      Fitree.trigger <| UBE.DebugUB s!"invalid denoteOp: {op}"
-      return .Next ⟨.unit, ()⟩
+  | _ => raiseUB s!"invalid denoteOp: {op}"
 
 def denoteBBStmt (bbstmt: BasicBlockStmt Δ):
     Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ) :=
@@ -135,38 +141,38 @@ def denoteBBStmt (bbstmt: BasicBlockStmt Δ):
       match br with
       | .Next ⟨τ, v⟩ =>
           Fitree.trigger (SSAEnvE.Set τ val v)
+          return br
       | _ =>
-          Fitree.trigger (UBE.DebugUB s!"invalid denoteBBStmt: {bbstmt}")
-      return br
+          raiseUB s!"invalid denoteBBStmt: {bbstmt}"
   | .StmtOp op =>
       denoteOp op
 
 def denoteBBStmts (stmts: List (BasicBlockStmt Δ))
   : Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ) :=
- match stmts with 
+ match stmts with
  | [] => return BlockResult.Next ⟨.unit, ()⟩
  | [stmt] => denoteBBStmt stmt
- | stmt::stmts => do 
+ | stmt::stmts => do
       let _ ← denoteBBStmt stmt
       denoteBBStmts stmts
 
 def denoteBB (bb: BasicBlock Δ) (args: TypedArgs Δ := []):
     Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ) := do
-  match bb with 
-  | BasicBlock.mk name formalArgsAndTypes stmts => 
+  match bb with
+  | BasicBlock.mk name formalArgsAndTypes stmts =>
      -- TODO: check that types in [TypedArgs] is equal to types at [bb.args]
      -- TODO: Any checks on the BlockResults of intermediate ops?
-     let formalArgs : List SSAVal:= formalArgsAndTypes.map Prod.fst
-     Fitree.inject (denoteTypedArgs args formalArgs)
+     let formalArgs : List SSAVal := formalArgsAndTypes.map Prod.fst
+     denoteTypedArgs args formalArgs
      denoteBBStmts stmts
 
 def denoteRegions (rs: List (Region Δ)):
-    List (TypedArgs Δ → Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ)) := 
- match rs with 
+    List (TypedArgs Δ → Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ)) :=
+ match rs with
  | [] => []
  | r :: rs => (denoteRegion r) :: denoteRegions rs
 
-def denoteRegion(r: Region Δ)  (args: TypedArgs Δ):
+def denoteRegion (r: Region Δ) (args: TypedArgs Δ):
     Fitree (UBE +' SSAEnvE Δ +' S.E) (BlockResult Δ) :=
   -- We only define semantics for single-basic-block regions
   -- Furthermore, we tacticly assume that the region that we run will
@@ -175,9 +181,8 @@ def denoteRegion(r: Region Δ)  (args: TypedArgs Δ):
   match r with
   | .mk [bb] =>
       denoteBB bb args
-  | _ => do
-      Fitree.trigger (UBE.DebugUB s!"invalid denoteRegion (>1 bb): {r}")
-      return BlockResult.Next ⟨.unit, ()⟩
+  | _ =>
+      raiseUB s!"invalid denoteRegion (>1 bb): {r}"
 end
 
 instance
@@ -190,7 +195,7 @@ instance
   semantics_op op :=
     (S₁.semantics_op op).map (.translate Member.inject) <|>
     (S₂.semantics_op op).map (.translate Member.inject)
-  handle := Fitree.case_ S₁.handle S₂.handle
+  handle := Fitree.case S₁.handle S₂.handle
 
 
 
@@ -220,25 +225,25 @@ def semanticsRegion {Δ: Dialect α σ ε} [S: Semantics Δ]
 def run! {Δ: Dialect α' σ' ε'} [S: Semantics Δ] {R}
     (t: Fitree (UBE +' SSAEnvE Δ +' S.E) R) (env: SSAEnv Δ):
     R × SSAEnv Δ :=
-  let t := interp_ub! t
-  let t := interp_ssa t env
-  let t := interp S.handle t
+  let t := interpUB'! t
+  let t := interpSSA' t env
+  let t := t.interp S.handle
   t.run
 
 def run {Δ: Dialect α' σ' ε'} [S: Semantics Δ] {R}
     (t: Fitree (UBE +' SSAEnvE Δ +' S.E) R) (env: SSAEnv Δ):
-    Option R × SSAEnv Δ :=
-  let t := interp_ub t
-  let t := interp_ssa t env
-  let t := interp S.handle t
+    Except String R × SSAEnv Δ :=
+  let t := interpUB' t
+  let t := interpSSA' t env
+  let t := t.interp S.handle
   t.run
 
 def runLogged {Gα Gσ Gε} {Gδ: Dialect Gα Gσ Gε} [S: Semantics Gδ]
     {R} (t: Fitree (UBE +' SSAEnvE Gδ +' S.E) R) (env: SSAEnv Gδ):
     (R × String) × SSAEnv Gδ :=
-  let t := interp_ub! t
-  let t := (interp_ssa_logged t).run env
-  let t := interp S.handle t
+  let t := interpUB'! t
+  let t := (interpSSALogged' t).run env
+  let t := t.interp S.handle
   t.run
 
 
@@ -252,17 +257,23 @@ class Denote (δ: Dialect α σ ε) [S: Semantics δ]
 
 notation "⟦ " t " ⟧" => Denote.denote t
 
-instance (δ: Dialect α σ ε) [Semantics δ]: Denote δ Op where
+instance DenoteOp (δ: Dialect α σ ε) [Semantics δ]: Denote δ Op where
   denote op := denoteOp δ op
 
-instance (δ: Dialect α σ ε) [Semantics δ]: Denote δ BasicBlockStmt where
+instance DenoteBBStmt (δ: Dialect α σ ε) [Semantics δ]:
+    Denote δ BasicBlockStmt where
   denote bbstmt := denoteBBStmt δ bbstmt
 
 -- TODO: this a small hack, because we assume
 -- that when we call `denote`, BB has no args.
-instance (δ: Dialect α σ ε) [Semantics δ]: Denote δ BasicBlock where
+instance DenoteBB (δ: Dialect α σ ε) [Semantics δ]: Denote δ BasicBlock where
   denote bb := denoteBB δ bb (args := [])
-
 
 -- Not for regions because we need to specify the fuel
 
+@[simp] theorem Denote.denoteOp [Semantics δ]:
+  Denote.denote (self := DenoteOp δ) op = denoteOp δ op := rfl
+@[simp] theorem Denote.denoteBBStmt [Semantics δ]:
+  Denote.denote (self := DenoteBBStmt δ) bbstmt = denoteBBStmt δ bbstmt := rfl
+@[simp] theorem Denote.denoteBB [Semantics δ]:
+  Denote.denote (self := DenoteBB δ) bb = denoteBB δ bb := rfl
