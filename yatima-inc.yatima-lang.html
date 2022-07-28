@@ -28,28 +28,28 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">yatima-lang</h3>
-<p dir="auto">A compiler and typechecker for the Yatima language.</p>
+<p dir="auto">A WIP compiler and typechecker for the Yatima language.</p>
 <h4 dir="auto">Build</h4>
 <p dir="auto">Build it with <code>lake build</code>.</p>
 <h4 dir="auto">Install</h4>
 <p dir="auto">Run <code>lake script run setup</code>, which will build the <code>yatima</code> binary and ask you where to place it.
 You can choose a directory that's already in your path, for example.</p>
 <h4 dir="auto">Usage</h4>
-<h5 dir="auto">Storing Lean objects</h5>
-<p dir="auto">Call <code>yatima store arg1 arg2 ...</code>, where each <code>argN</code> is either a Lean file or a directory of Lean files.</p>
-<p dir="auto">Optional flags:</p>
+<p dir="auto">The subcommands planned to be available for the <code>yatima</code> CLI are:</p>
 <ul dir="auto">
-<li><code>--prelude</code> (or <code>-p</code>) optimizes the compilation of prelude files without imports.
-All files to be compiled must follow this rule</li>
-<li><code>--log</code> (or <code>-l</code>) logs compilation progress</li>
-<li><code>--summary</code> (or <code>-s</code>) prints a compilation summary at the end of the process</li>
+<li><code>compile</code>: compile Lean 4 code to Yatima IR</li>
+<li><code>typecheck</code>: typecheck Yatima IR</li>
+<li><code>transpile</code>: transpile Yatima IR to Lurk code</li>
+<li><code>pipe</code>: chain the three subcommands above without writing Yatima IR to disk</li>
+<li><code>prove</code>: generates a Lurk proof that a certain Lean 4 declaration typechecks</li>
+<li><code>verify</code>: verify the correctness of a Lurk proof</li>
 </ul>
 <p dir="auto">Constraints:</p>
 <ul dir="auto">
-<li>The <code>store</code> command must be triggered from within a Lean project that uses Lake</li>
-<li>The compiled code must use the same toolchain as the one used to compile the <code>yatima</code> binary.
+<li>The <code>compile</code> subcommand must be triggered from within a Lean project that uses Lake</li>
+<li>The Lean 4 code to be compiled must use the same toolchain as the one used to compile the <code>yatima</code> binary.
 To see the needed toolchain, call <code>yatima --version</code> and check the content before the pipe <code>|</code></li>
-<li>To compile a file that imports others, the imported <code>olean</code> files must be available</li>
+<li>To compile a Lean 4 file that imports others, the imported <code>olean</code> files must be available</li>
 </ul>
 </article></div></main>
 </body>
