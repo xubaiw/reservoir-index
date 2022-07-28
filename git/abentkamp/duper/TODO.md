@@ -2,7 +2,6 @@
 
 Inference rules:
 - perform superposition only on maximal sides of main premise literal
-- Check whether a clause is still in active set when retrieving it from an index. (Or alternatively, remove clauses from indices when they are removed from active set)
 
 Simplification rules:
 - Semantic tautology deletion?
@@ -37,9 +36,6 @@ Known bugs/issues (bugs.lean):
     being bound does not appear in the resulting expression (e.g. (forall n : Nat, true)), the clause being produced will not reference the variable
     being bound. Consequently, the unification performed by Meta.isDefEq will not need to (or be able to) assign the introduced metavariable, yielding
     a final proof that contains metavariables (which the kernel will not accept).
-- false_eq_true test:
-  - duper cannot prove "not false" because it achieves the final active set [false = true] and can proceed no farther
-  - duper can handle the clause true = false and derive a contradiction, but not the clause false = true
 
 Other:
 - Although the current setup of using 'lake build' to run PUZ_tests, LCL_tests, and COM_tests is better than nothing, at some point, I'd like to make tests
@@ -50,6 +46,8 @@ Other:
 - Why are some clauses repeated in the proofs that duper produces (e.g. clauses 6-8 in test0011 and almost all of the early clauses in iffClausificationTest1)?
     - Do repeated clauses indicate that we're unnecessarily reproving things, and if so, how much does that impact efficiency?
 - Look into whether it would be useful/more efficient to have a lhs/rhs convention so that clauses aren't duplicated up to symmetries (e.g. a = b and b = a)
+- Currently, we have a hacky implementation of removing clauses from indices (tacking on a filter before retrieving). If this turns out to be too inefficient,
+  implement removal from discrimination trees properly.
 
 ## For later:
 
@@ -62,6 +60,10 @@ Heuristics:
 - Precedence heuristics for ordering
 - Literal selection heuristics
 - Next given clause heuristics
+
+Special treatment for certain types/expressions:
+- Implementing rules explicitly concerning boolean reasoning to better handle Bools
+- Implementing rules or integrating tactics pertaining to Nats, Ints, and/or Reals
 
 Other:
 - Duper cannot synthesize the "Inhabited" property for types it is given 

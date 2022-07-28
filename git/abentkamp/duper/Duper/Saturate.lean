@@ -14,7 +14,7 @@ import Duper.Rules.Demodulation
 import Duper.Rules.ElimResolvedLit
 import Duper.Rules.DestructiveEqualityResolution
 import Duper.Rules.EqualityFactoring
-import Duper.Rules.IdentFalseElim
+import Duper.Rules.IdentBoolFalseElim
 import Std.Data.BinomialHeap
 
 namespace Duper
@@ -40,7 +40,7 @@ open SimpResult
 
 def simpRules : ProverM (Array SimpRule) := do
   return #[
-    (forwardDemodulation (← getSupMainPremiseIdx)).toSimpRule "forward demodulation",
+    (forwardDemodulation (← getMainPremiseIdx)).toSimpRule "forward demodulation",
     -- backwardDemodulation,
     clausificationStep.toSimpRule "clausification",
     syntacticTautologyDeletion1.toSimpRule "syntactic tautology deletion 1",
@@ -48,7 +48,7 @@ def simpRules : ProverM (Array SimpRule) := do
     elimDupLit.toSimpRule "eliminate duplicate literals",
     elimResolvedLit.toSimpRule "eliminate resolved literals",
     destructiveEqualityResolution.toSimpRule "destructive equality resolution",
-    identFalseElim.toSimpRule "identity false elimination"
+    identBoolFalseElim.toSimpRule "identity boolean false elimination"
   ]
 
 def applySimpRules (givenClause : Clause) :
@@ -92,7 +92,9 @@ partial def saturate : ProverM Unit := do
           return LoopCtrl.abort
       trace[Prover.saturate] "### Given clause: {givenClause}"
       let some givenClause ← forwardSimplify givenClause
-        | return LoopCtrl.next
+        | do
+          removeFromDiscriminationTrees givenClause
+          return LoopCtrl.next
       trace[Prover.saturate] "### Given clause after simp: {givenClause}"
       backwardSimplify givenClause
       addToActive givenClause

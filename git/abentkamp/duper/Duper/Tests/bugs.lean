@@ -30,5 +30,3 @@ theorem escaped_mvar_test2_working {a : Type} [Inhabited a] (h : ¬ (false = tru
 
 theorem escaped_mvar_test2_broken {a : Type} [Inhabited a] (h : ¬ (false = true)) : ¬(∀ a' : a, false) :=
   by duper -- Fails because a' does not appear in the forall statement
-
-theorem false_eq_true_issue : ¬false := by duper -- Prover saturated because duper can only handle true = false, not false = true

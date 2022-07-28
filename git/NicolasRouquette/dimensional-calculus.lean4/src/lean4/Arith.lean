@@ -1,5 +1,6 @@
 import Lean.Data.Rat
 import Std.Data
+import Std.Data.HashMap
 import Std.Data.HashSet
 open Std
 
@@ -112,7 +113,7 @@ def applyMulAux (fs1: DCalcFactors) (l2: List DCalcFactor): DCalcFactors :=
   | List.nil =>
     fs1
   | List.cons f2 t2 =>
-    match fs1.getOp f2.fst with
+    match fs1.find? f2.fst with
     | some (f1a : Lean.Rat) =>
       let f12 : DCalcFactor := ⟨ f2.fst, f1a + f2.snd ⟩
       let fs1a := fs1.erase f2.fst
@@ -133,7 +134,7 @@ partial def applyDiv (fs1: DCalcFactors) (fs2: DCalcFactors) : DCalcFactors :=
     let l2 : List DCalcFactor := fs2.toList
     let f2 := l2.head!
     let f2tail := HashMap.ofList l2.tail!
-    match fs1.getOp f2.fst with
+    match fs1.find? f2.fst with
     | none =>
       applyDiv (fs1.insert f2.fst (-f2.snd)) f2tail
     | some (f1a : Lean.Rat) =>
