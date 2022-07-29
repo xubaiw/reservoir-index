@@ -50,6 +50,9 @@ theorem perm.mem_iff {a : α} {l₁ l₂ : List α} (h : l₁ ~ l₂) :
   a ∈ l₁ ↔ a ∈ l₂ :=
   sorry
 
+theorem perm.eq_singleton {a : α} {l : List α} (p : l ~ [a]) : l = [a] :=
+  sorry
+
 theorem Perm.length_eq {l₁ l₂ : List α} (p : l₁ ~ l₂) : length l₁ = length l₂ := by
   induction p with
   | nil => rfl
@@ -117,6 +120,11 @@ theorem filterMap_nil {l : List α} : (l.filterMap f = []) → ∀ a ∈ l, f a 
 theorem filterMap_cons {l : List α} :
   (l.filterMap f = hd :: tl) → 
   ∃ lhd ltl, (lhd ++ ltl = l) ∧ (lhd.filterMap f = [hd]) ∧ (ltl.filterMap f = tl) :=
+  sorry
+
+theorem filterMap_singleton_split {l : List α} :
+  (l.filterMap f = [b]) → 
+  ∃ hd a tl, (hd ++ [a] ++ tl = l) ∧ (hd.filterMap f = []) ∧ (f a = some b) ∧ (tl.filterMap f = []) :=
   sorry
 
 def lastSome? (f : α → Option β) : List α → Option β
