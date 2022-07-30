@@ -65,7 +65,7 @@ _the_q(x7, _kid_n_1(x7),
 -/
 
 
-section 
+section TFL
  
  constant x : Type
  constant e : Type 
@@ -101,6 +101,8 @@ theorem my : h₁ → h₂ := by
  unfold h₁
  unfold h₂
  intro h
- 
- 
-end
+
+
+end TFL
+
+

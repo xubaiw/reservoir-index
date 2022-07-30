@@ -30,3 +30,7 @@ theorem and_commutative (p q : Prop) : p ∧ q → q ∧ p :=
   show q ∧ p from And.intro hq hp
 
 
+
+
+
+

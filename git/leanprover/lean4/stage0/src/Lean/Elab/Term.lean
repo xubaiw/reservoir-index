@@ -1047,7 +1047,12 @@ def withSavedContext (savedCtx : SavedContext) (x : TermElabM α) : TermElabM α
     withTheReader Core.Context (fun ctx => { ctx with options := savedCtx.options, openDecls := savedCtx.openDecls }) <|
       withLevelNames savedCtx.levelNames x
 
-def postponeElabTerm (stx : Syntax) (expectedType? : Option Expr) : TermElabM Expr := do
+/--
+Delay the elaboration of `stx`, and return a fresh metavariable that works a placeholder.
+Remark: the caller is responsible for making sure the info tree is properly updated.
+This method is used only at `elabUsingElabFnsAux`.
+-/
+private def postponeElabTermCore (stx : Syntax) (expectedType? : Option Expr) : TermElabM Expr := do
   trace[Elab.postpone] "{stx} : {expectedType?}"
   let mvar ← mkFreshExprMVar expectedType? MetavarKind.syntheticOpaque
   registerSyntheticMVar stx mvar.mvarId! (SyntheticMVarKind.postponed (← saveContext))
@@ -1126,6 +1131,15 @@ def withInfoContext' (stx : Syntax) (x : TermElabM Expr) (mkInfo : Expr → Term
     Elab.withInfoContext' x mkInfo
 
 /--
+Postpone the elaboration of `stx`, return a metavariable that acts as a placeholder, and
+ensures the info tree is updated and a hole id is introduced.
+When `stx` is elaborated, new info nodes are created and attached to the new hole id in the info tree.
+-/
+def postponeElabTerm (stx : Syntax) (expectedType? : Option Expr) : TermElabM Expr := do
+  withInfoContext' stx (mkInfo := mkTermInfo .anonymous (expectedType? := expectedType?) stx) do
+    postponeElabTermCore stx expectedType?
+
+/--
   Helper function for `elabTerm` is tries the registered elaboration functions for `stxNode` kind until it finds one that supports the syntax or
   an error is found. -/
 private def elabUsingElabFnsAux (s : SavedState) (stx : Syntax) (expectedType? : Option Expr) (catchExPostpone : Bool)
@@ -1164,7 +1178,7 @@ private def elabUsingElabFnsAux (s : SavedState) (stx : Syntax) (expectedType? :
                 wasteful because when we resume the elaboration of `((f.x a1).x a2).x a3`, we start it from scratch
                 and new metavariables are created for the nested functions. -/
               s.restore
-              postponeElabTerm stx expectedType?
+              postponeElabTermCore stx expectedType?
             else
               throw ex)
     catch ex => match ex with
@@ -1560,7 +1574,34 @@ def resolveLocalName (n : Name) : TermElabM (Option (Expr × List String)) := do
   let matchLocaDecl? (localDecl : LocalDecl) (givenName : Name) : Option LocalDecl := do
     guard (localDecl.userName == givenName)
     return localDecl
-  /- "Match" function for auxiliary declarations that correspond to recursive definitions being defined. -/
+  /-
+  "Match" function for auxiliary declarations that correspond to recursive definitions being defined.
+  This function is used in the first-pass.
+  Note that we do not check for `localDecl.userName == giveName` in this pass as we do for regular local declarations.
+  Reason: consider the following example
+  ```
+    mutual
+      inductive Foo
+      | somefoo : Foo | bar : Bar → Foo → Foo
+      inductive Bar
+      | somebar : Bar| foobar : Foo → Bar → Bar
+    end
+
+    mutual
+      private def Foo.toString : Foo → String
+        | Foo.somefoo => go 2 ++ toString.go 2 ++ Foo.toString.go 2
+        | Foo.bar b f => toString f ++ Bar.toString b
+      where
+        go (x : Nat) := s!"foo {x}"
+
+      private def _root_.Ex2.Bar.toString : Bar → String
+        | Bar.somebar => "bar"
+        | Bar.foobar f b => Foo.toString f ++ Bar.toString b
+    end
+  ```
+  In the example above, we have two local declarations named `toString` in the local context, and
+  we want the `toString f` to be resolved to `Foo.toString f`
+  -/
   let matchAuxRecDecl? (localDecl : LocalDecl) (fullDeclName : Name) (givenNameView : MacroScopesView) : Option LocalDecl := do
     let fullDeclView := extractMacroScopes fullDeclName
     /- First cleanup private name annotations -/
@@ -1590,8 +1631,7 @@ def resolveLocalName (n : Name) : TermElabM (Option (Expr × List String)) := do
       return localDecl
     else
       /-
-         This case is only reachable when using mutual declarations. It is the standard
-         algorithm we using at `resolveGlobalName` for processing namespaces.
+         It is the standard algorithm we using at `resolveGlobalName` for processing namespaces.
 
          The current solution also has a limitation when using `def _root_` in a mutual block.
          The non `def _root_` declarations may update the namespace. See the following example:
@@ -1606,6 +1646,8 @@ def resolveLocalName (n : Name) : TermElabM (Option (Expr × List String)) := do
          `def Foo.f` updates the namespace. Then, even when processing `def _root_.g ...`
          the condition `currNamespace.isPrefixOf fullDeclName` does not hold.
          This is not a big problem because we are planning to modify how we handle the mutual block in the future.
+
+         Note that we don't check for `localDecl.userName == givenName` here.
       -/
       let rec go (ns : Name) : Option LocalDecl := do
         if { givenNameView with name := ns ++ givenNameView.name }.review == fullDeclName then
@@ -1618,7 +1660,7 @@ def resolveLocalName (n : Name) : TermElabM (Option (Expr × List String)) := do
      If `skipAuxDecl` we ignore `auxDecl` local declarations. -/
   let findLocalDecl? (givenNameView : MacroScopesView) (skipAuxDecl : Bool) : Option LocalDecl :=
     let givenName := givenNameView.review
-    lctx.decls.findSomeRev? fun localDecl? => do
+    let localDecl? := lctx.decls.findSomeRev? fun localDecl? => do
       let localDecl ← localDecl?
       if localDecl.binderInfo == .auxDecl then
         guard (not skipAuxDecl)
@@ -1627,6 +1669,14 @@ def resolveLocalName (n : Name) : TermElabM (Option (Expr × List String)) := do
         else
           matchLocaDecl? localDecl givenName
       else
+        matchLocaDecl? localDecl givenName
+    if localDecl?.isSome || skipAuxDecl then
+      localDecl?
+    else
+      -- Search auxDecls again trying an exact match of the given name
+      lctx.decls.findSomeRev? fun localDecl? => do
+        let localDecl ← localDecl?
+        guard (localDecl.binderInfo == .auxDecl)
         matchLocaDecl? localDecl givenName
   let rec loop (n : Name) (projs : List String) :=
     let givenNameView := { view with name := n }

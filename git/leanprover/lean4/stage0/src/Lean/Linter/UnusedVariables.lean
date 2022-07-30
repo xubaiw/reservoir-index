@@ -151,6 +151,9 @@ opaque getUnusedVariablesIgnoreFns : CommandElabM (Array IgnoreFunction)
 
 
 def unusedVariables : Linter := fun cmdStx => do
+  unless getLinterUnusedVariables (← getOptions) do
+    return
+
   -- NOTE: `messages` is local to the current command
   if (← get).messages.hasErrors then
     return
@@ -246,7 +249,7 @@ def unusedVariables : Linter := fun cmdStx => do
       continue
 
     -- publish warning if variable is unused and not ignored
-    publishMessage s!"unused variable `{localDecl.userName}`" range
+    publishMessage s!"unused variable `{localDecl.userName}` [linter.unusedVariables]" range
 
   return ()
 where

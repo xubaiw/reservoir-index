@@ -28,7 +28,9 @@ def f7 (xs : Vec α n) : Nat :=
 def f8 (xs : List Nat) : xs ≠ [] → xs.length > 0 :=
   @List.casesOn _ (motive := fun xs => xs ≠ [] → xs.length > 0) xs (by dsimp; intros; contradiction) (by dsimp; intros; simp_arith)
 
-set_option linter.unusedVariables false -- TODO: FIXME
+def f5' (xs : List Nat) (h : xs ≠ []) : xs.length > 0 :=
+  xs.casesOn (fun h => absurd rfl h) (fun _ _ _ => Nat.zero_lt_succ ..) h
+
 example (h₁ : a = b) (h₂ : b = c) : a = c :=
   Eq.rec h₂ h₁.symm
 
@@ -73,3 +75,16 @@ protected def znum.bit1 : znum → znum
   | zero    => pos .one
   | pos n => pos (pos_num.bit1 n)
   | neg n => neg (num.casesOn (pos_num.pred' n) .one pos_num.bit1)
+
+example (h : False) : a = c :=
+  h.rec
+
+example (h : False) : a = c :=
+  h.elim
+
+noncomputable def f : Nat → Nat :=
+  Nat.rec 0 (fun x _ => x)
+
+example : ∀ x, x ≥ 0 :=
+  Nat.rec (Nat.le_refl 0) (fun _ ih => Nat.le_succ_of_le ih)
+
