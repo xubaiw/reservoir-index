@@ -41,22 +41,21 @@ In order to instantiate terms of <code>TestSeq</code>, use the <code>test</code>
   test <span class="pl-s"><span class="pl-pds">"</span>Nat inequality<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> ≠ <span class="pl-c1">5</span>)
 <span class="pl-c"><span class="pl-c">--</span> test "Nat equality" (4 = 4) (test "Nat inequality" (4 ≠ 5)) : TestSeq</span></pre></div>
 <p dir="auto"><code>test</code> consumes a description a proposition and a next test
-The proposition, however, must have its own instance of <code>TDecidable</code>.</p>
-<h5 dir="auto">The <code>TDecidable</code> class</h5>
-<p dir="auto"><code>TDecidable</code> is how Lean is instructed to decide whether certain propositions are resolved as <code>true</code> or <code>false</code>.</p>
+The proposition, however, must have its own instance of <code>Testable</code>.</p>
+<h5 dir="auto">The <code>Testable</code> class</h5>
+<p dir="auto"><code>Testable</code> is how Lean is instructed to decide whether certain propositions are resolved as <code>true</code> or <code>false</code>.</p>
 <p dir="auto">This is an example of a simple instance for decidability of equalities:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="instance (x y : α) [DecidableEq α] [Repr α] : TDecidable (x = y) :=
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="instance (x y : α) [DecidableEq α] [Repr α] : Testable (x = y) :=
   if h : x = y then
     .isTrue h
   else
-    .isFalse h s!"Not equal: {repr x} and {repr y}""><pre><span class="pl-k">instance</span> (x y : α) [DecidableEq α] [Repr α] : TDecidable (x = y) :=
+    .isFalse h s!"Not equal: {repr x} and {repr y}""><pre><span class="pl-k">instance</span> (x y : α) [DecidableEq α] [Repr α] : Testable (x = y) :=
   <span class="pl-k">if</span> h : x = y <span class="pl-k">then</span>
     .isTrue h
   <span class="pl-k">else</span>
     .isFalse h s!<span class="pl-s"><span class="pl-pds">"</span>Not equal: {repr x} and {repr y}<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto">The custom failure message is optional.</p>
-<p dir="auto">There are more examples of <code>TDecidable</code> instances in <a href="LSpec/Instances.lean">LSpec/Instances.lean</a>.
-Such instances are automatically imported via <code>import LSpec</code>.</p>
+<p dir="auto">There are more examples of <code>Testable</code> instances in <a href="LSpec/Instances.lean">LSpec/Instances.lean</a>.</p>
 <p dir="auto">The user is, of course, free to provide their own instances.</p>
 <h5 dir="auto">Actually running the tests</h5>
 <h6 dir="auto">The <code>#lspec</code> command</h6>
@@ -80,26 +79,28 @@ Such instances are automatically imported via <code>import LSpec</code>.</p>
 def fiveIO : IO Nat :=
   return 5
 
-def main : IO UInt32 := do
+def main := do
   let four ← fourIO
   let five ← fiveIO
-  lspec do
-    test "fourIO equals 4" (four = 4)
+  lspecIO $
+    test "fourIO equals 4" (four = 4) $
     test "fiveIO equals 5" (five = 5)"><pre><span class="pl-k">def</span> <span class="pl-en">fourIO</span> : IO Nat :=
   return <span class="pl-c1">4</span>
 
 <span class="pl-k">def</span> <span class="pl-en">fiveIO</span> : IO Nat :=
   return <span class="pl-c1">5</span>
 
-<span class="pl-k">def</span> <span class="pl-en">main</span> : IO UInt32 := <span class="pl-k">do</span>
+<span class="pl-k">def</span> <span class="pl-en">main</span> := <span class="pl-k">do</span>
   <span class="pl-k">let</span> four ← fourIO
   <span class="pl-k">let</span> five ← fiveIO
-  lspec <span class="pl-k">do</span>
-    test <span class="pl-s"><span class="pl-pds">"</span>fourIO equals 4<span class="pl-pds">"</span></span> (four = <span class="pl-c1">4</span>)
+  lspecIO $
+    test <span class="pl-s"><span class="pl-pds">"</span>fourIO equals 4<span class="pl-pds">"</span></span> (four = <span class="pl-c1">4</span>) $
     test <span class="pl-s"><span class="pl-pds">"</span>fiveIO equals 5<span class="pl-pds">"</span></span> (five = <span class="pl-c1">5</span>)</pre></div>
+<h4 dir="auto">Integration with <code>SlimCheck</code></h4>
+<p dir="auto">TODO</p>
 <h4 dir="auto">Setting up a testing infra</h4>
 <p dir="auto">The LSpec package also provides a binary that runs test files automatically.
-The binary becomes available by running <code>lake build lspec</code>, which will generate the file <code>lean_packages/LSpec/build/bin/lspec</code>.</p>
+Run <code>lake exe lspec</code> to build it (if it hasn't been built yet) and execute it.</p>
 <p dir="auto">The <code>lspec</code> binary recursively searches for Lean files inside a <code>Tests</code> directory.
 For each Lean file present <code>Tests</code>, there must exist a corresponding <code>lean_exe</code> in your <code>lakefile.lean</code>.</p>
 <p dir="auto">For instance, suppose that the directory <code>Tests</code> contains the files <code>Tests/F1.lean</code> and <code>Tests/Some/Dir/F2.lean</code>.
@@ -127,10 +128,8 @@ jobs:
           ./elan-init -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
       - uses: actions/checkout@v2
-      - name: build LSpec binary
-        run: lake build lspec
-      - name: run LSpec
-        run: ./lean_packages/LSpec/build/bin/lspec"><pre><span class="pl-ent">name</span>: <span class="pl-s"><span class="pl-pds">"</span>LSpec CI<span class="pl-pds">"</span></span>
+      - name: run LSpec binary
+        run: lake exe lspec"><pre><span class="pl-ent">name</span>: <span class="pl-s"><span class="pl-pds">"</span>LSpec CI<span class="pl-pds">"</span></span>
 <span class="pl-ent">on</span>:
   <span class="pl-ent">pull_request</span>:
   <span class="pl-ent">push</span>:
@@ -148,10 +147,8 @@ jobs:
 <span class="pl-s">          ./elan-init -y --default-toolchain none</span>
 <span class="pl-s">          echo "$HOME/.elan/bin" >> $GITHUB_PATH</span>
 <span class="pl-s"></span>      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v2</span>
-      - <span class="pl-ent">name</span>: <span class="pl-s">build LSpec binary</span>
-        <span class="pl-ent">run</span>: <span class="pl-s">lake build lspec</span>
-      - <span class="pl-ent">name</span>: <span class="pl-s">run LSpec</span>
-        <span class="pl-ent">run</span>: <span class="pl-s">./lean_packages/LSpec/build/bin/lspec</span></pre></div>
+      - <span class="pl-ent">name</span>: <span class="pl-s">run LSpec binary</span>
+        <span class="pl-ent">run</span>: <span class="pl-s">lake exe lspec</span></pre></div>
 </article></div></main>
 </body>
 </html>

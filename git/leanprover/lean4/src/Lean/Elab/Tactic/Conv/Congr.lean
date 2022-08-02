@@ -80,12 +80,14 @@ private def selectIdx (tacticName : String) (mvarIds : List (Option MVarId)) (i 
         | none => pure ()
         | some mvarId =>
           if i != j then
-            mvarId.applyRefl
+            mvarId.refl
       match mvarIds.get ⟨i, h⟩ with
       | none => throwError "cannot select argument with forward dependencies"
       | some mvarId => replaceMainGoal [mvarId]
       return ()
   throwError "invalid '{tacticName}' conv tactic, application has only {mvarIds.length} (nondependent) argument(s)"
+
+@[builtinTactic Lean.Parser.Tactic.Conv.skip] def evalSkip : Tactic := fun _ => pure ()
 
 @[builtinTactic Lean.Parser.Tactic.Conv.lhs] def evalLhs : Tactic := fun _ => do
    let mvarIds ← congr (← getMainGoal)
