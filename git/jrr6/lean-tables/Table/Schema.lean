@@ -58,6 +58,15 @@ inductive ActionList {η : Type u_η} [DecidableEq η]
                   ActionList f (f schema entry) →
                   ActionList f schema
 
+inductive BiActionList {η : Type u_η} [DecidableEq η]
+                       {κ : @Schema η × @Schema η → Type u}
+  (f : ∀ (ss : @Schema η × @Schema η), κ ss → @Schema η × @Schema η)
+    : @Schema η × @Schema η → Type _
+| nil {s₁ s₂}  : BiActionList f (s₁, s₂)
+| cons {s₁ s₂} : (entry : κ (s₁, s₂)) →
+                  BiActionList f (f (s₁, s₂) entry) →
+                  BiActionList f (s₁, s₂)
+
 variable {η : Type u_η} [dec_η : DecidableEq η] {schema : @Schema η}
 
 -- For ease of refactoring, makes these products act like subtypes
@@ -106,6 +115,17 @@ def Schema.colImpliesName :
 --     cases p with
 --     | hd => apply HasName.hd
 --     | tl a => apply HasName.tl (colImpliesName a)
+
+-- There occasionally seem to be some issues with this function, too -- not sure
+-- if it's the same issue as `removeName` and `lookup`, but will leave these
+-- here for the time being just in case
+def Schema.colImpliesName_eq_1 {sch' : @Schema η} {hdr : @Header η} :
+  colImpliesName (schema := hdr :: sch') HasCol.hd = HasName.hd := rfl
+
+def Schema.colImpliesName_eq_2 {schema : @Schema η} {hdr : @Header η}
+                               {h : schema.HasCol hdr}:
+  colImpliesName (schema := hdr :: schema) (HasCol.tl h) =
+  HasName.tl (colImpliesName h) := rfl
 
 def Schema.certifyNames (schema : @Schema η) : List (CertifiedName schema) :=
   schema.certify.map (λ (⟨(c, _), h⟩ : CertifiedHeader schema) =>
@@ -204,15 +224,14 @@ def Schema.removeCNPres {schema : @Schema η} {nm} {n : schema.HasName nm}
   := ⟨cn.1, removeNamePres cn.2⟩
 
 def Schema.removeHeaderPres :
-    {nm : η} → {τ : Type u} → {schema : @Schema η} →
-    {h : schema.HasCol (nm, τ)} → {nm' : η} →
-    Schema.HasCol (nm', τ) (schema.removeHeader h) →
-    Schema.HasCol (nm', τ) schema
-| nm, τ, _ :: _, HasCol.hd, nm', pf => HasCol.tl pf
-| nm, τ, (nm', .(τ)) :: ss, HasCol.tl h, _, HasCol.hd => HasCol.hd
-| nm, τ, s :: ss, HasCol.tl h, nm', HasCol.tl h' =>
-  let ih := @removeHeaderPres nm _ _ h nm' h'
-  HasCol.tl ih
+    {hdr : @Header η} → {schema : @Schema η} →
+    {h : schema.HasCol hdr} →
+    {hdr' : @Header η} →
+    Schema.HasCol hdr' (schema.removeHeader h) →
+    Schema.HasCol hdr' schema
+| _, _ :: _, HasCol.hd, hdr', pf => HasCol.tl pf
+| hdr, .(hdr') :: ss, HasCol.tl h, hdr', HasCol.hd => HasCol.hd
+| hdr, s :: ss, HasCol.tl h, _, HasCol.tl h' => HasCol.tl (removeHeaderPres h')
 
 def Schema.removeTNPres
   (s : Schema)
@@ -237,11 +256,46 @@ def Schema.removeTypedNames {τ : Type u} :
 | s, ActionList.nil => s
 | s, ActionList.cons ch rest => removeTypedNames (removeTypedName τ s ch) rest
 
+-- TODO: this is a very inelegant way of hijacking `ActionList` (the
+-- alternative, though, would be to make `ActionList` even *more* abstract by
+-- decoupling `κ` and the type of the argument to `f`, which would be a function
+-- of `κ` or something like that...)
+def Schema.removeOtherDecCH
+  (schema' schema : @Schema η)
+  (c : (hdr : @Header η) × DecidableEq hdr.2 ×
+    schema.HasCol hdr × schema'.HasCol hdr) :
+  @Schema η := schema.removeHeader c.2.2.1
+
+def Schema.removeOtherDecCHs (schema' : @Schema η) :
+  (schema : @Schema η) →
+  (cs : ActionList (removeOtherDecCH schema') schema) →
+  @Schema η
+| s, ActionList.nil => s
+| s, ActionList.cons c cs =>
+  removeOtherDecCHs schema' (removeOtherDecCH schema' s c) cs
+
+def Schema.removeOtherCHPres :
+  (s : Schema) →
+  (k : (hdr : Header) × DecidableEq hdr.snd ×
+    HasCol hdr s × HasCol hdr schema₁) →
+  (hdr : Header) × DecidableEq hdr.snd ×
+    HasCol hdr (removeOtherDecCH schema₁ s k) × HasCol hdr schema₁ →
+  (hdr : Header) × DecidableEq hdr.snd × HasCol hdr s × HasCol hdr schema₁ := 
+λ _ _ c => ⟨c.1, c.2.1, removeHeaderPres c.2.2.1, c.2.2.2⟩
+
 -- Returns the schema entry with the specified name
 def Schema.lookup {η : Type u_η} [DecidableEq η]
     : (s : @Schema η) → CertifiedName s → @Header η
 | hdr :: _, ⟨_, Schema.HasName.hd⟩ => hdr
 | _ :: hs, ⟨c, Schema.HasName.tl h'⟩ => lookup hs ⟨c, h'⟩
+
+-- Returns the type associated with the given name.
+-- Note: don't use this function to specify the return type of a function.
+-- Instead, take the type implicitly and make that variable the return type.
+def Schema.lookupType {η : Type u_η} [DecidableEq η]
+    : (s : @Schema η) → CertifiedName s → Type u
+| (_, τ) :: _, ⟨_, Schema.HasName.hd⟩ => τ
+| _ :: hs, ⟨c, Schema.HasName.tl h'⟩ => lookupType hs ⟨c, h'⟩
 
 -- TODO: figure out what's going on here -- these should be auto-generated
 -- (also the field syntax isn't working, so using underscores instead)
@@ -296,6 +350,14 @@ theorem Schema.removeName_sublist :
 | _, _, HasName.hd => List.Sublist.cons _ _ _ (List.sublist_self _)
 | _, _, HasName.tl h => List.Sublist.cons2 _ _ _ (removeName_sublist _ _ h)
 
+theorem Schema.removeNames_sublist :
+  ∀ (s : @Schema η) (cs : ActionList Schema.removeCertifiedName s),
+    List.Sublist (s.removeNames cs) s
+| s, ActionList.nil => List.sublist_self _
+| s, ActionList.cons c cs =>
+  have ih := removeNames_sublist (s.removeName c.2) cs
+  List.Sublist.trans ih (Schema.removeName_sublist s c.1 c.2)
+
 theorem Schema.lookup_fst_eq_nm :
   ∀ (sch : @Schema η) (c : CertifiedName sch),
     (Schema.lookup sch c).fst = c.val
@@ -347,3 +409,14 @@ def ActionList.toList {sch : @Schema η} {κ : @Schema η → Type u}
     : ActionList f sch → List (κ sch)
 | ActionList.nil => []
 | ActionList.cons hdr xs => hdr :: (toList pres xs).map (pres sch hdr)
+
+def BiActionList.toList {schs : @Schema η × @Schema η} {κ : @Schema η × @Schema η → Type u}
+    {f : ∀ (ss : @Schema η × @Schema η), κ ss → @Schema η × @Schema η}
+    (pres : ∀ (ss : @Schema η × @Schema η) (k : κ ss), κ (f ss k) → κ ss)
+    : BiActionList f schs → List (κ schs)
+| BiActionList.nil => []
+| BiActionList.cons x xs =>
+  have hterm : sizeOf xs < sizeOf (cons x xs) :=
+    by simp; rw [Nat.add_comm, Nat.add_one]; apply Nat.lt.base
+  x :: (toList pres xs).map (pres schs x)
+termination_by toList xs => sizeOf xs

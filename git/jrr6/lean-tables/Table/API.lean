@@ -44,7 +44,31 @@ def crossJoin {schema₁ schema₂}
   {rows := List.map (λ (c1, c2) => Row.append c1 c2)
                     (List.prod t1.rows t2.rows)}
 
-def leftJoin : False := sorry -- TODO:
+def leftJoin {schema₁ schema₂ : @Schema η}
+             (t1 : Table schema₁)
+             (t2 : Table schema₂)
+             (cs : ActionList (Schema.removeOtherDecCH schema₁) schema₂)
+: Table (List.append schema₁ (Schema.removeOtherDecCHs schema₁ schema₂ cs)) :=
+{rows :=
+  t1.rows.flatMap (λ r₁ =>
+    let rs2 := t2.rows.filter (λ r₂ =>
+      let mismatch := (cs.toList Schema.removeOtherCHPres).find? (λ c =>
+        let _ : DecidableEq (Cell c.1.1 c.1.2) :=
+          instDecidableEqCell (inst := c.2.1)
+        decide $ r₁.getCell c.2.2.2 ≠ r₂.getCell c.2.2.1)
+
+      match mismatch with
+      | none => true
+      | _    => false
+    )
+    match rs2 with
+    | [] => [Row.append r₁ (Row.empty _)]
+    | _  =>
+      rs2.map (λ r₂ =>
+        let r₂' := r₂.removeOtherSchemaCols cs
+        Row.append r₁ r₂')
+  )
+}
 
 -- # Properties
 -- TODO: Use Fin instead of ad-hoc quotients
@@ -204,6 +228,7 @@ def orderBy (t : Table schema)
 -- # Aggregate
 -- TODO: this "dictionary" implementation could use some improvement
 -- Should we enforce Ord instance so that we can get the speed-up of an RBT?
+-- TODO: why does Lean freeze if we specify `τ : Type u`?
 def count {τ} [DecidableEq τ]
           (t : Table schema)
           (c : ((c : η) × schema.HasCol (c, τ)))
