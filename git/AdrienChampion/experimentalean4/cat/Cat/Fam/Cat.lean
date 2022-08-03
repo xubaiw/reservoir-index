@@ -19,7 +19,7 @@ structure Fam.Cat where
   : Obj → Obj → Setoid
 
 
-  /-- Type-level arrow composition.
+  /-- Type-level arrow composition `f ⊚ g` (`\oo`).
 
   **NB:** `|dom ⇛ cod|` coerces to `|dom| → |cod|`. This is why we can directly write `compose f g`
   without having to perform conversions all over the place.
@@ -54,26 +54,35 @@ structure Fam.Cat where
 
 
 
+/-- Carrier of `ℂ.Hom α β`, `α ↠ β` (`\rr`). -/
+abbrev Fam.Cat.hom
+  {ℂ : Cat}
+  (α β : ℂ.Obj)
+:=
+  |ℂ.Hom α β|
+
+infixr:min " ↠ " =>
+  Fam.Cat.hom
+
+
+
 /-- Same as `ℂ.compose` with explicit type parameters. -/
 abbrev Fam.Cat.compose'
   (ℂ : Cat)
   (α β γ : ℂ.Obj)
-: |Hom ℂ β γ ⇛ Hom ℂ α β ⇛ Hom ℂ α γ| :=
+: |ℂ.Hom β γ ⇛ ℂ.Hom α β ⇛ ℂ.Hom α γ| :=
   @Cat.compose ℂ α β γ
 
-/-- Underlying actual composition function. -/
+/-- Underlying actual composition function (`⊚`, `\oo`). -/
 abbrev Fam.Cat.kompose
-  (ℂ : Cat)
+  {ℂ : Cat}
   {α β γ : ℂ.Obj}
-: |ℂ.Hom β γ| → |ℂ.Hom α β| → |ℂ.Hom α γ| :=
+: (β ↠ γ) → (α ↠ β) → (α ↠ γ) :=
   ⟦ℂ.compose'⟧
 
--- /-- Value-level arrow composition. -/
--- abbrev Fam.Cat.compose
---   (ℂ : Cat)
---   {α β γ : ℂ.Obj}
--- : |ℂ.Hom β γ| → |ℂ.Hom α β| → |ℂ.Hom α γ| :=
---   ⟦@Cat.kompose ℂ⟧
+
+infixr:100 " ⊚ " =>
+  Fam.Cat.kompose
 
 
 
@@ -82,7 +91,7 @@ abbrev Fam.Cat.kompose
 instance instCongrCatCompose
   {ℂ : Fam.Cat}
   {α β γ : ℂ.Obj}
-: Congr |ℂ.Hom β γ| |ℂ.Hom α β| |ℂ.Hom α γ| ℂ.kompose where
+: Congr (β ↠ γ) (α ↠ β) (α ↠ γ) ℂ.kompose where
   left {f f'} g :=
     let k :=
       ℂ.compose' α β γ
