@@ -454,59 +454,60 @@ termination_by group xs => xs.length
 -- introducing dependence on `Quot.sound`
 decreasing_by assumption
 
--- TODO: probably a more elegant/functorial/monadic way to do this
-def flattenOne (t : Table schema)
-               (c : ((c : η) × (τ : Type u) × schema.HasCol (c, List τ)))
-    : Table (schema.flattenList c) :=
-{rows :=
-  t.rows.flatMap (λ (r : Row schema) =>
-      match getValue r c.1 c.2.2 with
-      | none => []
-      | some xs => xs.foldr (λ x acc => r.retypeCell c.2.2 (Cell.val x) :: acc)
-                            []
-  )
-}
+def clearFlattennees {schema : @Schema η} :
+  Row schema → (cs : ActionList Schema.flattenList schema) →
+  Row (schema.flattenLists cs)
+| r, ActionList.nil => r
+| r, ActionList.cons c cs => clearFlattennees (r.retypeCell c.2.2 Cell.emp) cs
 
-def flatten {schema : @Schema η} :
-  Table schema →
-  (cs : ActionList Schema.flattenList schema) →
-  Table (schema.flattenLists cs)
-| t, ActionList.nil => t
-| t, ActionList.cons c cs => flatten (flattenOne t c) cs
+-- def clearFlattennees' {schema : @Schema η} :
+--   (cs : ActionList Schema.flattenList schema) → Row (schema.flattenLists cs) →
+--   Row (schema.flattenLists cs)
+-- | ActionList.nil, r => r
+-- | ActionList.cons c cs, r =>
+--   let r' := r.setCell (Schema.flattenHasCol_of_HasCol_List c.2.2) Cell.emp
+--   clearFlattennees' cs r'
 
-/- BEGIN: ongoing flatten work
--- Row of lists to list of rows
-def rol2Lor : {schema : @Schema η} → {flattenschema : @Schema η} → Row schema → List (Row flattenschema)
-| _, _, Row.nil => []
-| _, _, Row.cons Cell.emp cs => rol2Lor cs
-| (nm, _) :: ss, _, Row.cons (Cell.val []) cs => Row.nil :: rol2Lor cs
-| _, _, Row.cons (Cell.val (x :: xs)) cs =>
-  let r :: rs := rol2Lor (Row.cons (Cell.val xs) cs)
-  (Row.cons (Cell.val x) r) :: rs
+def List.toSingletons : List α → List (List α)
+| [] => []
+| x :: xs => [x] :: toSingletons xs
 
-def allEmpty {schema : @Schema η} : Row schema → Bool
-| Row.nil => true
-| Row.cons Cell.emp cs => allEmpty cs
-| Row.cons (Cell.val v) cs => false
+def flattenOne {schema : @Schema η} :
+  List (List (Row schema)) →
+  (c : (c : η) × (τ : Type u_1) × Schema.HasCol (c, List τ) schema) →
+  List (List (Row $ schema.flattenList c))
+| [], c => []
+| [] :: rss, c => flattenOne rss c
+| (r :: rs) :: rss, c =>
+  let vals := match r.getCell c.2.2 with
+              | Cell.emp => []
+              | Cell.val xs => xs
+  let cleanR : Row schema := r -- TODO: figure out a way to empty the previous
+  let rec setVals : List c.2.1 → List (Row schema) → List (Row $ schema.flattenList c)
+  | [], [] => []
+  | [], r :: rs => (r.retypeCell c.2.2 Cell.emp) :: setVals [] rs
+  | v :: vs, [] => (cleanR.retypeCell c.2.2 (Cell.val v)) :: setVals vs []
+  | v :: vs, r :: rs => (r.retypeCell c.2.2 (Cell.val v)) :: setVals vs rs
+  setVals vals (r :: rs) :: flattenOne rss c
+termination_by setVals vs rs => vs.length + rs.length
 
-def proc {s₁ s₂ s₃ : @Schema η} : Row s₁ → Row s₂ → Row s₃ → Row (List.append s₁ s₂)
-| Row.nil, acc1, acc2 => if allEmpty acc2 then [acc1] else acc1 :: proc acc2 Row.nil Row.nil
-| Row.cons Cell.emp cs, acc1, acc2 => proc cs (Row.append acc1 (Row.singleCell Cell.emp)) (Row.append acc2 (Row.singleCell Cell.emp))
-| Row.cons (Cell.val []) cs, acc1, acc2 => proc cs (Cell.emp :: acc1) (Cell.emp :: acc2)
-| Row.cons (Cell.val (x :: xs)) cs, acc1, acc2 => proc cs (Cell.emp :: acc1) (Cell.emp :: acc2)
+-- TODO: could probably rewrite this to use the `selectMany` combinator
+def flatten (t : Table schema) (cs : ActionList Schema.flattenList schema)
+  : Table (schema.flattenLists cs) :=
+  let rss := t.rows.toSingletons
+  let rec doFlatten {sch : @Schema η} :
+    (cs : ActionList Schema.flattenList sch) →
+    List (List (Row sch)) →
+    List (List (Row $ sch.flattenLists cs))
+  | ActionList.nil, rss => rss
+  | ActionList.cons c cs, rss => doFlatten cs (flattenOne rss c)
+  {rows := List.flatten (doFlatten cs rss)}
 
-def ActionList.mapToList {α} {sch : @Schema η}
-                         {κ : @Schema η → Type u}
-                         {f : ∀ (s : @Schema η), κ s → @Schema η}
-                         (g : ∀ {s : @Schema η}, κ s → α)
-    : ActionList f sch → List α
-| nil => []
-| cons x xs => g x :: mapToList g xs
-
+/- Abandoned `selectMany` approach
 #check @Row.retypeCell
 def flatten' {n : Nat}
   (t : Table schema)
-  (cs : ActionList (Schema.flattenList (n := n)) schema) :
+  (cs : ActionList Schema.flattenList schema) :
   Table (schema.flattenLists cs) :=
 selectMany t
 (λ r n =>
@@ -517,24 +518,35 @@ selectMany t
     -- same as `schema` modulo some flattening?
     -- FIXME: α cannot depend on `s`; only `κ` can (so `r'` can't have the right
     -- type! -- `c` is a proof for that dependent type variable...)
-    let (oneFlat, rest) := cs.foldl (λ {s : @Schema η} ((r' : Row s), acc) c =>
-      match r'.getCell c.2.2 with
-      -- TODO: see algorithm on iPad
-      -- *Potential issue*: the proofs may become invalid as soon as we start
-      -- retyping cells -- need to make sure the ActionList is correct (I feel
-      -- like it might be, since the retyping is a flattening, but should make
-      -- sure...)
-      | Cell.emp => sorry
-      | Cell.val [] => sorry
-      | Cell.val [x] => sorry
-      | Cell.val (x :: y :: xs) => sorry
-    ) (r, r)
+    let rec κ_sch1 : List ((c : η) × (τ : Type _) × Schema.HasCol (c, List τ) schema) → @Schema η
+    | [] => schema
+    | c :: cs => (Schema.retypeColumn (κ_sch1 cs) (Schema.colImpliesName c.2.2) c.2.1)
+
+    -- FIXME: pretty sure `toList` won't work because we need to leverage the
+    -- consecutive flattening proofs of the `ActionList`
+    let (oneFlat, rest) := (cs.toList _).depFoldr
+      (κ := λ xs => Row (match xs with
+                    | [] => schema
+                    | c :: cs => (Schema.retypeColumn schema (Schema.colImpliesName c.2.2) c.2.1)) × Row schema)
+      (λ c (r', acc) =>
+        let pf := c.2.2
+        match r'.getCell c.2.2 with
+        -- TODO: see algorithm on iPad
+        -- *Potential issue*: the proofs may become invalid as soon as we start
+        -- retyping cells -- need to make sure the ActionList is correct (I feel
+        -- like it might be, since the retyping is a flattening, but should make
+        -- sure...)
+        | Cell.emp | Cell.val [] => (r'.retypeCell pf Cell.emp, acc)
+        | Cell.val [x] => (r'.retypeCell pf (Cell.val x), acc.setCell pf Cell.emp)
+        | Cell.val (x :: y :: xs) =>
+          (r'.retypeCell pf (Cell.val x), acc.setCell pf (Cell.val (y :: xs)))
+      ) (r, r)
     oneFlat :: doIter rest
   {rows := doIter r}
 )
 (λ r₁ r₂ => _)
-
-END: ongoing flatten work -/
+END COMMENT 2-/
+/- END: ongoing flatten work -/
 
 def transformColumn {τ₁ τ₂}
                     (t : Table schema)

@@ -808,7 +808,6 @@ def t := buildColumn gradebookSeq "quiz-pass?" (λ r =>
   (getValue r "quizzes" (by header)).map (List.map isPass)
 )
 
--- FIXME: flatten is implemented incorrectly
 #test
 flatten t A[⟨"quiz-pass?", _, by header⟩, ⟨"quizzes", _, by header⟩]
 =
