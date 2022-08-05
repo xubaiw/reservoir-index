@@ -78,3 +78,18 @@ macro "my_macro" : term => `(my_elab)
 class abbrev BarAbbrev (α : Prop) := Bar α
 
 register_option myOption : Bool := { defValue := my_macro, descr := "hi mom" }
+
+elab (name := myCmd) (docComment)? "my_command" ident : command => pure ()
+
+my_command x
+
+open Lean.Linter.MissingDocs in
+@[missingDocsHandler myCmd]
+def handleMyCmd : SimpleHandler := fun
+  | `(my_command $x:ident) => lintNamed x "my_command"
+  | _ => pure ()
+
+/-- doc -/
+my_command y
+
+my_command z

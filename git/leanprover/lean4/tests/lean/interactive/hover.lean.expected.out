@@ -2,12 +2,18 @@
  "position": {"line": 3, "character": 8}}
 {"range":
  {"start": {"line": 3, "character": 8}, "end": {"line": 3, "character": 18}},
- "contents": {"value": "```lean\nTrue.intro : True\n```", "kind": "markdown"}}
+ "contents":
+ {"value":
+  "```lean\nTrue.intro : True\n```\n***\nIntroduction rule for `True`. ",
+  "kind": "markdown"}}
 {"textDocument": {"uri": "file://hover.lean"},
  "position": {"line": 7, "character": 8}}
 {"range":
  {"start": {"line": 7, "character": 8}, "end": {"line": 7, "character": 18}},
- "contents": {"value": "```lean\nTrue.intro : True\n```", "kind": "markdown"}}
+ "contents":
+ {"value":
+  "```lean\nTrue.intro : True\n```\n***\nIntroduction rule for `True`. ",
+  "kind": "markdown"}}
 {"textDocument": {"uri": "file://hover.lean"},
  "position": {"line": 12, "character": 4}}
 {"range":
@@ -27,7 +33,10 @@
  "position": {"line": 21, "character": 13}}
 {"range":
  {"start": {"line": 21, "character": 13}, "end": {"line": 21, "character": 23}},
- "contents": {"value": "```lean\nTrue.intro : True\n```", "kind": "markdown"}}
+ "contents":
+ {"value":
+  "```lean\nTrue.intro : True\n```\n***\nIntroduction rule for `True`. ",
+  "kind": "markdown"}}
 {"textDocument": {"uri": "file://hover.lean"},
  "position": {"line": 31, "character": 2}}
 {"range":
@@ -80,7 +89,9 @@ null
 {"range":
  {"start": {"line": 93, "character": 8}, "end": {"line": 93, "character": 10}},
  "contents":
- {"value": "```lean\nid.{0} : ∀ {α : Prop}, α → α\n```", "kind": "markdown"}}
+ {"value":
+  "```lean\nid.{0} : ∀ {α : Prop}, α → α\n```\n***\nIdentity function ",
+  "kind": "markdown"}}
 {"textDocument": {"uri": "file://hover.lean"},
  "position": {"line": 93, "character": 10}}
 {"range":
@@ -239,4 +250,13 @@ null
  "contents":
  {"value":
   "`· tac` focuses on the main goal and tries to solve it using `tac`, or else fails. ",
+  "kind": "markdown"}}
+{"textDocument": {"uri": "file://hover.lean"},
+ "position": {"line": 172, "character": 28}}
+{"range":
+ {"start": {"line": 172, "character": 27},
+  "end": {"line": 172, "character": 32}},
+ "contents":
+ {"value":
+  "```lean\nId Nat\n```\n***\nYou can use parentheses for\n- Grouping expressions, e.g., `a * (b + c)`.\n- Creating tuples, e.g., `(a, b, c)` is notation for `Prod.mk a (Prod.mk b c)`.\n- Performing type ascription, e.g., `(0 : Int)` instructs Lean to process `0` as a value of type `Int`.\n- Creating `Unit.unit`, `()` is just a shorthand for `Unit.unit`.\n- Creating simple functions when combined with `·`. Here are some examples:\n  - `(· + 1)` is shorthand for `fun x => x + 1`\n  - `(· + ·)` is shorthand for `fun x y => x + y`\n  - `(f · a b)` is shorthand for `fun x => f x a b`\n  - `(h (· + 1) ·)` is shorthand for `fun x => h (fun y => y + 1) x`\n",
   "kind": "markdown"}}
