@@ -171,8 +171,8 @@ def getFileMTime (file : FilePath) : IO MTime :=
 instance : GetMTime FilePath := ⟨getFileMTime⟩
 
 /-- Check if the info's `MTIme` is at least `depMTime`. -/
-def checkIfNewer [GetMTime i] (info : i) (depMTime : MTime) : IO Bool := do
-  try pure ((← getMTime info) >= depMTime) catch _ => pure false
+def checkIfNewer [GetMTime i] (info : i) (depMTime : MTime) : BaseIO Bool :=
+  (do pure ((← getMTime info) >= depMTime : Bool)).catchExceptions fun _ => pure false
 
 --------------------------------------------------------------------------------
 /-! # Lake Build Trace (Hash + MTIme) -/
@@ -230,6 +230,14 @@ to see if the target is up-to-date.
 def checkAgainstHash [CheckExists i]
 (info : i) (hash : Hash) (self : BuildTrace) : BaseIO Bool :=
   pure (hash == self.hash) <&&> checkExists info
+
+/--
+Check the build trace against the given target info and its modification time
+to see if the target is up-to-date.
+-/
+def checkAgainstTime [CheckExists i] [GetMTime i]
+(info : i) (self : BuildTrace) : BaseIO Bool :=
+  checkIfNewer info self.mtime
 
 /--
 Check the build trace against the given target info and its trace file

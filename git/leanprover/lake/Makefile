@@ -12,7 +12,8 @@ test: check-lake test-ci test-bootstrap test-bootstrapped
 
 test-ci: test-tests test-examples
 
-test-tests: test-49 test-50 test-62 test-75 test-84 test-102 test-104 test-meta
+test-tests: test-44 test-49 test-50 test-62 test-75 test-102 test-104\
+	test-manifest test-meta
 
 test-examples: test-init test-hello test-deps\
 	test-git test-ffi test-targets test-precompile test-scripts
@@ -21,7 +22,7 @@ test-bootstrapped: test-boostrapped-hello
 
 clean: clean-build clean-tests clean-examples
 
-clean-tests: clean-62 clean-84 clean-102 clean-104
+clean-tests: clean-44 clean-62 clean-102 clean-104 clean-manifest
 
 clean-examples: clean-init clean-hello clean-deps\
 	clean-git clean-ffi clean-targets clean-precompile clean-bootstrap
@@ -117,6 +118,12 @@ test-boostrapped-hello:
 # Test Targets
 #-------------------------------------------------------------------------------
 
+clean-44:
+	cd test/44 && ./clean.sh
+
+test-44:
+	cd test/44 && ./test.sh
+
 test-49:
 	cd test/49 && ./test.sh
 
@@ -132,12 +139,6 @@ clean-62:
 test-75:
 	cd test/75 && ./test.sh
 
-clean-84:
-	cd test/84 && ./clean.sh
-
-test-84:
-	cd test/84 && ./test.sh
-
 clean-102:
 	cd test/102 && ./clean.sh
 
@@ -149,6 +150,12 @@ clean-104:
 
 test-104:
 	cd test/104 && ./test.sh
+
+clean-manifest:
+	cd test/manifest && ./clean.sh
+
+test-manifest:
+	cd test/manifest && ./test.sh
 
 test-meta:
 	cd test/meta && ./test.sh

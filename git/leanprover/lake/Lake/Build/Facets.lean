@@ -3,8 +3,8 @@ Copyright (c) 2022 Mac Malone. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mac Malone
 -/
+import Lake.Build.Job
 import Lake.Build.Data
-import Lake.Build.TargetTypes
 
 /-!
 # Simple Builtin Facet Declarations
@@ -16,6 +16,13 @@ import said configurations for `BuildInfo`.
 -/
 
 namespace Lake
+export System (FilePath)
+
+/--
+A dynamic/shared library for linking.
+Represented by an optional `-L` library directory × a `-l` library name.
+-/
+abbrev Dynlib := Option FilePath × String
 
 /-! ## Module Facets -/
 
@@ -39,57 +46,65 @@ which produce the Lean binaries of the module (i.e., `olean` and `ilean`).
 It is thus the facet used by default for building imports of a module.
 Also, if the module is not lean-only, it produces `c` files as well.
 -/
-abbrev Module.leanBinFacet  := `lean.bin
-module_data lean.bin : ActiveOpaqueTarget
+abbrev Module.leanBinFacet := `bin
+module_data bin : BuildJob Unit
 
 /-- The `olean` file produced by `lean`  -/
-abbrev Module.oleanFacet  := `olean
-module_data olean : ActiveFileTarget
+abbrev Module.oleanFacet := `olean
+module_data olean : BuildJob FilePath
 
 /-- The `ilean` file produced by `lean` -/
 abbrev Module.ileanFacet := `ilean
-module_data ilean : ActiveFileTarget
+module_data ilean : BuildJob FilePath
 
 /-- The C file built from the Lean file via `lean` -/
-abbrev Module.cFacet := `lean.c
-module_data lean.c : ActiveFileTarget
+abbrev Module.cFacet := `c
+module_data c : BuildJob FilePath
 
 /-- The object file built from `lean.c` -/
-abbrev Module.oFacet := `lean.o
-module_data lean.o : ActiveFileTarget
+abbrev Module.oFacet := `o
+module_data o : BuildJob FilePath
 
-/-- Shared library for `--load-dynlib` -/
+/-- Shared library for `--load-dynlib`. Returns just the library name. -/
 abbrev Module.dynlibFacet := `dynlib
-module_data dynlib : ActiveFileTarget
+module_data dynlib : BuildJob String
 
 /-! ## Package Facets -/
 
-/-- The package's `extraDepTarget` mixed with its transitive dependencies `extraDepTarget`. -/
+/-- The package's cloud build release. -/
+abbrev Package.releaseFacet := `release
+package_data release : BuildJob Unit
+
+/-- The package's `extraDepTarget` mixed with its transitive dependencies. -/
 abbrev Package.extraDepFacet := `extraDep
-package_data extraDep : ActiveOpaqueTarget
+package_data extraDep : BuildJob Unit
 
 /-! ## Target Facets -/
 
 /-- A Lean library's Lean libraries. -/
-abbrev LeanLib.leanFacet := `leanLib.lean
-target_data leanLib.lean : ActiveOpaqueTarget
+abbrev LeanLib.leanFacet := `lean
+library_data lean : BuildJob Unit
 
 /-- A Lean library's static binary. -/
-abbrev LeanLib.staticFacet := `leanLib.static
-target_data leanLib.static : ActiveFileTarget
+abbrev LeanLib.staticFacet := `static
+library_data static : BuildJob FilePath
 
 /-- A Lean library's shared binary. -/
-abbrev LeanLib.sharedFacet := `leanLib.shared
-target_data leanLib.shared : ActiveFileTarget
+abbrev LeanLib.sharedFacet := `shared
+library_data shared : BuildJob FilePath
 
 /-- A Lean binary executable. -/
 abbrev LeanExe.exeFacet := `leanExe
-target_data leanExe : ActiveFileTarget
+target_data leanExe : BuildJob FilePath
 
 /-- A external library's static binary. -/
 abbrev ExternLib.staticFacet := `externLib.static
-target_data externLib.static : ActiveFileTarget
+target_data externLib.static : BuildJob FilePath
 
 /-- A external library's shared binary. -/
 abbrev ExternLib.sharedFacet := `externLib.shared
-target_data externLib.shared : ActiveFileTarget
+target_data externLib.shared : BuildJob FilePath
+
+/-- A external library's dynlib. -/
+abbrev ExternLib.dynlibFacet := `externLib.dynlib
+target_data externLib.dynlib : BuildJob Dynlib

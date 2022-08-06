@@ -11,8 +11,6 @@ open Std System Lean
 
 namespace Lake
 
-abbrev ManifestM := StateT Manifest <| LogIO
-
 /-- Update the Git package in `repo` to `rev` if not already at it. -/
 def updateGitPkg (repo : GitRepo) (rev? : Option String) : LogIO PUnit := do
   let rev ← repo.findRemoteRevision rev?
@@ -25,7 +23,7 @@ def cloneGitPkg (repo : GitRepo) (url : String) (rev? : Option String) : LogIO P
   logInfo s!"cloning {url} to {repo}"
   repo.clone url
   if let some rev := rev? then
-    let hash ← repo.parseRemoteRevision rev
+    let hash ← repo.resolveRemoteRevision rev
     repo.checkoutDetach hash
 
 /--
@@ -33,13 +31,14 @@ Materializes a Git package in `dir`, cloning and/or updating it as necessary.
 
 Attempts to reproduce the `PackageEntry` in the manifest (if one exists) unless
 `shouldUpdate` is true. Otherwise, produces the package based on `url` and `rev`
-and saves the result to the manifest.
+and returns a record of the result to later save into the manifest.
 -/
 def materializeGitPkg (name : String) (dir : FilePath)
-(url : String) (rev? : Option String) (shouldUpdate := true) : ManifestM PUnit := do
+(url : String) (rev? : Option String) (manifestEntry? : Option PackageEntry)
+ : LogIO PackageEntry := do
   let repo := GitRepo.mk dir
-  if let some entry := (← get).find? name then
-    if shouldUpdate then
+  if let some entry := manifestEntry? then
+    if entry.shouldUpdate then
       if (← repo.dirExists) then
         if url = entry.url then
           updateGitPkg repo rev?
@@ -50,8 +49,15 @@ def materializeGitPkg (name : String) (dir : FilePath)
       else
         cloneGitPkg repo url rev?
       let rev ← repo.headRevision
-      modify (·.insert {entry with url, rev})
+      return {entry with url, rev, inputRev? := rev?}
     else
+      if let some rev := rev? then
+        if let some inputRev := entry.inputRev? then
+          if inputRev ≠ rev then
+            logWarning <|
+              s!"{name}: revision `{inputRev}` listed in manifest " ++
+              s!"does not match `{rev}` listed in the configuration file; " ++
+              "you may wish to run `lake update` to update"
       if (← repo.dirExists) then
         if url = entry.url then
           /-
@@ -62,23 +68,27 @@ def materializeGitPkg (name : String) (dir : FilePath)
           unless (← repo.headRevision) = entry.rev do
             updateGitPkg repo entry.rev
         else
-          logWarning <| s!"{name}: URL has changed; " ++
+          logWarning <|
+            s!"{name}: URL has changed; " ++
             "still using old package, use `lake update` to update"
       else
         cloneGitPkg repo entry.url entry.rev
+      return entry
   else
     if (← repo.dirExists) then
-      if shouldUpdate then
-        logInfo s!"{name}: no manifest entry; deleting {dir} and cloning again"
-        IO.FS.removeDirAll dir
-        cloneGitPkg repo url rev?
-      else
-        logWarning <| s!"{name}: no manifest entry; " ++
-          "still using old package, use `lake update` to update"
+      logInfo s!"{name}: no manifest entry; deleting {dir} and cloning again"
+      IO.FS.removeDirAll dir
+      cloneGitPkg repo url rev?
     else
       cloneGitPkg repo url rev?
     let rev ← repo.headRevision
-    modify (·.insert {name, url, rev})
+    return {name, url, rev, inputRev? := rev?}
+
+structure MaterializeResult where
+  pkgDir : FilePath
+  remoteUrl? : Option String
+  gitTag? : Option String
+  manifestEntry? : Option PackageEntry
 
 /--
 Materializes a `Dependency`, downloading nd/or updating it as necessary.
@@ -86,11 +96,19 @@ Local dependencies are materialized relative to `localRoot` and remote
 dependencies are stored in `packagesDir`.
 -/
 def materializeDep (packagesDir localRoot : FilePath)
-(dep : Dependency) (shouldUpdate := true) : ManifestM FilePath :=
+(dep : Dependency) (manifestEntry? : Option PackageEntry)
+: LogIO MaterializeResult :=
   match dep.src with
-  | Source.path dir => return localRoot / dir
+  | Source.path dir =>
+    return ⟨localRoot / dir, none, none, none⟩
   | Source.git url rev? subDir? => do
     let name := dep.name.toString (escape := false)
     let gitDir := packagesDir / name
-    materializeGitPkg name gitDir url rev? shouldUpdate
-    return match subDir? with | some subDir => gitDir / subDir | none => gitDir
+    let entry? ← materializeGitPkg name gitDir url rev? manifestEntry?
+    let pkgDir :=
+      match subDir? with
+      | some subDir => gitDir / subDir
+      | none => gitDir
+    let tag? ← GitRepo.mk gitDir |>.findTag?
+    let url? := Git.filterUrl? url
+    return ⟨pkgDir, url?, tag?, entry?⟩

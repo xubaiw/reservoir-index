@@ -6,9 +6,9 @@ Authors: Mac Malone
 
 namespace Lake
 
-def version.major := 3
-def version.minor := 2
-def version.patch := 2
+def version.major := 4
+def version.minor := 0
+def version.patch := 0
 
 def version.isPrerelease := false
 def version.isRelease := !isPrerelease

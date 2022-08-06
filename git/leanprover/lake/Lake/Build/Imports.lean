@@ -32,26 +32,26 @@ Returns the set of module dynlibs built (so they can be loaded by the server).
 Builds only module `.olean` and `.ilean` files if the package is configured
 as "Lean-only". Otherwise, also build `.c` files.
 -/
-def Package.buildImportsAndDeps (imports : List String) (self : Package) : BuildM (Array FilePath) := do
+def buildImportsAndDeps (imports : List String) : BuildM (Array FilePath) := do
+  let ws ← getWorkspace
   if imports.isEmpty then
     -- build the package's (and its dependencies') `extraDepTarget`
-    self.extraDep.build >>= (·.buildOpaque)
+    ws.root.extraDep.build >>= (·.materialize)
     return #[]
   else
     -- build local imports from list
-    let mods := (← getWorkspace).processImportList imports
-    let (res, bStore) ← EStateT.run BuildStore.empty <| mods.mapM fun mod =>
+    let mods := ws.processImportList imports
+    let (importTargets, bStore) ← RecBuildM.runIn {} <| mods.mapM fun mod =>
       if mod.shouldPrecompile then
-        buildIndexTop mod.dynlib <&> (·.withoutInfo)
+        (discard ·.toJob) <$> buildIndexTop mod.dynlib
       else
-        buildIndexTop mod.leanBin
-    let importTargets ← failOnBuildCycle res
-    let dynlibTargets := bStore.collectModuleFacetArray Module.dynlibFacet
-    let externLibTargets := bStore.collectSharedExternLibs
-    importTargets.forM (·.buildOpaque)
+        (discard ·.toJob) <$> buildIndexTop mod.leanBin
+    let dynlibJobs := bStore.collectModuleFacetArray Module.dynlibFacet
+    let externLibJobs := bStore.collectSharedExternLibs
+    importTargets.forM (·.await)
     -- NOTE: Unix requires the full file name of the dynlib (Windows doesn't care)
-    let dynlibs ← dynlibTargets.mapM fun dynlib => do
-      return FilePath.mk <| nameToSharedLib (← dynlib.build).toString
-    let externLibs ← externLibTargets.mapM (·.build)
+    let dynlibs ← dynlibJobs.mapM fun dynlib => do
+      return FilePath.mk <| nameToSharedLib (← dynlib.await)
+    let externLibs ← externLibJobs.mapM (·.await)
     -- NOTE: Lean wants the external library symbols before module symbols
     return externLibs ++ dynlibs

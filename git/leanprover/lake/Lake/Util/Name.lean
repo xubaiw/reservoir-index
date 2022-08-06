@@ -12,13 +12,15 @@ namespace Lake
 
 export Lean (Name NameMap)
 
+@[inline] def NameMap.empty : NameMap α := Std.RBMap.empty
+
+instance : ForIn m (NameMap α) (Name × α) where
+  forIn self init f := self.forIn init f
+
 /-! # Name Helpers -/
 
 namespace Name
 open Lean.Name
-
-def ofString (str : String) : Name :=
-  str.splitOn "." |>.foldl (fun n p => .str n p.trim) .anonymous
 
 @[simp] protected theorem beq_false (m n : Name) : (m == n) = false ↔ ¬ (m = n) := by
   rw [← beq_iff_eq m n]; cases m == n <;> simp

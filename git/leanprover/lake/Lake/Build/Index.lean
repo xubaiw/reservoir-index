@@ -3,9 +3,8 @@ Copyright (c) 2022 Mac Malone. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mac Malone
 -/
-import Lake.Build.Roots
+import Lake.Build.Executable
 import Lake.Build.Topological
-import Lake.Util.EStateT
 
 /-!
 # The Lake Build Index
@@ -27,6 +26,15 @@ dynamically typed equivalent.
 [h : FamilyDef TargetData facet α] : IndexBuildM (TargetData facet) :=
   cast (by rw [← h.family_key_eq_type]) build
 
+def ExternLib.recBuildStatic (lib : ExternLib) : IndexBuildM (BuildJob FilePath) := do
+  lib.config.getJob <$> fetch (lib.pkg.target lib.staticTargetName)
+
+def ExternLib.recBuildShared (lib : ExternLib) : IndexBuildM (BuildJob FilePath) := do
+  buildLeanSharedLibOfStatic (← lib.static.fetch) lib.linkArgs
+
+def ExternLib.recComputeDynlib (lib : ExternLib) : IndexBuildM (BuildJob Dynlib) := do
+  computeDynlibOfShared (← lib.shared.fetch)
+
 /-!
 ## Topologically-based Recursive Build Using the Index
 -/
@@ -43,36 +51,31 @@ def recBuildWithIndex : (info : BuildInfo) → IndexBuildM (BuildData info.key)
     config.build pkg
   else
     error s!"do not know how to build package facet `{facet}`"
-| .customTarget pkg target =>
+| .target pkg target =>
   if let some config := pkg.findTargetConfig? target then
-    if h : pkg.name = config.package ∧ target = config.name then
-      have h' : CustomData (pkg.name, target) = ActiveBuildTarget config.resultType := by simp [h]
-      liftM <| cast (by rw [← h']) <| config.target.activate
-    else
-      error "target's name in the configuration does not match the name it was registered with"
+    config.build pkg
   else
-      error s!"could not build `{target}` of `{pkg.name}` -- target not found"
-| .leanLib lib =>
-  mkTargetFacetBuild LeanLib.leanFacet lib.recBuildLean
-| .staticLeanLib lib =>
-  mkTargetFacetBuild LeanLib.staticFacet lib.recBuildStatic
-| .sharedLeanLib lib =>
-  mkTargetFacetBuild LeanLib.sharedFacet lib.recBuildShared
+    error s!"could not build `{target}` of `{pkg.name}` -- target not found"
+| .libraryFacet lib facet => do
+  if let some config := (← getWorkspace).findLibraryFacetConfig? facet then
+    config.build lib
+  else
+    error s!"do not know how to build library facet `{facet}`"
 | .leanExe exe =>
   mkTargetFacetBuild LeanExe.exeFacet exe.recBuildExe
 | .staticExternLib lib =>
-  mkTargetFacetBuild ExternLib.staticFacet lib.target.activate
+  mkTargetFacetBuild ExternLib.staticFacet lib.recBuildStatic
 | .sharedExternLib lib =>
-  mkTargetFacetBuild ExternLib.sharedFacet do
-    let staticTarget := Target.active <| ← lib.static.recBuild
-    staticToLeanDynlibTarget staticTarget |>.activate
+  mkTargetFacetBuild ExternLib.sharedFacet lib.recBuildShared
+| .dynlibExternLib lib =>
+  mkTargetFacetBuild ExternLib.dynlibFacet lib.recComputeDynlib
 
 /--
 Recursively build the given info using the Lake build index
 and a topological / suspending scheduler.
 -/
 def buildIndexTop' (info : BuildInfo) : RecBuildM (BuildData info.key) :=
-  buildDTop BuildData BuildInfo.key recBuildWithIndex info
+  buildDTop BuildData BuildInfo.key info recBuildWithIndex
 
 /--
 Recursively build the given info using the Lake build index
@@ -82,73 +85,17 @@ and a topological / suspending scheduler and return the dynamic result.
 [FamilyDef BuildData info.key α] : RecBuildM α := do
   cast (by simp) <| buildIndexTop' info
 
-/-- Build the given Lake target using the given Lake build store. -/
-@[inline] def BuildInfo.buildIn
-(store : BuildStore) (self : BuildInfo) [FamilyDef BuildData self.key α] : BuildM α := do
-  failOnBuildCycle <| ← EStateT.run' store <| buildIndexTop self
-
 /-- Build the given Lake target in a fresh build store. -/
-@[macroInline] def BuildInfo.build
+@[inline] def BuildInfo.build
 (self : BuildInfo) [FamilyDef BuildData self.key α] : BuildM α :=
-  buildIn BuildStore.empty self
+  buildIndexTop self |>.run
 
-export BuildInfo (build buildIn)
+export BuildInfo (build)
 
-/-! ## Targets Using the Build Index -/
+/-! ### Lean Executable Builds -/
 
-/-- An opaque target that builds the info in a fresh build store. -/
-@[inline] def BuildInfo.target (self : BuildInfo)
-[FamilyDef BuildData self.key (ActiveBuildTarget α)] : OpaqueTarget :=
-  BuildTarget.mk' () <| self.build <&> (·.task)
-
-/-- A smart constructor for facet configurations that generate targets. -/
-@[inline] def mkFacetTargetConfig (build : ι → IndexBuildM (ActiveBuildTarget α))
-[h : FamilyDef Fam facet (ActiveBuildTarget α)] : FacetConfig Fam ι facet where
-  build := cast (by rw [← h.family_key_eq_type]) build
-  toTarget? := fun info key_eq_type =>
-    have : FamilyDef BuildData info.key (ActiveBuildTarget α) :=
-      ⟨h.family_key_eq_type ▸ key_eq_type⟩
-    info.target
-
-/-! ### Module Facet Targets -/
-
-/-- An opaque target thats build the module facet in a fresh build store. -/
-@[inline] def Module.facetTarget (facet : Name) (self : Module)
-[FamilyDef ModuleData facet (ActiveBuildTarget α)] : OpaqueTarget :=
-  self.facet facet |>.target
-
-/-! ### Pure Lean Lib Targets -/
-
-@[inline] protected def LeanLib.leanTarget (self : LeanLib) : OpaqueTarget :=
-  self.lean.target
-
-@[inline] protected def Package.leanLibTarget (self : Package) : OpaqueTarget :=
-  self.builtinLib.leanTarget
-
-/-! ### Native Lean Lib Targets -/
-
-@[inline] protected def LeanLib.staticLibTarget (self : LeanLib) : FileTarget :=
-  self.static.target.withInfo self.sharedLibFile
-
-@[inline] protected def Package.staticLibTarget (self : Package) : FileTarget :=
-  self.builtinLib.staticLibTarget
-
-@[inline] protected def LeanLib.sharedLibTarget (self : LeanLib) : FileTarget :=
-  self.shared.target.withInfo self.sharedLibFile
-
-@[inline] protected def Package.sharedLibTarget (self : Package) : FileTarget :=
-  self.builtinLib.sharedLibTarget
-
-/-! ### Lean Executable Targets -/
-
-@[inline] protected def LeanExe.build (self : LeanExe) : BuildM ActiveFileTarget :=
+@[inline] protected def LeanExe.build (self : LeanExe) : BuildM (BuildJob FilePath) :=
   self.exe.build
 
-@[inline] protected def LeanExe.recBuild (self : LeanExe) : IndexBuildM ActiveFileTarget :=
-  self.exe.recBuild
-
-@[inline] protected def LeanExe.target (self : LeanExe) : FileTarget :=
-  self.exe.target.withInfo self.file
-
-@[inline] protected def Package.exeTarget (self : Package) : FileTarget :=
-  self.builtinExe.target
+@[inline] protected def LeanExe.fetch (self : LeanExe) : IndexBuildM (BuildJob FilePath) :=
+  self.exe.fetch

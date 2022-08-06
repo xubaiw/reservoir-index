@@ -15,15 +15,10 @@ import Lake.Build.Topological
 open System
 namespace Lake
 
-/-- The `Task` monad for Lake builds. -/
-abbrev BuildTask := OptionIOTask
-
-/-- A Lake build job. -/
-abbrev Job := BuildTask BuildTrace
-
 /-- A Lake context with some additional caching for builds. -/
 structure BuildContext extends Context where
   leanTrace : BuildTrace
+  oldMode : Bool := false
 
 /-- A transformer to equip a monad with a `BuildContext`. -/
 abbrev BuildT := ReaderT BuildContext
@@ -32,10 +27,13 @@ abbrev BuildT := ReaderT BuildContext
 abbrev SchedulerM := BuildT <| LogT BaseIO
 
 /-- The core monad for Lake builds. -/
-abbrev BuildM := BuildT <| MonadLogT BaseIO OptionIO
+abbrev BuildM := BuildT LogIO
 
 /-- A transformer to equip a monad with a Lake build store. -/
 abbrev BuildStoreT := StateT BuildStore
+
+/-- A Lake build cycle. -/
+abbrev BuildCycle := Cycle BuildKey
 
 /-- A transformer for monads that may encounter a build cycle. -/
 abbrev BuildCycleT := CycleT BuildKey
@@ -43,17 +41,11 @@ abbrev BuildCycleT := CycleT BuildKey
 /-- A recursive build of a Lake build store that may encounter a cycle. -/
 abbrev RecBuildM := BuildCycleT <| BuildStoreT BuildM
 
-instance : MonadError BuildM := ⟨MonadLog.error⟩
-instance : MonadLift IO BuildM := ⟨MonadError.runIO⟩
-
 instance [Pure m] : MonadLift LakeM (BuildT m) where
   monadLift x := fun ctx => pure <| x.run ctx.toContext
 
-instance : MonadLift LogIO BuildM where
-  monadLift x := fun ctx meths => liftM (n := BuildM) (x.run meths.lift) ctx meths
-
-def BuildM.run (logMethods : MonadLog BaseIO) (ctx : BuildContext) (self : BuildM α) : IO α :=
-  self ctx logMethods |>.toIO fun _ => IO.userError "build failed"
+@[inline] def BuildM.run (ctx : BuildContext) (self : BuildM α) : LogIO α :=
+  self ctx
 
 def BuildM.catchFailure (f : Unit → BaseIO α) (self : BuildM α) : SchedulerM α :=
   fun ctx logMethods => self ctx logMethods |>.catchFailure f

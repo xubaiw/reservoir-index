@@ -6,6 +6,11 @@ Authors: Mac Malone
 import Lake.DSL.Attributes
 import Lake.Config.Workspace
 
+/-!
+This module contains definitions to load configuration objects from
+a package configuration file (e.g., `lakefile.lean`).
+-/
+
 namespace Lake
 open Lean System
 
@@ -68,21 +73,23 @@ def Package.finalize (self : Package) (deps : Array Package) : LogIO Package := 
     evalConstCheck env opts LeanLibConfig ``LeanLibConfig name
   let leanExeConfigs ← IO.ofExcept <| mkTagMap env leanExeAttr fun name =>
     evalConstCheck env opts LeanExeConfig ``LeanExeConfig name
-  let externLibConfigs ← IO.ofExcept <| mkTagMap env externLibAttr fun name =>
-    evalConstCheck env opts ExternLibConfig ``ExternLibConfig name
-  let opaqueTargetConfigs ← mkTagMap env targetAttr fun declName =>
-    match evalConstCheck env opts TargetConfig ``TargetConfig declName with
-    | .ok a => pure <| OpaqueTargetConfig.mk a
+  let externLibConfigs ← mkDTagMap env externLibAttr fun name =>
+    match evalConstCheck env opts ExternLibDecl ``ExternLibDecl name with
+    | .ok decl =>
+      if h : decl.pkg = self.config.name ∧ decl.name = name then
+        return h.1 ▸ h.2 ▸ decl.config
+      else
+        error s!"target was defined as `{decl.pkg}/{decl.name}`, but was registered as `{self.name}/{name}`"
+    | .error e => error e
+  let opaqueTargetConfigs ← mkDTagMap env targetAttr fun name =>
+    match evalConstCheck env opts TargetDecl ``TargetDecl name with
+    | .ok decl =>
+      if h : decl.pkg = self.config.name ∧ decl.name = name then
+        return OpaqueTargetConfig.mk <| h.1 ▸ h.2 ▸ decl.config
+      else
+        error s!"target was defined as `{decl.pkg}/{decl.name}`, but was registered as `{self.name}/{name}`"
     | .error e => error e
   let defaultTargets := defaultTargetAttr.ext.getState env |>.fold (·.push ·) #[]
-
-  -- Issue Warnings
-  if self.config.extraDepTarget.isSome then
-    logWarning <| "`extraDepTarget` has been deprecated. " ++
-      "Try to use a custom target or raise an issue about your use case."
-  if leanLibConfigs.isEmpty && leanExeConfigs.isEmpty && self.defaultFacet ≠ .none then
-    logWarning <| "Package targets are deprecated. " ++
-      "Add a `lean_exe` and/or `lean_lib` default target to the package instead."
 
   -- Fill in the Package
   return {self with
@@ -94,23 +101,19 @@ def Package.finalize (self : Package) (deps : Array Package) : LogIO Package := 
 /--
 Load module/package facets into a `Workspace` from a configuration environment.
 -/
-def Workspace.loadFacets
-(env : Environment) (opts : Options) (self : Workspace) : LogIO Workspace := do
+def Workspace.addFacetsFromEnv
+(env : Environment) (opts : Options) (self : Workspace) : Except String Workspace := do
   let mut ws := self
   for name in moduleFacetAttr.ext.getState env do
     match evalConstCheck env opts ModuleFacetDecl ``ModuleFacetDecl name with
-    | .ok decl =>
-      if h : name = decl.name then
-        ws := ws.addModuleFacetConfig <| h ▸ decl.config
-      else
-        error s!"facet was defined as `{decl.name}`, but was registered as `{name}`"
+    | .ok decl => ws := ws.addModuleFacetConfig <| decl.config
     | .error e => error e
   for name in packageFacetAttr.ext.getState env do
     match evalConstCheck env opts PackageFacetDecl ``PackageFacetDecl name with
-    | .ok decl =>
-      if h : name = decl.name then
-        ws := ws.addPackageFacetConfig <| h ▸ decl.config
-      else
-        error s!"facet was defined as `{decl.name}`, but was registered as `{name}`"
+    | .ok decl => ws := ws.addPackageFacetConfig <| decl.config
+    | .error e => error e
+  for name in libraryFacetAttr.ext.getState env do
+    match evalConstCheck env opts LibraryFacetDecl ``LibraryFacetDecl name with
+    | .ok decl => ws := ws.addLibraryFacetConfig <| decl.config
     | .error e => error e
   return ws

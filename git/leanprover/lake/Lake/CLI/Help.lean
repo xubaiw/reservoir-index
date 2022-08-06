@@ -18,6 +18,8 @@ OPTIONS:
   --help, -h            print help of the program or a command and exit
   --dir, -d=file        use the package configuration in a specific directory
   --file, -f=file       use a specific file for the package configuration
+  --quiet, -q           hide progress messages
+  --verbose, -v         show verbose information (command invocations)
   --lean=cmd            specify the `lean` command used by Lake
   -K key[=value]        set the configuration file option named key
 
@@ -26,6 +28,7 @@ COMMANDS:
   init <name> [<temp>]  create a Lean package in the current directory
   build [<targets>...]  build targets
   update                update dependencies
+  upload <tag>          upload build artifacts to a GitHub release
   clean                 remove build outputs
   script                manage and run workspace scripts
   scripts               shorthand for `lake script list`
@@ -73,21 +76,15 @@ A target is specified with a string of the form:
 The optional `@` and `+` markers can be used to disambiguate packages
 and modules from other kinds of targets (i.e., executables and libraries).
 
-PACKAGE FACETS:         build the package's ...
-  exe                   binary executable
-  leanLib               Lean library (*.olean and *.ilean files)
-  staticLib             static library
-  sharedLib             shared library
-
 LIBRARY FACETS:         build the library's ...
-  lean                  Lean binaries (*.olean and *.ilean files)
-  static                static binary
-  shared                shared binary
+  lean (default)        Lean binaries (*.olean and *.ilean files)
+  static                static binary (*.a file)
+  shared                shared binary (*.so, *.dll, or *.dylib file)
 
 MODULE FACETS:          build the module's ...
-  [default]             Lean binaries (*.olean and *.ilean files)
-  c                     *.c file
-  o                     *.o file (of the *.c file)
+  bin (default)         Lean binaries (*.olean and *.ilean files)
+  c                     C file produced by `lean`
+  o                     *.o object file (of its `lean.c` C file)
   dynlib                shared library (e.g., for `--load-dynlib`)
 
 TARGET EXAMPLES:        build the ...
@@ -95,9 +92,8 @@ TARGET EXAMPLES:        build the ...
   @a                    default target(s) of package `a`
   +A                    olean and .ilean files of module `A`
   a/b                   default facet of target `b` of package `a`
-  a/+A:c                c file of module `A` of package `a`
-  @a:leanLib            lean library of package `a`
-  :exe                  root package's executable
+  a/+A:c                C file of module `A` of package `a`
+  :foo                  facet `foo` of the root package
 
 A bare `build` command will build the default facet of the root package.
 Package dependencies are not updated during a build."
@@ -119,6 +115,15 @@ version materialized is undefined. The specific revision of the resolved
 packages are cached in the `manifest.json` file of the `packagesDir`.
 
 No copy is made of local dependencies."
+
+def helpUpload :=
+"Upload build artifacts to a GitHub release
+
+USAGE:
+  lake upload <tag>
+
+Packs the root package's `buildDir` into a `tar.gz` archive using `tar` and
+then uploads the asset to the pre-existing GitHub release `tag` using `gh`."
 
 def helpClean :=
 "Remove build outputs
@@ -221,6 +226,7 @@ def help : (cmd : String) → String
 | "init"      => helpInit
 | "build"     => helpBuild
 | "update"    => helpUpdate
+| "upload"    => helpUpload
 | "clean"     => helpClean
 | "script"    => helpScriptCli
 | "scripts"   => helpScriptList

@@ -17,14 +17,26 @@ lean_exe b
 lean_exe c
 
 @[defaultTarget]
-target meow : PUnit := Target.opaqueSync (m := BuildM) do
-  IO.FS.writeFile (_package.buildDir / "meow.txt") "Meow!"
-  return default
+target meow (pkg : Package) : Unit := do
+  IO.FS.writeFile (pkg.buildDir / "meow.txt") "Meow!"
+  return .nil
 
-target bark : PUnit := Target.opaqueSync (m := BuildM) do
+target bark : Unit := do
   logInfo "Bark!"
-  return default
+  return .nil
 
-package_facet print_name : PUnit := fun pkg => do
+package_facet print_name pkg : Unit := do
   IO.println pkg.name
-  return ActiveTarget.nil
+  return .nil
+
+module_facet get_src mod : FilePath := do
+  inputFile mod.leanFile
+
+module_facet print_src mod : Unit := do
+  (← fetch (mod.facet `get_src)).bindSync fun src trace => do
+    IO.println src
+    return ((), trace)
+
+library_facet print_name lib : Unit := do
+  IO.println lib.name
+  return .nil

@@ -16,9 +16,34 @@ open Std System Lean
 
 namespace Lake
 
+/-- A string descriptor of the `System.Platform` OS (`windows`, `macOS`, or `linux`). -/
+def osDescriptor : String :=
+  if Platform.isWindows then
+    "windows"
+  else if Platform.isOSX then
+    "macOS"
+  else
+    "linux"
+
+/--
+A `tar.gz` file name suffix encoding the the current Platform.
+(i.e, `osDescriptor` joined with `System.Platform.numBits`).
+-/
+def archiveSuffix :=
+  s!"{osDescriptor}-{Platform.numBits}.tar.gz"
+
+/-- If `name?`, `{name}-{archiveSuffix}`, otherwise just `archiveSuffix`. -/
+def nameToArchive (name? : Option String) : String :=
+  match name? with
+  | none => archiveSuffix
+  | some name => s!"{name}-{archiveSuffix}"
+
 --------------------------------------------------------------------------------
 /-! # Defaults -/
 --------------------------------------------------------------------------------
+
+/-- The default name of the package manifest. -/
+def defaultManifestFileName := "manifest.json"
 
 /-- The default setting for a `PackageConfig`'s `buildDir` option. -/
 def defaultBuildDir : FilePath := "build"
@@ -35,23 +60,6 @@ def defaultOleanDir : FilePath := defaultLibDir
 /-- The default setting for a `PackageConfig`'s `irDir` option. -/
 def defaultIrDir : FilePath := "ir"
 
-/-- The default setting for a `PackageConfig`'s `binRoot` option. -/
-def defaultBinRoot : Name := `Main
-
---------------------------------------------------------------------------------
-/-! # PackageFacet -/
---------------------------------------------------------------------------------
-
-/-- A buildable component of a `Package`. -/
-inductive PackageFacet
-| /-- The package's binary executable. -/ exe
-| /-- The package's static library. -/ staticLib
-| /-- The package's shared library. -/ sharedLib
-| /-- The package's lean library (e.g. `olean` / `ilean` files). -/ leanLib
-| /-- The package has no buildable component. -/ none
-deriving BEq, DecidableEq, Repr
-instance : Inhabited PackageFacet := ⟨PackageFacet.exe⟩
-
 --------------------------------------------------------------------------------
 /-! # PackageConfig -/
 --------------------------------------------------------------------------------
@@ -63,25 +71,15 @@ structure PackageConfig extends WorkspaceConfig, LeanConfig where
   name : Name
 
   /--
-  An extra `OpaqueTarget` that should be built before the package.
+  The path of a package's manifest file, which stores the exact versions
+  of its resolved dependencies.
 
-  `OpaqueTarget.collectList/collectArray` can be used combine multiple
-  extra targets into a single `extraDepTarget`.
-
-  **DEPRECATED:** Use separate custom `target` declarations instead?
+  Defaults to `packagesDir` / `defaultManifestFileName` (i.e., `manifest.json`).
   -/
-  extraDepTarget : Option OpaqueTarget := none
+  manifestFile := packagesDir / defaultManifestFileName
 
-  /--
-  The optional `PackageFacet` to build on a bare `lake build` of the package.
-  Can be one of `exe`, `leanLib`, `staticLib`, `sharedLib`, or `none`.
-  Defaults to `exe`. See `lake help build` for more info on build facets.
-
-  **DEPRECATED:**
-  Package facets will be removed in a future version of Lake.
-  Use a separate `lean_lib` or `lean_exe` default target instead.
-  -/
-  defaultFacet : PackageFacet := .exe
+  /-- An `Array` of target names to build whenever the package is used. -/
+  extraDepTargets : Array Name := #[]
 
   /--
   Whether to compile each of the package's module into a native shared library
@@ -129,37 +127,11 @@ structure PackageConfig extends WorkspaceConfig, LeanConfig where
   oleanDir : FilePath := defaultOleanDir
 
   /--
-  The root module(s) of the package's library.
-
-  Submodules of these roots (e.g., `Pkg.Foo` of `Pkg`) are considered
-  part of the package.
-
-  Defaults to a single root of the package's upper camel case `name`.
-  -/
-  libRoots : Array Name := #[toUpperCamelCase name]
-
-  /--
-  An `Array` of module `Glob`s to build for the package's library.
-  Defaults to a `Glob.one` of each of the module's `libRoots`.
-
-  Submodule globs build every source file within their directory.
-  Local imports of glob'ed files (i.e., fellow modules of the package) are
-  also recursively built.
-  -/
-  libGlobs : Array Glob := libRoots.map Glob.one
-
-  /--
   The build subdirectory to which Lake should output
   the package's intermediary results (e.g., `.c` and `.o` files).
   Defaults to `defaultIrDir` (i.e., `ir`).
   -/
   irDir : FilePath := defaultIrDir
-
-  /--
-  The name of the package's static library.
-  Defaults to the package's upper camel case `name`.
-  -/
-  libName : String := toUpperCamelCase name |>.toString (escape := false)
 
   /--
   The build subdirectory to which Lake should output the package's static library.
@@ -168,77 +140,37 @@ structure PackageConfig extends WorkspaceConfig, LeanConfig where
   libDir : FilePath := defaultLibDir
 
   /--
-  The name of the package's binary executable.
-  Defaults to the package's `name` with any `.` replaced with a `-`.
-  -/
-  binName : String := name.toStringWithSep "-" (escape := false)
-
-  /--
   The build subdirectory to which Lake should output the package's binary executable.
   Defaults to `defaultBinDir` (i.e., `bin`).
   -/
   binDir : FilePath := defaultBinDir
 
   /--
-  The root module of the package's binary executable.
-  Defaults to `defaultBinRoot` (i.e., `Main`).
-
-  The root is built by recursively building its
-  local imports (i.e., fellow modules of the workspace).
-
-  This setting is most useful for packages that are distributing both a
-  library and a binary (like Lake itself). In such cases, it is common for
-  there to be code (e.g., `main`) that is needed for the binary but should
-  not be included in the library proper.
+  The URL of the GitHub repository to upload and download releases of this package.
+  If `none` (the default), for downloads, Lake uses the URL the package was download
+  from (if it is a dependency) and for uploads, uses `gh`'s default.
   -/
-  binRoot : Name := defaultBinRoot
+  releaseRepo? : Option String := none
 
   /--
-  Additional library `FileTarget`s (beyond the package's and its dependencies'
-  Lean libraries) to build and link to the package's binaries (and to dependent
-  packages' binaries).
-
-  **DEPRECATED:** Use separate `extern_lib` targets instead.
+  The name of the build archive on GitHub. Defaults to `none`.
+  The archive's full file name will be `nameToArchive buildArchive?`.
   -/
-  moreLibTargets : Array FileTarget := #[]
+  buildArchive? : Option String := none
 
   /--
-  Whether to expose symbols within the executable to the Lean interpreter.
-  This allows the executable to interpret Lean files (e.g.,  via
-  `Lean.Elab.runFrontend`).
-
-  Implementation-wise, this passes `-rdynamic` to the linker when building
-  on non-Windows systems.
-
-  Defaults to `false`.
+  Whether to prefer downloading a prebuilt release (from GitHub) rather than
+  building this package from the source when this package is used as a dependency.
   -/
-  supportInterpreter : Bool := false
+  preferReleaseBuild : Bool := false
 
 deriving Inhabited
-
-namespace PackageConfig
-
-/-- The configuration of the package's library. -/
-def toLeanLibConfig (self : PackageConfig) : LeanLibConfig where
-  name := self.libName
-  roots := self.libRoots
-  globs := self.libGlobs
-  toLeanConfig := self.toLeanConfig
-
-/-- The configuration of the package's binary executable. -/
-def toLeanExeConfig (self : PackageConfig) : LeanExeConfig where
-  root := self.binRoot
-  name := self.binName
-  supportInterpreter := self.supportInterpreter
-  toLeanConfig := self.toLeanConfig
-
-end PackageConfig
 
 --------------------------------------------------------------------------------
 /-! # Package -/
 --------------------------------------------------------------------------------
 
-abbrev DNameMap α := DRBMap Name α Lean.Name.quickCmp
+abbrev DNameMap α := DRBMap Name α Name.quickCmp
 @[inline] def DNameMap.empty : DNameMap α := DRBMap.empty
 
 /-- A Lake package -- its location plus its configuration. -/
@@ -251,6 +183,10 @@ structure Package where
   configEnv : Environment
   /-- The Lean `Options` the package configuration was elaborated with. -/
   leanOpts : Options
+  /-- The URL this package's Git remote. -/
+  remoteUrl? : Option String := none
+  /-- The Git tag of this package. -/
+  gitTag? : Option String := none
   /-- (Opaque references to) the package's direct dependencies. -/
   opaqueDeps : Array OpaquePackage := #[]
   /-- Lean library configurations for the package. -/
@@ -258,9 +194,9 @@ structure Package where
   /-- Lean binary executable configurations for the package. -/
   leanExeConfigs : NameMap LeanExeConfig := {}
   /-- External library targets for the package. -/
-  externLibConfigs : NameMap ExternLibConfig := {}
+  externLibConfigs : DNameMap (ExternLibConfig config.name) := {}
   /-- (Opaque references to) targets defined in the package. -/
-  opaqueTargetConfigs : NameMap OpaqueTargetConfig := {}
+  opaqueTargetConfigs : DNameMap (OpaqueTargetConfig config.name) := {}
   /--
   The names of the package's targets to build by default
   (i.e., on a bare `lake build` of the package).
@@ -270,6 +206,8 @@ structure Package where
   scripts : NameMap Script := {}
   deriving Inhabited
 
+#check String.dropRight
+
 hydrate_opaque_type OpaquePackage Package
 
 abbrev PackageSet := RBTree Package (·.config.name.quickCmp ·.config.name)
@@ -278,20 +216,57 @@ abbrev PackageSet := RBTree Package (·.config.name.quickCmp ·.config.name)
 namespace Package
 
 /-- The package's name. -/
-@[inline] def name (self : Package) : Name :=
+abbrev name (self : Package) : Name :=
   self.config.name
 
 /-- An `Array` of the package's direct dependencies. -/
 @[inline] def deps (self : Package) : Array Package  :=
   self.opaqueDeps.map (·.get)
 
-/-- The package's `extraDepTarget` configuration. -/
-@[inline] def extraDepTarget (self : Package) : OpaqueTarget :=
-  self.config.extraDepTarget.getD Target.nil
+/-- The package's `packagesDir` configuration. -/
+def packagesDir (self : Package) : FilePath :=
+  self.dir / self.config.packagesDir
 
-/-- The package's `defaultFacet` configuration. -/
-@[inline] def defaultFacet (self : Package) : PackageFacet :=
-   self.config.defaultFacet
+/-- The package's JSON manifest of remote dependencies. -/
+def manifestFile (self : Package) : FilePath :=
+  self.dir / self.config.manifestFile
+
+/-- The package's `dir` joined with its `buildDir` configuration. -/
+@[inline] def buildDir (self : Package) : FilePath :=
+  self.dir / self.config.buildDir
+
+/-- The package's `extraDepTargets` configuration. -/
+@[inline] def extraDepTargets (self : Package) : Array Name :=
+  self.config.extraDepTargets
+
+/-- The package's `releaseRepo?` configuration. -/
+@[inline] def releaseRepo? (self : Package) : Option String :=
+  self.config.releaseRepo?
+
+/--
+The package's URL × tag release.
+Tries `releaseRepo?` first and then falls back to `remoteUrl?`.
+-/
+def release? (self : Package) : Option (String × String) := do
+  let url ← self.releaseRepo? <|> self.remoteUrl?
+  let tag ← self.gitTag?
+  return (url, tag)
+
+/-- The package's `buildArchive?` configuration. -/
+@[inline] def buildArchive? (self : Package) : Option String :=
+  self.config.buildArchive?
+
+/-- The file name of the package's build archive derived from `buildArchive?`. -/
+@[inline] def buildArchive (self : Package) : String :=
+  nameToArchive self.buildArchive?
+
+/-- The package's `buildDir` joined with its `buildArchive` configuration. -/
+@[inline] def buildArchiveFile (self : Package) : FilePath :=
+  self.buildDir / self.buildArchive
+
+/-- The package's `preferReleaseBuild` configuration. -/
+@[inline] def preferReleaseBuild (self : Package) : Bool :=
+  self.config.preferReleaseBuild
 
 /-- The package's `precompileModules` configuration. -/
 @[inline] def precompileModules (self : Package) : Bool :=
@@ -304,22 +279,6 @@ namespace Package
 /-- The package's `moreServerArgs` configuration. -/
 @[inline] def moreServerArgs (self : Package) : Array String :=
   self.config.moreServerArgs
-
-/-- The package's `dir` joined with its `srcDir` configuration. -/
-@[inline] def srcDir (self : Package) : FilePath :=
-  self.dir / self.config.srcDir
-
-/-- The package's root directory for `lean` (i.e., `srcDir`). -/
-@[inline] def rootDir (self : Package) : FilePath :=
-  self.srcDir
-
-/-- The package's `dir` joined with its `buildDir` configuration. -/
-@[inline] def buildDir (self : Package) : FilePath :=
-  self.dir / self.config.buildDir
-
-/-- The package's `buildDir` joined with its `oleanDir` configuration. -/
-@[inline] def oleanDir (self : Package) : FilePath :=
-  self.buildDir / self.config.oleanDir
 
 /-- The package's `buildType` configuration. -/
 @[inline] def buildType (self : Package) : BuildType :=
@@ -337,6 +296,18 @@ namespace Package
 @[inline] def moreLinkArgs (self : Package) : Array String :=
   self.config.moreLinkArgs
 
+/-- The package's `dir` joined with its `srcDir` configuration. -/
+@[inline] def srcDir (self : Package) : FilePath :=
+  self.dir / self.config.srcDir
+
+/-- The package's root directory for `lean` (i.e., `srcDir`). -/
+@[inline] def rootDir (self : Package) : FilePath :=
+  self.srcDir
+
+/-- The package's `buildDir` joined with its `oleanDir` configuration. -/
+@[inline] def oleanDir (self : Package) : FilePath :=
+  self.buildDir / self.config.oleanDir
+
 /-- The package's `buildDir` joined with its `irDir` configuration. -/
 @[inline] def irDir (self : Package) : FilePath :=
   self.buildDir / self.config.irDir
@@ -349,25 +320,14 @@ namespace Package
 @[inline] def binDir (self : Package) : FilePath :=
   self.buildDir / self.config.binDir
 
-/-- The library configuration built into the package configuration. -/
-@[inline] def builtinLibConfig (self : Package) : LeanLibConfig :=
-  self.config.toLeanLibConfig
-
-/-- The binary executable configuration built into the package configuration. -/
-@[inline] def builtinExeConfig (self : Package) : LeanExeConfig :=
-  self.config.toLeanExeConfig
-
 /-- Whether the given module is considered local to the package. -/
 def isLocalModule (mod : Name) (self : Package) : Bool :=
-  self.leanLibConfigs.any (fun _ lib => lib.isLocalModule mod) ||
-  self.builtinLibConfig.isLocalModule mod
+  self.leanLibConfigs.any (fun _ lib => lib.isLocalModule mod)
 
 /-- Whether the given module is in the package (i.e., can build it). -/
 def isBuildableModule (mod : Name) (self : Package) : Bool :=
   self.leanLibConfigs.any (fun _ lib => lib.isBuildableModule mod) ||
-  self.leanExeConfigs.any (fun _ exe => exe.root == mod) ||
-  self.builtinLibConfig.isBuildableModule mod ||
-  self.config.binRoot == mod
+  self.leanExeConfigs.any (fun _ exe => exe.root == mod)
 
 /-- Remove the package's build outputs (i.e., delete its build directory). -/
 def clean (self : Package) : IO PUnit := do

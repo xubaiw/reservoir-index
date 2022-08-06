@@ -12,16 +12,14 @@ lean_lib FFI
   root := `Main
 }
 
-def pkgDir := __dir__
-def cSrcDir := pkgDir / "c"
-def cBuildDir := pkgDir / _package.buildDir / "c"
+target ffi.o (pkg : Package) : FilePath := do
+  let oFile := pkg.buildDir / "c" / "ffi.o"
+  let srcJob ← inputFile <| pkg.dir / "c" / "ffi.cpp"
+  buildFileAfterDep oFile srcJob fun srcFile => do
+    let flags := #["-I", (← getLeanIncludeDir).toString, "-fPIC"]
+    compileO "ffi.c" oFile srcFile flags "c++"
 
-def ffiOTarget : FileTarget :=
-  let oFile := cBuildDir / "ffi.o"
-  let srcTarget := inputFileTarget <| cSrcDir / "ffi.cpp"
-  fileTargetWithDep oFile srcTarget fun srcFile => do
-    compileO oFile srcFile #["-I", (← getLeanIncludeDir).toString, "-fPIC"] "c++"
-
-extern_lib cLib :=
-  let libFile := cBuildDir / nameToStaticLib "leanffi"
-  staticLibTarget libFile #[ffiOTarget]
+extern_lib libleanffi (pkg : Package) := do
+  let name := nameToStaticLib "leanffi"
+  let ffiO ← fetch <| pkg.target ``ffi.o
+  buildStaticLib (pkg.buildDir / "c" / name) #[ffiO]

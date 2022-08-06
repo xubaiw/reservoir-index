@@ -37,7 +37,13 @@ With Lake, the package's configuration is written in Lean inside a dedicated <co
 <li><a href="#getting-lake">Getting Lake</a></li>
 <li><a href="#creating-and-building-a-package">Creating and Building a Package</a></li>
 <li><a href="#glossary-of-terms">Glossary of Terms</a></li>
-<li><a href="#package-configuration-options">Package Configuration Options</a></li>
+<li><a href="#package-configuration-options">Package Configuration Options</a>
+<ul dir="auto">
+<li><a href="#layout">Layout</a></li>
+<li><a href="#build--run">Build & Run</a></li>
+<li><a href="#cloud-releases">Cloud Releases</a></li>
+</ul>
+</li>
 <li><a href="#defining-build-targets">Defining Build Targets</a>
 <ul dir="auto">
 <li><a href="#lean-libraries">Lean Libraries</a></li>
@@ -46,11 +52,13 @@ With Lake, the package's configuration is written in Lean inside a dedicated <co
 <li><a href="#custom-targets">Custom Targets</a></li>
 </ul>
 </li>
+<li><a href="#defining-new-facets">Defining New Facets</a></li>
 <li><a href="#adding-dependencies">Adding Dependencies</a>
 <ul dir="auto">
 <li><a href="#syntax-of-require">Syntax of <code>require</code></a></li>
 </ul>
 </li>
+<li><a href="#github-release-builds">GitHub Release Builds</a></li>
 <li><a href="#writing-and-running-scripts">Writing and Running Scripts</a></li>
 <li><a href="#building-and-running-lake-from-the-source">Building and Running Lake from the Source</a>
 <ul dir="auto">
@@ -167,27 +175,34 @@ Hello, world!
 </ul>
 <h4 dir="auto">Package Configuration Options</h4>
 <p dir="auto">Lake provides a large assortment of configuration options for packages.</p>
-<p dir="auto"><strong>Workspace Options</strong></p>
-<p dir="auto">Workspace options are shared across a package and its dependencies.</p>
+<h5 dir="auto">Layout</h5>
 <ul dir="auto">
 <li><code>packagesDir</code>: The directory to which Lake should download remote dependencies. Defaults to <code>lean_packages</code>.</li>
-</ul>
-<p dir="auto"><strong>Per Package Options</strong></p>
-<ul dir="auto">
+<li><code>manifestFile</code>: The path of a package's manifest file, which stores the exact versions of its resolved dependencies. Defaults to <code>lean_packages/manifest.json</code>.</li>
 <li><code>srcDir</code>: The directory containing the package's Lean source files. Defaults to the package's directory. (This will be passed to <code>lean</code> as the <code>-R</code> option.)</li>
 <li><code>buildDir</code>: The directory to which Lake should output the package's build results. Defaults to <code>build</code>.</li>
 <li><code>oleanDir</code>: The build subdirectory to which Lake should output the package's <code>.olean</code> files. Defaults to <code>lib</code>.</li>
 <li><code>irDir</code>: The build subdirectory to which Lake should output the package's intermediary results (e.g., <code>.c</code> and <code>.o</code> files). Defaults to <code>ir</code>.</li>
 <li><code>libDir</code>: The build subdirectory to which Lake should output the package's libraries. Defaults to <code>lib</code>.</li>
 <li><code>binDir</code>: The build subdirectory to which Lake should output the package's binary executables. Defaults to <code>bin</code>.</li>
-<li><code>precompileModules</code>:  Whether to compile each module into a native shared library that is loaded whenever the module is imported. This speeds up the evaluation of metaprograms and enables the interpreter to run functions marked <code>@[extern]</code>. Defaults to <code>false</code>.</li>
+</ul>
+<h5 dir="auto">Build & Run</h5>
+<ul dir="auto">
 <li><code>isLeanOnly</code>: Whether the package is "Lean-only". A Lean-only package does not produce native files for modules (e.g. <code>.c</code>, <code>.o</code>). Defaults to <code>false</code>. Setting <code>precompileModules</code> to <code>true</code> will override this setting and produce native files anyway (as they are needed to build module dynlibs).</li>
+<li><code>precompileModules</code>:  Whether to compile each module into a native shared library that is loaded whenever the module is imported. This speeds up the evaluation of metaprograms and enables the interpreter to run functions marked <code>@[extern]</code>. Defaults to <code>false</code>.</li>
 <li><code>moreServerArgs</code>:  Additional arguments to pass to the Lean language server (i.e., <code>lean --server</code>) launched by <code>lake serve</code>.</li>
 <li><code>buildType</code>: The <code>BuildType</code> of targets in the package (see <a href="https://stackoverflow.com/a/59314670" rel="nofollow"><code>CMAKE_BUILD_TYPE</code></a>). One of <code>debug</code>, <code>relWithDebInfo</code>, <code>minSizeRel</code>, or <code>release</code>. Defaults to <code>release</code>.</li>
 <li><code>moreLeanArgs</code>: An <code>Array</code> of additional arguments to pass to <code>lean</code> while compiling Lean source files.</li>
 <li><code>moreLeancArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> while compiling the C source files generated by <code>lean</code>. Lake already passes some flags based on the <code>buildType</code>, but you can change this by, for example, adding <code>-O0</code> and <code>-UNDEBUG</code>.</li>
 <li><code>moreLinkArgs</code>: An <code>Array</code> of additional arguments to pass to <code>leanc</code> when linking (e.g., binary executables or shared libraries). These will come <em>after</em> the paths of <code>extern_lib</code> targets.</li>
-<li><code>extraDepTarget</code>: An extra <code>OpaqueTarget</code> that should be built before the package. <code>Target.collectOpaqueList/collectOpaqueArray</code> can be used combine multiple extra targets into a single <code>extraDepTarget</code>. <strong>DEPRECATED:</strong> Try to use separate <a href="#custom-targets">custom target declarations</a> instead. Otherwise, raise an issue here about your use case.</li>
+<li><code>extraDepTargets</code>: An <code>Array</code> of <a href="#custom-targets">target</a> names that the package should always build before anything else.</li>
+</ul>
+<h5 dir="auto">Cloud Releases</h5>
+<ul dir="auto">
+<li><code>releaseRepo?</code>: The optional URL of the GitHub repository to upload and download releases of this package.  If <code>none</code> (the default), for downloads, Lake uses the URL the package was download from (if it is a dependency) and for uploads, uses <code>gh</code>'s default.</li>
+<li><code>buildArchive?</code>: The name of the build archive on GitHub. Defaults to <code>none</code>.
+The archive's full file name will end up being <code>nameToArchive buildArchive?</code>.</li>
+<li><code>preferReleaseBuild</code>: Whether to Prefer downloading a prebuilt release (from GitHub) rather than building this package from the source when this package is used as a dependency.</li>
 </ul>
 <h4 dir="auto">Defining Build Targets</h4>
 <p dir="auto">A Lake package can have many build targets, such as different Lean libraries and multiple binary executables. Any number of these declarations can be marked with the <code>@[defaultTarget]</code> attribute to tell Lake to build them on a bare <code>lake build</code> of the package.</p>
@@ -205,8 +220,7 @@ Hello, world!
 <li><code>roots</code>: An <code>Array</code> of root module <code>Name</code>(s) of the library. Submodules of these roots (e.g., <code>Lib.Foo</code> of <code>Lib</code>) are considered part of the library. Defaults to a single root of the library's upper camel case name.</li>
 <li><code>globs</code>: An <code>Array</code> of module <code>Glob</code>s to build for the library. Defaults to a <code>Glob.one</code> of each of the library's  <code>roots</code>. Submodule globs build every source file within their directory. Local imports of glob'ed files (i.e., fellow modules of the workspace) are also recursively built.</li>
 <li><code>libName</code>: The <code>String</code> name of the library. Used as a base for the file names of its static and dynamic binaries. Defaults to the upper camel case name of the target.</li>
-<li><code>nativeFacets</code>: An <code>Array</code> of module facets to build and combine into the library's static
-and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the object file compiled from the Lean source). <strong>PREVIEW:</strong> Module facets are in beta, unstable, and not yet documented. Use with care.</li>
+<li><code>nativeFacets</code>: An <code>Array</code> of <a href="#defining-new-facets">module facets</a> to build and combine into the library's static and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the object file compiled from the Lean source).</li>
 <li><code>precompileModules</code>, <code>buildType</code>, <code>moreLeanArgs</code>, <code>moreLinkArgs</code>, <code>moreLinkArgs</code>: Augments the package's corresponding configuration option. The library's arguments come after, modules are precompiled if either the library or package are precompiled, and the build type is the minimum of the two (<code>debug</code> is the lowest, and <code>release</code> is the highest)</li>
 </ul>
 <h5 dir="auto">Binary Executables</h5>
@@ -228,15 +242,36 @@ and shared libraries. Defaults to <code>#[Module.oFacet]</code> (i.e., the objec
 <p dir="auto">A external library target is a non-Lean <strong>static</strong> library that will be linked to the binaries of the package and its dependents (e.g., their shared libraries and executables).</p>
 <p dir="auto"><strong>Important:</strong> For the external library to link properly when <code>precompileModules</code> is on, the static library produced by an <code>extern_lib</code> target must following the platform's naming conventions for libraries (i.e., be named <code>foo.a</code> on Windows and <code>libfoo.a</code> on Unix). To make this easy, there is the <code>Lake.nameToStaticLib</code> utility function to convert a library name into its proper file name for the platform.</p>
 <p dir="auto"><strong>Syntax</strong></p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="extern_lib «target-name» :=
-  -- term of type `FileTarget` that builds the external library"><pre>extern_lib «<span class="pl-en">target-name</span>» :=
-  <span class="pl-c"><span class="pl-c">--</span> term of type `FileTarget` that builds the external library</span></pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="extern_lib «target-name» (pkg : Package) :=
+  -- a build function that produces its static library"><pre>extern_lib «<span class="pl-en">target-name</span>» (pkg : Package) :=
+  <span class="pl-c"><span class="pl-c">--</span> a build function that produces its static library</span></pre></div>
+<p dir="auto">The declaration is essentially a wrapper around a <code>System.FilePath</code> <a href="#custom-targets">target</a>. Like such a target, the <code>pkg</code> parameter and its type specifier are optional and body should be a term of type <code>IndexBuildM (BuildJob System.FilePath)</code> function that builds the static library.</p>
 <h5 dir="auto">Custom Targets</h5>
 <p dir="auto">A arbitrary target that can be built via <code>lake build <target-name></code>.</p>
 <p dir="auto"><strong>Syntax</strong></p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="target «target-name» : α :=
-  -- term of type `BuildTarget α` that builds the target"><pre>target «<span class="pl-en">target-name</span>» : α :=
-  <span class="pl-c"><span class="pl-c">--</span> term of type `BuildTarget α` that builds the target</span></pre></div>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="target «target-name» (pkg : Package) : α :=
+  -- a build function that produces a `BuildJob α`"><pre>target «<span class="pl-en">target-name</span>» (pkg : Package) : α :=
+  <span class="pl-c"><span class="pl-c">--</span> a build function that produces a `BuildJob α`</span></pre></div>
+<p dir="auto">The <code>pkg</code> parameter and its type specifier are optional and the body should be a term of type <code>IndexBuildM (BuildJob α)</code>.</p>
+<h4 dir="auto">Defining New Facets</h4>
+<p dir="auto">A Lake package can also define new <em>facets</em> for packages, modules, and libraries. Once defined, the new facet (e.g., <code>facet</code>) can be built on any current or future object of its type (e.g., through <code>lake build pkg:facet</code> for a package facet). Module facets can also be provided to <a href="#lean-libraries"><code>LeanLib.nativeFacets</code></a> to have Lake build and use them automatically when producing shared libraries.</p>
+<p dir="auto"><strong>Syntax</strong></p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package_facet «facet-name» (pkg : Package) : α :=
+  -- a build function that produces a `BuildJob α`
+
+module_facet «facet-name» (mod : Module) : α :=
+  -- a build function that produces a `BuildJob α`
+
+library_facet «facet-name» (lib : LeanLib) : α :=
+  -- a build function that produces a `BuildJob α`"><pre>package_facet «<span class="pl-en">facet-name</span>» (pkg : Package) : α :=
+  <span class="pl-c"><span class="pl-c">--</span> a build function that produces a `BuildJob α`</span>
+
+module_facet «<span class="pl-en">facet-name</span>» (mod : Module) : α :=
+  <span class="pl-c"><span class="pl-c">--</span> a build function that produces a `BuildJob α`</span>
+
+library_facet «<span class="pl-en">facet-name</span>» (lib : LeanLib) : α :=
+  <span class="pl-c"><span class="pl-c">--</span> a build function that produces a `BuildJob α`</span></pre></div>
+<p dir="auto">In all of these, the object parameter and its type specifier are optional and the body should be a term of type <code>IndexBuildM (BuildJob α)</code>.</p>
 <h4 dir="auto">Adding Dependencies</h4>
 <p dir="auto">Lake packages can have dependencies. Dependencies are other Lake packages the current package needs in order to function. They can be sourced directly from a local folder (e.g., a subdirectory of the package) or come from remote Git repositories. For example, one can depend on the Lean 4 port of <a href="https://github.com/leanprover-community/mathlib4">mathlib</a> like so:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="package hello
@@ -250,11 +285,19 @@ require mathlib <span class="pl-k">from</span> git
 <p dir="auto">For a theorem proving packages which depend on <code>mathlib</code>, you can also run <code>lake new <package-name> math</code> to generate a package configuration file that already has the <code>mathlib</code> dependency (and no binary executable target).</p>
 <h5 dir="auto">Syntax of <code>require</code></h5>
 <p dir="auto">The <code>require</code> command has two forms:</p>
-<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require foo from "path"/"to"/"local"/"package" with ["optional","args"]
-require bar from git "url.git"@"rev"/"optional"/"path-to"/"dir-with-pkg""><pre>require foo <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">"</span>path<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>local<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>package<span class="pl-pds">"</span></span> <span class="pl-k">with</span> [<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>args<span class="pl-pds">"</span></span>]
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="require foo from "path"/"to"/"local"/"package" with NameMap.empty
+require bar from git "url.git"@"rev"/"optional"/"path-to"/"dir-with-pkg""><pre>require foo <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">"</span>path<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>local<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>package<span class="pl-pds">"</span></span> <span class="pl-k">with</span> NameMap.empty
 require bar <span class="pl-k">from</span> git <span class="pl-s"><span class="pl-pds">"</span>url.git<span class="pl-pds">"</span></span>@<span class="pl-s"><span class="pl-pds">"</span>rev<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>optional<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>path-to<span class="pl-pds">"</span></span>/<span class="pl-s"><span class="pl-pds">"</span>dir-with-pkg<span class="pl-pds">"</span></span></pre></div>
 <p dir="auto">The first form adds a local dependency and the second form adds a Git dependency. For a Git dependency, the revision can be a commit hash, branch, or tag. Also, the <code>@"rev"</code> and <code>/"path-to"/"term"</code> parts of the <code>require</code> are optional.</p>
 <p dir="auto">Both forms also support an optional <code>with</code> clause to specify arguments to pass to the dependency's package configuration (i.e., same as <code>args</code> in a <code>lake build -- <args...></code> invocation). The elements of both the <code>from</code> and <code>with</code> clauses are proper terms so normal computation is supported within them (though parentheses made be required to disambiguate the syntax).</p>
+<h4 dir="auto">GitHub Release Builds</h4>
+<p dir="auto">Lake supports uploading and downloading build artifacts (i.e., the archived build directory) to/from GitHub releases of packages to enable end users to fetch pre-built artifacts from the cloud without needed to rebuild the package from the source themselves.</p>
+<h5 dir="auto">Downloading</h5>
+<p dir="auto">To download artifacts, one should configure the package <a href="#cloud-releases">options</a> <code>releaseRepo?</code> and <code>buildArchive?</code> as necessary to point to the GitHub repository hosting the release and the correct artifact name within it (if the defaults are not sufficient). Then, set <code>preferReleaseBuild := true</code> to tell Lake to fetch and unpack it as an extra package dependency.</p>
+<p dir="auto">Lake will only fetch release builds as part of its standard build process if the package wanting it is a dependency (as the root package is expected to modified and thus not often compatible with this scheme). However, should one wish to fetch a release for a root package (e.g., after cloning the release's source but before editing), one can manually do so via <code>lake build :release</code>.</p>
+<p dir="auto">Lake internally uses <code>curl</code> to download the release and <code>tar</code> to unpack it, so the end user must have both tools installed to use this feature. If Lake fails to fetch a release for any reason, it will move on to building from the source. Also note that this mechanism is not technically limited to GitHub, any Git host that uses the same URL scheme works as well.</p>
+<h5 dir="auto">Uploading</h5>
+<p dir="auto">To upload a built package as an artifact to a GitHub release, Lake provides the <code>lake upload <tag></code> command as a convenient shorthand. This command uses <code>tar</code> to pack the package's build directory into an archive and uses <code>gh release upload</code> to attach it to a pre-existing GitHub release for <code>tag</code>. Thus, in order to use it, the package uploader (but not the downloader) needs to have <code>gh</code>, the <a href="https://cli.github.com/">GitHub CLI</a>, installed and in <code>PATH</code>.</p>
 <h4 dir="auto">Writing and Running Scripts</h4>
 <p dir="auto">A configuration file can also contain a number of <code>scripts</code> declaration. A script is an arbitrary <code>(args : List String) → ScriptM UInt32</code> definition that can be run by <code>lake script run</code>. For example, given the following <code>lakefile.lean</code>:</p>
 <div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="import Lake

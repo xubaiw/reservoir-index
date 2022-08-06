@@ -7,14 +7,11 @@ import Lean.Util.Paths
 import Lake.Config.FacetConfig
 import Lake.Config.TargetConfig
 import Lake.Config.Env
+import Lake.Util.Log
 
 open System
-open Lean (LeanPaths)
 
 namespace Lake
-
-/-- The file name of a workspace's package manifest (i.e., `manifest.json`). -/
-def manifestFileName := "manifest.json"
 
 /-- A Lake workspace -- the top-level package directory. -/
 structure Workspace : Type where
@@ -24,16 +21,12 @@ structure Workspace : Type where
   lakeEnv : Lake.Env
   /-- Name-package map of packages within the workspace. -/
   packageMap : NameMap Package := {}
-  /--
-  Name-configuration map of (opaque references to)
-  module facets defined in the workspace.
-  -/
-  moduleFacetConfigs : DNameMap ModuleFacetConfig := {}
-  /--
-  Name-configuration map of (opaque references to)
-  module facets defined in the workspace.
-  -/
-  packageFacetConfigs : DNameMap PackageFacetConfig := {}
+  /-- Name-configuration map of module facets defined in the workspace. -/
+  moduleFacetConfigs : DNameMap ModuleFacetConfig
+  /-- Name-configuration map of package facets defined in the workspace. -/
+  packageFacetConfigs : DNameMap PackageFacetConfig
+  /-- Name-configuration map of library facets defined in the workspace. -/
+  libraryFacetConfigs : DNameMap LibraryFacetConfig
   deriving Inhabited
 
 hydrate_opaque_type OpaqueWorkspace Workspace
@@ -41,20 +34,16 @@ hydrate_opaque_type OpaqueWorkspace Workspace
 namespace Workspace
 
 /-- The path to the workspace's directory (i.e., the directory of the root package). -/
-def dir (self : Workspace) : FilePath :=
+@[inline] def dir (self : Workspace) : FilePath :=
   self.root.dir
 
 /-- The workspace's configuration. -/
-def config (self : Workspace) : WorkspaceConfig :=
+@[inline] def config (self : Workspace) : WorkspaceConfig :=
   self.root.config.toWorkspaceConfig
 
 /-- The workspace's `dir` joined with its `packagesDir` configuration. -/
-def packagesDir (self : Workspace) : FilePath :=
+@[inline] def packagesDir (self : Workspace) : FilePath :=
   self.dir / self.config.packagesDir
-
-/-- The workspace's JSON manifest of packages. -/
-def manifestFile (self : Workspace) : FilePath :=
-  self.packagesDir / manifestFileName
 
 /-- The `List` of packages to the workspace. -/
 def packageList (self : Workspace) : List Package :=
@@ -69,7 +58,7 @@ def addPackage (pkg : Package) (self : Workspace) : Workspace :=
   {self with packageMap := self.packageMap.insert pkg.name pkg}
 
 /-- Get a package within the workspace by name. -/
-def findPackage? (pkg : Name) (self : Workspace) : Option Package :=
+@[inline] def findPackage? (pkg : Name) (self : Workspace) : Option Package :=
   self.packageMap.find? pkg
 
 /-- Check if the module is local to any package in the workspace. -/
@@ -97,24 +86,32 @@ def findExternLib? (name : Name) (self : Workspace) : Option ExternLib :=
   self.packageArray.findSome? fun pkg => pkg.findExternLib? name
 
 /-- Try to find a target configuration in the workspace with the given name. -/
-def findTargetConfig? (name : Name) (self : Workspace) : Option (Package × TargetConfig) :=
+def findTargetConfig? (name : Name) (self : Workspace) : Option ((pkg : Package) × TargetConfig pkg.name name) :=
   self.packageArray.findSome? fun pkg => pkg.findTargetConfig? name <&> (⟨pkg, ·⟩)
 
 /-- Add a module facet to the workspace. -/
 def addModuleFacetConfig (cfg : ModuleFacetConfig name) (self : Workspace) : Workspace :=
-  {self with moduleFacetConfigs := self.moduleFacetConfigs.insert cfg.name cfg}
+  {self with moduleFacetConfigs := self.moduleFacetConfigs.insert name cfg}
 
 /-- Try to find a module facet configuration in the workspace with the given name. -/
-def findModuleFacetConfig? (name : Name) (self : Workspace) : Option (ModuleFacetConfig name) :=
+@[inline] def findModuleFacetConfig? (name : Name) (self : Workspace) : Option (ModuleFacetConfig name) :=
   self.moduleFacetConfigs.find? name
 
 /-- Add a package facet to the workspace. -/
 def addPackageFacetConfig (cfg : PackageFacetConfig name) (self : Workspace) : Workspace :=
-  {self with packageFacetConfigs := self.packageFacetConfigs.insert cfg.name cfg}
+  {self with packageFacetConfigs := self.packageFacetConfigs.insert name cfg}
 
 /-- Try to find a package facet configuration in the workspace with the given name. -/
-def findPackageFacetConfig? (name : Name) (self : Workspace) : Option (PackageFacetConfig name) :=
+@[inline] def findPackageFacetConfig? (name : Name) (self : Workspace) : Option (PackageFacetConfig name) :=
   self.packageFacetConfigs.find? name
+
+/-- Add a library facet to the workspace. -/
+def addLibraryFacetConfig (cfg : LibraryFacetConfig name) (self : Workspace) : Workspace :=
+  {self with libraryFacetConfigs := self.libraryFacetConfigs.insert cfg.name cfg}
+
+/-- Try to find a library facet configuration in the workspace with the given name. -/
+@[inline] def findLibraryFacetConfig? (name : Name) (self : Workspace) : Option (LibraryFacetConfig name) :=
+  self.libraryFacetConfigs.find? name
 
 /-- The `LEAN_PATH` of the workspace. -/
 def leanPath (self : Workspace) : SearchPath :=
@@ -130,11 +127,6 @@ This is added to the `sharedLibPathEnvVar` by `lake env`.
 -/
 def libPath (self : Workspace) : SearchPath :=
   self.packageList.map (·.libDir)
-
-/-- The `LeanPaths` of the workspace. -/
-def leanPaths (self : Workspace) : LeanPaths where
-  oleanPath := self.packageList.map (·.oleanDir)
-  srcPath := self.packageList.map (·.srcDir)
 
 /--
 Rhe detected `LEAN_PATH` of the environment
