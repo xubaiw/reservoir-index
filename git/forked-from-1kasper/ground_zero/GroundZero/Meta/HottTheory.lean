@@ -37,7 +37,7 @@ def isProof : LocalContext → Expr → MetaM Bool :=
 def mkNumMetaUnivs : Nat → MetaM (List Level)
 |   0   => return []
 | n + 1 => do
-  let id ← mkFreshMVarId;
+  let id ← mkFreshLMVarId;
   let xs ← mkNumMetaUnivs n;
   return (mkLevelMVar id :: xs)
 
@@ -124,7 +124,7 @@ leading_parser declModifiers false >> "hott " >> («def» <|> «theorem»)
   |> Elab.Command.elabDeclaration
 
   if (← getEnv).contains name then do {
-    Elab.Command.liftTermElabM name (checkDecl declId name);
+    Elab.Command.liftTermElabM (checkDecl declId name);
     modifyEnv (λ env => hottDecls.addEntry env name)
   }
 | _ => throwError "invalid declaration"
