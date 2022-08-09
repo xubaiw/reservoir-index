@@ -379,11 +379,13 @@ tptp KRS003_1 "../TPTP-v8.0.0/Problems/KRS/KRS003_1.p"
 tptp PUZ012_1 "../TPTP-v8.0.0/Problems/PUZ/PUZ012_1.p"
   by duper
 
+#print PUZ012_1 -- Goes up to clause 1789 (in 10458ms)
+
 --###############################################################################################################################
 -- Example from super
 /-
-super_test no longer exhibits the elimDupLit proof reconstruction bug, but now (as of the commit that added backward demodulation),
-it succeeds inconsistently (like PUZ012_1 from bugs.lean)
+super_test no longer exhibits the elimDupLit proof reconstruction bug, or inconsistent behavior, but duper now regularly
+times out on it.
 
 theorem super_test (p q : i → i → Prop) (a b c d : i) :
   (∀x y z, p x y ∧ p y z → p x z) →
