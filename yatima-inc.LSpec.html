@@ -149,6 +149,10 @@ jobs:
 <span class="pl-s"></span>      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v2</span>
       - <span class="pl-ent">name</span>: <span class="pl-s">run LSpec binary</span>
         <span class="pl-ent">run</span>: <span class="pl-s">lake exe lspec</span></pre></div>
+<h4 dir="auto">Running specific test suites</h4>
+<p dir="auto">The <code>lspec</code> binary also accepts specific test suites as input.
+For example, you can call <code>lake exe lspec Foo Some.Bar</code> and it will build and run <code>Tests/Foo.lean</code> and <code>Tests/Some/Bar.lean</code>.</p>
+<p dir="auto">This is particularly useful for running certain tests locally.</p>
 </article></div></main>
 </body>
 </html>
