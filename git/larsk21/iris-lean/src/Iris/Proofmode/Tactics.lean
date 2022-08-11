@@ -3,6 +3,8 @@ import Iris.Proofmode.Environments
 import Iris.Proofmode.Expr
 import Iris.Proofmode.InputPatterns
 import Iris.Proofmode.Theorems
+import Iris.Proofmode.Tactics.Cases
+import Iris.Proofmode.Tactics.Rename
 import Iris.Std
 
 import Lean.Elab
@@ -78,48 +80,6 @@ private def findHypothesis (name : Name) : TacticM HypothesisIndex := do
   else
     throwError "unknown hypothesis"
 
-
-def Internal.irenameCore (hypIndex : HypothesisIndex) (name : Name) : TacticM Unit := do
-  -- parse goal
-  let goal :: _ ← getUnsolvedGoals
-    | throwNoGoalsToBeSolved
-  let expr ← instantiateMVars <| ← getMVarType goal
-
-  let some (Γₚ, Γₛ, _) ← extractEnvsEntails? expr
-    | throwError "not in proof mode"
-
-  let modifyHypothesis (Γ : Expr) (idx : Nat) : TacticM Expr := do
-    -- find hypothesis
-    let some h ← EnvExpr.get? Γ idx
-      | throwError "invalid index or ill-formed proof environment"
-
-    -- check for unique (or equal) hypothesis name
-    let nameFrom? := h.getMDataName?
-    if nameFrom? |>.map (· != name) |>.getD true then
-      if ← [Γₚ, Γₛ].anyM (fun Γ => do return (← EnvExpr.any? Γ (·.getMDataName?.isEqSome name)) matches some true) then
-        throwError "name is already used for another hypothesis"
-
-    -- rename hypothesis
-    let h := h.setMDataName? name
-
-    -- re-insert hypothesis
-    let some Γ ← EnvExpr.set? Γ h idx
-      | throwError "invalid index or ill-formed proof environment"
-
-    return Γ
-
-  -- modify environment
-  let (Γₚ, Γₛ) ← match hypIndex with
-    | ⟨.intuitionistic, index, _⟩ => do
-      pure (← modifyHypothesis Γₚ index, Γₛ)
-    | ⟨.spatial, index, _⟩ => do
-      pure (Γₚ, ← modifyHypothesis Γₛ index)
-
-  -- update goal
-  let some expr ← modifyEnvsEntails? expr Γₚ Γₛ none
-    | throwError "ill-formed proof environment"
-
-  setMVarType goal expr
 
 elab "irename" colGt nameFrom:ident "into" colGt nameTo:ident : tactic => do
   -- parse syntax
@@ -461,221 +421,92 @@ elab "iright" : tactic => do
   )) catch _ => throwError "goal is not a disjunction"
 
 
-mutual
-  private partial def Internal.icasesCoreConjunction (hypIndex : HypothesisIndex) (args : Array iCasesPat) : TacticM Unit := do
-    if args.size < 2 then
-      throwError "conjunction must contain at least two elements"
+partial def Internal.icasesCore (nameFrom : Name) (pat : iCasesPat) : TacticM Unit := do
+  -- focus on main goal and save state
+  let mainGoal :: remainingGoals ← getUnsolvedGoals
+    | pure ()
+  setGoals [mainGoal]
 
-    -- destruct hypothesis with multiple conjunctions
-    let mut remainingArguments := #[(.anonymous, args[0]!)]
-    let mut hypIndex := hypIndex
-    for i in [:args.size - 1] do
-      -- destruct hypothesis and clear one side if requested
-      let (h, ra) ← (do
-        if args[i]! matches .clear then
-          if let some result ← destructRight hypIndex args[i + 1]! then
-            return result
-        else if i + 1 == args.size - 1 && args[i + 1]! matches .clear then
-          if let some result ← destructLeft hypIndex args[i]! then
-            return result
+  -- find hypothesis index
+  let hypIndex ← findHypothesis nameFrom
 
-        let some result ← destruct hypIndex args[i]! args[i + 1]!
-          | throwError "failed to destruct conjunction"
-        return result)
+  -- process pattern
+  processPattern hypIndex pat
 
-      -- update hypothesis index and collect remaining arguments
-      hypIndex := h
-      remainingArguments := remainingArguments |>.pop |>.append ra
+  -- restore goal state
+  setGoals <| (← getUnsolvedGoals) ++ remainingGoals
+where
+  processPattern (hypIndex : HypothesisIndex) : iCasesPat → (TacticM Unit)
+  | .one nameTo => do
+    irenameCore hypIndex nameTo
 
-    -- process pattern recursively
+  | .clear => do
+    evalTactic (← `(tactic|
+      iclear $(mkIdent nameFrom)
+    ))
+
+  | .conjunction args => do
+    if let #[] := args then
+      throwError "empty constructor is not a valid icases pattern"
+    else if let #[arg] := args then
+      return ← icasesCore nameFrom arg
+    else if let #[.one var, f] := args then
+      if let some (name, arg) ← icasesCoreExist hypIndex var f then
+        return ← icasesCore name arg
+
+    let remainingArguments ← icasesCoreConjunction hypIndex args
+
+    -- process arguments recursively
     for (name, arg) in remainingArguments do
-      -- save introduced goals
       let mut goals := []
 
-      -- apply recursive function to each goal
-      for goal in ← getUnsolvedGoals do
+      for goal in (← getUnsolvedGoals) do
         setGoals [goal]
         icasesCore name arg
         goals := goals ++ (← getUnsolvedGoals)
 
-      -- restore all introduced goals
       setGoals goals
-  where
-    destructRight (hypIndex : HypothesisIndex) (argR : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
-      -- destruct hypothesis
-      try evalTactic (← `(tactic|
-        first
-        | refine tac_conjunction_destruct_choice $(← hypIndex.quoteAsEnvsIndex) false _ ?_
-          simp only [ite_true, ite_false]
-        | fail
-      )) catch _ => return none
 
-      -- update hypothesis index
-      let hypIndex := { hypIndex with index := hypIndex.length - 1 }
+  | .disjunction args => do
+    if let #[] := args then
+      throwError "empty list of alternatives is not a valid icases pattern"
+    else if let #[arg] := args then
+      return ← icasesCore nameFrom arg
 
-      -- temporarily name hypothesis
-      let name ← mkFreshUserName `i
-      irenameCore hypIndex name
+    let remainingArguments ← icasesCoreDisjunction hypIndex args (← getMainGoal)
 
-      -- return new hypothesis index and remaining arguments
-      return (hypIndex, #[(name, argR)])
-
-    destructLeft (hypIndex : HypothesisIndex) (argL : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
-      -- destruct hypothesis
-      try evalTactic (← `(tactic|
-        first
-        | refine tac_conjunction_destruct_choice $(← hypIndex.quoteAsEnvsIndex) true _ ?_
-          simp only [ite_true, ite_false]
-        | fail
-      )) catch _ => return none
-
-      -- update hypothesis index
-      let hypIndex := { hypIndex with index := hypIndex.length - 1 }
-
-      -- temporarily name hypothesis
-      let name ← mkFreshUserName `i
-      irenameCore hypIndex name
-
-      -- return new hypothesis index and remaining arguments
-      return (hypIndex, #[(name, argL)])
-
-    destruct (hypIndex : HypothesisIndex) (argL argR : iCasesPat) : TacticM <| Option <| HypothesisIndex × (Array <| Name × iCasesPat) := do
-      -- destruct hypothesis
-      try evalTactic (← `(tactic|
-        first
-        | refine tac_conjunction_destruct $(← hypIndex.quoteAsEnvsIndex) _ ?_
-        | fail
-      ))
-      catch _ => return none
-
-      -- update hypothesis index
-      let hypIndex := { hypIndex with index := hypIndex.length, length := hypIndex.length + 1 }
-
-      -- temporarily name hypotheses
-      let nameL ← mkFreshUserName `i
-      let nameR ← mkFreshUserName `i
-
-      irenameCore { hypIndex with index := hypIndex.length - 2 } nameL
-      irenameCore { hypIndex with index := hypIndex.length - 1 } nameR
-
-      -- return new hypothesis index and remaining arguments
-      return (hypIndex, #[(nameL, argL), (nameR, argR)])
-
-  private partial def Internal.icasesCoreDisjunction (hypIndex : HypothesisIndex) (args : Array iCasesPat) (mainGoal : MVarId) : TacticM Unit := do
-    -- find main goal tag
-    let tag ← getMVarTag mainGoal
-
-    let mut goalsInd := #[mainGoal]
-    let mut hypIndex := hypIndex
-    for i in [1:args.size] do
-      -- assemble new goal tags
-      let tagL := tag ++ s!"Ind_{i}".toName
-      let tagR := if i < args.size - 1 then
-        tag ++ s!"Ind_{i + 1}_tmp".toName
-      else
-        tag ++ s!"Ind_{i + 1}".toName
-
-      -- destruct hypothesis
-      try evalTactic (← `(tactic|
-        first
-        | refine tac_disjunction_destruct $(← hypIndex.quoteAsEnvsIndex) _
-            ?$(mkIdent <| tagL):ident
-            ?$(mkIdent <| tagR):ident
-        | fail
-      ))
-      catch _ => throwError "failed to destruct disjunction"
-
-      -- update hypothesis index for new goals
-      hypIndex := { hypIndex with index := hypIndex.length - 1 }
-
-      -- save new goals
-      let (some goalL, some goalR) ← (tagL, tagR).mapAllM findGoalFromTag?
-        | throwError "goal tag assignment failed"
-      goalsInd := goalsInd |>.pop |>.push goalL |>.push goalR
-
-      -- switch to right new goal
-      setGoals [goalR]
-
-    -- restore all new goals
-    setGoals goalsInd.toList
-
-    -- save goals introduced by recursive calls
-    let mut goalsRec := []
-
-    -- process pattern recursively
-    for (arg, goal) in args.zip goalsInd do
-      let name ← mkFreshUserName `i
-
+    -- process arguments recursively
+    let mut goals := []
+    for (goal, name, arg) in remainingArguments do
       setGoals [goal]
-      irenameCore { hypIndex with index := hypIndex.length - 1 } name
       icasesCore name arg
-      goalsRec := goalsRec ++ (← getUnsolvedGoals)
+      goals := goals ++ (← getUnsolvedGoals)
 
-    -- restore all introduced goals
-    setGoals goalsRec
+    setGoals goals
 
-  partial def Internal.icasesCore (nameFrom : Name) (pat : iCasesPat) : TacticM Unit := do
-    -- focus on main goal and save state
-    let mainGoal :: remainingGoals ← getUnsolvedGoals
-      | pure ()
-    setGoals [mainGoal]
+  | .pure (.one nameTo) => do
+    irenameCore hypIndex nameTo
 
-    -- find hypothesis index
-    let hypIndex ← findHypothesis nameFrom
+    evalTactic (← `(tactic|
+      ipure $(mkIdent nameTo)
+    ))
 
-    -- process pattern
-    match pat with
-    | .one nameTo =>
-      irenameCore hypIndex nameTo
+  | .pure _ =>
+    throwError "cannot further destruct a hypothesis after moving it to the Lean context"
 
-    | .clear =>
-      evalTactic (← `(tactic|
-        iclear $(mkIdent nameFrom)
-      ))
+  | .intuitionistic pat => do
+    evalTactic (← `(tactic|
+      iintuitionistic $(mkIdent nameFrom)
+    ))
 
-    | .conjunction args =>
-      if let #[] := args then
-        throwError "empty constructor is not a valid icases pattern"
-      else if let #[arg] := args then
-        return ← icasesCore nameFrom arg
+    icasesCore nameFrom pat
 
-      icasesCoreConjunction hypIndex args
+  | .spatial pat => do
+    evalTactic (← `(tactic|
+      ispatial $(mkIdent nameFrom)
+    ))
 
-    | .disjunction args =>
-      if let #[] := args then
-        throwError "empty list of alternatives is not a valid icases pattern"
-      else if let #[arg] := args then
-        return ← icasesCore nameFrom arg
-
-      icasesCoreDisjunction hypIndex args mainGoal
-
-    | .pure (.one nameTo) =>
-      irenameCore hypIndex nameTo
-
-      evalTactic (← `(tactic|
-        ipure $(mkIdent nameTo)
-      ))
-
-    | .pure _ =>
-      throwError "cannot further destruct a hypothesis after moving it to the Lean context"
-
-    | .intuitionistic pat =>
-      evalTactic (← `(tactic|
-        iintuitionistic $(mkIdent nameFrom)
-      ))
-
-      icasesCore nameFrom pat
-
-    | .spatial pat =>
-      evalTactic (← `(tactic|
-        ispatial $(mkIdent nameFrom)
-      ))
-
-      icasesCore nameFrom pat
-
-    -- restore goal state
-    setGoals <| (← getUnsolvedGoals) ++ remainingGoals
-end
+    icasesCore nameFrom pat
 
 elab "icases" colGt name:ident "with" colGt pat:icasesPat : tactic => do
   -- parse syntax
