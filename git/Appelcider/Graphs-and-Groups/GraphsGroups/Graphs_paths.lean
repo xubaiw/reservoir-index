@@ -1,3 +1,6 @@
+import Mathlib.Algebra.Group.Basic
+import Mathlib.Algebra.Group.Defs
+
 structure Graph(V: Type) (E: Type) where
   null : E
   init : E → V
@@ -314,11 +317,6 @@ theorem homotopy_left_multiplication_class {G :Graph V E} {x y z : V} (p₁ : Ed
   simp[htclass, homotopy_left_multiplication]
 
 
---proves that homotopy class of left product of paths is same as given by left multiplication of homotopy
-theorem help {G :Graph V E} {x y z : V} (p₁ : EdgePath G x y) (p₂ : EdgePath G y z): homotopy_left_multiplication p₁ (htclass p₂) = htclass (multiply p₁ p₂) := by 
-  simp[htclass, homotopy_left_multiplication]
-
-
 --defines multiplication of homotopy
 def homotopy_multiplication : ht G x y → ht G y z → ht G x z := by 
   intro p₁ p₂
@@ -334,7 +332,7 @@ def homotopy_multiplication : ht G x y → ht G y z → ht G x z := by
           have : htclass (multiply q₁ p') = htclass (multiply q₂ p') := by 
             let prop := homotopy_right_mult q₁ q₂ p' h'
             rw[prop]
-          simp[help, this]
+          simp[homotopy_left_multiplication_class, this]
         apply Quot.ind g''
       let hh := g' p₂
       have : homotopy_left_multiplication q₁ p₂ = homotopy_left_multiplication q₂ p₂ := by simp[hh]
@@ -343,11 +341,11 @@ def homotopy_multiplication : ht G x y → ht G y z → ht G x z := by
   apply k p₁
 
 
-infixl: 65 " * " => homotopy_multiplication
+infixl: 65 " # " => homotopy_multiplication
 
 
---proves that * is associative up to multiplication by a pair of paths and one homotopy class 
-theorem homotopy_mult_path_path_assoc {G :Graph V E} {w x y z : V} (p : EdgePath G w x) (q : EdgePath G x y): (r : ht G y z) → (htclass (multiply p q)) * r = (htclass p) * ((htclass q) * r) := by 
+--proves that # is associative up to multiplication by a pair of paths and one homotopy class 
+theorem homotopy_mult_path_path_assoc {G :Graph V E} {w x y z : V} (p : EdgePath G w x) (q : EdgePath G x y): (r : ht G y z) → (htclass (multiply p q)) # r = (htclass p) # ((htclass q) # r) := by 
   apply Quot.ind 
   intro b
   simp[htclass, homotopy_multiplication]
@@ -358,17 +356,17 @@ theorem homotopy_mult_path_path_assoc {G :Graph V E} {w x y z : V} (p : EdgePath
   simp[mult_assoc]
 
 
---proves that * is associative up to multiplication by one path and a pair of homotopy classes 
-theorem homotopy_mult_path_assoc {G :Graph V E} {w x y z : V} (p : EdgePath G w x) (r : ht G y z): (q : ht G x y) → (htclass p * q) * r = (htclass p) * (q * r) := by 
+--proves that # is associative up to multiplication by one path and a pair of homotopy classes 
+theorem homotopy_mult_path_assoc {G :Graph V E} {w x y z : V} (p : EdgePath G w x) (r : ht G y z): (q : ht G x y) → (htclass p # q) # r = (htclass p) # (q # r) := by 
   apply Quot.ind
   intro a
   simp[htclass]
-  have p₁ : Quot.mk basicht p * Quot.mk basicht a = htclass (multiply p a) := by rfl
+  have p₁ : Quot.mk basicht p # Quot.mk basicht a = htclass (multiply p a) := by rfl
   rw[p₁]
   apply homotopy_mult_path_path_assoc p a r
 
---proves that * is associative on homotopy classes
-theorem homotopy_mult_assoc {G :Graph V E} {w x y z : V} (b : ht G x y) (c : ht G y z) : (a : ht G w x) → ((a * b) * c ) = (a * (b * c) )  := by 
+--proves that # is associative on homotopy classes
+theorem homotopy_mult_assoc {G :Graph V E} {w x y z : V} (b : ht G x y) (c : ht G y z) : (a : ht G w x) → ((a # b) # c ) = (a # (b # c) )  := by 
   apply Quot.ind
   intro a 
   apply homotopy_mult_path_assoc a c b
@@ -416,3 +414,41 @@ theorem homotopy_reducePath {G : Graph V E} {x y : V} (p₁ : EdgePath G x y): h
           have t₃ : homotopy (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) := by apply homotopy_left_mult_edge exy q t₂ ex h₁ h₂
           apply homotopy_trans (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) (reducePath (cons ex h₁ h₂ exy)) t₃ (this ▸ t₁)
 
+
+
+
+
+instance ht_mul {G : Graph V E} {x : V} :  Mul (ht G x x) where
+mul : ht G x x → ht G x x → ht G x x := fun a b => homotopy_multiplication a b
+
+instance ht_one {G : Graph V E} {x : V} : One (ht G x x) where
+one : ht G x x := htclass (single x)
+
+
+theorem ht_mult_assoc {G : Graph V E} {x : V} (a b c : ht G x x) : ((a # b) # c) = (a # ( b # c)) := by 
+let k := @homotopy_mult_assoc V E G x x x x
+let l (a b c : ht G x x) := k b c a
+apply (l a b c)
+
+theorem ht_right_identity {G : Graph V E} {x : V} : (a₀ : ht G x x) → ht_mul.mul a₀  (@ht_one V E G x).one = a₀ := by 
+have  k (b : EdgePath G x x) : homotopy_multiplication (htclass b) (htclass (single x)) = (htclass b) := by 
+    let l :=mult_const b ▸ homotopy_left_multiplication_class b (single x)
+    have : (htclass b) # (htclass (single x)) = homotopy_left_multiplication b (htclass (single x)) := by rfl
+    apply Eq.trans this l
+have k₂ (b : EdgePath G x x) : ht_mul.mul (htclass b) (@ht_one V E G x).one = htclass b := by 
+  apply k 
+apply Quot.ind
+apply k₂
+
+theorem ht_left_identity {G : Graph V E} {x : V} : (a₀ : ht G x x) → ht_mul.mul (@ht_one V E G x).one a₀ = a₀ := by 
+have  k (b : EdgePath G x x) : homotopy_multiplication (htclass (single x)) (htclass b) = (htclass b) := by 
+    have : (htclass b) # (htclass (single x)) = (htclass (multiply b (single x))) := by rfl
+    apply (mult_const b) ▸ this
+have k₂ (b : EdgePath G x x) : ht_mul.mul (@ht_one V E G x).one (htclass b)  = htclass b := by 
+  apply k 
+apply Quot.ind
+apply k₂
+
+def ht_semigroup (G : Graph V E) (x : V) := @Semigroup.mk (ht G x x) (ht_mul) (by apply ht_mult_assoc) 
+
+def ht_monoid (G : Graph V E) (x : V) := @Monoid.mk (ht G x x) (ht_semigroup G x) (ht_one) (ht_right_identity) (ht_left_identity) (npow_rec) (by simp[npow_rec]) (by simp[npow_rec])   

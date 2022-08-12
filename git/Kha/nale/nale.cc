@@ -122,7 +122,7 @@ struct NaleInputScheme : InputScheme
         auto flakeContents = format(R"({
   inputs.lean.url = github:%1%;
   inputs.lake2nix.url = @lake2nix-url@;
-  #inputs.lake2nix.inputs.lean.follows = "lean";
+  inputs.lake2nix.inputs.lean.follows = "lean";
   #inputs.lake2nix.inputs.flake-utils.follows = "lean/flake-utils";  # why
   #inputs.lake2nix.inputs.lake.inputs.flake-utils.follows = "lean/flake-utils";  # why
 
