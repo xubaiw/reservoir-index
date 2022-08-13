@@ -76,6 +76,7 @@ import Mathlib.Tactic.GuardGoalNums
 import Mathlib.Tactic.GuardHypNums
 import Mathlib.Tactic.Have
 import Mathlib.Tactic.HaveI
+import Mathlib.Tactic.HelpCmd
 import Mathlib.Tactic.InferParam
 import Mathlib.Tactic.Inhabit
 import Mathlib.Tactic.IrreducibleDef
@@ -102,7 +103,6 @@ import Mathlib.Tactic.Replace
 import Mathlib.Tactic.RestateAxiom
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.RunCmd
-import Mathlib.Tactic.RunTac
 import Mathlib.Tactic.Sat.FromLRAT
 import Mathlib.Tactic.SeqFocus
 import Mathlib.Tactic.Set
