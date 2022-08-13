@@ -123,8 +123,6 @@ struct NaleInputScheme : InputScheme
   inputs.lean.url = github:%1%;
   inputs.lake2nix.url = @lake2nix-url@;
   inputs.lake2nix.inputs.lean.follows = "lean";
-  #inputs.lake2nix.inputs.flake-utils.follows = "lean/flake-utils";  # why
-  #inputs.lake2nix.inputs.lake.inputs.flake-utils.follows = "lean/flake-utils";  # why
 
   outputs = { self, lake2nix, lean, ... }: lake2nix.lib.lakeRepo2flake { src = ./.; leanPkgs = lean.packages; };
 })") % leanVersion;

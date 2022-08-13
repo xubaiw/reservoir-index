@@ -28,9 +28,31 @@
 <p>TODO: should show a time axes that allows the users to view, filter and click copy the lakefile config.</p>
 <h2>README</h2>
 <div class="md" data-path="README.md" id="readme"><article class="markdown-body entry-content container-lg" itemprop="text"><h3 dir="auto">Cryptography in Lean 4</h3>
-<p dir="auto">This repo contains some experiments that are progressing to specifications of AES, SHA3 and Classic McEliece
-in Lean.</p>
-<p dir="auto">Please contact me if you are interested in working on cryptographic specifications in Lean.</p>
+<p dir="auto">This repo is intended to provide a comprehensive collection of specifications
+of cryptographic algorithms in Lean 4.  Each algorithm will have a complete,
+executable specification along with test vectors for some validation that the
+algorithm is correctly specified.</p>
+<p dir="auto">The repositiory currently contains a complete specification of the
+<a href="https://classic.mceliece.org/" rel="nofollow">Classic McEliece</a> algorithm on the
+<code>kem/mceliece348864</code> parameter set.  It has been
+derived from the <a href="https://classic.mceliece.org/nist.html" rel="nofollow">Nist Round 3</a>
+submission files.  Our <a href="https://github.com/joehendrix/lean-crypto/actions">continuous integration</a>
+validates that the Lean specification produces the same known-answer tests
+as the C reference implementation.</p>
+<p dir="auto">The cryptographic library also links in <a href="https://www.openssl.org/" rel="nofollow">OpenSSL</a>
+and <a href="https://codeberg.org/maandree/libkeccak" rel="nofollow">libkeccak</a> so
+that we can invoke fast C implementations of AES and SHAKE respectively.</p>
+<p dir="auto">This repository also includes experiments aimed at mapping the cryptographic
+specifications into SMT so that we can take advantage of automated constraint
+solving to reason about cryptographic specificiations including equivalence
+checking and checking correctness properties of specifications.</p>
+<h3 dir="auto">Plans for the Future</h3>
+<p dir="auto">This repository is still in its early stages.  Our next plans are to:</p>
+<ul dir="auto">
+<li>Write reference specifications of AES and SHAKE that can be validated
+against known answer tests.</li>
+<li>Complete specifications of other Classic Mceliece parameter sets.</li>
+</ul>
 </article></div></main>
 </body>
 </html>
