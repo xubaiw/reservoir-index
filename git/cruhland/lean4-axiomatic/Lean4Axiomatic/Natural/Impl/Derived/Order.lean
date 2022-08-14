@@ -7,7 +7,7 @@ variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
 variable [Addition.Derived ℕ]
-variable [Sign.Derived ℕ]
+variable [Sign ℕ]
 variable [Order.Base ℕ]
 
 namespace Base
@@ -288,7 +288,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
         n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
-    have : Positive d := Sign.positive_defn.mpr ‹d ≄ 0›
+    have : Positive d := Signed.positive_defn.mpr ‹d ≄ 0›
     have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Positive d›
     show step n ≤ m
     apply Order.Base.le_defn.mpr
@@ -341,7 +341,7 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     exists step k
     apply And.intro
     · show Positive (step k)
-      apply Sign.positive_defn.mpr
+      apply Signed.positive_defn.mpr
       show step k ≄ 0
       exact Axioms.step_neq_zero
     · show m ≃ n + step k
@@ -401,7 +401,7 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
       Derived.lt_defn_add.mp ‹0 < n›
     have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› Addition.zero_add)
-    exact AA.subst₁ (rβ := (· → ·)) ‹k ≃ n› ‹Positive k›
+    exact AA.subst₁ (f := Positive) (rβ := (· → ·)) ‹k ≃ n› ‹Positive k›
 
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
   intro (_ : n ≃ m)

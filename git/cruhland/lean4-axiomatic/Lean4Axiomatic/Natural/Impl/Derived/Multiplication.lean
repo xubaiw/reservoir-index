@@ -15,7 +15,7 @@ variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms.Derived ℕ]
 variable [Addition.Derived ℕ]
-variable [Sign.Base ℕ]
+variable [Sign ℕ]
 variable [Order.Derived ℕ]
 variable [Multiplication.Base ℕ]
 
@@ -223,9 +223,9 @@ theorem mul_positive {n m : ℕ}
     : Positive n → Positive m → Positive (n * m) := by
   intro (_ : Positive n) (_ : Positive m)
   show Positive (n * m)
-  have : n ≄ 0 := Sign.positive_defn.mp ‹Positive n›
-  have : m ≄ 0 := Sign.positive_defn.mp ‹Positive m›
-  apply Sign.positive_defn.mpr
+  have : n ≄ 0 := Signed.positive_defn.mp ‹Positive n›
+  have : m ≄ 0 := Signed.positive_defn.mp ‹Positive m›
+  apply Signed.positive_defn.mpr
   show n * m ≄ 0
   intro (_ : n * m ≃ 0)
   show False
@@ -354,7 +354,7 @@ def mul_cancelL
   apply AA.CancellativeOn.mk
   intro x y₁ y₂ (_ : x ≄ 0) (_ : x * y₁ ≃ x * y₂)
   show y₁ ≃ y₂
-  have : Positive x := Sign.positive_defn.mpr ‹x ≄ 0›
+  have : Positive x := Signed.positive_defn.mpr ‹x ≄ 0›
   have notTwoOfThree := (Order.trichotomy (x * y₁) (x * y₂)).atMostOne
   match (Order.trichotomy y₁ y₂).atLeastOne with
   | AA.OneOfThree.first (_ : y₁ < y₂) =>

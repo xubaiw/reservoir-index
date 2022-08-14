@@ -2,6 +2,7 @@ import Lean4Axiomatic.Integer.Addition
 import Lean4Axiomatic.Integer.Core
 import Lean4Axiomatic.Integer.Multiplication
 import Lean4Axiomatic.Integer.Negation
+import Lean4Axiomatic.Integer.Sign
 import Lean4Axiomatic.Integer.Subtraction
 
 /-!
@@ -11,8 +12,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic
 
 open Integer (
-  Addition.Base Core.Derived Multiplication.Base Negation.Derived
-  Subtraction.Base
+  Addition.Base Core.Derived Multiplication.Base Negation Sign Subtraction.Base
 )
 
 /--
@@ -39,7 +39,8 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toCore : Core.Derived ℕ ℤ
   toAddition : Addition.Base ℕ ℤ
   toMultiplication : Multiplication.Base ℕ ℤ
-  toNegation : Negation.Derived ℕ ℤ
+  toNegation : Negation ℕ ℤ
+  toSign : Sign ℕ ℤ
   toSubtraction : Subtraction.Base ℤ
 
 namespace Integer

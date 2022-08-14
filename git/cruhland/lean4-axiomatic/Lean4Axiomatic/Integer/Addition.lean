@@ -37,8 +37,16 @@ class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core.Base ℕ ℤ] 
   /-- Adding zero to an integer produces the same integer. -/
   add_identity : AA.Identity (α := ℤ) 0 (· + ·)
 
+  /--
+  Adding two natural numbers and then converting to an integer gives the same
+  result as converting each number to an integer and then adding.
+  -/
+  add_compatible_from_natural
+    : AA.Compatible₂ (α := ℕ) (β := ℤ) (↑·) (· + ·) (· + ·)
+
 attribute [instance] Addition.Base.addOp
 attribute [instance] Addition.Base.add_associative
+attribute [instance] Addition.Base.add_compatible_from_natural
 attribute [instance] Addition.Base.add_identity
 attribute [instance] Addition.Base.add_substitutive
 

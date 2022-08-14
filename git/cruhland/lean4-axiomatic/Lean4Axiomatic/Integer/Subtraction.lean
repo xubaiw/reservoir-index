@@ -11,13 +11,6 @@ namespace Lean4Axiomatic.Integer
 Definition of subtraction, and properties that it must satisfy.
 
 All other properties of subtraction can be derived from these.
-
-**Named parameters**
-- `ℤ`: The integers.
-
-**Class parameters**
-- All other class parameters provide the subset of integer properties necessary
-  to define the fields of this class.
 -/
 class Subtraction.Base (ℤ : Type) [Equivalence ℤ] :=
   /-- Definition of and syntax for subtraction. -/

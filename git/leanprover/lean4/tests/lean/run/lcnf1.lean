@@ -69,3 +69,41 @@ structure Foo where
 def foo1 :=  Foo.mk Type Nat
 
 #eval Compiler.compile #[``foo1]
+
+def Tuple (α : Type u) : Nat → Type u
+  | 0   => PUnit
+  | 1   => α
+  | n+2 => α × Tuple α (n+1)
+
+def mkConstTuple (a : α) : (n : Nat) → Tuple α n
+  | 0 => ⟨⟩
+  | 1 => a
+  | n+2 => (a, mkConstTuple a (n+1))
+
+def Tuple.map (f : α → β) (xs : Tuple α n) : Tuple β n :=
+  match n with
+  | 0 => ⟨⟩
+  | 1 => f xs
+  | _+2 => match xs with
+    | (a, xs) => (f a, Tuple.map f xs)
+
+def Tuple.example (a b : Nat) :=
+  Tuple.map (n := 2) (· + 1) (a, b)
+
+#eval Compiler.compile #[``mkConstTuple]
+#eval Compiler.compile #[``Tuple.map]
+#eval Compiler.compile #[``Tuple.example]
+
+def gebner1 (x : UInt64) : UInt64 := assert! x > 0; x - 1
+set_option pp.letVarTypes true in
+#eval Compiler.compile #[``gebner1]
+
+def gebner2 (x : UInt64) := x &&& ((1 : UInt64) <<< 5 : UInt64)
+set_option pp.letVarTypes true in
+#eval Compiler.compile #[``gebner2]
+
+#eval Compiler.compile #[``Lean.Meta.instMonadMetaM]
+#eval Compiler.compile #[``Lean.Core.instMonadCoreM]
+#eval Compiler.compile #[``instMonadEIO]
+set_option pp.explicit true in
+#eval Compiler.compile #[``EStateM.instMonadEStateM]

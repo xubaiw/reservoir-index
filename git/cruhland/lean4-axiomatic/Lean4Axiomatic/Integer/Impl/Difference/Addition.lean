@@ -136,12 +136,36 @@ instance add_identity : AA.Identity (α := Difference ℕ) 0 (· + ·) := {
   identityR := AA.identityR_from_identityL add_identityL
 }
 
+/--
+Conversion from `ℕ` to `Difference ℕ` is compatible with addition.
+
+**Proprty intuition**: One would hope this is true, otherwise we could not say
+that the set of differences (integers) is a superset of the natural numbers.
+
+**Proof intuition**: Expanding definitions is enough to get us nearly there --
+just need to clean up an extra zero.
+-/
+theorem add_compat_natural
+    {n m : ℕ} : (↑(n + m) : Difference ℕ) ≃ ↑n + ↑m
+    := by
+  show (n + m)——0 ≃ n——0 + m——0
+  show (n + m)——0 ≃ (n + m)——(0 + 0)
+  show (n + m) + (0 + 0) ≃ (n + m) + 0
+  exact AA.substR AA.identR
+
+def add_compatible_from_natural
+    : AA.Compatible₂ (α := ℕ) (β := Difference ℕ) (↑·) (· + ·) (· + ·)
+    := {
+  compat₂ := add_compat_natural
+}
+
 instance addition : Addition.Base ℕ (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative
   add_associative := add_associative
   add_identity := add_identity
+  add_compatible_from_natural := add_compatible_from_natural
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

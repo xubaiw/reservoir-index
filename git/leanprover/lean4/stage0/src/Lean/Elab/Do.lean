@@ -685,19 +685,19 @@ def mkSingletonDoSeq (doElem : Syntax) : Syntax :=
   mkDoSeq #[doElem]
 
 /--
-  If the given syntax is a `doIf`, return an equivalente `doIf` that has an `else` but no `else if`s or `if let`s.  -/
+  If the given syntax is a `doIf`, return an equivalent `doIf` that has an `else` but no `else if`s or `if let`s.  -/
 private def expandDoIf? (stx : Syntax) : MacroM (Option Syntax) := match stx with
   | `(doElem|if $_:doIfProp then $_ else $_) => pure none
-  | `(doElem|if%$i $cond:doIfCond then $t $[else if%$is $conds:doIfCond then $ts]* $[else $e?]?) => withRef stx do
+  | `(doElem|if $cond:doIfCond then $t $[else if $conds:doIfCond then $ts]* $[else $e?]?) => withRef stx do
     let mut e      := e?.getD (← `(doSeq|pure PUnit.unit))
     let mut eIsSeq := true
-    for (i, cond, t) in Array.zip (is.reverse.push i) (Array.zip (conds.reverse.push cond) (ts.reverse.push t)) do
+    for (cond, t) in Array.zip (conds.reverse.push cond) (ts.reverse.push t) do
       e ← if eIsSeq then pure e else `(doSeq|$e:doElem)
-      e ← withRef cond <| match cond with
-        | `(doIfCond|let $pat := $d) => `(doElem| match%$i $d:term with | $pat:term => $t | _ => $e)
-        | `(doIfCond|let $pat ← $d)  => `(doElem| match%$i ← $d    with | $pat:term => $t | _ => $e)
-        | `(doIfCond|$cond:doIfProp) => `(doElem| if%$i $cond:doIfProp then $t else $e)
-        | _                          => `(doElem| if%$i $(Syntax.missing) then $t else $e)
+      e ← match cond with
+        | `(doIfCond|let $pat := $d) => `(doElem| match $d:term with | $pat:term => $t | _ => $e)
+        | `(doIfCond|let $pat ← $d)  => `(doElem| match ← $d    with | $pat:term => $t | _ => $e)
+        | `(doIfCond|$cond:doIfProp) => `(doElem| if $cond:doIfProp then $t else $e)
+        | _                          => `(doElem| if $(Syntax.missing) then $t else $e)
       eIsSeq := false
     return some e
   | _ => pure none
@@ -1158,7 +1158,7 @@ end ToTerm
 
 def isMutableLet (doElem : Syntax) : Bool :=
   let kind := doElem.getKind
-  (kind == `Lean.Parser.Term.doLetArrow || kind == `Lean.Parser.Term.doLet)
+  (kind == ``doLetArrow || kind == ``doLet || kind == ``doLetElse)
   &&
   !doElem[1].isNone
 
@@ -1192,7 +1192,7 @@ def checkNotShadowingMutable (xs : Array Var) : M Unit := do
   let ctx ← read
   for x in xs do
     if ctx.mutableVars.contains x.getId then
-      throwInvalidShadowing x.getId
+      withRef x <| throwInvalidShadowing x.getId
 
 def withFor {α} (x : M α) : M α :=
   withReader (fun ctx => { ctx with insideFor := true }) x
@@ -1330,9 +1330,12 @@ mutual
           `(do let%$doLetArrow discr ← $doElem; let%$doLetArrow $pattern:term := discr)
         doSeqToCode <| getDoSeqElems (getDoSeq auxDo) ++ doElems
       else
-        if isMutableLet doLetArrow then
-          throwError "`mut` is currently not supported in let-decls with `else` case"
-        let contSeq := mkDoSeq doElems.toArray
+        let contSeq ← if isMutableLet doLetArrow then
+          let vars ← (← getPatternVarsEx pattern).mapM fun var => `(doElem| let mut $var := $var)
+          pure (vars ++ doElems.toArray)
+        else
+          pure doElems.toArray
+        let contSeq := mkDoSeq contSeq
         let elseSeq := mkSingletonDoSeq optElse[1]
         let auxDo ← `(do let%$doLetArrow discr ← $doElem; match%$doLetArrow discr with | $pattern:term => $contSeq | _ => $elseSeq)
         doSeqToCode <| getDoSeqElems (getDoSeq auxDo)
@@ -1340,11 +1343,16 @@ mutual
       throwError "unexpected kind of `do` declaration"
 
   partial def doLetElseToCode (doLetElse : Syntax) (doElems : List Syntax) : M CodeBlock := do
-    -- "let " >> termParser >> " := " >> termParser >> checkColGt >> " | " >> doElemParser
-    let pattern := doLetElse[1]
-    let val     := doLetElse[3]
-    let elseSeq := mkSingletonDoSeq doLetElse[5]
-    let contSeq := mkDoSeq doElems.toArray
+    -- "let " >> optional "mut " >> termParser >> " := " >> termParser >> checkColGt >> " | " >> doElemParser
+    let pattern := doLetElse[2]
+    let val     := doLetElse[4]
+    let elseSeq := mkSingletonDoSeq doLetElse[6]
+    let contSeq ← if isMutableLet doLetElse then
+      let vars ← (← getPatternVarsEx pattern).mapM fun var => `(doElem| let mut $var := $var)
+      pure (vars ++ doElems.toArray)
+    else
+      pure doElems.toArray
+    let contSeq := mkDoSeq contSeq
     let auxDo ← `(do let discr := $val; match discr with | $pattern:term => $contSeq | _ => $elseSeq)
     doSeqToCode <| getDoSeqElems (getDoSeq auxDo)
 

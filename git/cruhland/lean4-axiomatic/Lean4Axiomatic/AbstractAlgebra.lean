@@ -477,7 +477,8 @@ structures.
 - `EqvOp β`: Necessary because the property expresses an equivalence on `β`.
 -/
 class Compatible₂
-    {α β : Sort u} [EqvOp β] (f : α → β) (g : outParam (α → α → α)) (h : outParam (β → β → β))
+    {α β : Sort u} [EqvOp β]
+    (f : α → β) (g : α → α → α) (h : outParam (β → β → β))
     :=
   /--
   The compatibility property of an unary operation `f` with two binary
@@ -591,6 +592,14 @@ def distributiveR_from_distributiveL
     g (f x y) (f x z) ≃ _ := AA.substL AA.comm
     g (f y x) (f x z) ≃ _ := AA.substR AA.comm
     g (f y x) (f z x) ≃ _ := Rel.refl
+
+/--
+Expresses that one of two propositions is true, but not both.
+
+**Named parameters**
+- `α`, `β`: The two propositions.
+-/
+def ExactlyOneOfTwo (α β : Prop) : Prop := (α ∨ β) ∧ ¬ (α ∧ β)
 
 inductive OneOfThree (α β γ : Prop) : Prop where
 | first  (a : α)

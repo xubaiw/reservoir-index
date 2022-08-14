@@ -22,7 +22,7 @@ class Natural (ℕ : Type) where
   toCore : Core ℕ
   toAxioms : Axioms.Derived ℕ
   toAddition : Addition.Derived ℕ
-  toSign : Sign.Derived ℕ
+  toSign : Sign ℕ
   toOrder : Order.Derived ℕ
   toMultiplication : Multiplication.Derived ℕ
   toExponentiation : Exponentiation.Base ℕ
@@ -55,6 +55,6 @@ export Order (
   lt_defn lt_defn_add ltOp lt_split lt_step lt_step_le lt_zero lt_zero_pos
   trichotomy
 )
-export Sign (positive_add positive_defn positive_step)
+export Sign (positive_add positive_step)
 
 end Lean4Axiomatic.Natural

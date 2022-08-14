@@ -10,7 +10,7 @@ variable [Natural ℕ]
 variable {ℤ : Type}
 variable [Core.Base ℕ ℤ]
 variable [Addition.Base ℕ ℤ]
-variable [Negation.Base ℕ ℤ]
+variable [Negation ℕ ℤ]
 
 /-- Define subtraction of a value from another as adding its negation. -/
 def sub (a b : ℤ) : ℤ := a + (-b)

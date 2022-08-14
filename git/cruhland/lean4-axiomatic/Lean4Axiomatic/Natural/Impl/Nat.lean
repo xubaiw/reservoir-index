@@ -82,7 +82,7 @@ instance : Natural Nat where
   toCore := core
   toAxioms := Natural.Derived.axioms_derived
   toAddition := Natural.Derived.addition_derived
-  toSign := Natural.Derived.sign_derived
+  toSign := Natural.Default.sign
   toOrder := Natural.Derived.order_derived
   toMultiplication := Natural.Derived.multiplication_derived
   toExponentiation := exponentiation_base

@@ -30,8 +30,8 @@ For more information see `Substitutive₁.subst₁`.
 - `rβ`: a binary relation over `f`'s result type `β`.
 -/
 class Substitutive₁
-    {α : outParam (Sort u)} {β : Sort v}
-    (f : outParam (α → β)) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
+    {α : Sort u} {β : Sort v}
+    (f : α → β) (rα : outParam (α → α → Prop)) (rβ : β → β → Prop)
     :=
   /--
   The generalized substitution property of an unary operation `f`.

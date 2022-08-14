@@ -41,7 +41,7 @@ attribute [instance default+1] Order.Base.ltOp
 
 /-- Properties that follow from those provided in `Order.Base`. -/
 class Order.Derived
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ]
+    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign ℕ]
     extends Order.Base ℕ
     :=
   /--

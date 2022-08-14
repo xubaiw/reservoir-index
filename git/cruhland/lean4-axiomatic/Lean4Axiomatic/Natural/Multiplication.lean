@@ -32,7 +32,7 @@ attribute [instance] Multiplication.Base.mulOp
 
 /-- Properties that follow from those provided in `Multiplication.Base`. -/
 class Multiplication.Derived
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign.Base ℕ] [Order.Base ℕ]
+    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign ℕ] [Order.Base ℕ]
     extends Multiplication.Base ℕ where
   /--
   Multiplication preserves equality of natural numbers; two equal natural
@@ -82,6 +82,7 @@ class Multiplication.Derived
 
 attribute [instance] Multiplication.Derived.mul_absorbing
 attribute [instance] Multiplication.Derived.mul_associative
+attribute [instance] Multiplication.Derived.mul_cancellative
 attribute [instance] Multiplication.Derived.mul_commutative
 attribute [instance] Multiplication.Derived.mul_distributive
 attribute [instance] Multiplication.Derived.mul_identity
