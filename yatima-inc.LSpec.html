@@ -42,6 +42,15 @@ In order to instantiate terms of <code>TestSeq</code>, use the <code>test</code>
 <span class="pl-c"><span class="pl-c">--</span> test "Nat equality" (4 = 4) (test "Nat inequality" (4 ≠ 5)) : TestSeq</span></pre></div>
 <p dir="auto"><code>test</code> consumes a description a proposition and a next test
 The proposition, however, must have its own instance of <code>Testable</code>.</p>
+<p dir="auto">You can also collect <code>TestSeq</code> into conceptual test groups by using the
+helper function <code>group</code>:</p>
+<div class="highlight highlight-source-lean notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="#check
+  test "Nat equality" (42 = 42) $
+  group "manual group" $
+    test "Nat equality inside group" (4 = 4)"><pre><span class="pl-k">#check</span>
+  test <span class="pl-s"><span class="pl-pds">"</span>Nat equality<span class="pl-pds">"</span></span> (<span class="pl-c1">42</span> = <span class="pl-c1">42</span>) $
+  group <span class="pl-s"><span class="pl-pds">"</span>manual group<span class="pl-pds">"</span></span> $
+    test <span class="pl-s"><span class="pl-pds">"</span>Nat equality inside group<span class="pl-pds">"</span></span> (<span class="pl-c1">4</span> = <span class="pl-c1">4</span>)</pre></div>
 <h5 dir="auto">The <code>Testable</code> class</h5>
 <p dir="auto"><code>Testable</code> is how Lean is instructed to decide whether certain propositions are resolved as <code>true</code> or <code>false</code>.</p>
 <p dir="auto">This is an example of a simple instance for decidability of equalities:</p>

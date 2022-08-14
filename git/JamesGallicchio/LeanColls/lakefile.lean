@@ -1,24 +1,25 @@
 import Lake
 open System Lake DSL
 
-def cDir : FilePath := "bindings"
-
-def cSrc := cDir / "leancolls_array.c"
-
-def buildDir := defaultBuildDir
-
-def oTarget (pkgDir : FilePath) : FileTarget :=
-  let oFile := pkgDir / buildDir / cDir / "leancolls_array.o"
-  let srcTarget := inputFileTarget <| pkgDir / cSrc
-  fileTargetWithDep oFile srcTarget fun srcFile => do
-    compileO oFile srcFile #["-I", (← getLeanIncludeDir).toString]
-
-def cLibTarget (pkgDir : FilePath) : FileTarget :=
-  let libFile := pkgDir / buildDir / cDir / "leancolls_array.a"
-  staticLibTarget libFile #[oTarget pkgDir]
-
-package LeanColls (pkgDir) {
-  moreLibTargets := #[cLibTarget pkgDir]
---  defaultFacet := PackageFacet.sharedLib
---  moreServerArgs := #["--load-dynlib=build/lib/LeanColls.so"]
+package leancolls {
+  precompileModules := false
 }
+
+@[defaultTarget]
+lean_lib LeanColls {
+  srcDir := __dir__
+  roots := #[`LeanColls]
+}
+
+@[defaultTarget]
+lean_exe test {
+  root := `Main
+}
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4"
+    @ "a4f624b2fc85f02897a51d3149469a19975867d2"
+
+meta if get_config? env = some "dev" then -- dev is so not everyone has to build it
+require «doc-gen4» from git "https://github.com/leanprover/doc-gen4"
+    @ "422e6bec91bee589f667b8f2e83d149b419ac431"
