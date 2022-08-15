@@ -355,6 +355,12 @@ infoview window</td>
     -- top | bottom
     horizontal_position = "bottom",
 
+    -- Always open the infoview window in a separate tabpage.
+    -- Might be useful if you are using a screen reader and don't want too
+    -- many dynamic updates in the terminal at the same time.
+    -- Note that `height` and `width` will be ignored in this case.
+    separate_tab = false,
+
     -- Show indicators for pin locations when entering an infoview window?
     -- always | never | auto (= only when there are multiple pins)
     indicators = "auto",
@@ -455,6 +461,12 @@ infoview window</td>
     <span class="pl-c"><span class="pl-c">--</span> Put the infoview on the top or bottom when horizontal?</span>
     <span class="pl-c"><span class="pl-c">--</span> top | bottom</span>
     horizontal_position <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>bottom<span class="pl-pds">"</span></span>,
+
+    <span class="pl-c"><span class="pl-c">--</span> Always open the infoview window in a separate tabpage.</span>
+    <span class="pl-c"><span class="pl-c">--</span> Might be useful if you are using a screen reader and don't want too</span>
+    <span class="pl-c"><span class="pl-c">--</span> many dynamic updates in the terminal at the same time.</span>
+    <span class="pl-c"><span class="pl-c">--</span> Note that `height` and `width` will be ignored in this case.</span>
+    separate_tab <span class="pl-k">=</span> <span class="pl-c1">false</span>,
 
     <span class="pl-c"><span class="pl-c">--</span> Show indicators for pin locations when entering an infoview window?</span>
     <span class="pl-c"><span class="pl-c">--</span> always | never | auto (= only when there are multiple pins)</span>

@@ -12,7 +12,7 @@ import Lean4Axiomatic.Integer.Subtraction
 namespace Lean4Axiomatic
 
 open Integer (
-  Addition.Base Core.Derived Multiplication.Base Negation Sign Subtraction.Base
+  Addition.Base Core.Derived Multiplication.Base Negation Sign Subtraction
 )
 
 /--
@@ -41,7 +41,7 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
   toMultiplication : Multiplication.Base ℕ ℤ
   toNegation : Negation ℕ ℤ
   toSign : Sign ℕ ℤ
-  toSubtraction : Subtraction.Base ℤ
+  toSubtraction : Subtraction ℕ ℤ
 
 namespace Integer
 

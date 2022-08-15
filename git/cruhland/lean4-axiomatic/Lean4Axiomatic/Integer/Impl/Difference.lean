@@ -1,5 +1,5 @@
+import Lean4Axiomatic.Integer.Impl.Default.Subtraction
 import Lean4Axiomatic.Integer.Impl.Derived.Core
-import Lean4Axiomatic.Integer.Impl.Derived.Subtraction
 import Lean4Axiomatic.Integer.Impl.Difference.Addition
 import Lean4Axiomatic.Integer.Impl.Difference.Core
 import Lean4Axiomatic.Integer.Impl.Difference.Multiplication
@@ -25,10 +25,6 @@ def addition.base := @addition ℕ ‹Natural ℕ›
 
 def multiplication.base := @multiplication ℕ ‹Natural ℕ›
 
-def subtraction.base := @Derived.subtraction
-  ℕ ‹Natural ℕ›
-  (Difference ℕ) core.base addition.base negation
-
 end Inst
 
 instance integer : Integer ℕ (Difference ℕ) := {
@@ -37,7 +33,7 @@ instance integer : Integer ℕ (Difference ℕ) := {
   toMultiplication := Inst.multiplication.base
   toNegation := negation
   toSign := sign
-  toSubtraction := Derived.subtraction
+  toSubtraction := Default.subtraction
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference
