@@ -22,11 +22,6 @@ Simplification rules:
     "Simple and Efficient Clause Subsumption with Feature Vector Indexing"
 - Eliminate duplicate literals
   - Right now, elimDupLit doesn't recognize symmetrical literals as duplicates. That should be an easy but useful thing to fix
-- Clausification
-  - Give clausification an internal loop to repeatedly clausify until no more clausification should be done. This should be useful
-    in general, but should also directly address the specific problem of duper struggling to decompose "a and b and c and ... and z"
-  - Modify clausification to support clausifying literals with "True" or "False" on the lhs (right now, clausification only supports
-    clausifying literals with "True" or "False" on the rhs)
 - Semantic tautology deletion?
 - Positive/Negative simplify-reflect
 - Equality subsumption?
@@ -74,8 +69,6 @@ Other:
   determined what effects any given commit had on the outputs for PUZ_tests, LCL_tests, and COM_tests (i.e. which tests' behavior changed from the previous commit).
 - Unit tests, e.g. for the ordering. (How do unit tests work in Lean 4?)
 - Command line version of duper?
-- Why are some clauses repeated in the proofs that duper produces (e.g. clauses 6-8 in test0011 and almost all of the early clauses in iffClausificationTest1)?
-    - Do repeated clauses indicate that we're unnecessarily reproving things, and if so, how much does that impact efficiency?
 - Look into whether it would be useful/more efficient to have a lhs/rhs convention so that clauses aren't duplicated up to symmetries (e.g. a = b and b = a)
 - Currently, we have a hacky implementation of removing clauses from indices (tacking on a filter before retrieving). If this turns out to be too inefficient,
   implement removal from discrimination trees properly.
