@@ -5,7 +5,7 @@ namespace Lean4Axiomatic.Natural.Derived
 
 variable {ℕ : Type}
 variable [Core ℕ]
-variable [Axioms.Derived ℕ]
+variable [Axioms ℕ]
 variable [Addition.Derived ℕ]
 variable [Sign ℕ]
 variable [Order.Base ℕ]
@@ -97,7 +97,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
   show n ≤ m ∨ n ≃ step m
   have ⟨d, (_ : n + d ≃ step m)⟩ := Order.Base.le_defn.mp ‹n ≤ step m›
   let motive := λ x => d ≃ x → n ≤ m ∨ n ≃ step m
-  apply (Axioms.cases_on (motive := motive) d · · Rel.refl)
+  apply (cases_on (motive := motive) d · · Rel.refl)
   · intro (_ : d ≃ 0)
     apply Or.inr
     show n ≃ step m
@@ -135,7 +135,7 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
 theorem le_trans {n m k : ℕ} : n ≤ m → m ≤ k → n ≤ k := by
   intro (_ : n ≤ m)
   have ⟨d, (_ : n + d ≃ m)⟩ := Order.Base.le_defn.mp ‹n ≤ m›
-  apply Axioms.ind_on (motive := λ k => m ≤ k → n ≤ k) k
+  apply ind_on (motive := λ k => m ≤ k → n ≤ k) k
   case zero =>
     intro (_ : m ≤ 0)
     have ⟨e, (_ : m + e ≃ 0)⟩ := Order.Base.le_defn.mp ‹m ≤ 0›
@@ -270,7 +270,7 @@ theorem lt_step {n : ℕ} : n < step n := by
     show n + 1 ≃ step n
     exact Addition.add_one_step
   · show n ≄ step n
-    exact Rel.symm Axioms.Derived.step_neq
+    exact Rel.symm step_neq
 
 theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
   apply Iff.intro
@@ -420,7 +420,7 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
   show n < m ∨ n ≃ m
   have ⟨d, (h : n + d ≃ m)⟩ := Order.Base.le_defn.mp ‹n ≤ m›
   revert h
-  apply Axioms.cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
+  apply cases_on (motive := λ d => n + d ≃ m → n < m ∨ n ≃ m) d
   case zero =>
     intro (_ : n + 0 ≃ m)
     apply Or.inr
@@ -470,11 +470,11 @@ theorem trichotomy (n m : ℕ)
   constructor
   case atLeastOne =>
     let motive := λ n => AA.OneOfThree (n < m) (n ≃ m) (n > m)
-    apply Axioms.ind_on (motive := motive) n
+    apply ind_on (motive := motive) n
     case zero =>
       show AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)
       let motive := λ m : ℕ => AA.OneOfThree (0 < m) (0 ≃ m) (0 > m)
-      apply Axioms.cases_on (motive := motive) m
+      apply cases_on (motive := motive) m
       case zero =>
         apply AA.OneOfThree.second
         show 0 ≃ 0

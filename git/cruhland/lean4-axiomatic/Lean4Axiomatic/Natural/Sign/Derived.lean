@@ -11,7 +11,7 @@ namespace Lean4Axiomatic.Natural.Sign
 
 variable {ℕ : Type}
 variable [Core ℕ]
-variable [Axioms.Derived ℕ]
+variable [Axioms ℕ]
 variable [Addition.Derived ℕ]
 variable [Sign ℕ]
 
@@ -46,7 +46,7 @@ the successor of `0`. Every other positive number is the successor of another
 positive number.
 -/
 theorem positive_step {n : ℕ} : Positive n → ∃ m : ℕ, step m ≃ n := by
-  apply Axioms.cases_on (motive := λ n => Positive n → ∃ m, step m ≃ n) n
+  apply cases_on (motive := λ n => Positive n → ∃ m, step m ≃ n) n
   case zero =>
     intro (_ : Positive (0 : ℕ))
     apply False.elim
@@ -76,7 +76,7 @@ zero and is thus positive.
 theorem positive_add {n m : ℕ} : Positive n → Positive (n + m) := by
   intro (_ : Positive n)
   show Positive (n + m)
-  apply Axioms.cases_on (motive := λ m => Positive (n + m)) m
+  apply cases_on (motive := λ m => Positive (n + m)) m
   case zero =>
     show Positive (n + 0)
     apply AA.subst₁ (rβ := (· → ·)) (Rel.symm Addition.add_zero)

@@ -1,11 +1,15 @@
 import Lean4Axiomatic.AbstractAlgebra
 
-namespace Lean4Axiomatic.Natural
-
 /-!
 # Fundamental definitions and properties of natural numbers
 
 Closely follows the [Peano axioms](https://en.wikipedia.org/wiki/Peano_axioms).
+-/
+
+namespace Lean4Axiomatic.Natural
+
+/-!
+## Axioms
 -/
 
 /--
@@ -90,7 +94,7 @@ attribute [instance] Core.step_substitutive
 Provides the remaining Peano axioms for natural numbers (see `Constructors`
 for the first two).
 -/
-class Axioms.Base (ℕ : Type) [Core ℕ] :=
+class Axioms (ℕ : Type) [Core ℕ] :=
   /-- **Peano axiom 3**: zero is not the successor of any natural number. -/
   step_neq_zero {n : ℕ} : step n ≄ 0
 
@@ -111,32 +115,51 @@ class Axioms.Base (ℕ : Type) [Core ℕ] :=
   ind {motive : ℕ → Prop}
     : motive 0 → (∀ n, motive n → motive (step n)) → ∀ n, motive n
 
-attribute [instance] Axioms.Base.step_injective
+attribute [instance] Axioms.step_injective
 
-/-- Properties that follow from those provided in `Axioms.Base`. -/
-class Axioms.Derived (ℕ : Type) [Core ℕ] extends Axioms.Base ℕ :=
-  /--
-  Equivalent to `Axioms.Base.ind` but with a more convenient argument order
-  when using the `apply` tactic.
-  -/
-  ind_on
+export Axioms (ind step_injective step_neq_zero)
+
+/-!
+## Derived properties
+-/
+
+variable {ℕ : Type}
+variable [Core ℕ]
+variable [Axioms ℕ]
+
+/--
+Equivalent to `Axioms.ind` but with a more convenient argument order when using
+the `apply` tactic.
+-/
+def ind_on
     {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ m, motive m → motive (step m)) : motive n
+    :=
+  Axioms.ind zero step n
 
-  /--
-  Similar to `ind_on`, but doesn't provide an inductive hypothesis. Useful for
-  proofs that need a case split but not the full power of induction.
-  -/
-  cases_on
+/--
+Similar to `ind_on`, but doesn't provide an inductive hypothesis. Useful for
+proofs that need a case split but not the full power of induction.
+-/
+def cases_on
     {motive : ℕ → Prop} (n : ℕ)
     (zero : motive 0) (step : ∀ n, motive (step n)) : motive n
+    :=
+  ind_on n zero (λ n ih => step n)
 
-  /-- A natural number is never equal to its successor. -/
-  step_neq {n : ℕ} : step n ≄ n
-
-namespace Axioms
-export Axioms.Base (ind step_injective step_neq_zero)
-export Axioms.Derived (cases_on ind_on)
-end Axioms
+/-- A natural number is never equal to its successor. -/
+theorem step_neq {n : ℕ} : step n ≄ n := by
+  apply ind_on (motive := λ n => step n ≄ n) n
+  case zero =>
+    show step 0 ≄ 0
+    exact Axioms.step_neq_zero
+  case step =>
+    intro n (ih : step n ≄ n)
+    show step (step n) ≄ step n
+    intro (_ : step (step n) ≃ step n)
+    show False
+    apply ih
+    show step n ≃ n
+    exact AA.inject ‹step (step n) ≃ step n›
 
 end Lean4Axiomatic.Natural

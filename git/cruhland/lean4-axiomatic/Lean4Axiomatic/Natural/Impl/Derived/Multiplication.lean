@@ -13,7 +13,7 @@ These proofs are all derived from the properties in `Multiplication.Base`.
 
 variable {ℕ : Type}
 variable [Core ℕ]
-variable [Axioms.Derived ℕ]
+variable [Axioms ℕ]
 variable [Addition.Derived ℕ]
 variable [Sign ℕ]
 variable [Order.Derived ℕ]
@@ -33,7 +33,7 @@ Intuition: the multiplication `count * value` is defined as `count` copies of
 by properties of addition must always give `0`.
 -/
 theorem mul_zero {n : ℕ} : n * 0 ≃ 0 := by
-  apply Axioms.ind_on (motive := λ x => x * 0 ≃ 0) n
+  apply ind_on (motive := λ x => x * 0 ≃ 0) n
   case zero =>
     show 0 * 0 ≃ 0
     exact Base.zero_mul
@@ -64,7 +64,7 @@ of `n` copies of `m`, plus the sum of `n` copies of `1`. Since adding `n`
 copies of `1` together is just `n`, the whole result is `n * m + n`.
 -/
 theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
-  apply Axioms.ind_on (motive := λ x => x * step m ≃ x * m + x) n
+  apply ind_on (motive := λ x => x * step m ≃ x * m + x) n
   case zero =>
     show 0 * step m ≃ 0 * m + 0
     calc
@@ -101,7 +101,7 @@ The order of the factors in a product doesn't matter.
 Intuition: combine the results from `mul_zero` and `mul_step`.
 -/
 theorem mul_comm {n m : ℕ} : n * m ≃ m * n := by
-  apply Axioms.ind_on (motive := λ x => x * m ≃ m * x) n
+  apply ind_on (motive := λ x => x * m ≃ m * x) n
   case zero =>
     show 0 * m ≃ m * 0
     calc
@@ -126,11 +126,11 @@ Multiplication by a fixed value as the right-hand operand preserves equality.
 Intuition: addition preserves equality; multiplication is repeated addition.
 -/
 theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ * m := by
-  apply Axioms.ind_on (motive := λ x => ∀ y, x ≃ y → x * m ≃ y * m) n₁
+  apply ind_on (motive := λ x => ∀ y, x ≃ y → x * m ≃ y * m) n₁
   case zero =>
     intro n₂
     show 0 ≃ n₂ → 0 * m ≃ n₂ * m
-    apply Axioms.cases_on (motive := λ y => 0 ≃ y → 0 * m ≃ y * m)
+    apply cases_on (motive := λ y => 0 ≃ y → 0 * m ≃ y * m)
     case zero =>
       intro (_ : 0 ≃ (0 : ℕ))
       show 0 * m ≃ 0 * m
@@ -143,7 +143,7 @@ theorem subst_mul_eq {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ * m ≃ n₂ *
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ * m ≃ y * m) n₂
     show step n₁ ≃ n₂ → step n₁ * m ≃ n₂ * m
-    apply Axioms.cases_on (motive := λ y => step n₁ ≃ y → step n₁ * m ≃ y * m)
+    apply cases_on (motive := λ y => step n₁ ≃ y → step n₁ * m ≃ y * m)
     case zero =>
       intro (_ : step n₁ ≃ 0)
       apply False.elim
@@ -181,7 +181,7 @@ Intuition
 theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
   apply Iff.intro
   · show n * m ≃ 0 → n ≃ 0 ∨ m ≃ 0
-    apply Axioms.cases_on (motive := λ x => x * m ≃ 0 → x ≃ 0 ∨ m ≃ 0) n
+    apply cases_on (motive := λ x => x * m ≃ 0 → x ≃ 0 ∨ m ≃ 0) n
     case zero =>
       intro (_ : 0 * m ≃ 0)
       show 0 ≃ 0 ∨ m ≃ 0
@@ -247,7 +247,7 @@ of `m` added to the sum of `n` copies of `k`. Using the commutativity and
 associativity of addition to rearrange the sums shows this is clearly true.
 -/
 theorem mul_distribL_add {n m k : ℕ} : n * (m + k) ≃ n * m + n * k := by
-  apply Axioms.ind_on (motive := λ x => x * (m + k) ≃ x * m + x * k) n
+  apply ind_on (motive := λ x => x * (m + k) ≃ x * m + x * k) n
   case zero =>
     show 0 * (m + k) ≃ 0 * m + 0 * k
     calc
@@ -290,7 +290,7 @@ def mul_associative : AA.Associative (α := ℕ) (· * ·) := by
   constructor
   intro n m k
   show (n * m) * k ≃ n * (m * k)
-  apply Axioms.ind_on (motive := λ x => (x * m) * k ≃ x * (m * k))
+  apply ind_on (motive := λ x => (x * m) * k ≃ x * (m * k))
   case zero =>
     show (0 * m) * k ≃ 0 * (m * k)
     calc

@@ -20,7 +20,7 @@ required to construct an instance.
 -/
 class Natural (ℕ : Type) where
   toCore : Core ℕ
-  toAxioms : Axioms.Derived ℕ
+  toAxioms : Axioms ℕ
   toAddition : Addition.Derived ℕ
   toSign : Sign ℕ
   toOrder : Order.Derived ℕ
@@ -40,7 +40,6 @@ export Addition (
   add_associative add_cancellative add_commutative add_one_step addOp add_step
   add_substitutive add_zero step_add zero_add zero_sum_split
 )
-export Axioms (cases_on ind ind_on step_injective step_neq_zero)
 export Core (step_substitutive)
 export Equality (eqvOp?)
 export Exponentiation (powOp pow_step pow_zero)

@@ -6,11 +6,11 @@ namespace Derived
 
 variable {ℕ : Type}
 variable [Core ℕ]
-variable [Axioms.Derived ℕ]
+variable [Axioms ℕ]
 variable [Addition.Base ℕ]
 
 theorem add_zero {n : ℕ} : n + 0 ≃ n := by
-  apply Axioms.ind_on (motive := λ n => n + 0 ≃ n) n
+  apply ind_on (motive := λ n => n + 0 ≃ n) n
   case zero =>
     show 0 + 0 ≃ 0
     calc
@@ -25,7 +25,7 @@ theorem add_zero {n : ℕ} : n + 0 ≃ n := by
       step n       ≃ _ := Rel.refl
 
 theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
-  apply Axioms.ind_on (motive := λ n => n + step m ≃ step (n + m)) n
+  apply ind_on (motive := λ n => n + step m ≃ step (n + m)) n
   case zero =>
     show 0 + step m ≃ step (0 + m)
     calc
@@ -47,7 +47,7 @@ def add_semicompatible_step : AA.Semicompatible (α := ℕ) step (· + ·) := {
 }
 
 theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
-  apply Axioms.ind_on (motive := λ n => n + m ≃ m + n) n
+  apply ind_on (motive := λ n => n + m ≃ m + n) n
   case zero =>
     show 0 + m ≃ m + 0
     calc
@@ -67,11 +67,11 @@ instance add_commutative : AA.Commutative (α := ℕ) (· + ·) where
   comm := add_comm
 
 theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m := by
-  apply Axioms.ind_on (motive := λ x => ∀ y, x ≃ y → x + m ≃ y + m) n₁
+  apply ind_on (motive := λ x => ∀ y, x ≃ y → x + m ≃ y + m) n₁
   case zero =>
     intro n₂
     show 0 ≃ n₂ → 0 + m ≃ n₂ + m
-    apply Axioms.cases_on (motive := λ y => 0 ≃ y → 0 + m ≃ y + m)
+    apply cases_on (motive := λ y => 0 ≃ y → 0 + m ≃ y + m)
     case zero =>
       intro (_ : 0 ≃ (0 : ℕ))
       show 0 + m ≃ 0 + m
@@ -85,7 +85,7 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
   case step =>
     intro n₁ (ih : ∀ y, n₁ ≃ y → n₁ + m ≃ y + m) n₂
     show step n₁ ≃ n₂ → step n₁ + m ≃ n₂ + m
-    apply Axioms.cases_on (motive := λ y => step n₁ ≃ y → step n₁ + m ≃ y + m)
+    apply cases_on (motive := λ y => step n₁ ≃ y → step n₁ + m ≃ y + m)
     case zero =>
       intro (_ : step n₁ ≃ 0)
       show step n₁ + m ≃ 0 + m
@@ -130,7 +130,7 @@ def add_associative : AA.Associative (α := ℕ) (· + ·) := by
   constructor
   intro n m k
   show (n + m) + k ≃ n + (m + k)
-  apply Axioms.ind_on (motive := λ n => (n + m) + k ≃ n + (m + k)) n
+  apply ind_on (motive := λ n => (n + m) + k ≃ n + (m + k)) n
   case zero =>
     show (0 + m) + k ≃ 0 + (m + k)
     calc
@@ -154,7 +154,7 @@ The right-hand sides of two equal sums are equal if their left-hand sides are.
 applying `step_injective` and finally `zero_add`, leaving the desired result.
 -/
 theorem cancel_add {n m k : ℕ} : n + m ≃ n + k → m ≃ k := by
-  apply Axioms.ind_on (motive := λ n => n + m ≃ n + k → m ≃ k) n
+  apply ind_on (motive := λ n => n + m ≃ n + k → m ≃ k) n
   case zero =>
     intro (_ : 0 + m ≃ 0 + k)
     show m ≃ k
@@ -188,7 +188,7 @@ instance add_cancellative
 }
 
 theorem zero_sum_split {n m : ℕ} : n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0 := by
-  apply Axioms.cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
+  apply cases_on (motive := λ n => n + m ≃ 0 → n ≃ 0 ∧ m ≃ 0) n
   case zero =>
     intro (_ : 0 + m ≃ 0)
     show 0 ≃ 0 ∧ m ≃ 0

@@ -51,7 +51,7 @@ def ind
 | Nat.zero => mz
 | Nat.succ n => ms (ind mz ms n)
 
-instance axioms_base : Axioms.Base Nat := {
+instance axioms : Axioms Nat := {
   step_injective := step_injective
   step_neq_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
@@ -80,7 +80,7 @@ instance exponentiation_base : Exponentiation.Base Nat := {
 
 instance : Natural Nat where
   toCore := core
-  toAxioms := Natural.Derived.axioms_derived
+  toAxioms := axioms
   toAddition := Natural.Derived.addition_derived
   toSign := Natural.Default.sign
   toOrder := Natural.Derived.order_derived
