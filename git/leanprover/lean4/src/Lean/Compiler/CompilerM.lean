@@ -94,8 +94,8 @@ Compute the maximum auxiliary let variable index that is used within `e`.
 def getMaxLetVarIdx (e : Expr) : IO Nat := do
   let maxRef ← IO.mkRef 0
   e.forEach fun
-    | .letE (.num `_x i) ..
-    | .letE (.num `_jp i) .. => maxRef.modify (Nat.max · i)
+    | .letE (.num (.str .anonymous s) i) .. =>
+      if s.get 0 == '_' then maxRef.modify (Nat.max · i) else pure ()
     | _ => pure ()
   maxRef.get
 
@@ -113,8 +113,7 @@ def ensureUniqueLetVarNames (e : Expr) : CoreM Expr :=
     | .letE binderName type value body nonDep =>
       let idx ← modifyGet fun s => (s, s+1)
       let binderName' := match binderName with
-        | .num `_x _ => .num `_x idx
-        | .num `_jp _ => .num `_jp idx
+        | .num p _ => .num p idx
         | _ => .num binderName idx
       return .visit <| .letE binderName' type value body nonDep
     | _ => return .visit e
@@ -223,6 +222,17 @@ def mkLambda (xs : Array Expr) (e : Expr) : CompilerM Expr :=
   return (← get).lctx.mkLambda xs e
 
 /--
+Given a join point `jp` of the form `fun y => body`, if `jp` is simple (see `isSimpleLCNF`), just return it
+Otherwise, create `let jp := fun y => body` declaration and return `jp`.
+-/
+def mkJpDeclIfNotSimple (jp : Expr) : CompilerM Expr := do
+  if (← isSimpleLCNF jp.bindingBody!) then
+    -- Join point is too simple, we eagerly inline it.
+    return jp
+  else
+    mkJpDecl jp
+
+/--
 Create "jump" to join point `jp` with value `e`.
 Remarks:
 - If `e` is unreachable, then result is unreachable
@@ -244,5 +254,9 @@ def mkJump (jp : Expr) (e : Expr) : CompilerM Expr := do
     let x ← mkAuxLetDecl e
     let x ← mkAuxLetDecl (← mkLcCast x d)
     return mkJpApp x
+
+def mkOptJump (jp? : Option Expr) (e : Expr) : CompilerM Expr := do
+  let some jp := jp? | return e
+  mkJump jp e
 
 end Lean.Compiler

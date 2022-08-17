@@ -80,14 +80,14 @@ def mkLocalDecl (binderName : Name) (type : Expr) (bi := BinderInfo.default) : M
   }
   return .fvar fvarId
 
-def mkFreshBinderName : M Name := do
-  let declName := .num `_x (← get).nextIdx
+def mkFreshBinderName (binderName := `_x): M Name := do
+  let declName := .num binderName (← get).nextIdx
   modify fun s => { s with nextIdx := s.nextIdx + 1 }
   return declName
 
 def mkLetDecl (binderName : Name) (type : Expr) (value : Expr) (type' : Expr) (value' : Expr) : M Expr := do
   let fvarId ← mkFreshFVarId
-  let binderName ← if binderName.isInternal then mkFreshBinderName else pure binderName
+  let binderName ← if binderName.eraseMacroScopes.isInternal then mkFreshBinderName binderName.eraseMacroScopes else pure binderName
   let x := .fvar fvarId
   modify fun s => { s with
     lctx     := s.lctx.mkLetDecl fvarId binderName type value false
@@ -445,7 +445,7 @@ where
         visitLet body (xs.push value)
       else
         let type' ← liftMetaM <| toLCNFType type
-        let value' ← visit value
+        let value' ← withRoot true <| visit value
         let x ← mkLetDecl binderName type value type' value'
         visitLet body (xs.push x)
     | _ =>

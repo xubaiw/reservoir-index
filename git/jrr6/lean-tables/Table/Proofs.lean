@@ -483,7 +483,6 @@ theorem pivotTable_spec2 :
    
 -- TODO: pivotTable specs 3 & 4
 
--- TODO: `groupBy`
 -- Specs 1 and 2 are enforced by types
 -- Spec 3 is also enforced by types, but since it is actually expressible as an
 -- (albeit trivial) proof, we state it here for completeness
@@ -504,14 +503,13 @@ theorem groupBy_spec4 {sch' : @Schema η} {κ ν} [DecidableEq κ] :
   nrows (groupBy t key project aggregate) = (t.rows.map key).unique.length :=
 by intros t key proj agg
    simp only [nrows, groupBy]
-   rw [List.length_map]
-  --  induction t.rows with
-  --  | nil => simp [groupBy.group, List.map, List.unique, List.uniqueAux]
-  --  | cons r rs ih =>
-  --    simp only [List.map, groupBy.group, List.unique, List.uniqueAux]
-  --    rw [List.length_reverse]
-  --    have h_not_elem : ¬(key r ∈ []) := List.not_mem_empty (key r)
-  --    simp only [ite_false, h_not_elem]
+   rw [List.length_map, List.length_groupByKey]
+   apply congrArg
+   apply congrArg
+   rw [List.map_map]
+   apply congr _ rfl
+   apply congrArg
+   simp only [Function.comp]
 
 theorem completeCases_spec {τ : Type u} :
   ∀ (t : Table sch) (c : (c : η) × sch.HasCol (c, τ)),
@@ -534,3 +532,49 @@ theorem fillna_spec2 {τ : Type u} :
     (v : τ),
     nrows (fillna t c v) = nrows t :=
 λ _ _ _ => List.length_map _ _
+
+-- TODO: `pivotLonger` and `pivotWider`
+-- Specs 1 don't hold because of uniqueness issues, I think
+
+theorem flatten_spec1 :
+  ∀ (t : Table sch) (cs : ActionList Schema.flattenList sch),
+  header (flatten t cs) = header t := by
+  intros t cs
+  simp only [flatten, header, Schema.names]
+  induction cs with
+  | nil => simp only [Schema.flattenLists]
+  | cons c cs ih =>
+    simp only [Schema.flattenLists]
+    rw [ih]
+    simp only [Schema.flattenList]
+    apply Schema.retypeColumn_preserves_names
+    -- TODO: this shouldn't be necessary with more careful induction
+    exact Table.mk []
+
+-- TODO: `flatten` spec 2
+
+-- TODO: `transformColumn` specs 1 & 3
+theorem transformColumn_spec2 {τ₁ τ₂} :
+  ∀ (t : Table sch)
+    (c : (c : η) × sch.HasCol (c, τ₁))
+    (f : Option τ₁ → Option τ₂),
+  header (transformColumn t c f) = header t :=
+λ t c f => sch.retypeColumn_preserves_names _ _
+
+theorem transformColumn_spec4 :
+  ∀ (t : Table sch)
+    (c : (c : η) × sch.HasCol (c, τ₁))
+    (f : Option τ₁ → Option τ₂),
+  nrows (transformColumn t c f) = nrows t :=
+λ t c f => List.length_map _ _
+
+-- TODO: `renameColumns`
+
+-- The specification for `find` is contained in its type
+
+-- TODO: `groupByRetentive` specs 2–6 (in progress)
+theorem groupByRetentive_spec1 [DecidableEq τ] :
+  ∀ (t : Table sch) (c : (c : η) × sch.HasCol (c, τ)),
+  header (groupByRetentive t c) = ["key", "groups"] :=
+λ _ _ => rfl
+
