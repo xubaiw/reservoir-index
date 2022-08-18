@@ -74,7 +74,6 @@ class SpecificError:
     added_blocks: Callable
 
 
-# if any of ERRORS is matched, the result will be FAIL, and the system will cancel the last input.
 ERRORS = [
     r"error: tactic .+ failed",
     r"error: ring failed",
@@ -83,6 +82,7 @@ ERRORS = [
     r"error: invalid .+",
     r"error: .+ is missing",
     r"error: type mismatch",
+    r"error: no goals to be solved",
 ]
 
 SPECIFIC_ERRORS = [
