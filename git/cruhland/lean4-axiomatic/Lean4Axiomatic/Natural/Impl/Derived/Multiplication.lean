@@ -14,7 +14,7 @@ These proofs are all derived from the properties in `Multiplication.Base`.
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms ℕ]
-variable [Addition.Derived ℕ]
+variable [Addition ℕ]
 variable [Sign ℕ]
 variable [Order.Derived ℕ]
 variable [Multiplication.Base ℕ]
@@ -81,7 +81,7 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       n * step m + step m
     ≃ _ := AA.substL ih
       (n * m + n) + step m
-    ≃ _ := Addition.add_step
+    ≃ _ := add_step
       step ((n * m + n) + m)
     ≃ _ := AA.subst₁ AA.assoc
       step (n * m + (n + m))
@@ -91,7 +91,7 @@ theorem mul_step {n m : ℕ} : n * step m ≃ n * m + n := by
       step ((n * m + m) + n)
     ≃ _ := AA.subst₁ (AA.substL (Rel.symm Base.step_mul))
       step (step n * m + n)
-    ≃ _ := Rel.symm Addition.add_step
+    ≃ _ := Rel.symm add_step
       step n * m + step n
     ≃ _ := Rel.refl
 
@@ -195,7 +195,7 @@ theorem mul_split_zero {n m : ℕ} : n * m ≃ 0 ↔ n ≃ 0 ∨ m ≃ 0 := by
         n * m + m  ≃ _ := Rel.symm Base.step_mul
         step n * m ≃ _ := ‹step n * m ≃ 0›
         0          ≃ _ := Rel.refl
-      have ⟨_, (_ : m ≃ 0)⟩ := Addition.zero_sum_split ‹n * m + m ≃ 0›
+      have ⟨_, (_ : m ≃ 0)⟩ := zero_sum_split ‹n * m + m ≃ 0›
       exact ‹m ≃ 0›
   · intro (_ : n ≃ 0 ∨ m ≃ 0)
     show n * m ≃ 0

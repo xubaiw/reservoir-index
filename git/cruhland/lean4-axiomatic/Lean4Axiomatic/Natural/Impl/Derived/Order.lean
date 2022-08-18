@@ -6,7 +6,7 @@ namespace Lean4Axiomatic.Natural.Derived
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Axioms ℕ]
-variable [Addition.Derived ℕ]
+variable [Addition ℕ]
 variable [Sign ℕ]
 variable [Order.Base ℕ]
 
@@ -24,7 +24,7 @@ theorem le_subst_step {n₁ n₂ : ℕ} : n₁ ≤ n₂ → step n₁ ≤ step n
   exists d
   show step n₁ + d ≃ step n₂
   calc
-    step n₁ + d   ≃ _ := Addition.step_add
+    step n₁ + d   ≃ _ := step_add
     step (n₁ + d) ≃ _ := AA.subst₁ ‹n₁ + d ≃ n₂›
     step n₂       ≃ _ := Rel.refl
 
@@ -41,7 +41,7 @@ theorem le_inject_step {n₁ n₂ : ℕ} : step n₁ ≤ step n₂ → n₁ ≤ 
   exists d
   show n₁ + d ≃ n₂
   have : step (n₁ + d) ≃ step n₂ := calc
-    step (n₁ + d) ≃ _ := Rel.symm Addition.step_add
+    step (n₁ + d) ≃ _ := Rel.symm step_add
     step n₁ + d   ≃ _ := ‹step n₁ + d ≃ step n₂›
     step n₂       ≃ _ := Rel.refl
   exact AA.inject ‹step (n₁ + d) ≃ step n₂›
@@ -87,7 +87,7 @@ theorem le_refl {n : ℕ} : n ≤ n := by
   apply Order.Base.le_defn.mpr
   exists (0 : ℕ)
   show n + 0 ≃ n
-  exact Addition.add_zero
+  exact add_zero
 
 instance le_reflexive : Relation.Reflexive (α := ℕ) (· ≤ ·) where
   refl := le_refl
@@ -102,7 +102,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     apply Or.inr
     show n ≃ step m
     calc
-      n      ≃ _ := Rel.symm Addition.add_zero
+      n      ≃ _ := Rel.symm add_zero
       n + 0  ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
       n + d  ≃ _ := ‹n + d ≃ step m›
       step m ≃ _ := Rel.refl
@@ -115,7 +115,7 @@ theorem le_step_split {n m : ℕ} : n ≤ step m → n ≤ m ∨ n ≃ step m :=
     apply AA.inject (β := ℕ) (rβ := (· ≃ ·))
     show step (n + e) ≃ step m
     calc
-      step (n + e) ≃ _ := Rel.symm Addition.add_step
+      step (n + e) ≃ _ := Rel.symm add_step
       n + step e   ≃ _ := AA.substR (Rel.symm ‹d ≃ step e›)
       n + d        ≃ _ := ‹n + d ≃ step m›
       step m       ≃ _ := Rel.refl
@@ -128,7 +128,7 @@ theorem le_step {n m : ℕ} : n ≤ m → n ≤ step m := by
   exists step d
   show n + step d ≃ step m
   calc
-    n + step d   ≃ _ := Addition.add_step
+    n + step d   ≃ _ := add_step
     step (n + d) ≃ _ := AA.subst₁ ‹n + d ≃ m›
     step m       ≃ _ := Rel.refl
 
@@ -219,12 +219,12 @@ theorem le_antisymm {n m : ℕ} : n ≤ m → m ≤ n → n ≃ m := by
     n + (d₁ + d₂) ≃ _ := Rel.symm AA.assoc
     (n + d₁) + d₂ ≃ _ := AA.substL ‹n + d₁ ≃ m›
     m + d₂        ≃ _ := ‹m + d₂ ≃ n›
-    n             ≃ _ := Rel.symm Addition.add_zero
+    n             ≃ _ := Rel.symm add_zero
     n + 0         ≃ _ := Rel.refl
   have : d₁ + d₂ ≃ 0 := AA.cancelL ‹n + (d₁ + d₂) ≃ n + 0›
-  have ⟨(_ : d₁ ≃ 0), _⟩ := Addition.zero_sum_split ‹d₁ + d₂ ≃ 0›
+  have ⟨(_ : d₁ ≃ 0), _⟩ := zero_sum_split ‹d₁ + d₂ ≃ 0›
   calc
-    n      ≃ _ := Rel.symm Addition.add_zero
+    n      ≃ _ := Rel.symm add_zero
     n + 0  ≃ _ := AA.substR (Rel.symm ‹d₁ ≃ 0›)
     n + d₁ ≃ _ := ‹n + d₁ ≃ m›
     m      ≃ _ := Rel.refl
@@ -268,7 +268,7 @@ theorem lt_step {n : ℕ} : n < step n := by
     apply Order.Base.le_defn.mpr
     exists (1 : ℕ)
     show n + 1 ≃ step n
-    exact Addition.add_one_step
+    exact add_one_step
   · show n ≄ step n
     exact Rel.symm step_neq
 
@@ -284,19 +284,19 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
       apply ‹n ≄ m›
       show n ≃ m
       calc
-        n     ≃ _ := Rel.symm Addition.add_zero
+        n     ≃ _ := Rel.symm add_zero
         n + 0 ≃ _ := AA.substR (Rel.symm ‹d ≃ 0›)
         n + d ≃ _ := ‹n + d ≃ m›
         m     ≃ _ := Rel.refl
     have : Positive d := Signed.positive_defn.mpr ‹d ≄ 0›
-    have ⟨d', (_ : step d' ≃ d)⟩ := Sign.positive_step ‹Positive d›
+    have ⟨d', (_ : step d' ≃ d)⟩ := positive_step ‹Positive d›
     show step n ≤ m
     apply Order.Base.le_defn.mpr
     exists d'
     show step n + d' ≃ m
     calc
-      step n + d'   ≃ _ := Addition.step_add
-      step (n + d') ≃ _ := Rel.symm Addition.add_step
+      step n + d'   ≃ _ := step_add
+      step (n + d') ≃ _ := Rel.symm add_step
       n + step d'   ≃ _ := AA.substR ‹step d' ≃ d›
       n + d         ≃ _ := ‹n + d ≃ m›
       m             ≃ _ := Rel.refl
@@ -304,8 +304,8 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
     show n < m
     have ⟨d, (_ : step n + d ≃ m)⟩ := Order.Base.le_defn.mp ‹step n ≤ m›
     have : n + step d ≃ m := calc
-      n + step d   ≃ _ := Addition.add_step
-      step (n + d) ≃ _ := Rel.symm Addition.step_add
+      n + step d   ≃ _ := add_step
+      step (n + d) ≃ _ := Rel.symm step_add
       step n + d   ≃ _ := ‹step n + d ≃ m›
       m            ≃ _ := Rel.refl
     have : ∃ d, n + d ≃ m := ⟨step d, ‹n + step d ≃ m›⟩
@@ -316,7 +316,7 @@ theorem lt_step_le {n m : ℕ} : n < m ↔ step n ≤ m := by
       have : n + step d ≃ n + 0 := calc
         n + step d ≃ _ := ‹n + step d ≃ m›
         m          ≃ _ := Rel.symm ‹n ≃ m›
-        n          ≃ _ := Rel.symm Addition.add_zero
+        n          ≃ _ := Rel.symm add_zero
         n + 0      ≃ _ := Rel.refl
       have : step d ≃ 0 := AA.cancelL ‹n + step d ≃ n + 0›
       exact absurd this Axioms.step_neq_zero
@@ -347,8 +347,8 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     · show m ≃ n + step k
       calc
         m            ≃ _ := Rel.symm ‹step n + k ≃ m›
-        step n + k   ≃ _ := Addition.step_add
-        step (n + k) ≃ _ := Rel.symm Addition.add_step
+        step n + k   ≃ _ := step_add
+        step (n + k) ≃ _ := Rel.symm add_step
         n + step k   ≃ _ := Rel.refl
   · intro ⟨k, (_ : Positive k), (_ : m ≃ n + k)⟩
     show n < m
@@ -356,12 +356,12 @@ theorem lt_defn_add {n m : ℕ} : n < m ↔ ∃ k, Positive k ∧ m ≃ n + k :=
     show step n ≤ m
     apply Base.le_defn.mpr
     show ∃ k, step n + k ≃ m
-    have ⟨k', (_ : step k' ≃ k)⟩ := Sign.positive_step ‹Positive k›
+    have ⟨k', (_ : step k' ≃ k)⟩ := positive_step ‹Positive k›
     exists k'
     show step n + k' ≃ m
     calc
-      step n + k'   ≃ _ := Addition.step_add
-      step (n + k') ≃ _ := Rel.symm Addition.add_step
+      step n + k'   ≃ _ := step_add
+      step (n + k') ≃ _ := Rel.symm add_step
       n + step k'   ≃ _ := AA.substR ‹step k' ≃ k›
       n + k         ≃ _ := Rel.symm ‹m ≃ n + k›
       m             ≃ _ := Rel.refl
@@ -372,7 +372,7 @@ theorem lt_zero {n : ℕ} : n ≮ 0 := by
   have : step n ≤ 0 := lt_step_le.mp ‹n < 0›
   have ⟨d, (_ : step n + d ≃ 0)⟩ := Order.Base.le_defn.mp ‹step n ≤ 0›
   have : step (n + d) ≃ 0 := calc
-    step (n + d) ≃ _ := Rel.symm Addition.step_add
+    step (n + d) ≃ _ := Rel.symm step_add
     step n + d   ≃ _ := ‹step n + d ≃ 0›
     0            ≃ _ := Rel.refl
   exact absurd ‹step (n + d) ≃ 0› Axioms.step_neq_zero
@@ -395,12 +395,12 @@ theorem lt_zero_pos {n : ℕ} : Positive n ↔ n > 0 := by
     · show Positive n
       exact ‹Positive n›
     · show n ≃ 0 + n
-      exact Rel.symm Addition.zero_add
+      exact Rel.symm zero_add
   · intro (_ : 0 < n)
     show Positive n
     have ⟨k, ⟨(_ : Positive k), (_ : n ≃ 0 + k)⟩⟩ :=
       Derived.lt_defn_add.mp ‹0 < n›
-    have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› Addition.zero_add)
+    have : k ≃ n := Rel.symm (Rel.trans ‹n ≃ 0 + k› zero_add)
     exact AA.subst₁ (f := Positive) (rβ := (· → ·)) ‹k ≃ n› ‹Positive k›
 
 theorem le_from_eqv {n m : ℕ} : n ≃ m → n ≤ m := by
@@ -426,7 +426,7 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
     apply Or.inr
     show n ≃ m
     calc
-      n     ≃ _ := Rel.symm Addition.add_zero
+      n     ≃ _ := Rel.symm add_zero
       n + 0 ≃ _ := ‹n + 0 ≃ m›
       m     ≃ _ := Rel.refl
   case step =>
@@ -439,8 +439,8 @@ theorem le_split {n m : ℕ} : n ≤ m → n < m ∨ n ≃ m := by
     exists d
     show step n + d ≃ m
     calc
-      step n + d   ≃ _ := Addition.step_add
-      step (n + d) ≃ _ := Rel.symm Addition.add_step
+      step n + d   ≃ _ := step_add
+      step (n + d) ≃ _ := Rel.symm add_step
       n + step d   ≃ _ := ‹n + step d ≃ m›
       m            ≃ _ := Rel.refl
 
@@ -488,7 +488,7 @@ theorem trichotomy (n m : ℕ)
         · show 0 ≤ step m
           apply Order.Base.le_defn.mpr
           exists step m
-          exact Addition.zero_add
+          exact zero_add
         · show 0 ≄ step m
           exact Rel.symm Axioms.step_neq_zero
     case step =>

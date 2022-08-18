@@ -60,7 +60,7 @@ instance axioms : Axioms Nat := {
   ind := ind
 }
 
-instance addition_base : Addition.Base Nat := {
+instance addition : Addition Nat := {
   addOp := _root_.instAddNat
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
@@ -81,7 +81,7 @@ instance exponentiation_base : Exponentiation.Base Nat := {
 instance : Natural Nat where
   toCore := core
   toAxioms := axioms
-  toAddition := Natural.Derived.addition_derived
+  toAddition := addition
   toSign := Natural.Default.sign
   toOrder := Natural.Derived.order_derived
   toMultiplication := Natural.Derived.multiplication_derived

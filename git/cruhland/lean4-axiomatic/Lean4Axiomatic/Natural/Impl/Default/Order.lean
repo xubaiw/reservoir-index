@@ -7,7 +7,7 @@ namespace Default
 
 variable {ℕ : Type}
 variable [Core ℕ]
-variable [Addition.Base ℕ]
+variable [Addition ℕ]
 
 instance : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
 instance : LT ℕ := LT.mk λ n m => n ≤ m ∧ n ≄ m

@@ -14,7 +14,7 @@ Definition of the _less than or equal to_ and _less than_ relations.
 
 All other properties of ordering on natural numbers can be derived from this.
 -/
-class Order.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] :=
+class Order.Base (ℕ : Type) [Core ℕ] [Addition ℕ] :=
   /-- Definition of and syntax for the _less than or equal to_ relation. -/
   leOp : LE ℕ
 
@@ -41,7 +41,7 @@ attribute [instance default+1] Order.Base.ltOp
 
 /-- Properties that follow from those provided in `Order.Base`. -/
 class Order.Derived
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign ℕ]
+    (ℕ : Type) [Core ℕ] [Addition ℕ] [Sign ℕ]
     extends Order.Base ℕ
     :=
   /--

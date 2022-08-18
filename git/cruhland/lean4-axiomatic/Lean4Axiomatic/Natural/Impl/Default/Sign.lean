@@ -1,4 +1,4 @@
-import Lean4Axiomatic.Natural.Sign.Defined
+import Lean4Axiomatic.Natural.Sign
 
 namespace Lean4Axiomatic.Natural.Default
 

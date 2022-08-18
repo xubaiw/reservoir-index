@@ -15,7 +15,7 @@ Definition of multiplication, and properties that it must satisfy.
 
 All other properties of multiplication can be derived from these.
 -/
-class Multiplication.Base (ℕ : Type) [Core ℕ] [Addition.Base ℕ] where
+class Multiplication.Base (ℕ : Type) [Core ℕ] [Addition ℕ] where
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℕ
 
@@ -32,7 +32,7 @@ attribute [instance] Multiplication.Base.mulOp
 
 /-- Properties that follow from those provided in `Multiplication.Base`. -/
 class Multiplication.Derived
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Sign ℕ] [Order.Base ℕ]
+    (ℕ : Type) [Core ℕ] [Addition ℕ] [Sign ℕ] [Order.Base ℕ]
     extends Multiplication.Base ℕ where
   /--
   Multiplication preserves equality of natural numbers; two equal natural

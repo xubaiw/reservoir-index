@@ -48,6 +48,8 @@ class Equality (ℕ : Type) :=
 
 attribute [instance] Equality.eqvOp?
 
+export Equality (eqvOp?)
+
 /-- Definitions pertaining to numeric literal support for natural numbers. -/
 class Literals (ℕ : Type) [Constructors ℕ] [Equality ℕ] :=
   /--
@@ -77,6 +79,8 @@ class Literals (ℕ : Type) [Constructors ℕ] [Equality ℕ] :=
 
 attribute [instance default+1] Literals.literal
 
+export Literals (literal literal_step literal_zero)
+
 /--
 Packages together the basic properties of natural numbers, to reduce the amount
 of class references needed for more advanced properties.
@@ -89,6 +93,8 @@ class Core (ℕ : Type) extends Constructors ℕ, Equality ℕ, Literals ℕ :=
   step_substitutive : AA.Substitutive₁ (α := ℕ) step (· ≃ ·) (· ≃ ·)
 
 attribute [instance] Core.step_substitutive
+
+export Core (step_substitutive)
 
 /--
 Provides the remaining Peano axioms for natural numbers (see `Constructors`

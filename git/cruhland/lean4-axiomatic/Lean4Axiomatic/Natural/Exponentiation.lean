@@ -13,7 +13,7 @@ Definition of exponentiation, and properties that it must satisfy.
 All other properties of exponentiation can be derived from these.
 -/
 class Exponentiation.Base
-    (ℕ : Type) [Core ℕ] [Addition.Base ℕ] [Multiplication.Base ℕ] where
+    (ℕ : Type) [Core ℕ] [Addition ℕ] [Multiplication.Base ℕ] where
   /-- Definition of and syntax for exponentiation. -/
   powOp : Pow ℕ ℕ
 
