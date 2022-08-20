@@ -38,23 +38,6 @@ instance : MonadInferType CompilerM where
 instance : MonadLCtx CompilerM where
   getLCtx := return (← get).lctx
 
-structure CompilerM.SavedState where
-  core     : Core.State
-  compiler : CompilerM.State
-  deriving Inhabited
-
-protected def CompilerM.saveState : CompilerM CompilerM.SavedState :=
-  return { core := (← getThe Core.State), compiler := (← get) }
-
-/-- Restore backtrackable parts of the state. -/
-def CompilerM.SavedState.restore (b : SavedState) : CompilerM Unit := do
-  Core.restore b.core
-  set b.compiler
-
-instance : MonadBacktrack CompilerM.SavedState CompilerM where
-  saveState      := CompilerM.saveState
-  restoreState s := s.restore
-
 /--
 Add a new local declaration with the given arguments to the `LocalContext` of `CompilerM`.
 Returns the free variable representing the new declaration.
@@ -74,6 +57,12 @@ def mkLetDecl (binderName : Name) (type : Expr) (value : Expr) (nonDep : Bool) :
   modify fun s => { s with lctx := s.lctx.mkLetDecl fvarId binderName type value nonDep, letFVars := s.letFVars.push x }
   return x
 
+def mkFreshLetVarIdx : CompilerM Nat := do
+  modifyGet fun s => (s.nextIdx, { s with nextIdx := s.nextIdx +1 })
+
+def mkAuxLetDeclName (prefixName := `_x) : CompilerM Name :=
+  return .num prefixName (← mkFreshLetVarIdx)
+
 /--
 Create a new auxiliary let declaration with value `e` The name of the
 declaration is guaranteed to be unique.
@@ -83,10 +72,7 @@ def mkAuxLetDecl (e : Expr) (prefixName := `_x) : CompilerM Expr := do
   if e.isFVar then
     return e
   else
-    try
-      mkLetDecl (.num prefixName (← get).nextIdx) (← inferType e) e (nonDep := false)
-    finally
-      modify fun s => { s with nextIdx := s.nextIdx + 1 }
+    mkLetDecl (← mkAuxLetDeclName prefixName) (← inferType e) e (nonDep := false)
 
 /--
 Create an auxiliary let declaration with value `e`, that is a join point.
@@ -115,7 +101,7 @@ let-declarations that are safe to unfold without producing code blowup, and join
 Remark: user-facing names provided by users are preserved. We keep them as the prefix
 of the new unique names.
 -/
-def ensureUniqueLetVarNames (e : Expr) : CoreM Expr :=
+def ensureUniqueLetVarNamesCore (e : Expr) : StateRefT Nat CoreM Expr :=
   let pre (e : Expr) : StateRefT Nat CoreM TransformStep := do
     match e with
     | .letE binderName type value body nonDep =>
@@ -125,7 +111,12 @@ def ensureUniqueLetVarNames (e : Expr) : CoreM Expr :=
         | _ => .num binderName idx
       return .visit <| .letE binderName' type value body nonDep
     | _ => return .visit e
-  Core.transform e pre |>.run' 1
+  Core.transform e pre
+
+def ensureUniqueLetVarNames (e : Expr) : CompilerM Expr := do
+  let (e, nextIdx) ← ensureUniqueLetVarNamesCore e |>.run (← get).nextIdx
+  modify fun s => { s with nextIdx }
+  return e
 
 /--
 Move through all consecutive lambda abstractions at the top level of `e`.
