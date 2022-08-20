@@ -1,9 +1,6 @@
 import Lean4Axiomatic.Natural.Core
 
-namespace Lean4Axiomatic
-namespace Natural
-
-namespace Default
+namespace Lean4Axiomatic.Natural.Default
 
 variable {ℕ : Type}
 variable [Constructors ℕ]
@@ -20,15 +17,14 @@ def fromNat : Nat → ℕ
 | 0 => zero
 | n+1 => step (fromNat n)
 
-instance ofNat {n : Nat} : OfNat ℕ n where
+def ofNat {n : Nat} : OfNat ℕ n := {
   ofNat := fromNat n
+}
 
-instance literals [Equality ℕ] : Literals ℕ where
+def literals [Equality ℕ] : Literals ℕ := {
   literal := ofNat
   literal_zero := Rel.refl
   literal_step := Rel.refl
+}
 
-end Default
-
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural.Default

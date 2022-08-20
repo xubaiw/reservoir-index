@@ -1,15 +1,14 @@
 import Lean4Axiomatic.Natural
 import Lean4Axiomatic.Natural.Impl.Default
-import Lean4Axiomatic.Natural.Impl.Derived
 
 namespace Lean4Axiomatic.Natural.Impl.Nat
 
-instance constructors : Constructors Nat := {
+local instance constructors : Constructors Nat := {
   zero := Nat.zero
   step := Nat.succ
 }
 
-instance eqvOp? : Relation.Equivalence.EqvOp? Nat := {
+local instance eqvOp? : Relation.Equivalence.EqvOp? Nat := {
   tildeDash := Eq
   refl := λ {x} => Eq.refl x
   symm := Eq.symm
@@ -17,30 +16,32 @@ instance eqvOp? : Relation.Equivalence.EqvOp? Nat := {
   tildeDashQuestion := Nat.decEq
 }
 
-instance equality : Equality Nat := {
+local instance equality : Equality Nat := {
   eqvOp? := eqvOp?
 }
 
-instance literals : Literals Nat := {
+local instance literals : Literals Nat := {
   literal := @instOfNatNat
   literal_zero := Rel.refl
   literal_step := Rel.refl
 }
 
-instance step_substitutive
+local instance step_substitutive
     : AA.Substitutive₁ (step : Nat → Nat) (· ≃ ·) (· ≃ ·)
     := {
   subst₁ := congrArg step
 }
 
-instance core : Core Nat := {
+local instance core : Core Nat := {
   step_substitutive := step_substitutive
 }
 
 theorem succ_injective {n m : Nat} : Nat.succ n = Nat.succ m → n = m
 | Eq.refl _ => Eq.refl _
 
-instance step_injective : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·) := {
+local instance step_injective
+    : AA.Injective (step : Nat → Nat) (· ≃ ·) (· ≃ ·)
+    := {
   inject := succ_injective
 }
 
@@ -51,7 +52,7 @@ def ind
 | Nat.zero => mz
 | Nat.succ n => ms (ind mz ms n)
 
-instance axioms : Axioms Nat := {
+local instance axioms : Axioms Nat := {
   step_injective := step_injective
   step_neq_zero := Nat.noConfusion
   -- 2022-01-11: Using `Nat.rec` directly here, gives the following error:
@@ -60,31 +61,32 @@ instance axioms : Axioms Nat := {
   ind := ind
 }
 
-instance addition : Addition Nat := {
+local instance addition : Addition Nat := {
   addOp := _root_.instAddNat
   zero_add := @Nat.zero_add
   step_add := @Nat.succ_add
 }
 
-instance multiplication_base : Multiplication.Base Nat := {
+local instance multiplication : Multiplication Nat := {
   mulOp := _root_.instMulNat
   zero_mul := @Nat.zero_mul
   step_mul := @Nat.succ_mul
 }
 
-instance exponentiation_base : Exponentiation.Base Nat := {
+local instance exponentiation : Exponentiation Nat := {
   powOp := _root_.instPowNatNat
   pow_zero := rfl
   pow_step := rfl
 }
 
-instance : Natural Nat where
+instance : Natural Nat := {
   toCore := core
   toAxioms := axioms
   toAddition := addition
   toSign := Natural.Default.sign
-  toOrder := Natural.Derived.order_derived
-  toMultiplication := Natural.Derived.multiplication_derived
-  toExponentiation := exponentiation_base
+  toOrder := Natural.Default.order
+  toMultiplication := multiplication
+  toExponentiation := exponentiation
+}
 
 end Lean4Axiomatic.Natural.Impl.Nat

@@ -1,25 +1,20 @@
 import Lean4Axiomatic.Natural.Order
 
-namespace Lean4Axiomatic
-namespace Natural
-
-namespace Default
+namespace Lean4Axiomatic.Natural.Default
 
 variable {ℕ : Type}
 variable [Core ℕ]
 variable [Addition ℕ]
 
-instance : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
-instance : LT ℕ := LT.mk λ n m => n ≤ m ∧ n ≄ m
+local instance : LE ℕ := LE.mk λ n m => ∃ k : ℕ, n + k ≃ m
+local instance : LT ℕ := LT.mk λ n m => n ≤ m ∧ n ≄ m
 
-instance order_base : Order.Base ℕ where
+instance order : Order ℕ := {
   leOp := inferInstance
-  le_defn {n m : ℕ} := Iff.intro id id
+  le_defn := Iff.intro id id
 
   ltOp := inferInstance
-  lt_defn {n m : ℕ} := Iff.intro id id
+  lt_defn := Iff.intro id id
+}
 
-end Default
-
-end Natural
-end Lean4Axiomatic
+end Lean4Axiomatic.Natural.Default

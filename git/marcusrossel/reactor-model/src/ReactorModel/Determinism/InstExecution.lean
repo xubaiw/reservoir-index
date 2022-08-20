@@ -5,31 +5,39 @@ open Classical
 namespace Execution
 
 theorem InstExecution.preserves_tag : (s₁ ⇓ᵢ+ s₂) → s₁.ctx.tag = s₂.ctx.tag
-  | single h => h.preserves_tag
-  | trans h hi => h.preserves_tag.trans hi.preserves_tag
+  | single h => h.exec.preserves_tag
+  | trans h hi => h.exec.preserves_tag.trans hi.preserves_tag
 
 theorem InstExecution.preserves_ctx_past_future {s₁ s₂} :
   (s₁ ⇓ᵢ+ s₂) → ∀ g, g ≠ s₁.ctx.tag → s₁.ctx.processedRcns g = s₂.ctx.processedRcns g := by
   intro h g hg
   induction h
-  case single h => exact h.preserves_ctx_past_future _ hg
+  case single h => exact h.exec.preserves_ctx_past_future _ hg
   case trans s₁ _ sₘ he _ hi =>
     rw [InstExecution.preserves_tag $ single he] at hg
-    exact (he.preserves_ctx_past_future _ hg).trans $ hi hg
+    exact (he.exec.preserves_ctx_past_future _ hg).trans $ hi hg
     
 theorem InstExecution.preserves_rcns {i : ID} :
   (s₁ ⇓ᵢ+ s₂) → (s₁.rtr.obj? .rcn i = s₂.rtr.obj? .rcn i)
-  | single h => h.preserves_rcns
-  | trans h₁ₘ hₘ₂ => h₁ₘ.preserves_rcns.trans hₘ₂.preserves_rcns
+  | single h => h.exec.preserves_rcns
+  | trans h₁ₘ hₘ₂ => h₁ₘ.exec.preserves_rcns.trans hₘ₂.preserves_rcns
 
 theorem InstExecution.rcns_unprocessed : 
   (e : s₁ ⇓ᵢ+ s₂) → ∀ rcn ∈ e.rcns, rcn ∉ s₁.ctx.currentProcessedRcns := by
   intro h rcn hr
   induction h
-  case single h => simp [List.mem_singleton.mp hr, h.rcn_unprocessed]
+  case single h => 
+    simp [rcns] at hr
+    have h := h.rcn_unprocessed
+    simp [InstStep.rcn] at h
+    simp [hr, h]
   case trans hi =>
     cases List.mem_cons.mp hr
-    case inl h _ hc => simp [hc, h.rcn_unprocessed]
+    case inl h _ hc => 
+      simp [rcns] at hc
+      have h := h.rcn_unprocessed
+      simp [InstStep.rcn, ←hc] at h
+      exact h
     case inr h₁ _ h => 
       specialize hi h
       exact ((not_or _ _).mp $ (mt h₁.mem_currentProcessedRcns.mpr) hi).right
@@ -38,8 +46,17 @@ theorem InstExecution.rcns_nodup : (e : s₁ ⇓ᵢ+ s₂) → List.Nodup e.rcns
   | single _ => List.nodup_singleton _
   | trans h₁ h₂ => List.nodup_cons.mpr $ ⟨(mt $ h₂.rcns_unprocessed _) $ not_not.mpr h₁.self_currentProcessedRcns, h₂.rcns_nodup⟩
 
-theorem InstExecution.changes_nodup : (e : s₁ ⇓ᵢ+ s₂) → List.Nodup e.changes :=
-  sorry -- This should hold as each change (block) is Identified.
+theorem InstExecution.ops_nodup : (e : s₁ ⇓ᵢ+ s₂) → List.Nodup e.ops := by
+  intro e
+  induction e
+  case single => apply List.nodup_singleton
+  case trans hd tl h =>
+    simp [ops, List.nodup_cons, h]
+    by_contra hm
+    have h' := tl.rcns_unprocessed hd.op.rcn
+    simp [rcns, List.mem_map] at h'
+    specialize h' hd.op hm rfl
+    simp [hd.exec.ctx_adds_rcn, Context.addCurrentProcessed_mem_currentProcessedRcns] at h'
 
 theorem InstExecution.currentProcessedRcns_monotonic :
   (s₁ ⇓ᵢ+ s₂) → s₁.ctx.currentProcessedRcns ⊆ s₂.ctx.currentProcessedRcns := by
@@ -54,7 +71,7 @@ theorem InstExecution.mem_currentProcessedRcns :
   (e : s₁ ⇓ᵢ+ s₂) → ∀ rcn, rcn ∈ s₂.ctx.currentProcessedRcns ↔ rcn ∈ e.rcns ∨ rcn ∈ s₁.ctx.currentProcessedRcns := by
   intro h rcn
   induction h
-  case single h => simp [rcns, List.mem_singleton, h.mem_currentProcessedRcns]
+  case single h => simp [InstStep.rcn, rcns, List.mem_singleton, h.mem_currentProcessedRcns]
   case trans h₁ h₂ hi => 
     constructor <;> intro hc 
     case mp =>
@@ -110,83 +127,15 @@ theorem InstExecution.rcn_list_cons : (e : s₁ ⇓ᵢ+ s₂) → ∃ hd tl, e.r
   (by cases · <;> simp [rcns])
 
 theorem InstExecution.to_ChangeListStep :
-  (e : s₁ ⇓ᵢ+ s₂) → (s₁ -[e.changes']→* ⟨s₂.rtr, s₁.ctx⟩) := by
+  (e : s₁ ⇓ᵢ+ s₂) → (s₁ -[e.changes]→* ⟨s₂.rtr, s₁.ctx⟩) := by
   intro e
   induction e
-  case single e => simp [changes', e.to_ChangeListStep]
+  case single e => simp [changes, e.exec.to_ChangeListStep]
   case trans s₁ sₘ s₂ e₁ e₂ hi => 
-    have h := e₁.to_ChangeListStep
+    have h := e₁.exec.to_ChangeListStep
     simp [changes]
     have hs := ChangeListStep.append h hi rfl
     exact hs
-
-theorem InstExecution.mem_rcns_obj? :
-  {e : s₁ ⇓ᵢ+ s₂} → (rcn ∈ e.rcns) → (∃ o, s₁.rtr.obj? .rcn rcn = some o) := by
-  sorry
-
-theorem InstExecution.indep_rcns_indep_output :
-  (e : s ⇓ᵢ+ s') → (∀ rcn ∈ e.rcns, rcn' >[s.rtr]< rcn ∧ rcn' ≠ rcn) → s.rcnOutput rcn' = s'.rcnOutput rcn' := by
-  intro e h
-  induction e
-  case single h' =>
-    specialize h h'.rcn (by simp [rcns])
-    exact h'.indep_rcns_indep_output h.left h.right
-  case trans s₁ sₘ s₂ h₁ h₂ hi =>
-    specialize h h₁.rcn (by simp [rcns])
-    rw [h₁.indep_rcns_indep_output h.left h.right]
-    suffices h : ∀ (rcn : ID), rcn ∈ rcns h₂ → rcn' >[sₘ.rtr]< rcn ∧ rcn' ≠ rcn from hi h
-    intro rcn hr
-    -- TODO: Is this even provable?
-    cases ho : sₘ.rtr.obj? .rcn rcn'
-    case none =>
-      have := h₂.mem_rcns_obj? hr
-      sorry
-    case some =>
-      sorry
-
-/-
-theorem InstExecution.rcns_length_gt_zero : (e : s₁ ⇓ᵢ+ s₂) → e.rcns.length > 0
-  | single .. => by simp [rcns]
-  | trans _ h => by simp [rcns, Nat.succ_pos]
-    
-theorem InstExecution.nthState_zero : (e : s₁ ⇓ᵢ+ s₂) → e.nthState 0 = s₁ := by
-  simp [nthState]
-
-theorem InstExecution.nthState_rcn : 
-  (e : s₁ ⇓ᵢ+ s₂) → (e.nthState i = some s) → (i > 0) → 
-  ∃ (s' : _) (_ : s₁ ⇓ᵢ+ s) (e' : s ⇓ᵢ s') (_ : s' ⇓ᵢ+ s₂), e'.rcn = e.rcns[i]? := by
-  sorry
-
-theorem InstExecution.segments : 
-  (e : s₁ ⇓ᵢ+ s₂) → 
-  ∃ l : List (List (Identified Change)), 
-    (l.join = e.changes) ∧ 
-    (∀ i, e.nthState i = some s → e.rcns[i]? = some rcn → l[i]? = s.rcnOutput' rcn) 
-  := by
-    intro e
-    induction e
-    case single e =>
-      exists [e.changes]
-      simp [changes]
-      intro i hi hr
-      cases i <;> simp [nthState] at hi
-      subst hi
-      simp [rcns] at hr
-      simp [InstStep.changes]
--/      
-
-theorem InstStep.eq_rcn_eq_changes {e₁ : s ⇓ᵢ s₁} {e₂ : s ⇓ᵢ s₂} :
-  (e₁.rcn = e₂.rcn) → (e₁.changes = e₂.changes) := by
-  intro h
-  cases e₁ <;> cases e₂ <;> (simp [rcn] at h; simp [changes])
-  case skipReaction.skipReaction => 
-    exact h
-  case execReaction.execReaction h₁ _ _ _ _ _ _ h₂ _ =>
-    simp [h] at h₁
-    simp [Option.some_inj.mp <| h₁.symm.trans h₂]
-  case' execReaction.skipReaction h', skipReaction.execReaction h' _ _ =>
-    simp [←h] at h'
-    contradiction 
 
 theorem InstExecution.rcns_singleton (e : s₁ ⇓ᵢ+ s₂) :
   (e.rcns = [rcn]) → ∃ e' : s₁ ⇓ᵢ s₂, (e'.rcn = rcn) ∧ (e = single e') := by
@@ -198,7 +147,8 @@ theorem InstExecution.rcns_singleton (e : s₁ ⇓ᵢ+ s₂) :
     exact ⟨h, rfl⟩
   case trans hd tl => 
     have ⟨_, _, h'⟩ := tl.rcn_list_cons
-    simp [rcns, h'] at h
+    simp [rcns] at h
+    simp [rcns, h.right] at h'
 
 -- Reflexive closure for InstExecution
 inductive InstExecution.RC : State → State → Type
@@ -221,36 +171,52 @@ def InstExecution.appendRC (e₁ : s₁ ⇓ᵢ+ s₂) : (s₂ ⇓ᵢ* s₃) → 
 instance : HAppend (s₁ ⇓ᵢ+ s₂) (s₂ ⇓ᵢ* s₃) (s₁ ⇓ᵢ+ s₃) where
   hAppend e₁ e₂ := e₁.appendRC e₂
 
-theorem InstExecution.mem_changes_split (e : s₁ ⇓ᵢ+ s₂) :
-  (cs ∈ e.changes) → 
+theorem InstExecution.mem_ops_split (e : s₁ ⇓ᵢ+ s₂) :
+  (op ∈ e.ops) → 
   ∃ (sₘ₁ : _) (sₘ₂ : _) (e₁ : s₁ ⇓ᵢ* sₘ₁) (eₘ : sₘ₁ ⇓ᵢ sₘ₂) (e₂ : sₘ₂ ⇓ᵢ* s₂), 
-  (e = e₁ ++ eₘ ++ e₂) ∧ (eₘ.changes = cs) :=
+  (e = e₁ ++ eₘ ++ e₂) ∧ (eₘ.op = op) :=
   sorry
 
-theorem InstExecution.same_rcns_same_change_segments (e₁ : s ⇓ᵢ+ s₁) (e₂ : s ⇓ᵢ+ s₂) :
-  (e₁.rcns ~ e₂.rcns) → (e₁.changes ~ e₂.changes) := by
+theorem InstExecution.same_rcns_same_ops (e₁ : s ⇓ᵢ+ s₁) (e₂ : s ⇓ᵢ+ s₂) :
+  (e₁.rcns ~ e₂.rcns) → (e₁.ops ~ e₂.ops) := by
   intro hp
-  /-induction e₁ 
-  case single e₁ =>
-    simp [rcns] at hp
-    have hp := List.perm.eq_singleton hp.symm
-    have ⟨_, h₁, h₂⟩ := e₂.rcns_singleton hp
-    simp [h₂, changes, InstStep.eq_rcn_eq_changes h₁, List.Perm.refl]
-  -/
-  simp [List.perm_ext e₁.changes_nodup e₂.changes_nodup]
-  intro cs
-  constructor <;> intro h
-  case mp =>
-    have h' := e₁.mem_changes_split h
-    sorry
-  -- if a change appears in e₁, that means that it must have been produced by some unique rcn ∈ e₁.rcns.
-  -- since e₂.rcns must also contain this rcn, we only need to show that it must produce the same change.
+  simp [List.perm_ext e₁.ops_nodup e₂.ops_nodup]
+  intro op
+  suffices H : ∀ {s₁ s₂} (e₁ : s ⇓ᵢ+ s₁) (e₂ : s ⇓ᵢ+ s₂), (e₁.rcns ~ e₂.rcns) → ∀ {op}, op ∈ e₁.ops → op ∈ e₂.ops 
+    from ⟨H e₁ e₂ hp, H e₂ e₁ hp.symm⟩
+  intro s₁ s₂ e₁ e₂ hp op h
+  have ⟨sₘ₁, sₘ₂, hd₁, eₘ, tl₂, he, ho⟩ := e₁.mem_ops_split h
+  have H0 := eₘ.wfOp
+  have H1 : op.rcn ∈ e₁.rcns := by
+    simp [rcns, List.mem_map]
+    exact ⟨_, h, rfl⟩
+  have H2 : op.rcn ∈ e₂.rcns := 
+    hp.mem_iff.mp H1
+  have ⟨op', H4, H3⟩ : ∃ op', op' ∈ e₂.ops ∧ op.rcn = op'.rcn := by
+    simp [rcns, List.mem_map] at H2
+    exact H2
+  have ⟨sₘ₁', sₘ₂', hd₁', eₘ', tl₂', he', ho'⟩ :=
+    e₂.mem_ops_split H4
+  have H5 := eₘ'.wfOp
+  suffices h : sₘ₁.operation op.rcn = sₘ₁'.operation op.rcn by
+    skip
+    rw [ho', ←H3, ←h, ←ho, H0, Option.some_inj, ho] at H5
+    simp [H5, H4]
+
+  sorry 
+  -- NOTE: hd₁ and hd₁' don't have to contain the same process the same rcns.
+  --       they can be of completely different "length".
+  --       but they *do* need to contain precisely all dependencies of op.rcn and none of its antidependencies!
   --
-  -- same holds in the other direction.
-    
+  -- TODO: perhaps extract this into a lemma. 
+  -- the key features are:
+  -- * the precise op.rcn is irrelevant, we only need to know that ...?
+  --    1. it is not contained in hd₁/hd₁'.rcns ? 
+  -- 
+  -- ... continue the list
 
 theorem InstExecution.same_rcns_ChangeListEquiv :
-  (e₁ : s ⇓ᵢ+ s₁) → (e₂ : s ⇓ᵢ+ s₂) → (e₁.rcns ~ e₂.rcns) → (e₁.changes' ⋈ e₂.changes') := by
+  (e₁ : s ⇓ᵢ+ s₁) → (e₂ : s ⇓ᵢ+ s₂) → (e₁.rcns ~ e₂.rcns) → (e₁.changes ⋈ e₂.changes) := by
   intro e₁ e₂ hp
   sorry
   -- prove that the changes produced by each reaction are the same (somehow using InstStep.indep_rcns_indep_output)?

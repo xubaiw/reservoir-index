@@ -1,10 +1,13 @@
-import Lean4Axiomatic.Natural.Addition
 import Lean4Axiomatic.Natural.Multiplication
+
+/-!
+# Natural number exponentiation
+-/
 
 namespace Lean4Axiomatic.Natural
 
 /-!
-# Definition and properties of natural number exponentiation
+## Axioms
 -/
 
 /--
@@ -12,8 +15,7 @@ Definition of exponentiation, and properties that it must satisfy.
 
 All other properties of exponentiation can be derived from these.
 -/
-class Exponentiation.Base
-    (ℕ : Type) [Core ℕ] [Addition ℕ] [Multiplication.Base ℕ] where
+class Exponentiation (ℕ : Type) [Core ℕ] [Addition ℕ] [Multiplication ℕ] :=
   /-- Definition of and syntax for exponentiation. -/
   powOp : Pow ℕ ℕ
 
@@ -25,10 +27,8 @@ class Exponentiation.Base
   -/
   pow_step {n m : ℕ} : n ^ step m ≃ (n ^ m) * n
 
-attribute [instance] Exponentiation.Base.powOp
+attribute [instance] Exponentiation.powOp
 
-namespace Exponentiation
-export Exponentiation.Base (powOp pow_step pow_zero)
-end Exponentiation
+export Exponentiation (powOp pow_step pow_zero)
 
 end Lean4Axiomatic.Natural
