@@ -58,8 +58,10 @@ theorem positive_subst {n₁ n₂ : ℕ} : n₁ ≃ n₂ → Positive n₁ → P
   exact AA.substL (f := (· ≄ ·)) (rβ := (· → ·)) ‹n₁ ≃ n₂› ‹n₁ ≄ 0›
 
 instance positive_substitutive
-    : AA.Substitutive₁ (α := ℕ) Positive (· ≃ ·) (· → ·) where
+    : AA.Substitutive₁ (α := ℕ) Positive (· ≃ ·) (· → ·)
+    := {
   subst₁ := positive_subst
+}
 
 /--
 Every positive natural number is the successor of a natural number.

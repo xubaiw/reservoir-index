@@ -1,4 +1,3 @@
-import Lean4Axiomatic.Derived.Natural
 import Lean4Axiomatic.Integer.Impl.Difference.Addition
 
 namespace Lean4Axiomatic.Integer.Impl.Difference

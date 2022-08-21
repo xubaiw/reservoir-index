@@ -59,6 +59,26 @@ instance add_identity : AA.Identity (α := ℕ) 0 (· + ·) := {
   identityR := AA.IdentityOn.mk add_zero
 }
 
+/-- Convenience lemma for several integer proofs. -/
+theorem add_swapped_zeros_eqv {n m : ℕ} : n + 0 ≃ 0 + m ↔ n ≃ m := by
+  apply Iff.intro
+  case mp =>
+    intro (_ : n + 0 ≃ 0 + m)
+    show n ≃ m
+    calc
+      n     ≃ _ := Rel.symm AA.identR
+      n + 0 ≃ _ := ‹n + 0 ≃ 0 + m›
+      0 + m ≃ _ := AA.identL
+      m     ≃ _ := Rel.refl
+  case mpr =>
+    intro (_ : n ≃ m)
+    show n + 0 ≃ 0 + m
+    calc
+      n + 0 ≃ _ := AA.identR
+      n     ≃ _ := ‹n ≃ m›
+      m     ≃ _ := Rel.symm AA.identL
+      0 + m ≃ _ := Rel.refl
+
 /-- Incrementing the right term in a sum increments the result. -/
 theorem add_step {n m : ℕ} : n + step m ≃ step (n + m) := by
   apply ind_on (motive := λ n => n + step m ≃ step (n + m)) n
@@ -100,8 +120,9 @@ theorem add_comm {n m : ℕ} : n + m ≃ m + n := by
       step (m + n) ≃ _ := Rel.symm add_step
       m + step n   ≃ _ := Rel.refl
 
-instance add_commutative : AA.Commutative (α := ℕ) (· + ·) where
+instance add_commutative : AA.Commutative (α := ℕ) (· + ·) := {
   comm := add_comm
+}
 
 /--
 Addition preserves equivalence of natural numbers; two equivalent natural
@@ -145,13 +166,17 @@ theorem subst_add {n₁ n₂ m : ℕ} : n₁ ≃ n₂ → n₁ + m ≃ n₂ + m 
         step n₂ + m   ≃ _ := Rel.refl
 
 def add_substL
-    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
+    : AA.SubstitutiveOn Hand.L (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
   subst₂ := λ (_ : True) => subst_add
+}
 
 instance add_substitutive
-    : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·) where
+    : AA.Substitutive₂ (α := ℕ) (· + ·) AA.tc (· ≃ ·) (· ≃ ·)
+    := {
   substitutiveL := add_substL
   substitutiveR := AA.substR_from_substL_swap (rS := (· ≃ ·)) add_substL
+}
 
 /-- Adding one is the same as incrementing. -/
 theorem add_one_step {n : ℕ} : n + 1 ≃ step n := by

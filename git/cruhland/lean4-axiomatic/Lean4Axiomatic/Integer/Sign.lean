@@ -1,4 +1,3 @@
-import Lean4Axiomatic.Derived.Natural
 import Lean4Axiomatic.Integer.Impl.Derived.Core
 import Lean4Axiomatic.Integer.Negation
 import Lean4Axiomatic.Sign

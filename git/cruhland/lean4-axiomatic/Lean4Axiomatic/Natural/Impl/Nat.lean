@@ -1,5 +1,9 @@
 import Lean4Axiomatic.Natural
-import Lean4Axiomatic.Natural.Impl.Default
+import Lean4Axiomatic.Natural.Impl.Generic
+
+/-!
+# Full implementation of `Natural` for Lean's prelude `Nat`
+-/
 
 namespace Lean4Axiomatic.Natural.Impl.Nat
 
@@ -83,8 +87,8 @@ instance : Natural Nat := {
   toCore := core
   toAxioms := axioms
   toAddition := addition
-  toSign := Natural.Default.sign
-  toOrder := Natural.Default.order
+  toSign := Generic.sign
+  toOrder := Generic.order
   toMultiplication := multiplication
   toExponentiation := exponentiation
 }
