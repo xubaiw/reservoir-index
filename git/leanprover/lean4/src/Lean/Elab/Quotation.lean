@@ -99,6 +99,11 @@ def tryAddSyntaxNodeKindInfo (stx : Syntax) (k : SyntaxNodeKind) : TermElabM Uni
     if (← getEnv).contains k then
       addTermInfo' stx (← mkConstWithFreshMVarLevels k)
 
+instance : Quote Syntax.Preresolved where
+  quote
+    | .namespace ns => Unhygienic.run ``(Syntax.Preresolved.namespace $(quote ns))
+    | .decl n fs    => Unhygienic.run ``(Syntax.Preresolved.decl $(quote n) $(quote fs))
+
 /-- Elaborate the content of a syntax quotation term -/
 private partial def quoteSyntax : Syntax → TermElabM Term
   | Syntax.ident _ rawVal val preresolved => do
@@ -106,11 +111,15 @@ private partial def quoteSyntax : Syntax → TermElabM Term
       return ← `(Syntax.ident info $(quote rawVal) $(quote val) $(quote preresolved))
     -- Add global scopes at compilation time (now), add macro scope at runtime (in the quotation).
     -- See the paper for details.
-    let r ← resolveGlobalName val
+    let consts ← resolveGlobalName val
     -- extension of the paper algorithm: also store unique section variable names as top-level scopes
     -- so they can be captured and used inside the section, but not outside
-    let r' := resolveSectionVariable (← read).sectionVars val
-    let preresolved := r ++ r' ++ preresolved
+    let sectionVars := resolveSectionVariable (← read).sectionVars val
+    -- extension of the paper algorithm: resolve namespaces as well
+    let namespaces ← resolveNamespaceCore (allowEmpty := true) val
+    let preresolved := (consts ++ sectionVars).map (fun (n, projs) => Preresolved.decl n projs) ++
+      namespaces.map .namespace ++
+      preresolved
     let val := quote val
     -- `scp` is bound in stxQuot.expand
     `(Syntax.ident info $(quote rawVal) (addMacroScope mainModule $val scp) $(quote preresolved))

@@ -3400,6 +3400,17 @@ abbrev SyntaxNodeKind := Name
 /-! # Syntax AST -/
 
 /--
+Binding information resolved and stored at compile time of a syntax quotation.
+Note: We do not statically know whether a syntax expects a namespace or term name,
+so a `Syntax.ident` may contain both preresolution kinds.
+-/
+inductive Syntax.Preresolved where
+  | /-- A potential namespace reference -/
+    namespace (ns : Name)
+  | /-- A potential global constant or section variable reference, with additional field accesses -/
+    decl (n : Name) (fields : List String)
+
+/--
 Syntax objects used by the parser, macro expander, delaborator, etc.
 -/
 inductive Syntax where
@@ -3435,9 +3446,9 @@ inductive Syntax where
     `rawIdent` parsers.
     * `rawVal` is the literal substring from the input file
     * `val` is the parsed identifier (with hygiene)
-    * `preresolved` is the list of possible constants this could refer to
+    * `preresolved` is the list of possible declarations this could refer to
     -/
-    ident  (info : SourceInfo) (rawVal : Substring) (val : Name) (preresolved : List (Prod Name (List String))) : Syntax
+    ident  (info : SourceInfo) (rawVal : Substring) (val : Name) (preresolved : List Syntax.Preresolved) : Syntax
 
 /-- `SyntaxNodeKinds` is a set of `SyntaxNodeKind` (implemented as a list). -/
 def SyntaxNodeKinds := List SyntaxNodeKind
