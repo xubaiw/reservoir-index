@@ -19,7 +19,7 @@ structure HashMap (κ τ : Type) [Hashable κ] [DecidableEq κ] where
   size : Cached (
     View.view backing
     |>.map List.length
-    |> FoldableOps.sum (τ := Nat))
+    |> FoldableOps.sum)
 
 namespace HashMap
 variable {κ τ : Type} [Hashable κ] [DecidableEq κ]
@@ -91,7 +91,7 @@ theorem get_set_eq [Hashable κ] (k : κ) (t : τ) (m : HashMap κ τ)
   : (m.set k t |>.get? k) = some t
   := by
   simp [get?, set, set', calc_idx, calc_idx']
-  simp [COWArray.get, COWArray.set, Array.get_set_eq]
+  simp [COWArray.get, COWArray.set]
   simp [MapLike.get?]
   simp [AList.get?_set'_eq]
 

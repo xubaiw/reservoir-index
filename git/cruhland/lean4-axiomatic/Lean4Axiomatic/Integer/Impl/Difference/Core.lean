@@ -223,7 +223,7 @@ instance conversion : Conversion ℕ (Difference ℕ) := {
   from_natural_substitutive := from_natural_substitutive
 }
 
-instance core : Core.Base ℕ (Difference ℕ) := Core.Base.mk
+instance core : Core ℕ (Difference ℕ) := Core.mk
 
 end Difference
 

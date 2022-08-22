@@ -1,8 +1,3 @@
-import Lean4Axiomatic.Integer.Addition
-import Lean4Axiomatic.Integer.Core
-import Lean4Axiomatic.Integer.Multiplication
-import Lean4Axiomatic.Integer.Negation
-import Lean4Axiomatic.Integer.Sign
 import Lean4Axiomatic.Integer.Subtraction
 
 /-!
@@ -11,9 +6,7 @@ import Lean4Axiomatic.Integer.Subtraction
 
 namespace Lean4Axiomatic
 
-open Integer (
-  Addition.Base Core.Derived Multiplication.Base Negation Sign Subtraction
-)
+open Integer (Addition.Base Core Multiplication.Base Negation Sign Subtraction)
 
 /--
 The class of [integers](https://en.wikipedia.org/wiki/Integer).
@@ -36,7 +29,7 @@ construct an instance.
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
 class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
-  toCore : Core.Derived ℕ ℤ
+  toCore : Core ℕ ℤ
   toAddition : Addition.Base ℕ ℤ
   toMultiplication : Multiplication.Base ℕ ℤ
   toNegation : Negation ℕ ℤ
@@ -45,10 +38,7 @@ class Integer (ℕ : Type) [Natural ℕ] (ℤ : Type) :=
 
 namespace Integer
 
-attribute [instance] toCore
-
 export Addition (addOp)
-export Core (eqvOp)
 export Multiplication (mulOp)
 export Negation (negOp)
 

@@ -23,7 +23,7 @@ All other properties of multiplication can be derived from these.
 -/
 class Multiplication.Base
     (ℕ : outParam Type) [outParam (Natural ℕ)]
-    (ℤ : Type) [outParam (Core.Base ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
+    (ℤ : Type) [outParam (Core ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
     :=
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ

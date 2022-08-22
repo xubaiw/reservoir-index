@@ -1,4 +1,3 @@
-import Lean4Axiomatic.Integer.Impl.Derived.Core
 import Lean4Axiomatic.Integer.Negation
 import Lean4Axiomatic.Sign
 
@@ -8,19 +7,17 @@ import Lean4Axiomatic.Sign
 
 namespace Lean4Axiomatic.Integer
 
+open Signed (Negative Positive)
+
 /-!
 ## Preliminary definitions and theorems
 -/
 
-variable {ℕ : Type}
-variable [Natural ℕ]
-variable {ℤ : Type}
-variable [Core.Base ℕ ℤ]
-variable [Addition.Base ℕ ℤ]
-variable [Multiplication.Base ℕ ℤ]
-variable [Negation ℕ ℤ]
+section prelim
 
-open Signed (Negative Positive)
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Core ℕ ℤ]
+variable [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
 
 /--
 A positive or negative integer of unit magnitude.
@@ -266,6 +263,8 @@ theorem mul_preserves_nonzero
     mul_preserves_signedMagnitude a_sm b_sm
   exact Nonzero.mk ‹SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)››
 
+end prelim
+
 /-!
 ## Axioms
 -/
@@ -274,7 +273,7 @@ theorem mul_preserves_nonzero
 class Sign
     (ℕ : Type) [outParam (Natural ℕ)]
     (ℤ : Type)
-      [outParam (Core.Base ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
+      [outParam (Core ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
       [outParam (Multiplication.Base ℕ ℤ)] [outParam (Negation ℕ ℤ)]
     :=
   /-- Definitions of `Positive` and `Negative`, and their basic properties. -/
@@ -294,7 +293,9 @@ export Sign (negative_defn positive_defn)
 ## Derived properties
 -/
 
-variable [Sign ℕ ℤ]
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Core ℕ ℤ] [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ]
+variable [Negation ℕ ℤ] [Sign ℕ ℤ]
 
 /-- Extract and simplify the underlying equivalence from `Positive`. -/
 theorem positive_eqv {a : ℤ} : Positive a → ∃ (n : ℕ), a ≃ ↑n := by
@@ -337,7 +338,7 @@ theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := 
         a * a ≃ _ := AA.substL ‹a ≃ 0›
         0 * a ≃ _ := AA.absorbL
         0     ≃ _ := Rel.refl
-      exact absurd ‹(1 : ℤ) ≃ 0› Core.one_neqv_zero
+      exact absurd ‹(1 : ℤ) ≃ 0› one_neqv_zero
     | AA.OneOfThree.second (_ : Positive a) =>
       apply Or.inl
       show a ≃ 1

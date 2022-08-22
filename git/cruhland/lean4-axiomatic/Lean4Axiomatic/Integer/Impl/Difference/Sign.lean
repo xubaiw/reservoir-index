@@ -1,5 +1,4 @@
 import Lean4Axiomatic.Integer.Impl.Default.Sign
-import Lean4Axiomatic.Integer.Impl.Derived.Core
 import Lean4Axiomatic.Integer.Impl.Difference.Multiplication
 import Lean4Axiomatic.Integer.Impl.Difference.Negation
 import Lean4Axiomatic.Integer.Sign

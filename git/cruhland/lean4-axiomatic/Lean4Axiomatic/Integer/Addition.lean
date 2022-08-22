@@ -16,9 +16,9 @@ All other properties of addition can be derived from these.
 - `ℤ`: The type of integers.
 
 **Class parameters**
-- `Core.Base ℤ`: Required to express most properties of addition.
+- `Core ℤ`: Required to express most properties of addition.
 -/
-class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core.Base ℕ ℤ] :=
+class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
   /-- Definition of and syntax for addition. -/
   addOp : Add ℤ
 

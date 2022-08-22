@@ -1,11 +1,11 @@
 import Lean4Axiomatic.Natural
 import Lean4Axiomatic.Relation.Equivalence
 
-/-!
-# Fundamental definitions and properties of integers
--/
+/-! # Fundamental definitions and properties of integers -/
 
 namespace Lean4Axiomatic.Integer
+
+/-! ## Axioms -/
 
 /--
 Definitions pertaining to equivalence of integer values.
@@ -21,6 +21,8 @@ class Equivalence (ℤ : Type) :=
   eqvOp : Relation.Equivalence.EqvOp ℤ
 
 attribute [instance] Equivalence.eqvOp
+
+export Equivalence (eqvOp)
 
 /--
 Definitions pertaining to conversion of other types into or out of integers.
@@ -63,29 +65,30 @@ dependencies needed by other integer classes.
 **Class parameters**
 - `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
 -/
-class Core.Base (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : outParam Type)
+class Core (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : outParam Type)
   extends Equivalence ℤ, Conversion ℕ ℤ
 
+/-! ## Derived properties -/
+
+variable {ℕ : Type} [Natural ℕ]
+variable {ℤ : Type} [Core ℕ ℤ]
+
 /--
-Properties that follow from those provided by `Core.Base`.
+The integer one is not the same as the integer zero.
 
-**Named parameters**
-- `ℕ`: The natural numbers.
-- `ℤ`: The integers.
-
-**Class parameters**
-- `Natural ℕ`: Evidence that `ℕ` implements the natural numbers.
+**Proof intuition**: All the laws of algebra for integers continue to hold if
+`0 ≃ 1` (see [zero ring](https://en.wikipedia.org/wiki/Zero_ring)), so we need
+to use a non-algebraic fact. This is provided by the mapping from natural
+numbers to integers, specifically its injectivity which allows us to translate
+the property that a successor is never the same as zero into the integers.
 -/
-class Core.Derived
-    (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : outParam Type)
-    extends Core.Base ℕ ℤ
-    :=
-  /-- The integer values for zero and one are not equivalent. -/
-  one_neqv_zero : (1 : ℤ) ≄ 0
-
-namespace Core
-export Core.Derived (one_neqv_zero)
-export Equivalence (eqvOp)
-end Core
+theorem one_neqv_zero : (1 : ℤ) ≄ 0 := by
+  intro (_ : (1 : ℤ) ≃ 0)
+  show False
+  have : ↑(1 : ℕ) ≃ ↑(0 : ℕ) := ‹(1 : ℤ) ≃ 0›
+  have : (1 : ℕ) ≃ 0 := AA.inject ‹↑(1 : ℕ) ≃ ↑(0 : ℕ)›
+  have : Natural.step (0 : ℕ) ≃ 0 :=
+    Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
+  exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neq_zero
 
 end Lean4Axiomatic.Integer
