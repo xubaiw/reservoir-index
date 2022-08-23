@@ -1,11 +1,11 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Integer.Addition
 
+/-! # Integer multiplication -/
+
 namespace Lean4Axiomatic.Integer
 
-/-!
-# Definition and properties of integer multiplication
--/
+/-! ## Axioms -/
 
 /--
 Definition of multiplication, and properties that it must satisfy.
@@ -21,9 +21,9 @@ All other properties of multiplication can be derived from these.
 - All other class parameters provide the subset of integer properties necessary
   to define the fields of this class.
 -/
-class Multiplication.Base
+class Multiplication
     (ℕ : outParam Type) [outParam (Natural ℕ)]
-    (ℤ : Type) [outParam (Core ℕ ℤ)] [outParam (Addition.Base ℕ ℤ)]
+    (ℤ : Type) [outParam (Core ℕ ℤ)] [outParam (Addition ℕ ℤ)]
     :=
   /-- Definition of and syntax for multiplication. -/
   mulOp : Mul ℤ
@@ -56,16 +56,14 @@ class Multiplication.Base
   mul_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := ℤ) (↑·) (· * ·) (· * ·)
 
-attribute [instance] Multiplication.Base.mulOp
-attribute [instance] Multiplication.Base.mul_associative
-attribute [instance] Multiplication.Base.mul_commutative
-attribute [instance] Multiplication.Base.mul_compatible_from_natural
-attribute [instance] Multiplication.Base.mul_distributive
-attribute [instance] Multiplication.Base.mul_identity
-attribute [instance] Multiplication.Base.mul_substitutive
+attribute [instance] Multiplication.mulOp
+attribute [instance] Multiplication.mul_associative
+attribute [instance] Multiplication.mul_commutative
+attribute [instance] Multiplication.mul_compatible_from_natural
+attribute [instance] Multiplication.mul_distributive
+attribute [instance] Multiplication.mul_identity
+attribute [instance] Multiplication.mul_substitutive
 
-namespace Multiplication
-export Multiplication.Base (mulOp)
-end Multiplication
+export Multiplication (mulOp)
 
 end Lean4Axiomatic.Integer

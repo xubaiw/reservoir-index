@@ -4,8 +4,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 
 /-! ## Addition of formal differences -/
 
-variable {ℕ : Type}
-variable [Natural ℕ]
+variable {ℕ : Type} [Natural ℕ]
 
 /--
 Addition of differences.
@@ -159,7 +158,7 @@ def add_compatible_from_natural
   compat₂ := add_compat_natural
 }
 
-instance addition : Addition.Base ℕ (Difference ℕ) := {
+instance addition : Addition ℕ (Difference ℕ) := {
   addOp := addOp
   add_substitutive := add_substitutive
   add_commutative := add_commutative

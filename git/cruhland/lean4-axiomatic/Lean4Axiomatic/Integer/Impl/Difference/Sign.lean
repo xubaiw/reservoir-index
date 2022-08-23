@@ -1,12 +1,10 @@
-import Lean4Axiomatic.Integer.Impl.Default.Sign
+import Lean4Axiomatic.Integer.Impl.Generic.Sign
 import Lean4Axiomatic.Integer.Impl.Difference.Multiplication
 import Lean4Axiomatic.Integer.Impl.Difference.Negation
-import Lean4Axiomatic.Integer.Sign
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
-variable {ℕ : Type}
-variable [Natural ℕ]
+variable {ℕ : Type} [Natural ℕ]
 
 open Signed (Negative Positive)
 
@@ -60,7 +58,7 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
     apply Natural.lt_defn_add.mpr
     show ∃ (k : ℕ), Positive k ∧ m ≃ n + k
     have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ -1 * ↑k))
-      := Default.negative_defn.mp ‹Negative (n——m)›
+      := Generic.negative_defn.mp ‹Negative (n——m)›
     have : n——m ≃ 0——k := Rel.trans ‹n——m ≃ -1 * ↑k› (Rel.symm neg_diff)
     have : n + k ≃ 0 + m := ‹n——m ≃ 0——k›
     have : m ≃ n + k := calc
@@ -71,7 +69,7 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
   case mpr =>
     intro (_ : n < m)
     show Negative (n——m)
-    apply Default.negative_defn.mpr
+    apply Generic.negative_defn.mpr
     show SignedMagnitude (n——m) sqrt1_neg_one
     have (Exists.intro k (And.intro (_ : Positive k) (_ : m ≃ n + k))) :=
       Natural.lt_defn_add.mp ‹n < m›
@@ -103,11 +101,11 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
   case mp =>
     intro (_ : Positive (n——m))
     have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ 1 * ↑k))
-      := Default.positive_defn.mp ‹Positive (n——m)›
+      := Generic.positive_defn.mp ‹Positive (n——m)›
     show m < n
     apply neg_diff_lt.mp
     show Negative (m——n)
-    apply Default.negative_defn.mpr
+    apply Generic.negative_defn.mpr
     show SignedMagnitude (m——n) sqrt1_neg_one
     apply SignedMagnitude.intro k ‹Positive k›
     show m——n ≃ -1 * ↑k
@@ -120,11 +118,11 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
   case mpr =>
     intro (_ : m < n)
     show Positive (n——m)
-    apply Default.positive_defn.mpr
+    apply Generic.positive_defn.mpr
     show SignedMagnitude (n——m) sqrt1_one
     have : Negative (m——n) := neg_diff_lt.mpr ‹m < n›
     have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : m——n ≃ -1 * ↑k))
-      := Default.negative_defn.mp ‹Negative (m——n)›
+      := Generic.negative_defn.mp ‹Negative (m——n)›
     apply SignedMagnitude.intro k ‹Positive k›
     show n——m ≃ 1 * ↑k
     calc
@@ -191,15 +189,15 @@ theorem trichotomy
     exact absurd twoOfThree notTwoOfThree
 
 def signed : Signed (Difference ℕ) := {
-  positive_substitutive := Default.positive_substitutive
-  negative_substitutive := Default.negative_substitutive
+  positive_substitutive := Generic.positive_substitutive
+  negative_substitutive := Generic.negative_substitutive
   trichotomy := trichotomy
 }
 
 instance sign : Sign ℕ (Difference ℕ) := {
   signed := signed
-  positive_defn := Default.positive_defn
-  negative_defn := Default.negative_defn
+  positive_defn := Generic.positive_defn
+  negative_defn := Generic.negative_defn
 }
 
 end Lean4Axiomatic.Integer.Impl.Difference

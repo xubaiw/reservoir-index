@@ -1,12 +1,10 @@
 import Lean4Axiomatic.Integer.Impl.Difference.Addition
-import Lean4Axiomatic.Relation.Equivalence
 
 namespace Lean4Axiomatic.Integer.Impl.Difference
 
 /-! ## Multiplication of formal differences -/
 
-variable {ℕ : Type}
-variable [Natural ℕ]
+variable {ℕ : Type} [Natural ℕ]
 
 /--
 Multiplication of differences.
@@ -297,7 +295,7 @@ def mul_compatible_from_natural
   compat₂ := mul_compat_natural
 }
 
-instance multiplication : Multiplication.Base ℕ (Difference ℕ) := {
+instance multiplication : Multiplication ℕ (Difference ℕ) := {
   mulOp := mulOp
   mul_commutative := mul_commutative
   mul_substitutive := mul_substitutive

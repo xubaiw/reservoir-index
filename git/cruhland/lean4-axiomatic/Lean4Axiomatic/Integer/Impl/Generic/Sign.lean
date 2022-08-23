@@ -1,10 +1,12 @@
 import Lean4Axiomatic.Integer.Sign
 
-namespace Lean4Axiomatic.Integer.Impl.Default
+/-! # Generic implementations of integer signedness properties -/
+
+namespace Lean4Axiomatic.Integer.Impl.Generic
 
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ]
-variable [Addition.Base ℕ ℤ] [Multiplication.Base ℕ ℤ] [Negation ℕ ℤ]
+variable [Addition ℕ ℤ] [Multiplication ℕ ℤ] [Negation ℕ ℤ]
 
 open Signed (Negative Positive)
 
@@ -93,4 +95,4 @@ def negative_substitutive
   subst₁ := negative_subst
 }
 
-end Lean4Axiomatic.Integer.Impl.Default
+end Lean4Axiomatic.Integer.Impl.Generic

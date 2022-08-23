@@ -1,11 +1,11 @@
 import Lean4Axiomatic.AbstractAlgebra
 import Lean4Axiomatic.Integer.Core
 
+/-! # Integer addition -/
+
 namespace Lean4Axiomatic.Integer
 
-/-!
-# Definition and properties of integer addition
--/
+/-! ## Axioms -/
 
 /--
 Definition of addition, and properties that it must satisfy.
@@ -18,7 +18,7 @@ All other properties of addition can be derived from these.
 **Class parameters**
 - `Core ℤ`: Required to express most properties of addition.
 -/
-class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
+class Addition (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
   /-- Definition of and syntax for addition. -/
   addOp : Add ℤ
 
@@ -44,14 +44,12 @@ class Addition.Base (ℕ : Type) [Natural ℕ] (ℤ : Type) [Core ℕ ℤ] :=
   add_compatible_from_natural
     : AA.Compatible₂ (α := ℕ) (β := ℤ) (↑·) (· + ·) (· + ·)
 
-attribute [instance] Addition.Base.addOp
-attribute [instance] Addition.Base.add_associative
-attribute [instance] Addition.Base.add_compatible_from_natural
-attribute [instance] Addition.Base.add_identity
-attribute [instance] Addition.Base.add_substitutive
+attribute [instance] Addition.addOp
+attribute [instance] Addition.add_associative
+attribute [instance] Addition.add_compatible_from_natural
+attribute [instance] Addition.add_identity
+attribute [instance] Addition.add_substitutive
 
-namespace Addition
-export Addition.Base (addOp)
-end Addition
+export Addition (addOp)
 
 end Lean4Axiomatic.Integer
