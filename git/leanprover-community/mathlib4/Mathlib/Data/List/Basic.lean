@@ -5,6 +5,7 @@ import Mathlib.Logic.Function.Basic
 import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Option.Basic
 import Mathlib.Data.List.Defs
+import Mathlib.Tactic.Simpa
 import Lean
 
 open Function
@@ -237,17 +238,22 @@ lemma exists_of_length_succ {n} :
 | [], H => absurd H.symm $ Nat.succ_ne_zero n
 | h :: t, _ => ⟨h, t, rfl⟩
 
--- @[simp] lemma length_injective_iff : injective (List.length : List α → ℕ) ↔ subsingleton α :=
--- begin
---   constructor,
---   { intro h, refine ⟨fun  x y, _⟩, suffices : [x] = [y], { simpa using this }, apply h, refl },
---   { intros hα l1 l2 hl, induction l1 generalizing l2; cases l2,
---     { refl }, { cases hl }, { cases hl },
---     congr, exactI subsingleton.elim _ _, apply l1_ih, simpa using hl }
--- end
+@[simp]
+lemma length_injective_iff : injective (List.length : List α → ℕ) ↔ Subsingleton α := by
+  constructor
+  · intro h; refine ⟨λ x y => ?_⟩; (suffices [x] = [y] by simpa using this); apply h; rfl
+  · intros hα l1 l2 hl
+    induction l1 generalizing l2 <;> cases l2
+    case nil.nil => rfl
+    case nil.cons => cases hl
+    case cons.nil => cases hl
+    case cons.cons ih _ _ => congr
+                             · exact Subsingleton.elim _ _
+                             · apply ih; simpa using hl
 
--- @[simp] lemma length_injective [subsingleton α] : injective (length : List α → ℕ) :=
--- length_injective_iff.mpr $ by apply_instance
+@[simp default+1]
+lemma length_injective [Subsingleton α] : injective (length : List α → ℕ) :=
+length_injective_iff.mpr inferInstance
 
 /-! ### set-theoretic notation of Lists -/
 
@@ -933,10 +939,9 @@ variable [DecidableEq α]
 @[simp] theorem erase_nil (a : α) : [].erase a = [] := rfl
 
 theorem erase_cons (a b : α) (l : List α) :
-    (b :: l).erase a = if b = a then l else b :: l.erase a := by
-  by_cases h : a = b
-  · simp only [if_pos h.symm, List.erase, EqIffBeqTrue.mp h.symm]
-  · simp only [if_neg (Ne.symm h), List.erase, NeqIffBeqFalse.mp (Ne.symm h)]
+    (b :: l).erase a = if b = a then l else b :: l.erase a :=
+  if h : b = a then by simp [List.erase, h]
+  else by simp [List.erase, h, (beq_eq_false_iff_ne _ _).2 h]
 
 @[simp] theorem erase_cons_head (a : α) (l : List α) : (a :: l).erase a = l := by
   simp [erase_cons]

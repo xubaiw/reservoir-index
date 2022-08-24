@@ -21,6 +21,7 @@ import Mathlib.Tactic.LibrarySearch
 import Mathlib.Tactic.NormCast
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.RCases
+import Mathlib.Tactic.Recover
 import Mathlib.Tactic.Replace
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Set
@@ -28,6 +29,7 @@ import Mathlib.Tactic.ShowTerm
 import Mathlib.Tactic.Simps
 import Mathlib.Tactic.SolveByElim
 import Mathlib.Tactic.Trace
+import Mathlib.Tactic.Substs
 import Mathlib.Init.ExtendedBinder
 import Mathlib.Util.WithWeakNamespace
 import Mathlib.Util.Syntax
@@ -243,11 +245,9 @@ end Conv
 /- M -/ syntax (name := injectionsAndClear) "injections_and_clear" : tactic
 
 /- E -/ syntax (name := tryFor) "try_for " term:max tacticSeq : tactic
-/- E -/ syntax (name := substs) "substs" (ppSpace ident)* : tactic
 /- E -/ syntax (name := unfoldCoes) "unfold_coes" (ppSpace location)? : tactic
 /- E -/ syntax (name := unfoldWf) "unfold_wf" : tactic
 /- M -/ syntax (name := unfoldAux) "unfold_aux" : tactic
-/- E -/ syntax (name := recover) "recover" : tactic
 /- E -/ syntax (name := «continue») "continue " tacticSeq : tactic
 /- M -/ syntax (name := generalizeHyp) "generalize " atomic(ident " : ")? term:51 " = " ident
   ppSpace location : tactic
@@ -335,8 +335,6 @@ syntax termList := " [" term,* "]"
 /- M -/ syntax (name := contrapose!) "contrapose!" (ppSpace ident (" with " ident)?)? : tactic
 
 /- E -/ syntax (name := byContra') "by_contra'" (ppSpace ident)? Term.optType : tactic
-
-/- E -/ syntax (name := renameVar) "rename_var " ident " → " ident (ppSpace location)? : tactic
 
 /- M -/ syntax (name := assocRw) "assoc_rw " rwRuleSeq (ppSpace location)? : tactic
 

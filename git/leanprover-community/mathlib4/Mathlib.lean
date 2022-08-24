@@ -100,7 +100,9 @@ import Mathlib.Tactic.OpenPrivate
 import Mathlib.Tactic.PermuteGoals
 import Mathlib.Tactic.PrintPrefix
 import Mathlib.Tactic.RCases
+import Mathlib.Tactic.Recover
 import Mathlib.Tactic.Rename
+import Mathlib.Tactic.RenameBVar
 import Mathlib.Tactic.Replace
 import Mathlib.Tactic.RestateAxiom
 import Mathlib.Tactic.Ring
@@ -114,6 +116,7 @@ import Mathlib.Tactic.Simpa
 import Mathlib.Tactic.Simps
 import Mathlib.Tactic.SolveByElim
 import Mathlib.Tactic.Spread
+import Mathlib.Tactic.Substs
 import Mathlib.Tactic.SudoSetOption
 import Mathlib.Tactic.SwapVar
 import Mathlib.Tactic.ToAdditive

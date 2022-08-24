@@ -545,37 +545,7 @@ theorem length_count_pairsToRow : ∀ (xs : List (Option τ × Nat)),
 theorem count_spec4 {τ} [DecidableEq τ] :
   ∀ (t : Table sch) (c : (c : η) × sch.HasCol (c, τ)),
   nrows (count t c) = (getColumn2 t c.1 c.2).unique.length :=
-λ t c => Eq.trans (length_count_pairsToRow _) (List.length_counts _)
-
-  -- simp only [count, nrows]
-  -- have :
-  --   List.length (List.foldl (fun acc optV => count.incr acc optV) [] (getColumn2 t c.fst c.snd))
-  --   =
-  --   List.length (List.foldl (fun acc optV => count.incr acc optV) [] (getColumn2 t c.fst c.snd))
-  --   + List.length (List.unique ([] : List (Option τ))) := rfl
-  -- rw [this]
-  -- apply List.foldl_invariant
-  --   (λ acc xs => List.length acc + List.length xs.unique = (getColumn2 t c.1 c.2).unique.length)
-  -- -- Initialization
-  -- case h_init => simp only [getColumn2, List.length, Nat.zero_add]
-  -- -- Preservation
-  -- case h_pres =>
-  --   intros v x xs h
-  --   rw [List.unique, List.uniqueAux] at h
-  --   simp only [List.not_mem_nil, ite_false] at h
-  --   rw [List.length_uniqueAux] at h
-  --   simp only [List.length, Nat.zero_add] at h
-  --   cases v with
-  --   | nil =>
-  --     simp only [count.incr, List.length, Nat.zero_add]
-  --     simp only [List.length, Nat.zero_add] at h
-  --     rw [Nat.add_comm] at h
-  --     exact h
-  --   | cons v vs =>
-  --     unfold count.incr
-  --   admit
-  --   . intros y hy
-      
+λ t c => Eq.trans (length_count_pairsToRow _) (List.length_counts _)      
 
 theorem bin_spec1 [ToString η] :
   ∀ (t : Table sch)
@@ -610,8 +580,42 @@ theorem pivotTable_spec2 :
   header (pivotTable t cs inst aggs) =
   List.append (cs.map (·.1.1)) (aggs.map (·.1.1)) :=
 λ t cs inst aggs => List.map_map_append cs aggs Prod.fst Sigma.fst Sigma.fst
-   
--- TODO: pivotTable specs 3 & 4
+
+-- TODO: get rid of `Classical.choice` (termination proof)
+theorem pivotTable_spec3_aux :
+  ∀ (cs : List $ CertifiedHeader sch) 
+    (aggs : List ((c' : Header) × (c : CertifiedHeader sch) ×
+                  (List (Option c.fst.snd) → Option c'.snd)))
+    (cn : CertifiedName (Schema.fromCHeaders cs)),
+  Schema.lookup
+    (List.append (Schema.fromCHeaders cs) (aggs.map (fun a => a.fst)))
+    ⟨cn.fst, Schema.hasNameOfAppend cn.snd⟩ =
+  Schema.lookup sch ⟨cn.fst, Schema.hasNameOfFromCHeaders cn.snd⟩
+| ⟨(.(nm), τ), _⟩ :: cs, aggs, ⟨nm, .hd⟩ => by
+  simp only [Schema.fromCHeaders, List.map, List.append, Schema.hasNameOfAppend]
+  rw [Schema.lookup_eq_1,
+      Schema.hasNameOfFromCHeaders_eq_1,
+      Schema.lookup_of_colImpliesName]
+| ⟨_, _⟩ :: cs, aggs, ⟨nm, .tl _⟩ => by
+  simp only [Schema.fromCHeaders, List.map, List.append, Schema.hasNameOfAppend]
+  rw [Schema.lookup_eq_2,
+      Schema.hasNameOfFromCHeaders_eq_2]
+  apply pivotTable_spec3_aux cs aggs ⟨nm, _⟩
+
+theorem pivotTable_spec3 :
+  ∀ (t : Table sch)
+    (cs : List $ CertifiedHeader sch)
+    (inst : DecidableEq (Row (Schema.fromCHeaders cs)))
+    (aggs : List ((c' : Header) ×
+                  (c : CertifiedHeader sch) ×
+                  (List (Option c.fst.snd) → Option c'.snd)))
+    (cn : CertifiedName (Schema.fromCHeaders cs)),
+    (schema $ pivotTable t cs inst aggs).lookup
+      ⟨cn.1, Schema.hasNameOfAppend cn.2⟩ =
+    (schema t).lookup ⟨cn.1, Schema.hasNameOfFromCHeaders cn.2⟩ :=
+λ t cs inst => pivotTable_spec3_aux cs
+
+-- Spec 4 is enforced by types
 
 -- Specs 1 and 2 are enforced by types
 -- Spec 3 is also enforced by types, but since it is actually expressible as an
@@ -698,9 +702,16 @@ theorem transformColumn_spec4 :
   nrows (transformColumn t c f) = nrows t :=
 λ t c f => List.length_map _ _
 
--- TODO: `renameColumns`
+-- TODO: `renameColumns` specs 1 and 2
 
--- The specification for `find` is contained in its type
+theorem renameColumns_spec3 :
+  ∀ (t : Table sch)
+    (ccs : ActionList Schema.renameColumnCN sch),
+  nrows (renameColumns t ccs) = nrows t :=
+λ _ _ => List.length_map _ _
+
+-- The specification for `find` is contained in its type (`Option` corresponds
+-- to "Error," and `Fin` restricts the range of the output)
 
 -- TODO: `groupByRetentive` specs 2–6 (in progress)
 theorem groupByRetentive_spec1 [DecidableEq τ] :
