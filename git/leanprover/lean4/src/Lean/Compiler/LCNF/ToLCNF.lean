@@ -23,6 +23,11 @@ def isLCProof (e : Expr) : Bool :=
 def mkLcProof (p : Expr) :=
   mkApp (mkConst ``lcProof []) p
 
+/--
+Auxiliary inductive datatype for constructing LCNF `Code` objects.
+The `toLCNF` function maintains a sequence of elements that is eventually
+converted into `Code`.
+-/
 inductive Element where
   | jp  (decl : FunDecl)
   | fun (decl : FunDecl)
@@ -45,7 +50,7 @@ where
       | .cases fvarId cases =>
         if let .return fvarId' := c then
           if fvarId == fvarId' then
-            return .cases cases
+            go (i - 1) (.cases cases)
           else
             -- `cases` is dead code
             go (i - 1) c
@@ -85,6 +90,14 @@ def pushElement (elem : Element) : M Unit := do
 def mkUnreachable (type : Expr) : M Expr := do
   pushElement .unreach
   return .fvar (← mkAuxParam type).fvarId
+
+def mkAuxLetDecl (e : Expr) (prefixName := `_x) : M Expr := do
+  if e.isFVar then
+    return e
+  else
+    let letDecl ← mkLetDecl (← mkFreshBinderName prefixName) (← inferType e) e
+    pushElement (.let letDecl)
+    return .fvar letDecl.fvarId
 
 def run (x : M α) : CompilerM α :=
   x |>.run' {}
@@ -141,15 +154,23 @@ def toLCNFType (type : Expr) : M Expr := do
     modify fun s => { s with typeCache := s.typeCache.insert type type' }
     return type'
 
+def cleanupBinderName (binderName : Name) : CompilerM Name :=
+  if binderName.hasMacroScopes then
+    let binderName := binderName.eraseMacroScopes
+    mkFreshBinderName binderName
+  else
+    return binderName
+
 /-- Create a new local declaration using a Lean regular type. -/
 def mkParam (binderName : Name) (type : Expr) : M Param := do
+  let binderName ← cleanupBinderName binderName
   let type' ← toLCNFType type
   let param ← LCNF.mkParam binderName type'
   modify fun s => { s with lctx  := s.lctx.mkLocalDecl param.fvarId binderName type .default }
   return param
 
 def mkLetDecl (binderName : Name) (type : Expr) (value : Expr) (type' : Expr) (value' : Expr) : M LetDecl := do
-  let binderName ← if binderName.eraseMacroScopes.isInternal then mkFreshBinderName binderName.eraseMacroScopes else pure binderName
+  let binderName ← cleanupBinderName binderName
   let letDecl ← LCNF.mkLetDecl binderName type' value'
   modify fun s => { s with
     lctx := s.lctx.mkLetDecl letDecl.fvarId binderName type value false
@@ -215,8 +236,8 @@ where
       | .letE ..    => visitLet e #[]
       | .lit ..     => mkAuxLetDecl e
       | .forallE .. => unreachable!
-      | .mvar .. => throwError "unexpected occurrence of metavariable in code generator{indentExpr e}"
-      | .bvar .. => unreachable!
+      | .mvar ..    => throwError "unexpected occurrence of metavariable in code generator{indentExpr e}"
+      | .bvar ..    => unreachable!
       | _           => pure e
     modify fun s => { s with cache := s.cache.insert e r }
     return r
@@ -476,12 +497,13 @@ where
         let type' ← toLCNFType type
         let value' ← visit value
         let letDecl ← mkLetDecl binderName type value type' value'
-        pushElement (.let letDecl)
         visitLet body (xs.push (.fvar letDecl.fvarId))
     | _ =>
       let e := e.instantiateRev xs
       visit e
 
 end ToLCNF
+
+export ToLCNF (toLCNF)
 
 end Lean.Compiler.LCNF
