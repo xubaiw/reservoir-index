@@ -37,7 +37,8 @@ macro_rules
   | `(term!{ $x:ident })                => `(mkConst $(quote x.getId.toString))
   | `(term!{ { $t:term } })             => `(mkConst (toString $t))
   | `(term!{ s!$s })                    => `(mkConst s!$s)
-  | `(term!{ $n:numLit })               => `(mkConst $(quote <| toString n.isNatLit?.get!))
+  | `(term!{ $n:num })                  => `(mkConst $(quote <| toString n.getNat))
+  -- `(mkConst $(quote <| toString (Syntax.isNatLit? n).get!))
   | `(term!{ $x:ident ( $[$args],* ) }) => do
       let args ← args.mapM fun x => `(term!{ $x })
       `(app $(quote x.getId.toString) [ $args,* ])
@@ -74,7 +75,7 @@ partial def hash : FOTerm → UInt64
 
 instance : Hashable FOTerm := ⟨hash⟩
 
-/-- Returns a list of all free variable occurrences in the term. -/ 
+/-- Returns a list of all free variable occurrences in the term. -/
 partial def freeVars : FOTerm → List String :=
   go []
 where go (acc : List String) : FOTerm → List String
@@ -209,7 +210,7 @@ instance : ToString FOForm := ⟨FOForm.toString⟩
 instance : Repr FOForm where
   reprPrec p _ := s!"fo!\{{toString p}}"
 
-/-- Returns a list of all free variable occurrences in the formula. -/ 
+/-- Returns a list of all free variable occurrences in the formula. -/
 def freeVars : FOForm → List String :=
   go HashSet.empty
 where go (bound : HashSet String) : FOForm → List String
@@ -220,7 +221,7 @@ where go (bound : HashSet String) : FOForm → List String
   | disj φ ψ => go bound φ ++ go bound ψ
   | impl φ ψ => go bound φ ++ go bound ψ
   | biImpl φ ψ => go bound φ ++ go bound ψ
-  | all x φ => go (bound.insert x) φ 
+  | all x φ => go (bound.insert x) φ
   | ex x φ => go (bound.insert x) φ
   | _ => []
 

@@ -208,11 +208,6 @@ instance : LawfulBEq String := inferInstance
 
 /-! # Logical connectives and equality -/
 
-def implies (a b : Prop) := a → b
-
-theorem implies.trans {p q r : Prop} (h₁ : implies p q) (h₂ : implies q r) : implies p r :=
-  fun hp => h₂ (h₁ hp)
-
 def trivial : True := ⟨⟩
 
 theorem mt {a b : Prop} (h₁ : a → b) (h₂ : ¬b) : ¬a :=
@@ -436,8 +431,8 @@ variable {p q : Prop}
   else
     isFalse fun hq => absurd (Iff.mpr h hq) hp
 
-@[inline] def  decidable_of_decidable_of_eq [hp : Decidable p] (h : p = q) : Decidable q :=
-  h ▸ hp
+@[inline] def  decidable_of_decidable_of_eq [Decidable p] (h : p = q) : Decidable q :=
+  decidable_of_decidable_of_iff (p := p) (h ▸ Iff.rfl)
 end
 
 @[macroInline] instance {p q} [Decidable p] [Decidable q] : Decidable (p → q) :=

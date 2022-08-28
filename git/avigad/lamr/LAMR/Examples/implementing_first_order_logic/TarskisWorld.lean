@@ -133,7 +133,7 @@ def World.toArray (world : World) : Array (Array (Option Object)) := Id.run do
   for obj in world do
     assert! obj.row < 8
     assert! obj.col < 8
-    arr := arr.set! obj.row $ arr[obj.row].set! obj.col (some obj)
+    arr := arr.set! obj.row $ arr[obj.row]!.set! obj.col (some obj)
   arr
 
 instance : ToString World :=
@@ -144,7 +144,7 @@ instance : ToString World :=
     for i in [:8] do
       s := s ++ "| "
       for j in [:8] do
-        s := s ++ toString arr[7-i][j] ++ " | "
+        s := s ++ toString arr[7-i]![j]! ++ " | "
       s := s ++ "\n" ++ rowDashes ++ "\n"
     s⟩
 
@@ -178,7 +178,7 @@ assign!{
 }
 
 def World.eval (world : World) (A : FOForm) : Bool :=
-  A.eval { univ := world, fn := fun f l => default, rel := tWRelInterp } (fun x => default)
+  A.eval { univ := world, fn := fun _ _ => default, rel := tWRelInterp } (fun _ => default)
 
 /-
 Try it out.
