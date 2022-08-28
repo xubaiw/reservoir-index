@@ -3,6 +3,13 @@ import Lean
 open Lean
 open Lean.Meta
 
+#check isDefEq
+#check Lean.Meta.Simp.tryTheoremWithExtraArgs?
+#check withNewMCtxDepth
+#check MonadControlT
+#check MonadControl
+#check Lean.Expr.abstractM
+
 /-- Given an array of expression pairs (match_target, e), attempts to assign mvars in e to make e equal to match_target (without
     making any assignments to mvars that appear in match_target).
     Returns true and performs mvar assignments if successful, returns false and does not perform any mvar assignments otherwise -/
