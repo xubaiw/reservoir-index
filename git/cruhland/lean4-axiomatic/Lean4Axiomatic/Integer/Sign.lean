@@ -7,6 +7,7 @@ import Lean4Axiomatic.Sign
 
 namespace Lean4Axiomatic.Integer
 
+open Coe (coe)
 open Signed (Negative Positive)
 
 /-!
@@ -128,25 +129,23 @@ inductive SignedMagnitude (a : ℤ) {s : ℤ} (_ : SquareRootOfUnity s) : Prop
   - `pos`: Ensures a positive magnitude.
   - `eqv`: Proof that `a` is a product of the sign and the magnitude.
   -/
-  intro (m : ℕ) (pos : Positive m) (eqv : a ≃ s * m)
+  intro (m : ℕ) (pos : Positive m) (eqv : a ≃ s * coe m)
 
 /-- Extract the `Positive` field from `SignedMagnitude`. -/
 def SignedMagnitude.pos
     {a s : ℤ} {sqrt1 : SquareRootOfUnity s}
     : SignedMagnitude a sqrt1 → ∃ (n : ℕ), Positive n
     := by
-  intro (SignedMagnitude.intro m (_ : Positive m) (_ : a ≃ s * ↑m))
-  exists m
-  exact ‹Positive m›
+  intro (SignedMagnitude.intro m (_ : Positive m) (_ : a ≃ s * coe m))
+  exact Exists.intro m ‹Positive m›
 
 /-- Extract the underlying equivalence from `SignedMagnitude`. -/
 def SignedMagnitude.eqv
     {a s : ℤ} {sqrt1 : SquareRootOfUnity s}
-    : SignedMagnitude a sqrt1 → ∃ (n : ℕ), a ≃ s * ↑n
+    : SignedMagnitude a sqrt1 → ∃ (n : ℕ), a ≃ s * coe n
     := by
-  intro (SignedMagnitude.intro m (_ : Positive m) (_ : a ≃ s * ↑m))
-  exists m
-  exact ‹a ≃ s * ↑m›
+  intro (SignedMagnitude.intro m (_ : Positive m) (_ : a ≃ s * coe m))
+  exact Exists.intro m ‹a ≃ s * coe m›
 
 /--
 `SignedMagnitude` respects equivalence of signs.
@@ -165,9 +164,9 @@ theorem signedMagnitude_sqrt1_subst
         AA.subst₁ (rβ := (· → ·)) ‹s₁ ≃ s₂› ‹SquareRootOfUnity s₁›
       SignedMagnitude a ‹SquareRootOfUnity s₂›
     := by
-  intro (SignedMagnitude.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * ↑m))
-  have : a ≃ s₂ * ↑m := Rel.trans ‹a ≃ s₁ * ↑m› (AA.substL ‹s₁ ≃ s₂›)
-  exact SignedMagnitude.intro m ‹Positive m› ‹a ≃ s₂ * ↑m›
+  intro (SignedMagnitude.intro (m : ℕ) (_ : Positive m) (_ : a ≃ s₁ * coe m))
+  have : a ≃ s₂ * coe m := Rel.trans ‹a ≃ s₁ * coe m› (AA.substL ‹s₁ ≃ s₂›)
+  exact SignedMagnitude.intro m ‹Positive m› ‹a ≃ s₂ * coe m›
 
 /--
 Given two integers in signed-magnitude form, we can put their product in
@@ -188,19 +187,21 @@ theorem mul_preserves_signedMagnitude
     → have : SquareRootOfUnity (as * bs) := mul_preserves_sqrt1 a_sqrt1 b_sqrt1
       SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)›
     := by
-  intro (SignedMagnitude.intro (am : ℕ) (_ : Positive am) (_ : a ≃ as * ↑am))
-  intro (SignedMagnitude.intro (bm : ℕ) (_ : Positive bm) (_ : b ≃ bs * ↑bm))
+  intro
+    (SignedMagnitude.intro (am : ℕ) (_ : Positive am) (_ : a ≃ as * coe am))
+  intro
+    (SignedMagnitude.intro (bm : ℕ) (_ : Positive bm) (_ : b ≃ bs * coe bm))
   have : SquareRootOfUnity (as * bs) := mul_preserves_sqrt1 a_sqrt1 b_sqrt1
   show SignedMagnitude (a * b) ‹SquareRootOfUnity (as * bs)›
   have : Positive (am * bm) := Natural.mul_positive ‹Positive am› ‹Positive bm›
-  have : a * b ≃ (as * bs) * ↑(am * bm) := calc
-    a * b                   ≃ _ := AA.substL ‹a ≃ as * ↑am›
-    (as * ↑am) * b          ≃ _ := AA.substR ‹b ≃ bs * ↑bm›
-    (as * ↑am) * (bs * ↑bm) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
-    (as * bs) * (↑am * ↑bm) ≃ _ := AA.substR (Rel.symm (AA.compat₂ (f := (↑·))))
-    (as * bs) * ↑(am * bm)  ≃ _ := Rel.refl
+  have : a * b ≃ (as * bs) * coe (am * bm) := calc
+    a * b                         ≃ _ := AA.substL ‹a ≃ as * coe am›
+    (as * coe am) * b             ≃ _ := AA.substR ‹b ≃ bs * coe bm›
+    (as * coe am) * (bs * coe bm) ≃ _ := AA.expr_xxfxxff_lr_swap_rl
+    (as * bs) * (coe am * coe bm) ≃ _ := AA.substR (Rel.symm AA.compat₂)
+    (as * bs) * coe (am * bm)     ≃ _ := Rel.refl
   exact SignedMagnitude.intro
-    (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * ↑(am * bm)›
+    (am * bm) ‹Positive (am * bm)› ‹a * b ≃ (as * bs) * coe (am * bm)›
 
 /--
 A positive or negative integer.
@@ -238,8 +239,7 @@ def Nonzero.mk
 /-- Extract the proof of `SquareRootOfUnity` from `Nonzero`. -/
 def Nonzero.sqrt1 {a : ℤ} : Nonzero a → ∃ (s : ℤ), SquareRootOfUnity s := by
   intro (Nonzero.intro (s : ℤ) (sqrt1 : SquareRootOfUnity s) _)
-  exists s
-  exact ‹SquareRootOfUnity s›
+  exact Exists.intro s ‹SquareRootOfUnity s›
 
 /--
 The product of nonzero integers is nonzero.
@@ -298,24 +298,24 @@ variable {ℤ : Type} [Core ℕ ℤ] [Addition ℕ ℤ] [Multiplication ℕ ℤ]
 variable [Negation ℕ ℤ] [Sign ℕ ℤ]
 
 /-- Extract and simplify the underlying equivalence from `Positive`. -/
-theorem positive_eqv {a : ℤ} : Positive a → ∃ (n : ℕ), a ≃ ↑n := by
+theorem positive_eqv {a : ℤ} : Positive a → ∃ (n : ℕ), a ≃ coe n := by
   intro (_ : Positive a)
-  show ∃ n, a ≃ ↑n
+  show ∃ n, a ≃ coe n
   have : SignedMagnitude a sqrt1_one := positive_defn.mp ‹Positive a›
-  have (Exists.intro (n : ℕ) (_ : a ≃ 1 * ↑n)) := this.eqv
+  have (Exists.intro (n : ℕ) (_ : a ≃ 1 * coe n)) := this.eqv
   exists n
-  show a ≃ ↑n
-  exact Rel.trans ‹a ≃ 1 * ↑n› AA.identL
+  show a ≃ coe n
+  exact Rel.trans ‹a ≃ 1 * coe n› AA.identL
 
 /-- Extract and simplify the underlying equivalence from `Negative`. -/
-theorem negative_eqv {a : ℤ} : Negative a → ∃ (n : ℕ), a ≃ -↑n := by
+theorem negative_eqv {a : ℤ} : Negative a → ∃ (n : ℕ), a ≃ -(coe n) := by
   intro (_ : Negative a)
-  show ∃ n, a ≃ -↑n
+  show ∃ n, a ≃ -(coe n)
   have : SignedMagnitude a sqrt1_neg_one := negative_defn.mp ‹Negative a›
-  have (Exists.intro (n : ℕ) (_ : a ≃ -1 * ↑n)) := this.eqv
+  have (Exists.intro (n : ℕ) (_ : a ≃ -1 * coe n)) := this.eqv
   exists n
-  show a ≃ -↑n
-  exact Rel.trans ‹a ≃ -1 * ↑n› mul_neg_one
+  show a ≃ -(coe n)
+  exact Rel.trans ‹a ≃ -1 * coe n› mul_neg_one
 
 /--
 The only square roots of unity in the integers are `1` and `-1`.
@@ -342,42 +342,43 @@ theorem sqrt1_cases {a : ℤ} : SquareRootOfUnity a ↔ a ≃ 1 ∨ a ≃ -1 := 
     | AA.OneOfThree.second (_ : Positive a) =>
       apply Or.inl
       show a ≃ 1
-      have (Exists.intro (n : ℕ) (_ : a ≃ ↑n)) := positive_eqv ‹Positive a›
-      have : ↑(n * n) ≃ ↑(1 : ℕ) := calc
-        ↑(n * n) ≃ _ := AA.compat₂ (f := (↑·))
-        ↑n * ↑n  ≃ _ := AA.substL (Rel.symm ‹a ≃ ↑n›)
-        a * ↑n   ≃ _ := AA.substR (Rel.symm ‹a ≃ ↑n›)
-        a * a    ≃ _ := ‹a * a ≃ 1›
-        1        ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹↑(n * n) ≃ ↑(1 : ℕ)›
+      have (Exists.intro (n : ℕ) (_ : a ≃ coe n)) := positive_eqv ‹Positive a›
+      have : coe (n * n) ≃ coe 1 := calc
+        coe (n * n)   ≃ _ := AA.compat₂
+        coe n * coe n ≃ _ := AA.substL (Rel.symm ‹a ≃ coe n›)
+        a * coe n     ≃ _ := AA.substR (Rel.symm ‹a ≃ coe n›)
+        a * a         ≃ _ := ‹a * a ≃ 1›
+        1             ≃ _ := Rel.refl
+      have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ 1
       calc
-        a       ≃ _ := ‹a ≃ ↑n›
-        ↑n      ≃ _ := AA.subst₁ (f := (↑·)) ‹n ≃ 1›
-        ↑1      ≃ _ := Rel.refl
+        a       ≃ _ := ‹a ≃ coe n›
+        coe n   ≃ _ := AA.subst₁ ‹n ≃ 1›
+        coe 1   ≃ _ := Rel.refl
         (1 : ℤ) ≃ _ := Rel.refl
     | AA.OneOfThree.third (_ : Negative a) =>
       apply Or.inr
       show a ≃ -1
-      have (Exists.intro (n : ℕ) (_ : a ≃ -↑n)) := negative_eqv ‹Negative a›
-      have : ↑(n * n) ≃ ↑(1 : ℕ) := calc
-        ↑(n * n)        ≃ _ := AA.compat₂ (f := (↑·))
-        ↑n * ↑n         ≃ _ := Rel.symm neg_involutive
-        (-(-(↑n * ↑n))) ≃ _ := AA.subst₁ AA.scompatR
-        (-(↑n * -↑n))   ≃ _ := AA.scompatL
-        (-↑n) * (-↑n)   ≃ _ := AA.substL (Rel.symm ‹a ≃ -↑n›)
-        a * (-↑n)       ≃ _ := AA.substR (Rel.symm ‹a ≃ -↑n›)
-        a * a           ≃ _ := ‹a * a ≃ 1›
-        1               ≃ _ := Rel.refl
-      have : n * n ≃ 1 := AA.inject ‹↑(n * n) ≃ ↑(1 : ℕ)›
+      have (Exists.intro (n : ℕ) (_ : a ≃ -(coe n))) :=
+        negative_eqv ‹Negative a›
+      have : coe (n * n) ≃ coe 1 := calc
+        coe (n * n)             ≃ _ := AA.compat₂
+        coe n * coe n           ≃ _ := Rel.symm neg_involutive
+        (-(-(coe n * coe n)))   ≃ _ := AA.subst₁ AA.scompatR
+        (-(coe n * -(coe n)))   ≃ _ := AA.scompatL
+        (-(coe n)) * (-(coe n)) ≃ _ := AA.substL (Rel.symm ‹a ≃ -(coe n)›)
+        a * (-(coe n))          ≃ _ := AA.substR (Rel.symm ‹a ≃ -(coe n)›)
+        a * a                   ≃ _ := ‹a * a ≃ 1›
+        1                       ≃ _ := Rel.refl
+      have : n * n ≃ 1 := AA.inject ‹coe (n * n) ≃ coe (1 : ℕ)›
       have : n ≃ 1 := Natural.sqrt1.mp ‹n * n ≃ 1›
       show a ≃ -1
       calc
-        a     ≃ _ := ‹a ≃ -↑n›
-        (-↑n) ≃ _ := AA.subst₁ (AA.subst₁ (f := (↑·)) ‹n ≃ 1›)
-        (-↑1) ≃ _ := Rel.refl
-        (-1)  ≃ _ := Rel.refl
+        a          ≃ _ := ‹a ≃ -(coe n)›
+        (-(coe n)) ≃ _ := AA.subst₁ (AA.subst₁ ‹n ≃ 1›)
+        (-(coe 1)) ≃ _ := Rel.refl
+        (-1)       ≃ _ := Rel.refl
   case mpr =>
     intro (_ : a ≃ 1 ∨ a ≃ -1)
     show SquareRootOfUnity a

@@ -88,8 +88,10 @@ where
           let ps ← (← getSubst).applyToParams ps
           return alt.updateAlt! ps (← go k)
         | .default k => withNewScope do return alt.updateCode (← go k)
-      return .cases { c with discr, resultType, alts }
-    | .return .. | .jmp .. | .unreach .. => return code
+      return code.updateCases! resultType discr alts
+    | .return fvarId => return code.updateReturn! ((← getSubst).applyToFVar fvarId)
+    | .jmp fvarId args => return code.updateJmp! ((← getSubst).applyToFVar fvarId) (← args.mapMonoM fun arg => return (← getSubst).applyToExpr arg)
+    | .unreach .. => return code
 
 /--
 Common sub-expression elimination

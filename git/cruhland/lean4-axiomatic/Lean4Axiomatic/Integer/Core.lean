@@ -5,6 +5,8 @@ import Lean4Axiomatic.Relation.Equivalence
 
 namespace Lean4Axiomatic.Integer
 
+open Coe (coe)
+
 /-! ## Axioms -/
 
 /--
@@ -45,10 +47,10 @@ class Conversion
 
   /-- Every natural number maps to a unique integer. -/
   from_natural_substitutive
-    : AA.Substitutive₁ (α := ℕ) (β := ℤ) (↑·) (· ≃ ·) (· ≃ ·)
+    : AA.Substitutive₁ (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
 
   /-- Every integer representation comes from a unique natural number. -/
-  from_natural_injective : AA.Injective (α := ℕ) (β := ℤ) (↑·) (· ≃ ·) (· ≃ ·)
+  from_natural_injective : AA.Injective (α := ℕ) (β := ℤ) coe (· ≃ ·) (· ≃ ·)
 
 attribute [instance] Conversion.from_natural
 attribute [instance] Conversion.from_natural_injective
@@ -73,6 +75,11 @@ class Core (ℕ : outParam Type) [outParam (Natural ℕ)] (ℤ : outParam Type)
 variable {ℕ : Type} [Natural ℕ]
 variable {ℤ : Type} [Core ℕ ℤ]
 
+/-- Provides a single definition of integer literals, for convenience. -/
+instance literal {n : Nat} : OfNat ℤ n := {
+  ofNat := coe (OfNat.ofNat n : ℕ)
+}
+
 /--
 The integer one is not the same as the integer zero.
 
@@ -85,8 +92,8 @@ the property that a successor is never the same as zero into the integers.
 theorem one_neqv_zero : (1 : ℤ) ≄ 0 := by
   intro (_ : (1 : ℤ) ≃ 0)
   show False
-  have : ↑(1 : ℕ) ≃ ↑(0 : ℕ) := ‹(1 : ℤ) ≃ 0›
-  have : (1 : ℕ) ≃ 0 := AA.inject ‹↑(1 : ℕ) ≃ ↑(0 : ℕ)›
+  have : coe (1 : ℕ) ≃ coe (0 : ℕ) := ‹(1 : ℤ) ≃ 0›
+  have : (1 : ℕ) ≃ 0 := AA.inject ‹coe (1 : ℕ) ≃ coe (0 : ℕ)›
   have : Natural.step (0 : ℕ) ≃ 0 :=
     Rel.trans (Rel.symm Natural.literal_step) ‹(1 : ℕ) ≃ 0›
   exact absurd ‹Natural.step (0 : ℕ) ≃ 0› Natural.step_neq_zero

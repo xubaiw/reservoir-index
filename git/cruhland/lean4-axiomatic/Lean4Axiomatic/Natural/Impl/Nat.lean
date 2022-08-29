@@ -78,7 +78,7 @@ local instance multiplication : Multiplication Nat := {
 }
 
 local instance exponentiation : Exponentiation Nat := {
-  powOp := _root_.instPowNatNat
+  powOp := _root_.instPowNat
   pow_zero := rfl
   pow_step := rfl
 }

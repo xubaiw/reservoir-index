@@ -6,6 +6,7 @@ namespace Lean4Axiomatic.Integer.Impl.Difference
 
 variable {ℕ : Type} [Natural ℕ]
 
+open Coe (coe)
 open Signed (Negative Positive)
 
 /--
@@ -44,22 +45,23 @@ definitions of `Negative` and `(· < ·)` and show that the equivalence for one
 implies the other.
 -/
 theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
-  have neg_diff {k : ℕ} : 0——k ≃ -1 * ↑k := by
+  have neg_diff {k : ℕ} : 0——k ≃ -1 * coe k := by
     apply Rel.symm
     calc
-      (-1) * ↑k ≃ _ := mul_neg_one
-      (-↑k)     ≃ _ := Rel.refl
-      (-(k——0)) ≃ _ := Rel.refl
-      0——k      ≃ _ := Rel.refl
+      (-1) * coe k ≃ _ := mul_neg_one
+      (-(coe k))   ≃ _ := Rel.refl
+      (-(k——0))    ≃ _ := Rel.refl
+      0——k         ≃ _ := Rel.refl
   apply Iff.intro
   case mp =>
     intro (_ : Negative (n——m))
     show n < m
     apply Natural.lt_defn_add.mpr
     show ∃ (k : ℕ), Positive k ∧ m ≃ n + k
-    have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ -1 * ↑k))
-      := Generic.negative_defn.mp ‹Negative (n——m)›
-    have : n——m ≃ 0——k := Rel.trans ‹n——m ≃ -1 * ↑k› (Rel.symm neg_diff)
+    have
+      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ -1 * coe k))
+        := Generic.negative_defn.mp ‹Negative (n——m)›
+    have : n——m ≃ 0——k := Rel.trans ‹n——m ≃ -1 * coe k› (Rel.symm neg_diff)
     have : n + k ≃ 0 + m := ‹n——m ≃ 0——k›
     have : m ≃ n + k := calc
       m     ≃ _ := Rel.symm AA.identL
@@ -74,9 +76,9 @@ theorem neg_diff_lt {n m : ℕ} : Negative (n——m) ↔ n < m := by
     have (Exists.intro k (And.intro (_ : Positive k) (_ : m ≃ n + k))) :=
       Natural.lt_defn_add.mp ‹n < m›
     apply SignedMagnitude.intro k ‹Positive k›
-    show n——m ≃ -1 * ↑k
-    have : 0——k ≃ -1 * ↑k := neg_diff
-    apply (Rel.trans · ‹0——k ≃ -1 * ↑k›)
+    show n——m ≃ -1 * coe k
+    have : 0——k ≃ -1 * coe k := neg_diff
+    apply (Rel.trans · ‹0——k ≃ -1 * coe k›)
     show n——m ≃ 0——k
     show n + k ≃ 0 + m
     calc
@@ -100,38 +102,40 @@ theorem pos_diff_gt {n m : ℕ} : Positive (n——m) ↔ n > m := by
   apply Iff.intro
   case mp =>
     intro (_ : Positive (n——m))
-    have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ 1 * ↑k))
-      := Generic.positive_defn.mp ‹Positive (n——m)›
+    have
+      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : n——m ≃ 1 * coe k))
+        := Generic.positive_defn.mp ‹Positive (n——m)›
     show m < n
     apply neg_diff_lt.mp
     show Negative (m——n)
     apply Generic.negative_defn.mpr
     show SignedMagnitude (m——n) sqrt1_neg_one
     apply SignedMagnitude.intro k ‹Positive k›
-    show m——n ≃ -1 * ↑k
+    show m——n ≃ -1 * coe k
     calc
-      m——n         ≃ _ := Rel.symm neg_involutive
-      (-(-(m——n))) ≃ _ := Rel.refl
-      (-(n——m))    ≃ _ := AA.subst₁ ‹n——m ≃ 1 * ↑k›
-      (-(1 * ↑k))  ≃ _ := AA.scompatL
-      (-1) * ↑k    ≃ _ := Rel.refl
+      m——n           ≃ _ := Rel.symm neg_involutive
+      (-(-(m——n)))   ≃ _ := Rel.refl
+      (-(n——m))      ≃ _ := AA.subst₁ ‹n——m ≃ 1 * coe k›
+      (-(1 * coe k)) ≃ _ := AA.scompatL
+      (-1) * coe k   ≃ _ := Rel.refl
   case mpr =>
     intro (_ : m < n)
     show Positive (n——m)
     apply Generic.positive_defn.mpr
     show SignedMagnitude (n——m) sqrt1_one
     have : Negative (m——n) := neg_diff_lt.mpr ‹m < n›
-    have (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : m——n ≃ -1 * ↑k))
-      := Generic.negative_defn.mp ‹Negative (m——n)›
+    have
+      (SignedMagnitude.intro (k : ℕ) (_ : Positive k) (_ : m——n ≃ -1 * coe k))
+        := Generic.negative_defn.mp ‹Negative (m——n)›
     apply SignedMagnitude.intro k ‹Positive k›
-    show n——m ≃ 1 * ↑k
+    show n——m ≃ 1 * coe k
     calc
-      n——m           ≃ _ := Rel.symm neg_involutive
-      (-(-(n——m)))   ≃ _ := Rel.refl
-      (-(m——n))      ≃ _ := AA.subst₁ ‹m——n ≃ -1 * ↑k›
-      (-(-1 * ↑k))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatL)
-      (-(-(1 * ↑k))) ≃ _ := neg_involutive
-      1 * ↑k         ≃ _ := Rel.refl
+      n——m              ≃ _ := Rel.symm neg_involutive
+      (-(-(n——m)))      ≃ _ := Rel.refl
+      (-(m——n))         ≃ _ := AA.subst₁ ‹m——n ≃ -1 * coe k›
+      (-(-1 * coe k))   ≃ _ := AA.subst₁ (Rel.symm AA.scompatL)
+      (-(-(1 * coe k))) ≃ _ := neg_involutive
+      1 * coe k         ≃ _ := Rel.refl
 
 /--
 Every natural number difference is equivalent to exactly one of the following:
