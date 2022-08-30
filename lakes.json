@@ -142,6 +142,7 @@
  "opencompl/lean-gap",
  "opencompl/lean-mlir",
  "opencompl/lean-mlir-semantics",
+ "pcpthm/pe",
  "plumsirawit/mynat",
  "pnwamk/lean4-assert-command",
  "ramonfmir/junglean",
